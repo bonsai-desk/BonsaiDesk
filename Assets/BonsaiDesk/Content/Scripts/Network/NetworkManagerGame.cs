@@ -10,6 +10,11 @@ using UnityEngine;
 using UnityEngine.Android;
 using UnityEngine.Networking;
 
+public class NetworkSyncTest : NetworkBehaviour
+{
+    
+}
+
 public class NetworkManagerGame : NobleNetworkManager
 {
     
@@ -563,20 +568,15 @@ public class NetworkManagerGame : NobleNetworkManager
         };
         
     }
-
-    public override void OnClientConnect(NetworkConnection conn)
+    
+    public override void OnServerPrepared(string hostAddress, ushort hostPort)
     {
-        Debug.Log("[BONSAI] OnClientConnect");
-        base.OnClientConnect(conn);
-
-        NetworkClient.RegisterHandler<SpotMessage>(OnSpot);
-        NetworkClient.RegisterHandler<ActionMessage>(OnAction);
-        NetworkClient.RegisterHandler<ShouldDisconnect>(OnShouldDisconnect);
+        Debug.Log("[BONSAI] OnServerPrepared: " + hostAddress + ":" + hostPort);
         
-        // triggers when client connects to remote host
-        if (NetworkServer.connections.Count == 0) State = ConnectionState.ClientConnected;
+        // triggers on startup
+        State = ConnectionState.Neutral;
     }
-
+    
     public override void OnServerConnect(NetworkConnection conn)
     {
         Debug.Log("[BONSAI] OnServerConnect");
@@ -602,7 +602,19 @@ public class NetworkManagerGame : NobleNetworkManager
         // triggers when client joins
         if (NetworkServer.connections.Count > 1) State = ConnectionState.Hosting;
     }
+    
+    public override void OnServerAddPlayer(NetworkConnection conn)
+    {
+        Debug.Log("[BONSAI] OnServerAddPlayer");
+        conn.Send(new SpotMessage()
+        {
+            spotId = playerInfo[conn].spot,
+            colorIndex = playerInfo[conn].spot
+        });
 
+        base.OnServerAddPlayer(conn);
+    }
+    
     public override void OnServerDisconnect(NetworkConnection conn)
     {
         Debug.Log("[BONSAI] OnServerDisconnect");
@@ -636,26 +648,19 @@ public class NetworkManagerGame : NobleNetworkManager
         if (NetworkServer.connections.Count == 1) State = ConnectionState.Loading;
     }
 
-    public override void OnServerAddPlayer(NetworkConnection conn)
+    public override void OnClientConnect(NetworkConnection conn)
     {
-        Debug.Log("[BONSAI] OnServerAddPlayer");
-        conn.Send(new SpotMessage()
-        {
-            spotId = playerInfo[conn].spot,
-            colorIndex = playerInfo[conn].spot
-        });
+        Debug.Log("[BONSAI] OnClientConnect");
+        base.OnClientConnect(conn);
 
-        base.OnServerAddPlayer(conn);
+        NetworkClient.RegisterHandler<SpotMessage>(OnSpot);
+        NetworkClient.RegisterHandler<ActionMessage>(OnAction);
+        NetworkClient.RegisterHandler<ShouldDisconnect>(OnShouldDisconnect);
+        
+        // triggers when client connects to remote host
+        if (NetworkServer.connections.Count == 0) State = ConnectionState.ClientConnected;
     }
     
-    public override void OnServerPrepared(string hostAddress, ushort hostPort)
-    {
-        Debug.Log("[BONSAI] OnServerPrepared: " + hostAddress + ":" + hostPort);
-        
-        // triggers on startup
-        State = ConnectionState.Neutral;
-    }
-
     public override void OnClientDisconnect(NetworkConnection conn)
     {
         Debug.Log("[BONSAI] OnClientDisconnect");
