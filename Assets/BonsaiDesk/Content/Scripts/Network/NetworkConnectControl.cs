@@ -93,11 +93,13 @@ public class NetworkConnectControl : NetworkManagerGame
     }
 
     #region Hooks
+    
 
     public override void OnServerPrepared(string hostAddress, ushort hostPort)
     {
-        // Get your HostEndPoint here.
         Debug.Log("[BONSAI] OnServerPrepared: " + hostAddress + ":" + hostPort);
+        
+        // triggers on startup
         State = ConnectionState.Neutral;
     }
 
@@ -105,12 +107,17 @@ public class NetworkConnectControl : NetworkManagerGame
     {
         Debug.Log("[BONSAI] OnClientConnect");
         base.OnServerConnect(conn);
+        
+        // triggers when client joins
         if (NetworkServer.connections.Count > 1) State = ConnectionState.Hosting;
     }
 
     public override void OnServerDisconnect(NetworkConnection conn)
     {
+        Debug.Log("[BONSAI] OnServerDisconnect");
         base.OnServerDisconnect(conn);
+        
+        // triggers when last client leaves
         if (NetworkServer.connections.Count == 1) State = ConnectionState.Loading;
     }
 
@@ -119,6 +126,8 @@ public class NetworkConnectControl : NetworkManagerGame
         Debug.Log("[BONSAI] OnClientConnect");
         base.OnClientConnect(conn);
         NetworkClient.RegisterHandler<ShouldDisconnect>(OnShouldDisconnect);
+        
+        // triggers when client connects to remote host
         if (NetworkServer.connections.Count == 0) State = ConnectionState.ClientConnected;
     }
 
@@ -155,18 +164,12 @@ public class NetworkConnectControl : NetworkManagerGame
 
     private void OnApplicationFocus(bool focus)
     {
-        if (!focus)
-            SetCommsActive(_comms, true);
-        else
-            SetCommsActive(_comms, false);
+        SetCommsActive(_comms, !focus);
     }
 
     private void OnApplicationPause(bool pause)
     {
-        if (!pause)
-            SetCommsActive(_comms, true);
-        else
-            SetCommsActive(_comms, false);
+        SetCommsActive(_comms, !pause);
     }
 
     #endregion Hooks
