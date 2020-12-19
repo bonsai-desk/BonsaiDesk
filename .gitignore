@@ -9,9 +9,17 @@
 /[Bb]uilds/
 /[Ll]ogs/
 /[Mm]emoryCaptures/
+/[Ss]creenshots/
+
+# Third party libraries
+/[Aa]ssets/[Oo]culus/
+/[Aa]ssets/[Vv]uplex/
 
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
+
+# ignore unitypackage meta files
+*.unitypackage.meta
 
 # Uncomment this line if you wish to ignore the asset store tools plugin
 # /[Aa]ssets/AssetStoreTools*
@@ -21,6 +29,9 @@
 
 # Visual Studio cache directory
 .vs/
+
+# Jetbrains cache directory
+.idea/
 
 # Gradle cache directory
 .gradle/
@@ -58,3 +69,6 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+# Misc files
+/[Aa]ssets/[Oo]culus.meta
+/[Aa]ssets/[Vv]uplex.meta

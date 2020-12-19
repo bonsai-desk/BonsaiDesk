@@ -1,0 +1,10 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# to native line endings on checkout.
+*.cs diff=csharp text
+
+# Denote all files that are truly binary and should not be modified.
+*.unity binary
+*.prefab binary
+*.asset binary
