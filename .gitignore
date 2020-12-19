@@ -72,3 +72,6 @@ crashlytics-build.properties
 # Misc files
 /[Aa]ssets/[Oo]culus.meta
 /[Aa]ssets/[Vv]uplex.meta
+Assets/Resources/ONSPSettings.asset
+Assets/Resources/OVRBuildConfig.asset
+Assets/Resources/OVRPlatformToolSettings.asset
