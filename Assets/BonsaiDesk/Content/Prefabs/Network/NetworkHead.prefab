@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7947208961684909439}
   - component: {fileID: 7795443118032021746}
   - component: {fileID: 5814571453450792687}
-  m_Layer: 0
+  m_Layer: 23
   m_Name: Torus.001
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -90,7 +90,7 @@ GameObject:
   - component: {fileID: 8387184738934244614}
   - component: {fileID: 464823058662530366}
   - component: {fileID: 8837168306053357189}
-  m_Layer: 0
+  m_Layer: 23
   m_Name: Icosphere
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -167,7 +167,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2411917000250662940}
-  m_Layer: 0
+  m_Layer: 23
   m_Name: head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -203,7 +203,7 @@ GameObject:
   - component: {fileID: 6061963478752365002}
   - component: {fileID: 6093332519935760262}
   - component: {fileID: 746807473865535806}
-  m_Layer: 0
+  m_Layer: 23
   m_Name: Torus.002
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -281,7 +281,7 @@ GameObject:
   m_Component:
   - component: {fileID: 134682111854882460}
   - component: {fileID: 1629970178986108462}
-  m_Layer: 0
+  m_Layer: 23
   m_Name: PinchPullLine
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -412,7 +412,7 @@ GameObject:
   - component: {fileID: 7985103108568604082}
   - component: {fileID: 1831669267413453835}
   - component: {fileID: 4804434930606010686}
-  m_Layer: 0
+  m_Layer: 23
   m_Name: Torus
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -494,7 +494,7 @@ GameObject:
   - component: {fileID: 397433653346894428}
   - component: {fileID: 2482834880378478163}
   - component: {fileID: 5873238580600341142}
-  m_Layer: 0
+  m_Layer: 23
   m_Name: NetworkHead
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -650,7 +650,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1230662520340006629}
-  m_Layer: 0
+  m_Layer: 23
   m_Name: Meshes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
