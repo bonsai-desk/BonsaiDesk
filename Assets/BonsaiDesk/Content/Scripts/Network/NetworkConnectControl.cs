@@ -11,12 +11,12 @@ using UnityEngine.Networking;
 public class NetworkConnectControl : NetworkManagerGame
 {
     public TextMeshProUGUI textMesh;
+    public BonsaiScreenFade fader;
+
     public string apiBaseUri = "https://api.desk.link";
     public float waitBeforeSpawnButton = 0.4f;
     public int roomTagLength = 4;
     public float refreshRoomEverySeconds = 5;
-
-    public BonsaiScreenFade fader;
 
     public GameObject neutralButtons;
     public GameObject hostButtons;
@@ -56,11 +56,6 @@ public class NetworkConnectControl : NetworkManagerGame
             Permission.RequestUserPermission(Permission.Microphone);
 
         _comms = GetComponent<DissonanceComms>();
-        //voiceReceipt = GetComponent<VoiceReceiptTrigger>();
-        //voiceBroadcast = GetComponent<VoiceBroadcastTrigger>();
-
-        //voiceReceipt.enabled = false;
-        //voiceBroadcast.enabled = false;
         _comms.IsMuted = true;
         _comms.IsDeafened = true;
 
@@ -76,6 +71,89 @@ public class NetworkConnectControl : NetworkManagerGame
             _comms.IsMuted = true;
             _comms.IsDeafened = true;
         };
+    }
+
+    private enum ConnectionState
+    {
+        Loading,
+        Neutral,
+        HostCreating,
+        HostWaiting,
+        Hosting,
+        ClientEntry,
+        ClientConnecting,
+        ClientConnected
+    }
+
+    private enum Work
+    {
+        Setup,
+        Cleanup
+    }
+
+    private struct ShouldDisconnect : NetworkMessage
+    {
+    }
+
+    #region hooks
+
+    public override void OnServerPrepared(string hostAddress, ushort hostPort)
+    {
+        // Get your HostEndPoint here.
+        Debug.Log("[BONSAI] OnServerPrepared: " + hostAddress + ":" + hostPort);
+        State = ConnectionState.Neutral;
+    }
+
+    public override void OnServerConnect(NetworkConnection conn)
+    {
+        Debug.Log("[BONSAI] OnClientConnect");
+        base.OnServerConnect(conn);
+        if (NetworkServer.connections.Count > 1) State = ConnectionState.Hosting;
+    }
+
+    public override void OnServerDisconnect(NetworkConnection conn)
+    {
+        base.OnServerDisconnect(conn);
+        if (NetworkServer.connections.Count == 1) State = ConnectionState.Loading;
+    }
+
+    public override void OnClientConnect(NetworkConnection conn)
+    {
+        Debug.Log("[BONSAI] OnClientConnect");
+        base.OnClientConnect(conn);
+        NetworkClient.RegisterHandler<ShouldDisconnect>(OnShouldDisconnect);
+        if (NetworkServer.connections.Count == 0) State = ConnectionState.ClientConnected;
+    }
+
+    private void OnShouldDisconnect(ShouldDisconnect _)
+    {
+        StartCoroutine(LoadingAfterClientStop());
+    }
+
+    public override void OnClientDisconnect(NetworkConnection conn)
+    {
+        Debug.Log("[BONSAI] OnClientDisconnect");
+        NetworkClient.UnregisterHandler<SpotMessage>();
+        NetworkClient.UnregisterHandler<ActionMessage>();
+        NetworkClient.UnregisterHandler<ShouldDisconnect>();
+        switch (State)
+        {
+            case ConnectionState.ClientConnected:
+                // this happens on client when the host exits rudely (power off, etc)
+                // base method stops client with a delay so it can gracefully disconnct
+                // since the client is getting booted here, we don't need to wait (which introduces bugs)
+                fader.SetFadeLevel(1.0f);
+                State = ConnectionState.Loading;
+                break;
+            case ConnectionState.ClientConnecting:
+                //this should happen on client trying to connect to a paused host
+                StopClient();
+                State = ConnectionState.Loading;
+                break;
+            default:
+                base.OnClientDisconnect(conn);
+                break;
+        }
     }
 
     private void OnApplicationFocus(bool focus)
@@ -114,14 +192,52 @@ public class NetworkConnectControl : NetworkManagerGame
         }
     }
 
-    private IEnumerator HandleSetupLoading()
+    #endregion hooks
+
+    #region Public Methods
+
+    public void ClickStartHost()
     {
-        while (isDisconnecting) yield return null;
-        if (HostEndPoint == null)
-            StartHost();
-        else
-            State = ConnectionState.Neutral;
+        State = ConnectionState.HostCreating;
     }
+
+    public void ClickStopHost()
+    {
+        State = ConnectionState.Neutral;
+    }
+
+    public void ClickStartClient()
+    {
+        State = ConnectionState.ClientEntry;
+    }
+
+    public void AppendRoomString(string s)
+    {
+        _enteredRoomTag += s;
+        if (_enteredRoomTag.Length >= roomTagLength && _roomRequest == null)
+            State = ConnectionState.ClientConnecting;
+        else
+            UpdateText(ConnectionState.ClientEntry);
+    }
+
+    public void ClickStopClient()
+    {
+        State = ConnectionState.Loading;
+    }
+
+    public void ClickExitClient()
+    {
+        StartCoroutine(SmoothStopClient());
+    }
+
+    public void ClickExitHost()
+    {
+        State = ConnectionState.Loading;
+    }
+
+    #endregion Public Methods
+
+    #region Utilities
 
     private void HandleState(ConnectionState state, Work work)
     {
@@ -245,149 +361,14 @@ public class NetworkConnectControl : NetworkManagerGame
         if (work == Work.Setup && updateText) UpdateText(state);
     }
 
-    private IEnumerator KickClients()
+    private IEnumerator HandleSetupLoading()
     {
-        foreach (var conn in NetworkServer.connections.Values.ToList()
-            .Where(conn => conn.connectionId != NetworkConnection.LocalConnectionId))
-            conn.Send(new ShouldDisconnect());
-        yield return new WaitForSeconds(fader.fadeTime + 0.15f);
-        foreach (var conn in NetworkServer.connections.Values.ToList()
-            .Where(conn => conn.connectionId != NetworkConnection.LocalConnectionId))
-            conn.Disconnect();
-    }
-
-    public override void OnServerPrepared(string hostAddress, ushort hostPort)
-    {
-        // Get your HostEndPoint here.
-        Debug.Log("[BONSAI] OnServerPrepared: " + hostAddress + ":" + hostPort);
-        State = ConnectionState.Neutral;
-    }
-
-    private void OnShouldDisconnect(ShouldDisconnect _)
-    {
-        StartCoroutine(LoadingAfterClientStop());
-    }
-
-    public override void OnClientConnect(NetworkConnection conn)
-    {
-        Debug.Log("[BONSAI] OnClientConnect");
-        base.OnClientConnect(conn);
-        NetworkClient.RegisterHandler<ShouldDisconnect>(OnShouldDisconnect);
-        if (NetworkServer.connections.Count == 0) State = ConnectionState.ClientConnected;
-    }
-
-    public override void OnClientDisconnect(NetworkConnection conn)
-    {
-        Debug.Log("[BONSAI] OnClientDisconnect");
-        NetworkClient.UnregisterHandler<SpotMessage>();
-        NetworkClient.UnregisterHandler<ActionMessage>();
-        NetworkClient.UnregisterHandler<ShouldDisconnect>();
-        switch (State)
-        {
-            case ConnectionState.ClientConnected:
-                // this happens on client when the host exits rudely (power off, etc)
-                // base method stops client with a delay so it can gracefully disconnct
-                // since the client is getting booted here, we don't need to wait (which introduces bugs)
-                fader.SetFadeLevel(1.0f);
-                State = ConnectionState.Loading;
-                break;
-            case ConnectionState.ClientConnecting:
-                //this should happen on client trying to connect to a paused host
-                StopClient();
-                State = ConnectionState.Loading;
-                break;
-            default:
-                base.OnClientDisconnect(conn);
-                break;
-        }
-    }
-
-    private IEnumerator LoadingAfterClientStop()
-    {
-        fader.FadeOut();
-        yield return new WaitForSeconds(fader.fadeTime);
-        State = ConnectionState.Loading;
-    }
-
-    public override void OnServerConnect(NetworkConnection conn)
-    {
-        Debug.Log("[BONSAI] OnClientConnect");
-        base.OnServerConnect(conn);
-        if (NetworkServer.connections.Count > 1) State = ConnectionState.Hosting;
-    }
-
-    public override void OnServerDisconnect(NetworkConnection conn)
-    {
-        base.OnServerDisconnect(conn);
-        if (NetworkServer.connections.Count == 1) State = ConnectionState.Loading;
-    }
-
-    private struct ShouldDisconnect : NetworkMessage
-    {
-    }
-
-    private enum ConnectionState
-    {
-        Loading,
-        Neutral,
-        HostCreating,
-        HostWaiting,
-        Hosting,
-        ClientEntry,
-        ClientConnecting,
-        ClientConnected
-    }
-
-    private enum Work
-    {
-        Setup,
-        Cleanup
-    }
-
-    #region Public Methods
-
-    public void ClickStartHost()
-    {
-        State = ConnectionState.HostCreating;
-    }
-
-    public void ClickStopHost()
-    {
-        State = ConnectionState.Neutral;
-    }
-
-    public void ClickStartClient()
-    {
-        State = ConnectionState.ClientEntry;
-    }
-
-    public void AppendRoomString(string s)
-    {
-        _enteredRoomTag += s;
-        if (_enteredRoomTag.Length >= roomTagLength && _roomRequest == null)
-            State = ConnectionState.ClientConnecting;
+        while (isDisconnecting) yield return null;
+        if (HostEndPoint == null)
+            StartHost();
         else
-            UpdateText(ConnectionState.ClientEntry);
+            State = ConnectionState.Neutral;
     }
-
-    public void ClickStopClient()
-    {
-        State = ConnectionState.Loading;
-    }
-
-    public void ClickExitClient()
-    {
-        StartCoroutine(SmoothStopClient());
-    }
-
-    public void ClickExitHost()
-    {
-        State = ConnectionState.Loading;
-    }
-
-    #endregion Public Methods
-
-    #region Utilities
 
     private IEnumerator SmoothStartClient()
     {
@@ -475,6 +456,24 @@ public class NetworkConnectControl : NetworkManagerGame
 
             if (button != null) button.SetActive(true);
         }
+    }
+
+    private IEnumerator KickClients()
+    {
+        foreach (var conn in NetworkServer.connections.Values.ToList()
+            .Where(conn => conn.connectionId != NetworkConnection.LocalConnectionId))
+            conn.Send(new ShouldDisconnect());
+        yield return new WaitForSeconds(fader.fadeTime + 0.15f);
+        foreach (var conn in NetworkServer.connections.Values.ToList()
+            .Where(conn => conn.connectionId != NetworkConnection.LocalConnectionId))
+            conn.Disconnect();
+    }
+
+    private IEnumerator LoadingAfterClientStop()
+    {
+        fader.FadeOut();
+        yield return new WaitForSeconds(fader.fadeTime);
+        State = ConnectionState.Loading;
     }
 
     #endregion Utilities
