@@ -6,8 +6,8 @@ using UnityEngine;
 
 public class LogToText : MonoBehaviour
 {
-    int numLogsToStore = 5;
-    
+    private int numLogsToStore = 5;
+
     private static LogToText _instance;
 
     public static LogToText Instance
@@ -29,7 +29,8 @@ public class LogToText : MonoBehaviour
         }
     }
 
-    Queue<Log> logs = new Queue<Log>();
+    private Queue<Log> logs = new Queue<Log>();
+    private string logPath;
 
     private void Awake()
     {
@@ -41,6 +42,23 @@ public class LogToText : MonoBehaviour
         else
         {
             _instance = this;
+        }
+
+        if (string.IsNullOrEmpty(logPath))
+        {
+            deleteOldFiles();
+
+            System.DateTime epochStart = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
+            int cur_time = (int) (System.DateTime.UtcNow - epochStart).TotalSeconds;
+
+            string fileName = cur_time + ".log";
+
+            logPath = Path.Combine(Application.persistentDataPath, fileName);
+            StreamWriter sw = File.CreateText(logPath);
+            sw.Close();
+            print("Saving log to: " + logPath);
+            
+            OVRManager.HMDUnmounted += OVRManagerOnHMDUnmounted;
         }
     }
 
@@ -78,7 +96,7 @@ public class LogToText : MonoBehaviour
             string ext = fileName.Substring(periodIndex + 1);
             if (ext.CompareTo("log") == 0)
             {
-                if(int.TryParse(name, out int nameNumber))
+                if (int.TryParse(name, out int nameNumber))
                 {
                     sortedLogs.Add(nameNumber, filePath.ToString());
                 }
@@ -86,24 +104,18 @@ public class LogToText : MonoBehaviour
         }
 
         int numToDelete = sortedLogs.Count - (numLogsToStore - 1);
-        for(int i = 0; i < numToDelete; i++)
+        for (int i = 0; i < numToDelete; i++)
         {
             File.Delete(sortedLogs.Values[i]);
         }
     }
-
-    void writeToFile()
+    
+    void appendLogQueueToFile()
     {
-        deleteOldFiles();
-        
-        System.DateTime epochStart = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
-        int cur_time = (int) (System.DateTime.UtcNow - epochStart).TotalSeconds;
-
-        string fileName = cur_time + ".log";
-
-        string path = Path.Combine(Application.persistentDataPath, fileName);
-        print("Saving log to: " + path);
-        using (StreamWriter sw = File.CreateText(path))
+        if (logs.Count == 0)
+            return;
+        print("Updating log at: " + logPath);
+        using (StreamWriter sw = File.AppendText(logPath))
         {
             while (logs.Count > 0)
             {
@@ -117,6 +129,23 @@ public class LogToText : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-        writeToFile();
+        appendLogQueueToFile();
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus)
+            appendLogQueueToFile();
+    }
+
+    private void OnApplicationPause(bool pauseStatus)
+    {
+        if (pauseStatus)
+            appendLogQueueToFile();
+    }
+    
+    private void OVRManagerOnHMDUnmounted()
+    {
+        appendLogQueueToFile();
     }
 }
