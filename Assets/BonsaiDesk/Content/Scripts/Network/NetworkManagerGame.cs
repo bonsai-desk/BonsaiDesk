@@ -12,26 +12,35 @@ using UnityEngine.Networking;
 
 public class NetworkSyncTest : NetworkBehaviour
 {
+    public static void RegisterHandlers()
+    {
+        NetworkClient.RegisterHandler<NumberMessage>(OnNumber);
+    }
     
+    public static void UnregisterHandlers()
+    {
+        NetworkClient.UnregisterHandler<NumberMessage>();
+    }
+
+    private struct NumberMessage : NetworkMessage
+    {
+        public int TheNumber;
+    }
+
+    private static void OnNumber(NetworkConnection conn, NumberMessage msg)
+    {
+        Debug.Log("[BONSAI] OnNumber" + msg.TheNumber);
+    }
+
 }
 
 public class NetworkManagerGame : NobleNetworkManager
 {
-    
-    #region Props
-
     public static new NetworkManagerGame singleton;
+    
+    #region Player Props
 
     public Dictionary<NetworkConnection, PlayerInfo> playerInfo = new Dictionary<NetworkConnection, PlayerInfo>();
-
-    public enum VideoState
-    {
-        none,
-        cued,
-        playing
-    }
-
-    public VideoState videoState = VideoState.none;
 
     [System.Serializable]
     public class PlayerInfo
@@ -60,6 +69,19 @@ public class NetworkManagerGame : NobleNetworkManager
 
     public static int colorIndex = 0;
 
+    #endregion
+    
+    #region Video Props
+    
+    public enum VideoState
+    {
+        none,
+        cued,
+        playing
+    }
+    
+    public VideoState videoState = VideoState.none;
+    
     #endregion
     
     #region Control props
@@ -97,7 +119,6 @@ public class NetworkManagerGame : NobleNetworkManager
             HandleState(value, Work.Setup);
         }
     }
-    
     private enum ConnectionState
     {
         Loading,
@@ -109,16 +130,13 @@ public class NetworkManagerGame : NobleNetworkManager
         ClientConnecting,
         ClientConnected
     }
-
     private enum Work
     {
         Setup,
         Cleanup
     }
 
-    private struct ShouldDisconnect : NetworkMessage
-    {
-    }
+
     
     #endregion
     
@@ -168,7 +186,7 @@ public class NetworkManagerGame : NobleNetworkManager
     
     #region Utilities
     
-    private void OnShouldDisconnect(ShouldDisconnect _)
+    private void OnShouldDisconnect(ShouldDisconnectMessage _)
     {
         StartCoroutine(FadeThenReturnToLoading());
     }
@@ -408,7 +426,7 @@ public class NetworkManagerGame : NobleNetworkManager
     {
         foreach (var conn in NetworkServer.connections.Values.ToList()
             .Where(conn => conn.connectionId != NetworkConnection.LocalConnectionId))
-            conn.Send(new ShouldDisconnect());
+            conn.Send(new ShouldDisconnectMessage());
         yield return new WaitForSeconds(fader.fadeTime + 0.15f);
         foreach (var conn in NetworkServer.connections.Values.ToList()
             .Where(conn => conn.connectionId != NetworkConnection.LocalConnectionId))
@@ -655,7 +673,8 @@ public class NetworkManagerGame : NobleNetworkManager
 
         NetworkClient.RegisterHandler<SpotMessage>(OnSpot);
         NetworkClient.RegisterHandler<ActionMessage>(OnAction);
-        NetworkClient.RegisterHandler<ShouldDisconnect>(OnShouldDisconnect);
+        NetworkClient.RegisterHandler<ShouldDisconnectMessage>(OnShouldDisconnect);
+        NetworkSyncTest.RegisterHandlers();
         
         // triggers when client connects to remote host
         if (NetworkServer.connections.Count == 0) State = ConnectionState.ClientConnected;
@@ -664,9 +683,12 @@ public class NetworkManagerGame : NobleNetworkManager
     public override void OnClientDisconnect(NetworkConnection conn)
     {
         Debug.Log("[BONSAI] OnClientDisconnect");
+        
         NetworkClient.UnregisterHandler<SpotMessage>();
         NetworkClient.UnregisterHandler<ActionMessage>();
-        NetworkClient.UnregisterHandler<ShouldDisconnect>();
+        NetworkClient.UnregisterHandler<ShouldDisconnectMessage>();
+        NetworkSyncTest.UnregisterHandlers();
+        
         switch (State)
         {
             case ConnectionState.ClientConnected:
@@ -699,7 +721,11 @@ public class NetworkManagerGame : NobleNetworkManager
 
     #endregion
 
-    #region Spot Messages
+    #region Messages
+    
+    private struct ShouldDisconnectMessage : NetworkMessage
+    {
+    }
 
     public class SpotMessage : NetworkMessage
     {
