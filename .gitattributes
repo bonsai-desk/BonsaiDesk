@@ -8,3 +8,7 @@
 *.unity binary
 *.prefab binary
 *.asset binary
+
+# .gitattributes in project root
+package.json text eol=lf
+package-lock.json text eol=lf
