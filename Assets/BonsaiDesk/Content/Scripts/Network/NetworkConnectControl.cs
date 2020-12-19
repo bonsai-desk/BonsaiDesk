@@ -92,7 +92,7 @@ public class NetworkConnectControl : NetworkManagerGame
     {
     }
 
-    #region hooks
+    #region Hooks
 
     public override void OnServerPrepared(string hostAddress, ushort hostPort)
     {
@@ -169,7 +169,7 @@ public class NetworkConnectControl : NetworkManagerGame
             SetCommsActive(_comms, false);
     }
 
-    #endregion hooks
+    #endregion Hooks
 
     #region Public Methods
 
@@ -194,7 +194,8 @@ public class NetworkConnectControl : NetworkManagerGame
         if (_enteredRoomTag.Length >= roomTagLength && _roomRequest == null)
             State = ConnectionState.ClientConnecting;
         else
-            UpdateText(ConnectionState.ClientEntry);
+            UpdateText(textMesh, ConnectionState.ClientEntry, enteredRoomTag: _enteredRoomTag,
+                fakeRoomTag: _fakeRoomTag);
     }
 
     public void ClickStopClient()
@@ -216,7 +217,7 @@ public class NetworkConnectControl : NetworkManagerGame
 
     #region Utilities
 
-    private static void SetCommsActive(DissonanceComms comms,  bool active)
+    private static void SetCommsActive(DissonanceComms comms, bool active)
     {
         if (comms == null) return;
         if (active)
@@ -344,7 +345,8 @@ public class NetworkConnectControl : NetworkManagerGame
                 break;
         }
 
-        if (work == Work.Setup && updateText) UpdateText(state);
+        if (work == Work.Setup && updateText)
+            UpdateText(textMesh, state, _assignedRoomTag, _enteredRoomTag, _fakeRoomTag);
     }
 
     private IEnumerator StartHostAfterDisconnect()
@@ -372,48 +374,51 @@ public class NetworkConnectControl : NetworkManagerGame
         State = ConnectionState.Loading;
     }
 
-    private void UpdateText(ConnectionState newState)
+    private static void UpdateText(TextMeshProUGUI textMeshPro, ConnectionState newState,
+        string assignedRoomTag = "none",
+        string enteredRoomTag = "none", string fakeRoomTag = "none"
+    )
     {
         switch (newState)
         {
             case ConnectionState.Loading:
-                textMesh.text = "Setting Up";
+                textMeshPro.text = "Setting Up";
                 break;
 
             case ConnectionState.ClientEntry:
-                var displayRoomTag = _enteredRoomTag + _fakeRoomTag.Substring(
-                    0, _fakeRoomTag.Count() - _enteredRoomTag.Count()
+                var displayRoomTag = enteredRoomTag + fakeRoomTag.Substring(
+                    0, fakeRoomTag.Count() - enteredRoomTag.Count()
                 );
-                textMesh.text = "Join\n\n" + displayRoomTag;
+                textMeshPro.text = "Join\n\n" + displayRoomTag;
                 break;
 
             case ConnectionState.ClientConnecting:
-                textMesh.text = "Join\n\n[" + _enteredRoomTag + "]";
+                textMeshPro.text = "Join\n\n[" + enteredRoomTag + "]";
                 break;
 
             case ConnectionState.ClientConnected:
-                textMesh.text = "Exit";
+                textMeshPro.text = "Exit";
                 break;
 
             case ConnectionState.HostCreating:
-                textMesh.text = "\nOpening\n\n\n\nClose Desk";
+                textMeshPro.text = "\nOpening\n\n\n\nClose Desk";
                 break;
 
             case ConnectionState.HostWaiting:
-                textMesh.text = "\n" + _assignedRoomTag + "\n\n\n\nClose Desk";
+                textMeshPro.text = "\n" + assignedRoomTag + "\n\n\n\nClose Desk";
                 break;
 
             case ConnectionState.Hosting:
-                textMesh.text = "Exit";
+                textMeshPro.text = "Exit";
                 break;
 
             case ConnectionState.Neutral:
                 var end = "    |    Join Desk";
-                textMesh.text = "Open Desk" + end;
+                textMeshPro.text = "Open Desk" + end;
                 break;
 
             default:
-                textMesh.text = "UpdateText switch default";
+                textMeshPro.text = "UpdateText switch default";
                 break;
         }
     }
