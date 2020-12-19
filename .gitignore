@@ -75,3 +75,6 @@ crashlytics-build.properties
 Assets/Resources/ONSPSettings.asset
 Assets/Resources/OVRBuildConfig.asset
 Assets/Resources/OVRPlatformToolSettings.asset
+Assets/Resources/ONSPSettings.asset.meta
+Assets/Resources/OVRBuildConfig.asset.meta
+Assets/Resources/OVRPlatformToolSettings.asset.meta
