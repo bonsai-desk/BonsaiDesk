@@ -127,7 +127,7 @@ public class NetworkConnectControl : NetworkManagerGame
 
     private void OnShouldDisconnect(ShouldDisconnect _)
     {
-        StartCoroutine(LoadingAfterClientStop());
+        StartCoroutine(FadeThenReturnToLoading());
     }
 
     public override void OnClientDisconnect(NetworkConnection conn)
@@ -227,7 +227,7 @@ public class NetworkConnectControl : NetworkManagerGame
 
     public void ClickExitClient()
     {
-        StartCoroutine(SmoothStopClient());
+        StartCoroutine(FadeThenReturnToLoading());
     }
 
     public void ClickExitHost()
@@ -257,7 +257,7 @@ public class NetworkConnectControl : NetworkManagerGame
                     }
 
                     if (HostEndPoint != null) updateText = false;
-                    StartCoroutine(HandleSetupLoading());
+                    StartCoroutine(NeutralAfterDisconnect());
                 }
 
                 break;
@@ -267,7 +267,7 @@ public class NetworkConnectControl : NetworkManagerGame
                 if (work == Work.Setup)
                 {
                     if (fader.currentAlpha != 0) fader.FadeIn();
-                    ActivateButtons(neutralButtons);
+                    ActivateButtons(neutralButtons, waitBeforeSpawnButton);
                 }
                 else
                 {
@@ -287,7 +287,7 @@ public class NetworkConnectControl : NetworkManagerGame
             case ConnectionState.HostWaiting:
                 if (work == Work.Setup)
                 {
-                    ActivateButtons(hostButtons);
+                    ActivateButtons(hostButtons, waitBeforeSpawnButton);
                 }
                 else
                 {
@@ -302,7 +302,7 @@ public class NetworkConnectControl : NetworkManagerGame
             case ConnectionState.Hosting:
                 if (work == Work.Setup)
                 {
-                    ActivateButtons(hostStartedButtons);
+                    ActivateButtons(hostStartedButtons, waitBeforeSpawnButton);
                     _comms.IsMuted = false;
                     _comms.IsDeafened = false;
                 }
@@ -320,7 +320,7 @@ public class NetworkConnectControl : NetworkManagerGame
                 if (work == Work.Setup)
                 {
                     _enteredRoomTag = "";
-                    ActivateButtons(clientButtons);
+                    ActivateButtons(clientButtons, waitBeforeSpawnButton);
                 }
                 else
                 {
@@ -340,7 +340,7 @@ public class NetworkConnectControl : NetworkManagerGame
                 if (work == Work.Setup)
                 {
                     fader.FadeIn();
-                    ActivateButtons(clientStartedButtons);
+                    ActivateButtons(clientStartedButtons, waitBeforeSpawnButton);
                     _comms.IsMuted = false;
                     _comms.IsDeafened = false;
                 }
@@ -361,7 +361,7 @@ public class NetworkConnectControl : NetworkManagerGame
         if (work == Work.Setup && updateText) UpdateText(state);
     }
 
-    private IEnumerator HandleSetupLoading()
+    private IEnumerator NeutralAfterDisconnect()
     {
         while (isDisconnecting) yield return null;
         if (HostEndPoint == null)
@@ -369,7 +369,7 @@ public class NetworkConnectControl : NetworkManagerGame
         else
             State = ConnectionState.Neutral;
     }
-
+    
     private IEnumerator SmoothStartClient()
     {
         fader.FadeOut();
@@ -379,11 +379,10 @@ public class NetworkConnectControl : NetworkManagerGame
         StartClient();
     }
 
-    private IEnumerator SmoothStopClient()
+    private IEnumerator FadeThenReturnToLoading()
     {
         fader.FadeOut();
         yield return new WaitForSeconds(fader.fadeTime);
-        while (HostEndPoint != null) yield return null;
         State = ConnectionState.Loading;
     }
 
@@ -433,12 +432,12 @@ public class NetworkConnectControl : NetworkManagerGame
         }
     }
 
-    private void ActivateButtons(GameObject buttons)
+    private void ActivateButtons(GameObject buttons, float delayTime)
     {
-        StartCoroutine(DelayActivateButtons(buttons, waitBeforeSpawnButton));
+        StartCoroutine(DelayActivateButtons(buttons, delayTime));
     }
 
-    private void DisableButtons(GameObject buttons)
+    private static void DisableButtons(GameObject buttons)
     {
         foreach (Transform child in buttons.transform)
         {
@@ -447,7 +446,7 @@ public class NetworkConnectControl : NetworkManagerGame
         }
     }
 
-    private IEnumerator DelayActivateButtons(GameObject buttons, float seconds)
+    private static IEnumerator DelayActivateButtons(GameObject buttons, float seconds)
     {
         yield return new WaitForSeconds(seconds);
         foreach (Transform child in buttons.transform)
@@ -469,12 +468,6 @@ public class NetworkConnectControl : NetworkManagerGame
             conn.Disconnect();
     }
 
-    private IEnumerator LoadingAfterClientStop()
-    {
-        fader.FadeOut();
-        yield return new WaitForSeconds(fader.fadeTime);
-        State = ConnectionState.Loading;
-    }
 
     #endregion Utilities
 
