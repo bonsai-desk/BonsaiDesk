@@ -56,20 +56,17 @@ public class NetworkConnectControl : NetworkManagerGame
             Permission.RequestUserPermission(Permission.Microphone);
 
         _comms = GetComponent<DissonanceComms>();
-        _comms.IsMuted = true;
-        _comms.IsDeafened = true;
+        SetCommsActive(_comms, false);
 
         OVRManager.HMDMounted += () =>
         {
             if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) return;
-            _comms.IsMuted = false;
-            _comms.IsDeafened = false;
+            SetCommsActive(_comms, true);
         };
         OVRManager.HMDUnmounted += () =>
         {
             if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) return;
-            _comms.IsMuted = true;
-            _comms.IsDeafened = true;
+            SetCommsActive(_comms, false);
         };
     }
 
@@ -95,12 +92,14 @@ public class NetworkConnectControl : NetworkManagerGame
     {
     }
 
-    #region hooks
+    #region Hooks
+    
 
     public override void OnServerPrepared(string hostAddress, ushort hostPort)
     {
-        // Get your HostEndPoint here.
         Debug.Log("[BONSAI] OnServerPrepared: " + hostAddress + ":" + hostPort);
+        
+        // triggers on startup
         State = ConnectionState.Neutral;
     }
 
@@ -108,12 +107,17 @@ public class NetworkConnectControl : NetworkManagerGame
     {
         Debug.Log("[BONSAI] OnClientConnect");
         base.OnServerConnect(conn);
+        
+        // triggers when client joins
         if (NetworkServer.connections.Count > 1) State = ConnectionState.Hosting;
     }
 
     public override void OnServerDisconnect(NetworkConnection conn)
     {
+        Debug.Log("[BONSAI] OnServerDisconnect");
         base.OnServerDisconnect(conn);
+        
+        // triggers when last client leaves
         if (NetworkServer.connections.Count == 1) State = ConnectionState.Loading;
     }
 
@@ -122,12 +126,14 @@ public class NetworkConnectControl : NetworkManagerGame
         Debug.Log("[BONSAI] OnClientConnect");
         base.OnClientConnect(conn);
         NetworkClient.RegisterHandler<ShouldDisconnect>(OnShouldDisconnect);
+        
+        // triggers when client connects to remote host
         if (NetworkServer.connections.Count == 0) State = ConnectionState.ClientConnected;
     }
 
     private void OnShouldDisconnect(ShouldDisconnect _)
     {
-        StartCoroutine(LoadingAfterClientStop());
+        StartCoroutine(FadeThenReturnToLoading());
     }
 
     public override void OnClientDisconnect(NetworkConnection conn)
@@ -158,41 +164,15 @@ public class NetworkConnectControl : NetworkManagerGame
 
     private void OnApplicationFocus(bool focus)
     {
-        if (!focus)
-        {
-            if (_comms != null)
-            {
-                _comms.IsMuted = true;
-                _comms.IsDeafened = true;
-            }
-        }
-        else
-        {
-            if (_comms != null)
-            {
-                _comms.IsMuted = false;
-                _comms.IsDeafened = false;
-            }
-        }
+        SetCommsActive(_comms, focus);
     }
 
     private void OnApplicationPause(bool pause)
     {
-        if (!pause)
-        {
-            if (_comms == null) return;
-            _comms.IsMuted = true;
-            _comms.IsDeafened = true;
-        }
-        else
-        {
-            if (_comms == null) return;
-            _comms.IsMuted = false;
-            _comms.IsDeafened = false;
-        }
+        SetCommsActive(_comms, !pause);
     }
 
-    #endregion hooks
+    #endregion Hooks
 
     #region Public Methods
 
@@ -217,7 +197,8 @@ public class NetworkConnectControl : NetworkManagerGame
         if (_enteredRoomTag.Length >= roomTagLength && _roomRequest == null)
             State = ConnectionState.ClientConnecting;
         else
-            UpdateText(ConnectionState.ClientEntry);
+            UpdateText(textMesh, ConnectionState.ClientEntry, enteredRoomTag: _enteredRoomTag,
+                fakeRoomTag: _fakeRoomTag);
     }
 
     public void ClickStopClient()
@@ -227,7 +208,7 @@ public class NetworkConnectControl : NetworkManagerGame
 
     public void ClickExitClient()
     {
-        StartCoroutine(SmoothStopClient());
+        StartCoroutine(FadeThenReturnToLoading());
     }
 
     public void ClickExitHost()
@@ -238,6 +219,21 @@ public class NetworkConnectControl : NetworkManagerGame
     #endregion Public Methods
 
     #region Utilities
+
+    private static void SetCommsActive(DissonanceComms comms, bool active)
+    {
+        if (comms == null) return;
+        if (active)
+        {
+            comms.IsMuted = false;
+            comms.IsDeafened = false;
+        }
+        else
+        {
+            comms.IsMuted = true;
+            comms.IsDeafened = true;
+        }
+    }
 
     private void HandleState(ConnectionState state, Work work)
     {
@@ -250,14 +246,10 @@ public class NetworkConnectControl : NetworkManagerGame
                 {
                     GameObject.Find("GameManager").GetComponent<MoveToDesk>()
                         .SetTableEdge(GameObject.Find("DefaultEdge").transform);
-                    if (_comms != null)
-                    {
-                        _comms.IsMuted = true;
-                        _comms.IsDeafened = true;
-                    }
+                    SetCommsActive(_comms, false);
 
                     if (HostEndPoint != null) updateText = false;
-                    StartCoroutine(HandleSetupLoading());
+                    StartCoroutine(StartHostAfterDisconnect());
                 }
 
                 break;
@@ -267,7 +259,7 @@ public class NetworkConnectControl : NetworkManagerGame
                 if (work == Work.Setup)
                 {
                     if (fader.currentAlpha != 0) fader.FadeIn();
-                    ActivateButtons(neutralButtons);
+                    ActivateButtons(neutralButtons, waitBeforeSpawnButton);
                 }
                 else
                 {
@@ -287,7 +279,7 @@ public class NetworkConnectControl : NetworkManagerGame
             case ConnectionState.HostWaiting:
                 if (work == Work.Setup)
                 {
-                    ActivateButtons(hostButtons);
+                    ActivateButtons(hostButtons, waitBeforeSpawnButton);
                 }
                 else
                 {
@@ -302,9 +294,8 @@ public class NetworkConnectControl : NetworkManagerGame
             case ConnectionState.Hosting:
                 if (work == Work.Setup)
                 {
-                    ActivateButtons(hostStartedButtons);
-                    _comms.IsMuted = false;
-                    _comms.IsDeafened = false;
+                    ActivateButtons(hostStartedButtons, waitBeforeSpawnButton);
+                    SetCommsActive(_comms, true);
                 }
                 else
                 {
@@ -320,7 +311,7 @@ public class NetworkConnectControl : NetworkManagerGame
                 if (work == Work.Setup)
                 {
                     _enteredRoomTag = "";
-                    ActivateButtons(clientButtons);
+                    ActivateButtons(clientButtons, waitBeforeSpawnButton);
                 }
                 else
                 {
@@ -340,9 +331,8 @@ public class NetworkConnectControl : NetworkManagerGame
                 if (work == Work.Setup)
                 {
                     fader.FadeIn();
-                    ActivateButtons(clientStartedButtons);
-                    _comms.IsMuted = false;
-                    _comms.IsDeafened = false;
+                    ActivateButtons(clientStartedButtons, waitBeforeSpawnButton);
+                    SetCommsActive(_comms, true);
                 }
                 else
                 {
@@ -358,10 +348,11 @@ public class NetworkConnectControl : NetworkManagerGame
                 break;
         }
 
-        if (work == Work.Setup && updateText) UpdateText(state);
+        if (work == Work.Setup && updateText)
+            UpdateText(textMesh, state, _assignedRoomTag, _enteredRoomTag, _fakeRoomTag);
     }
 
-    private IEnumerator HandleSetupLoading()
+    private IEnumerator StartHostAfterDisconnect()
     {
         while (isDisconnecting) yield return null;
         if (HostEndPoint == null)
@@ -379,66 +370,68 @@ public class NetworkConnectControl : NetworkManagerGame
         StartClient();
     }
 
-    private IEnumerator SmoothStopClient()
+    private IEnumerator FadeThenReturnToLoading()
     {
         fader.FadeOut();
         yield return new WaitForSeconds(fader.fadeTime);
-        while (HostEndPoint != null) yield return null;
         State = ConnectionState.Loading;
     }
 
-    private void UpdateText(ConnectionState newState)
+    private static void UpdateText(TextMeshProUGUI textMeshPro, ConnectionState newState,
+        string assignedRoomTag = "none",
+        string enteredRoomTag = "none", string fakeRoomTag = "none"
+    )
     {
         switch (newState)
         {
             case ConnectionState.Loading:
-                textMesh.text = "Setting Up";
+                textMeshPro.text = "Setting Up";
                 break;
 
             case ConnectionState.ClientEntry:
-                var displayRoomTag = _enteredRoomTag + _fakeRoomTag.Substring(
-                    0, _fakeRoomTag.Count() - _enteredRoomTag.Count()
+                var displayRoomTag = enteredRoomTag + fakeRoomTag.Substring(
+                    0, fakeRoomTag.Count() - enteredRoomTag.Count()
                 );
-                textMesh.text = "Join\n\n" + displayRoomTag;
+                textMeshPro.text = "Join\n\n" + displayRoomTag;
                 break;
 
             case ConnectionState.ClientConnecting:
-                textMesh.text = "Join\n\n[" + _enteredRoomTag + "]";
+                textMeshPro.text = "Join\n\n[" + enteredRoomTag + "]";
                 break;
 
             case ConnectionState.ClientConnected:
-                textMesh.text = "Exit";
+                textMeshPro.text = "Exit";
                 break;
 
             case ConnectionState.HostCreating:
-                textMesh.text = "\nOpening\n\n\n\nClose Desk";
+                textMeshPro.text = "\nOpening\n\n\n\nClose Desk";
                 break;
 
             case ConnectionState.HostWaiting:
-                textMesh.text = "\n" + _assignedRoomTag + "\n\n\n\nClose Desk";
+                textMeshPro.text = "\n" + assignedRoomTag + "\n\n\n\nClose Desk";
                 break;
 
             case ConnectionState.Hosting:
-                textMesh.text = "Exit";
+                textMeshPro.text = "Exit";
                 break;
 
             case ConnectionState.Neutral:
                 var end = "    |    Join Desk";
-                textMesh.text = "Open Desk" + end;
+                textMeshPro.text = "Open Desk" + end;
                 break;
 
             default:
-                textMesh.text = "UpdateText switch default";
+                textMeshPro.text = "UpdateText switch default";
                 break;
         }
     }
 
-    private void ActivateButtons(GameObject buttons)
+    private void ActivateButtons(GameObject buttons, float delayTime)
     {
-        StartCoroutine(DelayActivateButtons(buttons, waitBeforeSpawnButton));
+        StartCoroutine(DelayActivateButtons(buttons, delayTime));
     }
 
-    private void DisableButtons(GameObject buttons)
+    private static void DisableButtons(GameObject buttons)
     {
         foreach (Transform child in buttons.transform)
         {
@@ -447,7 +440,7 @@ public class NetworkConnectControl : NetworkManagerGame
         }
     }
 
-    private IEnumerator DelayActivateButtons(GameObject buttons, float seconds)
+    private static IEnumerator DelayActivateButtons(GameObject buttons, float seconds)
     {
         yield return new WaitForSeconds(seconds);
         foreach (Transform child in buttons.transform)
@@ -467,13 +460,6 @@ public class NetworkConnectControl : NetworkManagerGame
         foreach (var conn in NetworkServer.connections.Values.ToList()
             .Where(conn => conn.connectionId != NetworkConnection.LocalConnectionId))
             conn.Disconnect();
-    }
-
-    private IEnumerator LoadingAfterClientStop()
-    {
-        fader.FadeOut();
-        yield return new WaitForSeconds(fader.fadeTime);
-        State = ConnectionState.Loading;
     }
 
     #endregion Utilities
