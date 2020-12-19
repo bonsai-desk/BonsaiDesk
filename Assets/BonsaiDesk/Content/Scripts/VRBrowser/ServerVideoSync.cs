@@ -1,0 +1,66 @@
+﻿using Mirror;
+
+public class ServerVideoSync : NetworkBehaviour
+{
+    // Start is called before the first frame update
+    private void Start()
+    {
+        InvokeRepeating(nameof(SyncUpdate), 0f, 0.1f);
+    }
+
+    private void SyncUpdate()
+    {
+        switch (NetworkManagerGame.singleton.videoState)
+        {
+            case NetworkManagerGame.VideoState.none:
+                break;
+
+            case NetworkManagerGame.VideoState.cued:
+                bool readyToPlay = true;
+                foreach (var player in NetworkManagerGame.singleton.playerInfo)
+                {
+                    if (player.Value.youtubePlayerState != 5)
+                        readyToPlay = false;
+                }
+                if (readyToPlay)
+                {
+                    NetworkManagerGame.singleton.videoState = NetworkManagerGame.VideoState.playing;
+                    NetworkServer.SendToAll(new NetworkManagerGame.ActionMessage()
+                    {
+                        actionId = 0
+                    });
+                }
+                break;
+
+            case NetworkManagerGame.VideoState.playing:
+                // float acceptableDifference = 1f;
+                // float min = Mathf.Infinity;
+                // foreach (var player in NetworkManagerGame.singleton.playerInfo)
+                // {
+                //     if (player.Value.youtubePlayerCurrentTime < min)
+                //         min = player.Value.youtubePlayerCurrentTime;
+                // }
+                // foreach (var player in NetworkManagerGame.singleton.playerInfo)
+                // {
+                //     if (player.Value.youtubePlayerCurrentTime > min + acceptableDifference)
+                //     {
+                //         player.Key.Send(new NetworkManagerGame.ActionMessage()
+                //         {
+                //             actionId = 2
+                //         });
+                //     }
+                //     else
+                //     {
+                //         player.Key.Send(new NetworkManagerGame.ActionMessage()
+                //         {
+                //             actionId = 1
+                //         });
+                //     }
+                // }
+                break;
+
+            default:
+                break;
+        }
+    }
+}

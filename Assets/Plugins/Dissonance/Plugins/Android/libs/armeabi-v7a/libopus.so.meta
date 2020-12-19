@@ -1,0 +1,84 @@
+fileFormatVersion: 2
+guid: 1d00421ca0320c446a77d2eba74f6e16
+timeCreated: 1487188298
+licenseType: Store
+PluginImporter:
+  serializedVersion: 1
+  iconMap: {}
+  executionOrder: {}
+  isPreloaded: 0
+  isOverridable: 0
+  platformData:
+    Android:
+      enabled: 1
+      settings:
+        CPU: ARMv7
+    Any:
+      enabled: 0
+      settings:
+        Exclude Android: 0
+        Exclude Editor: 1
+        Exclude Linux: 1
+        Exclude Linux64: 1
+        Exclude LinuxUniversal: 1
+        Exclude OSXIntel: 1
+        Exclude OSXIntel64: 1
+        Exclude OSXUniversal: 1
+        Exclude Win: 1
+        Exclude Win64: 1
+        Exclude WindowsStoreApps: 1
+        Exclude iOS: 1
+    Editor:
+      enabled: 0
+      settings:
+        CPU: AnyCPU
+        DefaultValueInitialized: true
+        OS: AnyOS
+    Linux:
+      enabled: 0
+      settings:
+        CPU: None
+    Linux64:
+      enabled: 0
+      settings:
+        CPU: None
+    LinuxUniversal:
+      enabled: 0
+      settings:
+        CPU: None
+    OSXIntel:
+      enabled: 0
+      settings:
+        CPU: None
+    OSXIntel64:
+      enabled: 0
+      settings:
+        CPU: None
+    OSXUniversal:
+      enabled: 0
+      settings:
+        CPU: None
+    Win:
+      enabled: 0
+      settings:
+        CPU: AnyCPU
+    Win64:
+      enabled: 0
+      settings:
+        CPU: AnyCPU
+    WindowsStoreApps:
+      enabled: 0
+      settings:
+        CPU: X86
+        DontProcess: False
+        PlaceholderPath: 
+        SDK: AnySDK
+        ScriptingBackend: AnyScriptingBackend
+    iOS:
+      enabled: 0
+      settings:
+        CompileFlags: 
+        FrameworkDependencies: 
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,0 +1,3 @@
+Step 1: Download and Import the Match Up plugin
+	* If you purchased the Starter Pack or a monthly plan you should already have Match Up
+Step 2: Import the MatchUpNobleConnect.unitypackage in this folder.
