@@ -3,6 +3,11 @@
   "name": "vuplex-webview-gecko-extension",
   "version": "1.0",
   "description": "Adds support for the Vuplex 3D WebView window.vuplex API.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "browser-agent@vuplex.com"
+    }
+  },
   "content_scripts": [
     {
       "matches": [
@@ -16,6 +21,7 @@
   ],
   "permissions": [
     "nativeMessaging",
+    "nativeMessagingFromContent",
     "geckoViewAddons"
   ]
 }
