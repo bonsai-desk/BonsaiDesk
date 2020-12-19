@@ -13,7 +13,7 @@ using UnityEngine.Networking;
 public class NetworkManagerGame : NobleNetworkManager
 {
     
-    #region properties
+    #region Props
 
     public static new NetworkManagerGame singleton;
 
@@ -55,7 +55,7 @@ public class NetworkManagerGame : NobleNetworkManager
 
     public static int colorIndex = 0;
 
-    #endregion properties
+    #endregion
     
     #region Control props
     
@@ -524,7 +524,7 @@ public class NetworkManagerGame : NobleNetworkManager
 
     #endregion Requests
 
-    #region overrides
+    #region Overrides
 
     public override void Awake()
     {
@@ -692,9 +692,9 @@ public class NetworkManagerGame : NobleNetworkManager
         SetCommsActive(_comms, !pause);
     }
 
-    #endregion overrides
+    #endregion
 
-    #region spot messages
+    #region Spot Messages
 
     public class SpotMessage : NetworkMessage
     {
@@ -707,17 +707,22 @@ public class NetworkManagerGame : NobleNetworkManager
         public int actionId;
     }
 
-    private void OnSpot(NetworkConnection conn, SpotMessage msg)
+    private static void OnSpot(NetworkConnection conn, SpotMessage msg)
     {
-        if (msg.spotId == 0)
-            GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(GameObject.Find("DefaultEdge").transform);
-        if (msg.spotId == 1)
-            GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(GameObject.Find("AcrossEdge").transform);
+        switch (msg.spotId)
+        {
+            case 0:
+                GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(GameObject.Find("DefaultEdge").transform);
+                break;
+            case 1:
+                GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(GameObject.Find("AcrossEdge").transform);
+                break;
+        }
 
         colorIndex = msg.colorIndex;
     }
 
-    private void OnAction(NetworkConnection conn, ActionMessage msg)
+    private static void OnAction(NetworkConnection conn, ActionMessage msg)
     {
         switch (msg.actionId)
         {
@@ -738,5 +743,5 @@ public class NetworkManagerGame : NobleNetworkManager
         }
     }
 
-    #endregion spot messages
+    #endregion
 }
