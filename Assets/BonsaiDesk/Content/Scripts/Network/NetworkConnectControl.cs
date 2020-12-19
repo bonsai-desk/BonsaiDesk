@@ -56,17 +56,17 @@ public class NetworkConnectControl : NetworkManagerGame
             Permission.RequestUserPermission(Permission.Microphone);
 
         _comms = GetComponent<DissonanceComms>();
-        SetCommsActive(_comms, true);
+        SetCommsActive(_comms, false);
 
         OVRManager.HMDMounted += () =>
         {
             if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) return;
-            SetCommsActive(_comms, false);
+            SetCommsActive(_comms, true);
         };
         OVRManager.HMDUnmounted += () =>
         {
             if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) return;
-            SetCommsActive(_comms, true);
+            SetCommsActive(_comms, false);
         };
     }
 
@@ -164,7 +164,7 @@ public class NetworkConnectControl : NetworkManagerGame
 
     private void OnApplicationFocus(bool focus)
     {
-        SetCommsActive(_comms, !focus);
+        SetCommsActive(_comms, focus);
     }
 
     private void OnApplicationPause(bool pause)
@@ -246,7 +246,7 @@ public class NetworkConnectControl : NetworkManagerGame
                 {
                     GameObject.Find("GameManager").GetComponent<MoveToDesk>()
                         .SetTableEdge(GameObject.Find("DefaultEdge").transform);
-                    SetCommsActive(_comms, true);
+                    SetCommsActive(_comms, false);
 
                     if (HostEndPoint != null) updateText = false;
                     StartCoroutine(StartHostAfterDisconnect());
@@ -295,7 +295,7 @@ public class NetworkConnectControl : NetworkManagerGame
                 if (work == Work.Setup)
                 {
                     ActivateButtons(hostStartedButtons, waitBeforeSpawnButton);
-                    SetCommsActive(_comms, false);
+                    SetCommsActive(_comms, true);
                 }
                 else
                 {
@@ -332,7 +332,7 @@ public class NetworkConnectControl : NetworkManagerGame
                 {
                     fader.FadeIn();
                     ActivateButtons(clientStartedButtons, waitBeforeSpawnButton);
-                    SetCommsActive(_comms, false);
+                    SetCommsActive(_comms, true);
                 }
                 else
                 {
