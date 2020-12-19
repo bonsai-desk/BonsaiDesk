@@ -56,20 +56,17 @@ public class NetworkConnectControl : NetworkManagerGame
             Permission.RequestUserPermission(Permission.Microphone);
 
         _comms = GetComponent<DissonanceComms>();
-        _comms.IsMuted = true;
-        _comms.IsDeafened = true;
+        SetCommsActive(_comms, true);
 
         OVRManager.HMDMounted += () =>
         {
             if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) return;
-            _comms.IsMuted = false;
-            _comms.IsDeafened = false;
+            SetCommsActive(_comms, false);
         };
         OVRManager.HMDUnmounted += () =>
         {
             if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) return;
-            _comms.IsMuted = true;
-            _comms.IsDeafened = true;
+            SetCommsActive(_comms, true);
         };
     }
 
@@ -159,37 +156,17 @@ public class NetworkConnectControl : NetworkManagerGame
     private void OnApplicationFocus(bool focus)
     {
         if (!focus)
-        {
-            if (_comms != null)
-            {
-                _comms.IsMuted = true;
-                _comms.IsDeafened = true;
-            }
-        }
+            SetCommsActive(_comms, true);
         else
-        {
-            if (_comms != null)
-            {
-                _comms.IsMuted = false;
-                _comms.IsDeafened = false;
-            }
-        }
+            SetCommsActive(_comms, false);
     }
 
     private void OnApplicationPause(bool pause)
     {
         if (!pause)
-        {
-            if (_comms == null) return;
-            _comms.IsMuted = true;
-            _comms.IsDeafened = true;
-        }
+            SetCommsActive(_comms, true);
         else
-        {
-            if (_comms == null) return;
-            _comms.IsMuted = false;
-            _comms.IsDeafened = false;
-        }
+            SetCommsActive(_comms, false);
     }
 
     #endregion hooks
@@ -239,6 +216,21 @@ public class NetworkConnectControl : NetworkManagerGame
 
     #region Utilities
 
+    private static void SetCommsActive(DissonanceComms comms,  bool active)
+    {
+        if (comms == null) return;
+        if (active)
+        {
+            comms.IsMuted = false;
+            comms.IsDeafened = false;
+        }
+        else
+        {
+            comms.IsMuted = true;
+            comms.IsDeafened = true;
+        }
+    }
+
     private void HandleState(ConnectionState state, Work work)
     {
         var updateText = true;
@@ -250,14 +242,10 @@ public class NetworkConnectControl : NetworkManagerGame
                 {
                     GameObject.Find("GameManager").GetComponent<MoveToDesk>()
                         .SetTableEdge(GameObject.Find("DefaultEdge").transform);
-                    if (_comms != null)
-                    {
-                        _comms.IsMuted = true;
-                        _comms.IsDeafened = true;
-                    }
+                    SetCommsActive(_comms, true);
 
                     if (HostEndPoint != null) updateText = false;
-                    StartCoroutine(NeutralAfterDisconnect());
+                    StartCoroutine(StartHostAfterDisconnect());
                 }
 
                 break;
@@ -303,8 +291,7 @@ public class NetworkConnectControl : NetworkManagerGame
                 if (work == Work.Setup)
                 {
                     ActivateButtons(hostStartedButtons, waitBeforeSpawnButton);
-                    _comms.IsMuted = false;
-                    _comms.IsDeafened = false;
+                    SetCommsActive(_comms, false);
                 }
                 else
                 {
@@ -341,8 +328,7 @@ public class NetworkConnectControl : NetworkManagerGame
                 {
                     fader.FadeIn();
                     ActivateButtons(clientStartedButtons, waitBeforeSpawnButton);
-                    _comms.IsMuted = false;
-                    _comms.IsDeafened = false;
+                    SetCommsActive(_comms, false);
                 }
                 else
                 {
@@ -361,7 +347,7 @@ public class NetworkConnectControl : NetworkManagerGame
         if (work == Work.Setup && updateText) UpdateText(state);
     }
 
-    private IEnumerator NeutralAfterDisconnect()
+    private IEnumerator StartHostAfterDisconnect()
     {
         while (isDisconnecting) yield return null;
         if (HostEndPoint == null)
@@ -369,7 +355,7 @@ public class NetworkConnectControl : NetworkManagerGame
         else
             State = ConnectionState.Neutral;
     }
-    
+
     private IEnumerator SmoothStartClient()
     {
         fader.FadeOut();
@@ -467,7 +453,6 @@ public class NetworkConnectControl : NetworkManagerGame
             .Where(conn => conn.connectionId != NetworkConnection.LocalConnectionId))
             conn.Disconnect();
     }
-
 
     #endregion Utilities
 
