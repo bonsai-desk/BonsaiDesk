@@ -1747,7 +1747,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 217350381}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 53188fc896a52814f8d8befde57dba28, type: 3}
+  m_Script: {fileID: 11500000, guid: f21e9a8608853ae4083fb4017d571b76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   dontDestroyOnLoad: 1
@@ -1783,11 +1783,11 @@ MonoBehaviour:
   isDisconnecting: 0
   videoState: 0
   textMesh: {fileID: 205315705}
-  api_base_uri: https://api.desk.link
+  fader: {fileID: 1129058233}
+  apiBaseUri: https://api.desk.link
   waitBeforeSpawnButton: 0.4
   roomTagLength: 4
   refreshRoomEverySeconds: 5
-  fader: {fileID: 1129058233}
   neutralButtons: {fileID: 1849847950}
   hostButtons: {fileID: 1127556774}
   clientButtons: {fileID: 476871714}
@@ -7949,6 +7949,7 @@ MonoBehaviour:
     y: 0
     width: 0
     height: 0
+  invertTextureRects: 0
   overrideTextureRectMatrix: 0
   overridePerLayerColorScaleAndOffset: 0
   colorScale: {x: 1, y: 1, z: 1, w: 1}
@@ -7966,6 +7967,7 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   isAlphaPremultiplied: 0
+  _previewInEditor: 0
 --- !u!65 &551743313
 BoxCollider:
   m_ObjectHideFlags: 0
