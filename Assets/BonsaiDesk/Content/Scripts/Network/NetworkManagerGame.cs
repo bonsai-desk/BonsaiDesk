@@ -1,34 +1,59 @@
-﻿using System.Collections;
-using Mirror;
-using NobleConnect.Mirror;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Dissonance;
+using Mirror;
+using NobleConnect.Mirror;
 using OVRSimpleJSON;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Android;
 using UnityEngine.Networking;
+using Random = UnityEngine.Random;
+
+public class NetworkSyncTest : NetworkBehaviour
+{
+    public static void RegisterHandlers()
+    {
+        NetworkClient.RegisterHandler<NumberMessage>(OnNumber);
+    }
+
+    public static void UnregisterHandlers()
+    {
+        NetworkClient.UnregisterHandler<NumberMessage>();
+    }
+
+    private static void OnNumber(NetworkConnection conn, NumberMessage msg)
+    {
+        Debug.Log("[BONSAI] OnNumber" + msg.TheNumber);
+    }
+
+    public static NumberMessage GetNumberMessage()
+    {
+        return new NumberMessage {TheNumber = Random.Range(0f, 1f)};
+    }
+
+
+    public struct NumberMessage : NetworkMessage
+    {
+        public float TheNumber;
+    }
+}
 
 public class NetworkManagerGame : NobleNetworkManager
 {
-    
-    #region properties
+    public new static NetworkManagerGame singleton;
 
-    public static new NetworkManagerGame singleton;
+    public MoveToDesk moveToDesk;
+
+    private Camera _camera;
+
+    #region Player Props
 
     public Dictionary<NetworkConnection, PlayerInfo> playerInfo = new Dictionary<NetworkConnection, PlayerInfo>();
 
-    public enum VideoState
-    {
-        none,
-        cued,
-        playing
-    }
-
-    public VideoState videoState = VideoState.none;
-
-    [System.Serializable]
+    [Serializable]
     public class PlayerInfo
     {
         public int spot;
@@ -45,20 +70,30 @@ public class NetworkManagerGame : NobleNetworkManager
 
     public void ResetPlayerInfoTime()
     {
-        foreach (var player in playerInfo)
-        {
-            player.Value.youtubePlayerCurrentTime = 0;
-        }
+        foreach (var player in playerInfo) player.Value.youtubePlayerCurrentTime = 0;
     }
 
-    private bool[] spotInUse = new bool[2];
+    private readonly bool[] spotInUse = new bool[2];
 
-    public static int colorIndex = 0;
+    public static int colorIndex;
 
-    #endregion properties
-    
+    #endregion
+
+    #region Video Props
+
+    public enum VideoState
+    {
+        none,
+        cued,
+        playing
+    }
+
+    public VideoState videoState = VideoState.none;
+
+    #endregion
+
     #region Control props
-    
+
     public TextMeshProUGUI textMesh;
     public BonsaiScreenFade fader;
 
@@ -72,7 +107,7 @@ public class NetworkManagerGame : NobleNetworkManager
     public GameObject clientButtons;
     public GameObject hostStartedButtons;
     public GameObject clientStartedButtons;
-    
+
     private string _assignedRoomTag = "";
     private DissonanceComms _comms;
 
@@ -92,7 +127,7 @@ public class NetworkManagerGame : NobleNetworkManager
             HandleState(value, Work.Setup);
         }
     }
-    
+
     private enum ConnectionState
     {
         Loading,
@@ -111,13 +146,32 @@ public class NetworkManagerGame : NobleNetworkManager
         Cleanup
     }
 
-    private struct ShouldDisconnect : NetworkMessage
-    {
-    }
-    
     #endregion
-    
+
     #region Buttons
+
+    public void ClickTogglePlayerOff()
+    {
+        //var camera = Camera.main;
+        Debug.Log("ClickTogglePlayerOff");
+        var camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
+        Debug.Log("Bonsai Camera " + camera == null);
+    }
+
+    public void ClickTogglePlayerOn()
+    {
+        //var camera = Camera.main;
+        Debug.Log("ClickTogglePlayerOn");
+        var camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
+        Debug.Log("Bonsai Camera " + camera == null);
+    }
+
+    public void SendNumberMessage()
+    {
+        foreach (var conn in NetworkServer.connections.Values.ToList())
+
+            conn.Send(NetworkSyncTest.GetNumberMessage());
+    }
 
     public void ClickStartHost()
     {
@@ -160,10 +214,10 @@ public class NetworkManagerGame : NobleNetworkManager
     }
 
     #endregion Buttons
-    
+
     #region Utilities
-    
-    private void OnShouldDisconnect(ShouldDisconnect _)
+
+    private void OnShouldDisconnect(ShouldDisconnectMessage _)
     {
         StartCoroutine(FadeThenReturnToLoading());
     }
@@ -403,7 +457,7 @@ public class NetworkManagerGame : NobleNetworkManager
     {
         foreach (var conn in NetworkServer.connections.Values.ToList()
             .Where(conn => conn.connectionId != NetworkConnection.LocalConnectionId))
-            conn.Send(new ShouldDisconnect());
+            conn.Send(new ShouldDisconnectMessage());
         yield return new WaitForSeconds(fader.fadeTime + 0.15f);
         foreach (var conn in NetworkServer.connections.Values.ToList()
             .Where(conn => conn.connectionId != NetworkConnection.LocalConnectionId))
@@ -524,7 +578,7 @@ public class NetworkManagerGame : NobleNetworkManager
 
     #endregion Requests
 
-    #region overrides
+    #region Overrides
 
     public override void Awake()
     {
@@ -538,9 +592,11 @@ public class NetworkManagerGame : NobleNetworkManager
     {
         base.Start();
 
-        for (int i = 0; i < spotInUse.Length; i++)
+        _camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
+
+        for (var i = 0; i < spotInUse.Length; i++)
             spotInUse[i] = false;
-        
+
         _fakeRoomTag = new string('-', roomTagLength);
 
         State = ConnectionState.Loading;
@@ -551,17 +607,95 @@ public class NetworkManagerGame : NobleNetworkManager
         _comms = GetComponent<DissonanceComms>();
         SetCommsActive(_comms, false);
 
-        OVRManager.HMDMounted += () =>
+        OVRManager.HMDUnmounted += VoidAndDeafen;
+
+        MoveToDesk.OrientationChanged += HandleOrientationChange;
+    }
+
+    private void VoidAndDeafen()
+    {
+        moveToDesk.ResetPosition();
+        SetCommsActive(_comms, false);
+    }
+
+    private void HandleOrientationChange(bool oriented)
+    {
+        if (oriented)
+            _camera.cullingMask |= 1 << LayerMask.NameToLayer("networkPlayer");
+        else
+            _camera.cullingMask &= ~(1 << LayerMask.NameToLayer("networkPlayer"));
+        if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) return;
+        SetCommsActive(_comms, oriented);
+    }
+
+    public override void OnServerPrepared(string hostAddress, ushort hostPort)
+    {
+        Debug.Log("[BONSAI] OnServerPrepared: " + hostAddress + ":" + hostPort);
+
+        // triggers on startup
+        State = ConnectionState.Neutral;
+    }
+
+    public override void OnServerConnect(NetworkConnection conn)
+    {
+        Debug.Log("[BONSAI] OnServerConnect");
+        base.OnServerConnect(conn);
+        var openSpotId = -1;
+        for (var i = 0; i < spotInUse.Length; i++)
+            if (!spotInUse[i])
+            {
+                openSpotId = i;
+                break;
+            }
+
+        if (openSpotId == -1)
         {
-            if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) return;
-            SetCommsActive(_comms, true);
-        };
-        OVRManager.HMDUnmounted += () =>
+            Debug.LogError("No open spot.");
+            openSpotId = 0;
+        }
+
+        spotInUse[openSpotId] = true;
+        playerInfo.Add(conn, new PlayerInfo(openSpotId));
+
+        // triggers when client joins
+        if (NetworkServer.connections.Count > 1) State = ConnectionState.Hosting;
+    }
+
+    public override void OnServerAddPlayer(NetworkConnection conn)
+    {
+        Debug.Log("[BONSAI] OnServerAddPlayer");
+        conn.Send(new SpotMessage
         {
-            if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) return;
-            SetCommsActive(_comms, false);
-        };
-        
+            spotId = playerInfo[conn].spot,
+            colorIndex = playerInfo[conn].spot
+        });
+
+        base.OnServerAddPlayer(conn);
+    }
+
+    public override void OnServerDisconnect(NetworkConnection conn)
+    {
+        Debug.Log("[BONSAI] OnServerDisconnect");
+        base.OnServerDisconnect(conn);
+        var spotId = playerInfo[conn].spot;
+
+        var spotUsedCount = 0;
+        foreach (var player in playerInfo)
+            if (player.Value.spot == spotId)
+                spotUsedCount++;
+        if (spotUsedCount <= 1) spotInUse[spotId] = false;
+        playerInfo.Remove(conn);
+
+        var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
+        foreach (var netIdentity in tmp)
+            if (netIdentity != null && (netIdentity.gameObject.CompareTag("KeepOnDisconnect") ||
+                                        netIdentity.gameObject.CompareTag("BlockArea")))
+                netIdentity.RemoveClientAuthority();
+
+        NetworkServer.DestroyPlayerForConnection(conn);
+
+        // triggers when last client leaves
+        if (NetworkServer.connections.Count == 1) State = ConnectionState.Loading;
     }
 
     public override void OnClientConnect(NetworkConnection conn)
@@ -571,97 +705,22 @@ public class NetworkManagerGame : NobleNetworkManager
 
         NetworkClient.RegisterHandler<SpotMessage>(OnSpot);
         NetworkClient.RegisterHandler<ActionMessage>(OnAction);
-        NetworkClient.RegisterHandler<ShouldDisconnect>(OnShouldDisconnect);
-        
+        NetworkClient.RegisterHandler<ShouldDisconnectMessage>(OnShouldDisconnect);
+        NetworkSyncTest.RegisterHandlers();
+
         // triggers when client connects to remote host
         if (NetworkServer.connections.Count == 0) State = ConnectionState.ClientConnected;
-    }
-
-    public override void OnServerConnect(NetworkConnection conn)
-    {
-        Debug.Log("[BONSAI] OnServerConnect");
-        base.OnServerConnect(conn);
-        int openSpotId = -1;
-        for (int i = 0; i < spotInUse.Length; i++)
-        {
-            if (!spotInUse[i])
-            {
-                openSpotId = i;
-                break;
-            }
-        }
-
-        if (openSpotId == -1)
-        {
-            Debug.LogError("No open spot.");
-            openSpotId = 0;
-        }
-        spotInUse[openSpotId] = true;
-        playerInfo.Add(conn, new PlayerInfo(openSpotId));
-        
-        // triggers when client joins
-        if (NetworkServer.connections.Count > 1) State = ConnectionState.Hosting;
-    }
-
-    public override void OnServerDisconnect(NetworkConnection conn)
-    {
-        Debug.Log("[BONSAI] OnServerDisconnect");
-        base.OnServerDisconnect(conn);
-        int spotId = playerInfo[conn].spot;
-
-        int spotUsedCount = 0;
-        foreach (var player in playerInfo)
-        {
-            if (player.Value.spot == spotId)
-                spotUsedCount++;
-        }
-        if (spotUsedCount <= 1)
-        {
-            spotInUse[spotId] = false;
-        }
-        playerInfo.Remove(conn);
-
-        HashSet<NetworkIdentity> tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
-        foreach (NetworkIdentity netIdentity in tmp)
-        {
-            if (netIdentity != null && (netIdentity.gameObject.CompareTag("KeepOnDisconnect") || netIdentity.gameObject.CompareTag("BlockArea")))
-            {
-                netIdentity.RemoveClientAuthority();
-            }
-        }
-
-        NetworkServer.DestroyPlayerForConnection(conn);
-        
-        // triggers when last client leaves
-        if (NetworkServer.connections.Count == 1) State = ConnectionState.Loading;
-    }
-
-    public override void OnServerAddPlayer(NetworkConnection conn)
-    {
-        Debug.Log("[BONSAI] OnServerAddPlayer");
-        conn.Send(new SpotMessage()
-        {
-            spotId = playerInfo[conn].spot,
-            colorIndex = playerInfo[conn].spot
-        });
-
-        base.OnServerAddPlayer(conn);
-    }
-    
-    public override void OnServerPrepared(string hostAddress, ushort hostPort)
-    {
-        Debug.Log("[BONSAI] OnServerPrepared: " + hostAddress + ":" + hostPort);
-        
-        // triggers on startup
-        State = ConnectionState.Neutral;
     }
 
     public override void OnClientDisconnect(NetworkConnection conn)
     {
         Debug.Log("[BONSAI] OnClientDisconnect");
+
         NetworkClient.UnregisterHandler<SpotMessage>();
         NetworkClient.UnregisterHandler<ActionMessage>();
-        NetworkClient.UnregisterHandler<ShouldDisconnect>();
+        NetworkClient.UnregisterHandler<ShouldDisconnectMessage>();
+        NetworkSyncTest.UnregisterHandlers();
+
         switch (State)
         {
             case ConnectionState.ClientConnected:
@@ -684,22 +743,28 @@ public class NetworkManagerGame : NobleNetworkManager
 
     private void OnApplicationFocus(bool focus)
     {
-        SetCommsActive(_comms, focus);
+        if (moveToDesk.oriented) SetCommsActive(_comms, focus);
     }
 
     private void OnApplicationPause(bool pause)
     {
-        SetCommsActive(_comms, !pause);
+        if (!pause) return;
+        SetCommsActive(_comms, false);
+        moveToDesk.ResetPosition();
     }
 
-    #endregion overrides
+    #endregion
 
-    #region spot messages
+    #region Messages
+
+    private struct ShouldDisconnectMessage : NetworkMessage
+    {
+    }
 
     public class SpotMessage : NetworkMessage
     {
-        public int spotId;
         public int colorIndex;
+        public int spotId;
     }
 
     public class ActionMessage : NetworkMessage
@@ -707,17 +772,24 @@ public class NetworkManagerGame : NobleNetworkManager
         public int actionId;
     }
 
-    private void OnSpot(NetworkConnection conn, SpotMessage msg)
+    private static void OnSpot(NetworkConnection conn, SpotMessage msg)
     {
-        if (msg.spotId == 0)
-            GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(GameObject.Find("DefaultEdge").transform);
-        if (msg.spotId == 1)
-            GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(GameObject.Find("AcrossEdge").transform);
+        switch (msg.spotId)
+        {
+            case 0:
+                GameObject.Find("GameManager").GetComponent<MoveToDesk>()
+                    .SetTableEdge(GameObject.Find("DefaultEdge").transform);
+                break;
+            case 1:
+                GameObject.Find("GameManager").GetComponent<MoveToDesk>()
+                    .SetTableEdge(GameObject.Find("AcrossEdge").transform);
+                break;
+        }
 
         colorIndex = msg.colorIndex;
     }
 
-    private void OnAction(NetworkConnection conn, ActionMessage msg)
+    private static void OnAction(NetworkConnection conn, ActionMessage msg)
     {
         switch (msg.actionId)
         {
@@ -732,11 +804,8 @@ public class NetworkManagerGame : NobleNetworkManager
             case 2: //pause video
                 BrowserManager.instance.PauseVideo();
                 break;
-
-            default:
-                break;
         }
     }
 
-    #endregion spot messages
+    #endregion
 }

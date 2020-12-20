@@ -1781,6 +1781,7 @@ MonoBehaviour:
   maxRelayRefreshAttempts: 3
   relayLifetime: 30
   isDisconnecting: 0
+  moveToDesk: {fileID: 1212259449}
   videoState: 0
   textMesh: {fileID: 205315705}
   fader: {fileID: 1129058233}
