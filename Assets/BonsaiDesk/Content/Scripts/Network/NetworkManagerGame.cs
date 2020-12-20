@@ -282,6 +282,7 @@ public class NetworkManagerGame : NobleNetworkManager
             case ConnectionState.HostWaiting:
                 if (work == Work.Setup)
                 {
+                    _refreshRoomCoroutine = StartCoroutine(RefreshRoomEverySeconds());
                     ActivateButtons(hostButtons, waitBeforeSpawnButton);
                 }
                 else
