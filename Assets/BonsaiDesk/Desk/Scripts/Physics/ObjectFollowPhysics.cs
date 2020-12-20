@@ -33,10 +33,10 @@ public class ObjectFollowPhysics : MonoBehaviour
     {
         body = GetComponent<Rigidbody>();
         body.maxAngularVelocity = float.MaxValue;
-
+        
         moveForce = lbsForce * lbsToKg * 9.81f;
         rotationTorque = lbsTorque * lbsToKg * 9.81f;
-
+        
         if (hideObject == null && transform.childCount > 0)
         {
             hideObject = transform.GetChild(0).gameObject;
@@ -94,8 +94,8 @@ public class ObjectFollowPhysics : MonoBehaviour
     {
         body.velocity = Vector3.zero;
         body.angularVelocity = Vector3.zero;
-        body.MovePosition(target.position);
-        body.MoveRotation(target.rotation);
+        transform.position = target.position;
+        transform.rotation = target.rotation;
     }
 
     private void addForceTowardsTarget()
