@@ -122,6 +122,7 @@ public class NetworkManagerGame : NobleNetworkManager
         get => _connectionState;
         set
         {
+            if (_connectionState == value) Debug.LogWarning("[BONSAI] Trying to set state to itself: " + State);
             HandleState(_connectionState, Work.Cleanup);
             _connectionState = value;
             HandleState(value, Work.Setup);
@@ -486,6 +487,15 @@ public class NetworkManagerGame : NobleNetworkManager
                 yield return www.downloadHandler.isDone;
                 var jsonNode = JSONNode.Parse(www.downloadHandler.text) as JSONObject;
                 Debug.Log("[BONSAI] GetRoom text " + www.downloadHandler.text);
+
+                if (jsonNode is null)
+                {
+                    State = ConnectionState.ClientEntry;
+                    textMesh.text = "Server Returned Empty Response\n\n\n\n(try again)";
+                    _roomRequest = null;
+                    yield break;
+                }
+
                 var ipAddress = jsonNode["ip_address"];
                 var port = jsonNode["port"];
                 if (ipAddress != null && port != null)
@@ -497,7 +507,9 @@ public class NetworkManagerGame : NobleNetworkManager
                 }
                 else
                 {
-                    textMesh.text = "Parse ip/port Error!";
+                    State = ConnectionState.ClientEntry;
+                    textMesh.text = "Server Returned Bad Info\n\n\n\n(try again)";
+                    _roomRequest = null;
                 }
             }
         }
@@ -505,9 +517,9 @@ public class NetworkManagerGame : NobleNetworkManager
 
     private IEnumerator PostCreateRoom(string ipAddress, ushort port)
     {
-        // TODO handle parse errors better
         Debug.Log("[BONSAI] PostCreateRoom:" + ipAddress + ":" + port);
         var form = new WWWForm();
+
         form.AddField("ip_address", ipAddress);
         form.AddField("port", port);
 
@@ -516,25 +528,29 @@ public class NetworkManagerGame : NobleNetworkManager
         using (var www = UnityWebRequest.Post(apiBaseUri + "/rooms", form))
         {
             yield return www.SendWebRequest();
+            // wait a little if the request goes to quickly
             yield return delay;
 
             if (www.isNetworkError || www.isHttpError)
             {
-                Debug.Log("[BONSAI] CreateRoom fail");
+                Debug.LogWarning("[BONSAI] CreateRoom FAIL www error");
+                textMesh.text = "Failed to create room\n\n\n\nReset";
+                ActivateButtons(hostButtons, waitBeforeSpawnButton);
             }
             else
             {
                 yield return www.downloadHandler.isDone;
                 var jsonNode = JSONNode.Parse(www.downloadHandler.text) as JSONObject;
-                if (jsonNode["tag"])
+                if (!(jsonNode is null) && jsonNode["tag"])
                 {
                     _assignedRoomTag = jsonNode["tag"];
-                    _refreshRoomCoroutine = StartCoroutine(RefreshRoomEverySeconds());
                     State = ConnectionState.HostWaiting;
                 }
                 else
                 {
-                    textMesh.text = "Parse room/tag error";
+                    Debug.LogWarning("[BONSAI] CreateRoom FAIL bad server data");
+                    textMesh.text = "Server returned bad data\n\n\n\nReset";
+                    ActivateButtons(hostButtons, waitBeforeSpawnButton);
                 }
             }
         }
@@ -547,7 +563,7 @@ public class NetworkManagerGame : NobleNetworkManager
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
-                Debug.Log("[BONSAI] DeleteRoom fail");
+                Debug.LogWarning("[BONSAI] DeleteRoom FAIL");
             else
                 Debug.Log("[BONSAI] DeleteRoom OK");
         }
@@ -561,19 +577,30 @@ public class NetworkManagerGame : NobleNetworkManager
             yield return www.SendWebRequest();
 
             if (www.isNetworkError || www.isHttpError)
-                Debug.Log("[BONSAI] PostRefreshRoom fail");
+            {
+                Debug.LogWarning("[BONSAI] PostRefreshRoom fail");
+                State = ConnectionState.Neutral;
+            }
+
             else
+            {
                 Debug.Log("[BONSAI] PostRefreshRoom OK");
+            }
         }
     }
 
     private IEnumerator RefreshRoomEverySeconds()
     {
-        while (true)
+        const int timeOut = 60 * 5;
+        var startTime = Time.time;
+        while (Time.time - startTime < timeOut)
         {
             yield return new WaitForSeconds(refreshRoomEverySeconds);
             yield return PostRefreshRoom();
         }
+
+        Debug.Log("[BONSAI] Host waiting for too long, returning to Neutral");
+        State = ConnectionState.Neutral;
     }
 
     #endregion Requests
