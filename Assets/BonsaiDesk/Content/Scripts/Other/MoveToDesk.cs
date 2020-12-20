@@ -44,7 +44,7 @@ public class MoveToDesk : MonoBehaviour
     private List<PlayerOrientation> playerOrientations;
     private int state;
 
-    private bool oriented
+    public bool oriented
     {
         get => _oriented;
         set
@@ -71,7 +71,6 @@ public class MoveToDesk : MonoBehaviour
 
         ResetPosition();
 
-        OVRManager.HMDUnmounted += ResetPosition;
     }
 
     private void Update()

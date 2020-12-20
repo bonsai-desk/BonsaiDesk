@@ -45,6 +45,10 @@ public class NetworkManagerGame : NobleNetworkManager
 {
     public new static NetworkManagerGame singleton;
 
+    public MoveToDesk moveToDesk;
+
+    private Camera _camera;
+
     #region Player Props
 
     public Dictionary<NetworkConnection, PlayerInfo> playerInfo = new Dictionary<NetworkConnection, PlayerInfo>();
@@ -588,7 +592,7 @@ public class NetworkManagerGame : NobleNetworkManager
     {
         base.Start();
 
-        var camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
+        _camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
 
         for (var i = 0; i < spotInUse.Length; i++)
             spotInUse[i] = false;
@@ -603,20 +607,25 @@ public class NetworkManagerGame : NobleNetworkManager
         _comms = GetComponent<DissonanceComms>();
         SetCommsActive(_comms, false);
 
-        OVRManager.HMDUnmounted += () =>
-        {
-            if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) return;
-            SetCommsActive(_comms, false);
-        };
-        MoveToDesk.OrientationChanged += oriented =>
-        {
-            if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) return;
-            SetCommsActive(_comms, oriented);
-            if (oriented)
-                camera.cullingMask |= 1 << LayerMask.NameToLayer("networkPlayer");
-            else
-                camera.cullingMask &= ~(1 << LayerMask.NameToLayer("networkPlayer"));
-        };
+        OVRManager.HMDUnmounted += VoidAndDeafen;
+
+        MoveToDesk.OrientationChanged += HandleOrientationChange;
+    }
+
+    private void VoidAndDeafen()
+    {
+        moveToDesk.ResetPosition();
+        SetCommsActive(_comms, false);
+    }
+
+    private void HandleOrientationChange(bool oriented)
+    {
+        if (oriented)
+            _camera.cullingMask |= 1 << LayerMask.NameToLayer("networkPlayer");
+        else
+            _camera.cullingMask &= ~(1 << LayerMask.NameToLayer("networkPlayer"));
+        if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) return;
+        SetCommsActive(_comms, oriented);
     }
 
     public override void OnServerPrepared(string hostAddress, ushort hostPort)
@@ -734,12 +743,14 @@ public class NetworkManagerGame : NobleNetworkManager
 
     private void OnApplicationFocus(bool focus)
     {
-        SetCommsActive(_comms, focus);
+        if (moveToDesk.oriented) SetCommsActive(_comms, focus);
     }
 
     private void OnApplicationPause(bool pause)
     {
-        SetCommsActive(_comms, !pause);
+        if (!pause) return;
+        SetCommsActive(_comms, false);
+        moveToDesk.ResetPosition();
     }
 
     #endregion
