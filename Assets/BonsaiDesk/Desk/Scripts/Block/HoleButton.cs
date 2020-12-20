@@ -39,7 +39,7 @@ public class HoleButton : MonoBehaviour
 
     public OVR.SoundFXRef audioSource;
 
-    public float pressCooldown = 0.5f;
+    private float pressCooldown = 0.15f;
     private float lastPressTime = 0;
 
     public static float shrinkTime = 0.35f;
