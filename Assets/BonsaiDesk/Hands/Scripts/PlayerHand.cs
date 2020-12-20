@@ -344,6 +344,7 @@ public class PlayerHand : MonoBehaviour
                 }
             }
         }
+        
         bool hitObject = false;
         if (!objectAttached && !hitPullBox && !OtherHand().objectAttached && OtherHand().beamHold == null && heldJoint == null)
         {
@@ -462,82 +463,82 @@ public class PlayerHand : MonoBehaviour
             }
         }
 
-        float angleToFace = 180f;
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
-            angleToFace = Vector3.Angle(-holdPosition.right, head.forward);
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
-            angleToFace = Vector3.Angle(holdPosition.right, head.forward);
-        // float angleToSky = Vector3.Angle(holdPosition.forward, Vector3.up);
-
-        if (fistMinStrength > 0.7f)
-        {
-            if (!menu.activeInHierarchy && !lastFist && angleToFace < 70f) // && angleToSky < 90f
-            {
-                if (heldJoint != null)
-                {
-                    heldBody.useGravity = heldObjectGravity;
-                    heldBody.drag = heldObjectDrag;
-                    heldBody.angularDrag = heldObjectAngularDrag;
-                    Destroy(heldJoint);
-                    heldJoint = null;
-                    heldBody = null;
-                }
-
-                // bool flip = true;
-                // if (_skeletonType == OVRSkeleton.SkeletonType.HandRight && PlayerHands.hands.blockSelectMenu.transform.GetChild(0).localPosition.x > 0
-                // || _skeletonType == OVRSkeleton.SkeletonType.HandLeft && PlayerHands.hands.blockSelectMenu.transform.GetChild(0).localPosition.x < 0)
-                //     flip = false;
-                // if (flip)
-                // {
-                //     for (int i = 0; i < 2; i++)
-                //     {
-                //         Vector3 pos = PlayerHands.hands.blockSelectMenu.transform.GetChild(i).localPosition;
-                //         pos.x *= -1f;
-                //         PlayerHands.hands.blockSelectMenu.transform.GetChild(i).localPosition = pos;
-                //     }
-                // }
-
-                menu.transform.position = holdPosition.position;
-
-                //Vector3 forward = holdPosition.position - PlayerHands.hands.head.position;
-                //forward.y = 0;
-                Vector3 forward = PlayerHands.hands.head.forward;
-                //forward.y = 0;
-                menu.transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
-
-                menu.SetActive(true);
-            }
-        }
-        else
-        {
-            if (menu.activeInHierarchy)
-            {
-                var fistHits = Physics.OverlapSphere(holdPosition.position, 0.01f, allButHands, QueryTriggerInteraction.Collide);
-                foreach (var hit in fistHits)
-                {
-                    TriggerAction triggerAction = hit.GetComponent<TriggerAction>();
-                    if (triggerAction != null)
-                    {
-                        if (triggerAction.action != null)
-                            triggerAction.action.Invoke();
-                        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
-                        {
-                            if (triggerAction.leftAction != null)
-                                triggerAction.leftAction.Invoke();
-                        }
-                        if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
-                        {
-                            if (triggerAction.rightAction != null)
-                                triggerAction.rightAction.Invoke();
-                        }
-
-                        break;
-                    }
-                }
-
-                menu.SetActive(false);
-            }
-        }
+        // float angleToFace = 180f;
+        // if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        //     angleToFace = Vector3.Angle(-holdPosition.right, head.forward);
+        // if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
+        //     angleToFace = Vector3.Angle(holdPosition.right, head.forward);
+        // // float angleToSky = Vector3.Angle(holdPosition.forward, Vector3.up);
+        //
+        // if (fistMinStrength > 0.7f)
+        // {
+        //     if (!menu.activeInHierarchy && !lastFist && angleToFace < 70f) // && angleToSky < 90f
+        //     {
+        //         if (heldJoint != null)
+        //         {
+        //             heldBody.useGravity = heldObjectGravity;
+        //             heldBody.drag = heldObjectDrag;
+        //             heldBody.angularDrag = heldObjectAngularDrag;
+        //             Destroy(heldJoint);
+        //             heldJoint = null;
+        //             heldBody = null;
+        //         }
+        //
+        //         // bool flip = true;
+        //         // if (_skeletonType == OVRSkeleton.SkeletonType.HandRight && PlayerHands.hands.blockSelectMenu.transform.GetChild(0).localPosition.x > 0
+        //         // || _skeletonType == OVRSkeleton.SkeletonType.HandLeft && PlayerHands.hands.blockSelectMenu.transform.GetChild(0).localPosition.x < 0)
+        //         //     flip = false;
+        //         // if (flip)
+        //         // {
+        //         //     for (int i = 0; i < 2; i++)
+        //         //     {
+        //         //         Vector3 pos = PlayerHands.hands.blockSelectMenu.transform.GetChild(i).localPosition;
+        //         //         pos.x *= -1f;
+        //         //         PlayerHands.hands.blockSelectMenu.transform.GetChild(i).localPosition = pos;
+        //         //     }
+        //         // }
+        //
+        //         menu.transform.position = holdPosition.position;
+        //
+        //         //Vector3 forward = holdPosition.position - PlayerHands.hands.head.position;
+        //         //forward.y = 0;
+        //         Vector3 forward = PlayerHands.hands.head.forward;
+        //         //forward.y = 0;
+        //         menu.transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
+        //
+        //         menu.SetActive(true);
+        //     }
+        // }
+        // else
+        // {
+        //     if (menu.activeInHierarchy)
+        //     {
+        //         var fistHits = Physics.OverlapSphere(holdPosition.position, 0.01f, allButHands, QueryTriggerInteraction.Collide);
+        //         foreach (var hit in fistHits)
+        //         {
+        //             TriggerAction triggerAction = hit.GetComponent<TriggerAction>();
+        //             if (triggerAction != null)
+        //             {
+        //                 if (triggerAction.action != null)
+        //                     triggerAction.action.Invoke();
+        //                 if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        //                 {
+        //                     if (triggerAction.leftAction != null)
+        //                         triggerAction.leftAction.Invoke();
+        //                 }
+        //                 if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
+        //                 {
+        //                     if (triggerAction.rightAction != null)
+        //                         triggerAction.rightAction.Invoke();
+        //                 }
+        //
+        //                 break;
+        //             }
+        //         }
+        //
+        //         menu.SetActive(false);
+        //     }
+        // }
         lastFist = fistMinStrength > 0.7f;
         lastIndexPinching = indexPinching;
     }
