@@ -185,11 +185,12 @@ public class NetworkManagerGame : NobleNetworkManager
 
     IEnumerator StopHostFadeReturnToLoading()
     {
-        StopHost();
-       //fader.FadeOut();
+       fader.FadeOut();
        yield return new WaitForSeconds(fader.fadeTime);
-       //fader.FadeIn();
-        State = ConnectionState.Loading;
+       StopHost();
+       yield return new WaitForSeconds(0.5f);
+       State = ConnectionState.Loading;
+       fader.FadeIn();
         
     }
 
@@ -271,6 +272,16 @@ public class NetworkManagerGame : NobleNetworkManager
         }
     }
 
+    IEnumerator FadeToState(ConnectionState newState)
+    {
+        fader.FadeOut();
+        yield return new WaitForSeconds(fader.fadeTime);
+        State = newState;
+        yield return new WaitForSeconds(0.5f);
+        fader.FadeIn();
+    }
+
+    
     private void HandleState(ConnectionState state, Work work)
     {
         switch (state)
@@ -284,7 +295,8 @@ public class NetworkManagerGame : NobleNetworkManager
                 {
                     
                     //if (fader.currentAlpha != 0) fader.FadeIn();
-                    textMesh.text = "Could not link desk\n\n\n\n(reconnect)";
+                    isLANOnly = true;
+                    textMesh.text = "Internet Disconnected!\n\n\n\n(reconnect)";
                     Debug.Log("[BONSAI] RelayError Setup");
                     ActivateButtons(relayFailedButtons, waitBeforeSpawnButton);
                 }
@@ -431,6 +443,7 @@ public class NetworkManagerGame : NobleNetworkManager
     private IEnumerator StartHostAfterDisconnect()
     {
         while (isDisconnecting) yield return null;
+        // 
         if (HostEndPoint == null || isLANOnly)
         {
             Debug.Log("[BONSAI] StartHostAfterDisconnect StartHost ");
@@ -446,8 +459,11 @@ public class NetworkManagerGame : NobleNetworkManager
     {
         fader.FadeOut();
         yield return new WaitForSeconds(fader.fadeTime);
+        Debug.Log("[BONSAI] SmoothStartClient StopHost");
         StopHost();
-        while (HostEndPoint != null) yield return null;
+        if (HostEndPoint != null) yield return null;
+        Debug.Log("[BONSAI] HostEndPoint == null");
+        Debug.Log("[BONSAI] StartClient");
         StartClient();
     }
 
@@ -505,10 +521,15 @@ public class NetworkManagerGame : NobleNetworkManager
         {
             _roomRequest = www;
             yield return www.SendWebRequest();
-            if (www.isNetworkError || www.isHttpError)
+            if (www.isHttpError)
             {
                 State = ConnectionState.ClientEntry;
                 textMesh.text = "Could Not Find\n\n[" + roomID + "]\n\n(try again)";
+                _roomRequest = null;
+            } else if (www.isNetworkError)
+            {
+                StartCoroutine(FadeToState(ConnectionState.RelayError));
+                //textMesh.text = "Internet not working!\n\n[" + roomID + "]\n\n(try again)";
                 _roomRequest = null;
             }
             else
@@ -560,11 +581,17 @@ public class NetworkManagerGame : NobleNetworkManager
             // wait a little if the request goes to quickly
             yield return delay;
 
-            if (www.isNetworkError || www.isHttpError)
+            if (www.isHttpError)
             {
                 Debug.LogWarning("[BONSAI] CreateRoom FAIL www error");
                 textMesh.text = "Failed to create room\n\n\n\nReset";
                 ActivateButtons(hostButtons, waitBeforeSpawnButton);
+            }
+            else if (www.isNetworkError)
+            {
+                StartCoroutine(FadeToState(ConnectionState.RelayError));
+                //textMesh.text = "Internet not working!\n\n[" + roomID + "]\n\n(try again)";
+                _roomRequest = null;
             }
             else
             {
@@ -682,6 +709,32 @@ public class NetworkManagerGame : NobleNetworkManager
             _camera.cullingMask &= ~(1 << LayerMask.NameToLayer("networkPlayer"));
         if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) return;
         SetCommsActive(_comms, oriented);
+    }
+
+    public override void OnFatalError(string error)
+    {
+        base.OnFatalError(error);
+        Debug.Log("[BONSAI] OnFatalError");
+        Debug.Log(error);
+        State = ConnectionState.RelayError;
+    }
+
+    public override void OnServerError(NetworkConnection conn, int errorCode)
+    {
+        base.OnServerError(conn, errorCode);
+        Debug.Log("[BONSAI] OnServerError");
+    }
+
+    public override void OnClientError(NetworkConnection conn, int errorCode)
+    {
+        base.OnClientError(conn, errorCode);
+        Debug.Log("[BONSAI] OnClientError");
+    }
+
+    public override void OnClientNotReady(NetworkConnection conn)
+    {
+        base.OnClientNotReady(conn);
+        Debug.Log("[BONSAI] OnClientNotReady");
     }
 
     public override void OnServerPrepared(string hostAddress, ushort hostPort)
