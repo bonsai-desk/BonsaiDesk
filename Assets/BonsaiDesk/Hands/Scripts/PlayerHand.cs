@@ -91,6 +91,9 @@ public class PlayerHand : MonoBehaviour
     [HideInInspector]
     public Transform oPointerPose;
 
+    public Camera mainCamera;
+    private int handLayer;
+
     public void ToggleDeleteMode()
     {
         deleteMode = !deleteMode;
@@ -212,6 +215,15 @@ public class PlayerHand : MonoBehaviour
             name = "PointerPoseAdjusted"
         };
         oPointerPose = oPointerPoseGO.transform;
+
+        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        {
+            handLayer = LayerMask.NameToLayer("LeftHand");
+        }
+        else
+        {
+            handLayer = LayerMask.NameToLayer("RightHand");
+        }
     }
 
     public void BackToOriginalColor()
@@ -277,6 +289,15 @@ public class PlayerHand : MonoBehaviour
         // {
         //     test.parent = transform;
         // }
+
+        if (oVRPhysicsHand.IsDataValid && oVRPhysicsHand.IsDataHighConfidence)
+        {
+            mainCamera.cullingMask |= 1 << handLayer;
+        }
+        else
+        {
+            mainCamera.cullingMask &= ~(1 << handLayer);
+        }
 
         oPointerPose.position = cameraRig.TransformPoint(oVRHand.PointerPose.position);
         oPointerPose.rotation = cameraRig.rotation * oVRHand.PointerPose.rotation;
