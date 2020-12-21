@@ -117,7 +117,7 @@ public class NetworkManagerGame : NobleNetworkManager
     private Coroutine _refreshRoomCoroutine;
     private UnityWebRequest _roomRequest;
 
-    private ConnectionState State
+    public ConnectionState State
     {
         get => _connectionState;
         set
@@ -129,7 +129,7 @@ public class NetworkManagerGame : NobleNetworkManager
         }
     }
 
-    private enum ConnectionState
+    public enum ConnectionState
     {
         Loading,
         Neutral,

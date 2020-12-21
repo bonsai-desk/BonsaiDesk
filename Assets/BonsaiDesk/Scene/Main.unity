@@ -1690,6 +1690,7 @@ GameObject:
   m_Component:
   - component: {fileID: 217350384}
   - component: {fileID: 217350383}
+  - component: {fileID: 217350389}
   - component: {fileID: 217350385}
   - component: {fileID: 217350388}
   - component: {fileID: 217350387}
@@ -1762,7 +1763,7 @@ MonoBehaviour:
   maxConnections: 4
   disconnectInactiveConnections: 0
   disconnectInactiveTimeout: 60
-  authenticator: {fileID: 0}
+  authenticator: {fileID: 217350389}
   playerPrefab: {fileID: 8502092791694960064, guid: 7a3d891c413afec4b8225c317854d9f8,
     type: 3}
   autoCreatePlayer: 1
@@ -1904,6 +1905,24 @@ MonoBehaviour:
   _playerPriority: 0
   _tokens:
     _tokens: []
+--- !u!114 &217350389
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 217350381}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bb9c96253d4ef54aafd4d7287c111a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  OnServerAuthenticated:
+    m_PersistentCalls:
+      m_Calls: []
+  OnClientAuthenticated:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &223974226
 GameObject:
   m_ObjectHideFlags: 0
