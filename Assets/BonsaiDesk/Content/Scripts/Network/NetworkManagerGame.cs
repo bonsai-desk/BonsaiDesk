@@ -131,6 +131,7 @@ public class NetworkManagerGame : NobleNetworkManager
 
     public enum ConnectionState
     {
+        Waking,
         Loading,
         Neutral,
         HostCreating,
@@ -243,10 +244,15 @@ public class NetworkManagerGame : NobleNetworkManager
         var updateText = true;
         switch (state)
         {
+            // Default state on start
+            case ConnectionState.Waking:
+                break;
+            
             // Waiting for a HostEndPoint
             case ConnectionState.Loading:
                 if (work == Work.Setup)
                 {
+                    if (client != null) StopClient();
                     GameObject.Find("GameManager").GetComponent<MoveToDesk>()
                         .SetTableEdge(GameObject.Find("DefaultEdge").transform);
                     SetCommsActive(_comms, false);
@@ -326,7 +332,13 @@ public class NetworkManagerGame : NobleNetworkManager
 
             // Client give room tag to Bonsai for HostEndPoint and connects
             case ConnectionState.ClientConnecting:
-                if (work == Work.Setup) StartCoroutine(JoinRoom(apiBaseUri, _enteredRoomTag));
+                if (work == Work.Setup)
+                {
+                    StartCoroutine(JoinRoom(apiBaseUri, _enteredRoomTag));
+                }
+                else
+                {
+                }
 
                 break;
 
@@ -704,7 +716,9 @@ public class NetworkManagerGame : NobleNetworkManager
     public override void OnServerDisconnect(NetworkConnection conn)
     {
         Debug.Log("[BONSAI] OnServerDisconnect");
-        base.OnServerDisconnect(conn);
+
+        if (conn.isAuthenticated)
+        {
         var spotId = playerInfo[conn].spot;
 
         var spotUsedCount = 0;
@@ -719,16 +733,23 @@ public class NetworkManagerGame : NobleNetworkManager
             if (netIdentity != null && (netIdentity.gameObject.CompareTag("KeepOnDisconnect") ||
                                         netIdentity.gameObject.CompareTag("BlockArea")))
                 netIdentity.RemoveClientAuthority();
-
-        NetworkServer.DestroyPlayerForConnection(conn);
+        
+        base.OnServerDisconnect(conn);
 
         // triggers when last client leaves
         if (NetworkServer.connections.Count == 1) State = ConnectionState.Loading;
+        }
+
     }
 
     public override void OnClientConnect(NetworkConnection conn)
     {
         Debug.Log("[BONSAI] OnClientConnect");
+        
+        // TODO explain this
+        //if (conn.isReady && conn.connectionId == NetworkServer.localConnection.connectionId) return;
+        if (conn.isReady) return;
+            
         base.OnClientConnect(conn);
 
         NetworkClient.RegisterHandler<SpotMessage>(OnSpot);

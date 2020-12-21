@@ -65,6 +65,8 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator
         yield return new WaitForSeconds(waitTime);
 
         // Reject the unsuccessful authentication
+        // The client should have disconnected by now
+        // This will throw a warning 
         ServerReject(conn);
     }
 
@@ -101,14 +103,17 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator
             ClientAccept(conn);
             
         }
-        else
+        else if (msg.code == 200)
         {
             // Authentication has been rejected
-        Debug.Log("[BONSAI] ClientReject");
-            ClientReject(conn);
-            
+            Debug.Log("[BONSAI] ClientReject");
+            // TODO try both!
+            //ClientReject(conn);
+            NetworkManagerGame.singleton.State = NetworkManagerGame.ConnectionState.Loading;
+
         }
     }
+
 
     #endregion
 }
