@@ -103,6 +103,7 @@ public class NetworkManagerGame : NobleNetworkManager
     public float refreshRoomEverySeconds = 5;
 
     public GameObject neutralButtons;
+    public GameObject relayFailedButtons;
     public GameObject hostButtons;
     public GameObject clientButtons;
     public GameObject hostStartedButtons;
@@ -123,6 +124,7 @@ public class NetworkManagerGame : NobleNetworkManager
         set
         {
             if (_connectionState == value) Debug.LogWarning("[BONSAI] Trying to set state to itself: " + State);
+            Debug.Log("[BONSAI] HandleState Setup " + value);
             HandleState(_connectionState, Work.Cleanup);
             _connectionState = value;
             HandleState(value, Work.Setup);
@@ -132,6 +134,7 @@ public class NetworkManagerGame : NobleNetworkManager
     public enum ConnectionState
     {
         Waking,
+        RelayError,
         Loading,
         Neutral,
         HostCreating,
@@ -175,6 +178,26 @@ public class NetworkManagerGame : NobleNetworkManager
             conn.Send(NetworkSyncTest.GetNumberMessage());
     }
 
+    public void ClickRelayFailed()
+    {
+        StartCoroutine(StopHostFadeReturnToLoading());
+    }
+
+    IEnumerator StopHostFadeReturnToLoading()
+    {
+        StopHost();
+       //fader.FadeOut();
+       yield return new WaitForSeconds(fader.fadeTime);
+       //fader.FadeIn();
+        State = ConnectionState.Loading;
+        
+    }
+
+    public void ClickFadeThenReturnToLoading()
+    {
+        StartCoroutine(FadeThenReturnToLoading());
+    }
+
     public void ClickStartHost()
     {
         State = ConnectionState.HostCreating;
@@ -196,8 +219,7 @@ public class NetworkManagerGame : NobleNetworkManager
         if (_enteredRoomTag.Length >= roomTagLength && _roomRequest == null)
             State = ConnectionState.ClientConnecting;
         else
-            UpdateText(textMesh, ConnectionState.ClientEntry, enteredRoomTag: _enteredRoomTag,
-                fakeRoomTag: _fakeRoomTag);
+            UpdateClientEntryText();
     }
 
     public void ClickStopClient()
@@ -218,6 +240,16 @@ public class NetworkManagerGame : NobleNetworkManager
     #endregion Buttons
 
     #region Utilities
+
+    private void UpdateClientEntryText()
+    {
+
+        var displayRoomTag = _enteredRoomTag + _fakeRoomTag.Substring(
+            0, _fakeRoomTag.Count() - _enteredRoomTag.Count());
+    
+        textMesh.text = "Join\n\n" + displayRoomTag;
+        
+    }
 
     private void OnShouldDisconnect(ShouldDisconnectMessage _)
     {
@@ -241,23 +273,41 @@ public class NetworkManagerGame : NobleNetworkManager
 
     private void HandleState(ConnectionState state, Work work)
     {
-        var updateText = true;
         switch (state)
         {
             // Default state on start
             case ConnectionState.Waking:
+                break;
+            
+            case ConnectionState.RelayError:
+                if (work == Work.Setup)
+                {
+                    
+                    //if (fader.currentAlpha != 0) fader.FadeIn();
+                    textMesh.text = "Could not link desk\n\n\n\n(reconnect)";
+                    Debug.Log("[BONSAI] RelayError Setup");
+                    ActivateButtons(relayFailedButtons, waitBeforeSpawnButton);
+                }
+                else
+                {
+                    Debug.Log("[BONSAI] RelayError Cleanup");
+                    DisableButtons(relayFailedButtons);
+                }
+
                 break;
 
             // Waiting for a HostEndPoint
             case ConnectionState.Loading:
                 if (work == Work.Setup)
                 {
+                    Debug.Log("[BONSAI] Loading Setup isLanOnly " + isLANOnly);
+                    
+                    textMesh.text = "Setting Up";
                     if (client != null) StopClient();
                     GameObject.Find("GameManager").GetComponent<MoveToDesk>()
                         .SetTableEdge(GameObject.Find("DefaultEdge").transform);
                     SetCommsActive(_comms, false);
 
-                    if (HostEndPoint != null) updateText = false;
                     StartCoroutine(StartHostAfterDisconnect());
                 }
 
@@ -267,6 +317,9 @@ public class NetworkManagerGame : NobleNetworkManager
             case ConnectionState.Neutral:
                 if (work == Work.Setup)
                 {
+                    var end = "    |    Join Desk";
+                    textMesh.text = "Open Desk" + end;
+                    
                     if (fader.currentAlpha != 0) fader.FadeIn();
                     ActivateButtons(neutralButtons, waitBeforeSpawnButton);
                 }
@@ -280,7 +333,10 @@ public class NetworkManagerGame : NobleNetworkManager
             // Post and wait for room tag from Bonsai
             case ConnectionState.HostCreating:
                 if (work == Work.Setup)
+                {
+                    textMesh.text = "\nOpening\n\n\n\nClose Desk";
                     StartCoroutine(PostCreateRoom(HostEndPoint.Address.ToString(), (ushort) HostEndPoint.Port));
+                } 
 
                 break;
 
@@ -288,6 +344,7 @@ public class NetworkManagerGame : NobleNetworkManager
             case ConnectionState.HostWaiting:
                 if (work == Work.Setup)
                 {
+                    textMesh.text = "\n" + _assignedRoomTag + "\n\n\n\nClose Desk";
                     _refreshRoomCoroutine = StartCoroutine(RefreshRoomEverySeconds());
                     ActivateButtons(hostButtons, waitBeforeSpawnButton);
                 }
@@ -304,6 +361,7 @@ public class NetworkManagerGame : NobleNetworkManager
             case ConnectionState.Hosting:
                 if (work == Work.Setup)
                 {
+                    textMesh.text = "Exit";
                     ActivateButtons(hostStartedButtons, waitBeforeSpawnButton);
                     SetCommsActive(_comms, true);
                 }
@@ -321,6 +379,7 @@ public class NetworkManagerGame : NobleNetworkManager
                 if (work == Work.Setup)
                 {
                     _enteredRoomTag = "";
+                    UpdateClientEntryText();
                     ActivateButtons(clientButtons, waitBeforeSpawnButton);
                 }
                 else
@@ -334,6 +393,7 @@ public class NetworkManagerGame : NobleNetworkManager
             case ConnectionState.ClientConnecting:
                 if (work == Work.Setup)
                 {
+                    textMesh.text = "Join\n\n[" + _enteredRoomTag + "]";
                     StartCoroutine(JoinRoom(apiBaseUri, _enteredRoomTag));
                 }
 
@@ -343,6 +403,8 @@ public class NetworkManagerGame : NobleNetworkManager
             case ConnectionState.ClientConnected:
                 if (work == Work.Setup)
                 {
+                    
+                    textMesh.text = "Exit";
                     fader.FadeIn();
                     ActivateButtons(clientStartedButtons, waitBeforeSpawnButton);
                     SetCommsActive(_comms, true);
@@ -357,21 +419,27 @@ public class NetworkManagerGame : NobleNetworkManager
                 break;
 
             default:
+                textMesh.text = "UpdateText switch default";
                 Debug.LogError("[BONSAI] HandleState not handled");
                 break;
         }
 
-        if (work == Work.Setup && updateText)
-            UpdateText(textMesh, state, _assignedRoomTag, _enteredRoomTag, _fakeRoomTag);
+       //if (work == Work.Setup && updateText)
+       //    UpdateText(textMesh, state, _assignedRoomTag, _enteredRoomTag, _fakeRoomTag);
     }
 
     private IEnumerator StartHostAfterDisconnect()
     {
         while (isDisconnecting) yield return null;
-        if (HostEndPoint == null)
+        if (HostEndPoint == null || isLANOnly)
+        {
+            Debug.Log("[BONSAI] StartHostAfterDisconnect StartHost ");
+            isLANOnly = false;
             StartHost();
+        }
         else
             State = ConnectionState.Neutral;
+        
     }
 
     private IEnumerator SmoothStartClient()
@@ -388,55 +456,6 @@ public class NetworkManagerGame : NobleNetworkManager
         fader.FadeOut();
         yield return new WaitForSeconds(fader.fadeTime);
         State = ConnectionState.Loading;
-    }
-
-    private static void UpdateText(TextMeshProUGUI textMeshPro, ConnectionState newState,
-        string assignedRoomTag = "none",
-        string enteredRoomTag = "none", string fakeRoomTag = "none"
-    )
-    {
-        switch (newState)
-        {
-            case ConnectionState.Loading:
-                textMeshPro.text = "Setting Up";
-                break;
-
-            case ConnectionState.ClientEntry:
-                var displayRoomTag = enteredRoomTag + fakeRoomTag.Substring(
-                    0, fakeRoomTag.Count() - enteredRoomTag.Count()
-                );
-                textMeshPro.text = "Join\n\n" + displayRoomTag;
-                break;
-
-            case ConnectionState.ClientConnecting:
-                textMeshPro.text = "Join\n\n[" + enteredRoomTag + "]";
-                break;
-
-            case ConnectionState.ClientConnected:
-                textMeshPro.text = "Exit";
-                break;
-
-            case ConnectionState.HostCreating:
-                textMeshPro.text = "\nOpening\n\n\n\nClose Desk";
-                break;
-
-            case ConnectionState.HostWaiting:
-                textMeshPro.text = "\n" + assignedRoomTag + "\n\n\n\nClose Desk";
-                break;
-
-            case ConnectionState.Hosting:
-                textMeshPro.text = "Exit";
-                break;
-
-            case ConnectionState.Neutral:
-                var end = "    |    Join Desk";
-                textMeshPro.text = "Open Desk" + end;
-                break;
-
-            default:
-                textMeshPro.text = "UpdateText switch default";
-                break;
-        }
     }
 
     private void ActivateButtons(GameObject buttons, float delayTime)
@@ -667,15 +686,34 @@ public class NetworkManagerGame : NobleNetworkManager
 
     public override void OnServerPrepared(string hostAddress, ushort hostPort)
     {
-        Debug.Log("[BONSAI] OnServerPrepared: " + hostAddress + ":" + hostPort);
 
+        Debug.Log("[BONSAI] OnServerPrepared isLanOnly: " + isLANOnly);
+        Debug.Log("[BONSAI] OnServerPrepared: " + hostAddress + ":" + hostPort);
+        
         // triggers on startup
-        State = ConnectionState.Neutral;
+        if (!isLANOnly)
+        {
+            State = ConnectionState.Neutral;
+        }
+        else
+        {
+        State = ConnectionState.RelayError;
+        }
+        
     }
 
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+        Debug.Log("[BONSAI] OnStartServer isLanOnly " + isLANOnly);
+    }
+    
     public override void OnServerConnect(NetworkConnection conn)
     {
         Debug.Log("[BONSAI] OnServerConnect");
+
+        
+        
         base.OnServerConnect(conn);
         var openSpotId = -1;
         for (var i = 0; i < spotInUse.Length; i++)
