@@ -443,7 +443,7 @@ public class NetworkManagerGame : NobleNetworkManager
     private IEnumerator StartHostAfterDisconnect()
     {
         while (isDisconnecting) yield return null;
-        // 
+        
         if (HostEndPoint == null || isLANOnly)
         {
             Debug.Log("[BONSAI] StartHostAfterDisconnect StartHost ");
@@ -452,6 +452,8 @@ public class NetworkManagerGame : NobleNetworkManager
         }
         else
             State = ConnectionState.Neutral;
+        
+        if (fader.currentAlpha != 0) fader.FadeIn();
         
     }
 
@@ -858,7 +860,7 @@ public class NetworkManagerGame : NobleNetworkManager
         NetworkSyncTest.UnregisterHandlers();
 
         switch (State)
-        {
+       {
             case ConnectionState.ClientConnected:
                 // this happens on client when the host exits rudely (power off, etc)
                 // base method stops client with a delay so it can gracefully disconnct
