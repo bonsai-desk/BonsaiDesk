@@ -247,7 +247,7 @@ public class NetworkManagerGame : NobleNetworkManager
             // Default state on start
             case ConnectionState.Waking:
                 break;
-            
+
             // Waiting for a HostEndPoint
             case ConnectionState.Loading:
                 if (work == Work.Setup)
@@ -335,9 +335,6 @@ public class NetworkManagerGame : NobleNetworkManager
                 if (work == Work.Setup)
                 {
                     StartCoroutine(JoinRoom(apiBaseUri, _enteredRoomTag));
-                }
-                else
-                {
                 }
 
                 break;
@@ -719,37 +716,36 @@ public class NetworkManagerGame : NobleNetworkManager
 
         if (conn.isAuthenticated)
         {
-        var spotId = playerInfo[conn].spot;
+            var spotId = playerInfo[conn].spot;
 
-        var spotUsedCount = 0;
-        foreach (var player in playerInfo)
-            if (player.Value.spot == spotId)
-                spotUsedCount++;
-        if (spotUsedCount <= 1) spotInUse[spotId] = false;
-        playerInfo.Remove(conn);
+            var spotUsedCount = 0;
+            foreach (var player in playerInfo)
+                if (player.Value.spot == spotId)
+                    spotUsedCount++;
+            if (spotUsedCount <= 1) spotInUse[spotId] = false;
+            playerInfo.Remove(conn);
 
-        var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
-        foreach (var netIdentity in tmp)
-            if (netIdentity != null && (netIdentity.gameObject.CompareTag("KeepOnDisconnect") ||
-                                        netIdentity.gameObject.CompareTag("BlockArea")))
-                netIdentity.RemoveClientAuthority();
-        
-        base.OnServerDisconnect(conn);
+            var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
+            foreach (var netIdentity in tmp)
+                if (netIdentity != null && (netIdentity.gameObject.CompareTag("KeepOnDisconnect") ||
+                                            netIdentity.gameObject.CompareTag("BlockArea")))
+                    netIdentity.RemoveClientAuthority();
 
-        // triggers when last client leaves
-        if (NetworkServer.connections.Count == 1) State = ConnectionState.Loading;
+            base.OnServerDisconnect(conn);
+
+            // triggers when last client leaves
+            if (NetworkServer.connections.Count == 1) State = ConnectionState.Loading;
         }
-
     }
 
     public override void OnClientConnect(NetworkConnection conn)
     {
         Debug.Log("[BONSAI] OnClientConnect");
-        
+
         // TODO explain this
         //if (conn.isReady && conn.connectionId == NetworkServer.localConnection.connectionId) return;
         if (conn.isReady) return;
-            
+
         base.OnClientConnect(conn);
 
         NetworkClient.RegisterHandler<SpotMessage>(OnSpot);
