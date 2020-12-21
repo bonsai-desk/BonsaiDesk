@@ -54,9 +54,11 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator
                 code = 200
             };
             Debug.Log("[BONSAI] OnServerAuthenticate 200");
-            conn.Send(authResponseMessage);
             conn.isAuthenticated = false;
-            StartCoroutine(DelayedDisconnect(conn, 1));
+            ServerReject(conn);
+            
+           // conn.Send(authResponseMessage);
+           // StartCoroutine(DelayedDisconnect(conn, 1));
         }
     }
 
