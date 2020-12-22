@@ -36,7 +36,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator
     /// <param name="conn">Connection to client.</param>
     public override void OnServerAuthenticate(NetworkConnection conn)
     {
-        if (NetworkManagerGame.singleton.State == NetworkManagerGame.ConnectionState.HostWaiting ||
+        if (NetworkManagerGame.Singleton.State == NetworkManagerGame.ConnectionState.HostWaiting ||
             conn.connectionId == NetworkServer.localConnection.connectionId)
         {
             var authResponseMessage = new AuthResponseMessage
@@ -110,7 +110,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator
             Debug.Log("[BONSAI] ClientReject");
             // TODO try both!
             //ClientReject(conn);
-            NetworkManagerGame.singleton.State = NetworkManagerGame.ConnectionState.Loading;
+            NetworkManagerGame.Singleton.State = NetworkManagerGame.ConnectionState.Loading;
         }
     }
 

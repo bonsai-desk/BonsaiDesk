@@ -10,21 +10,21 @@ public class ServerVideoSync : NetworkBehaviour
 
     private void SyncUpdate()
     {
-        switch (NetworkManagerGame.singleton.videoState)
+        switch (NetworkManagerGame.Singleton.videoState)
         {
             case NetworkManagerGame.VideoState.None:
                 break;
 
             case NetworkManagerGame.VideoState.Cued:
                 bool readyToPlay = true;
-                foreach (var player in NetworkManagerGame.singleton.PlayerInfos)
+                foreach (var player in NetworkManagerGame.Singleton.PlayerInfos)
                 {
                     if (player.Value.youtubePlayerState != 5)
                         readyToPlay = false;
                 }
                 if (readyToPlay)
                 {
-                    NetworkManagerGame.singleton.videoState = NetworkManagerGame.VideoState.Playing;
+                    NetworkManagerGame.Singleton.videoState = NetworkManagerGame.VideoState.Playing;
                     NetworkServer.SendToAll(new NetworkManagerGame.ActionMessage()
                     {
                         ActionId = 0

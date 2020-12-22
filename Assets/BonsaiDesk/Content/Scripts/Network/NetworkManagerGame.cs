@@ -13,7 +13,7 @@ using UnityEngine.Networking;
 
 public class NetworkManagerGame : NobleNetworkManager
 {
-    public new static NetworkManagerGame singleton;
+    public new static NetworkManagerGame Singleton;
 
     public MoveToDesk moveToDesk;
 
@@ -569,8 +569,8 @@ public class NetworkManagerGame : NobleNetworkManager
     {
         base.Awake();
 
-        if (singleton == null)
-            singleton = this;
+        if (Singleton == null)
+            Singleton = this;
     }
 
     public override void Start()
