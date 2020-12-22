@@ -11,21 +11,6 @@ using UnityEngine;
 using UnityEngine.Android;
 using UnityEngine.Networking;
 
-public struct SpotMessage : NetworkMessage
-{
-    public int ColorIndex;
-    public int SpotId;
-}
-
-public struct ActionMessage : NetworkMessage
-{
-    public int ActionId;
-}
-
-public struct ShouldDisconnectMessage : NetworkMessage
-{
-}
-
 public class NetworkManagerGame : NobleNetworkManager
 {
     public static NetworkManagerGame Singleton;
@@ -804,6 +789,20 @@ public class NetworkManagerGame : NobleNetworkManager
 
     #region Messages
 
+    private struct ShouldDisconnectMessage : NetworkMessage
+    {
+    }
+
+    public struct SpotMessage : NetworkMessage
+    {
+        public int ColorIndex;
+        public int SpotId;
+    }
+
+    public struct ActionMessage : NetworkMessage
+    {
+        public int ActionId;
+    }
 
     private static void OnSpot(NetworkConnection conn, SpotMessage msg)
     {
