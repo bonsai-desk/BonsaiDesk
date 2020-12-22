@@ -793,7 +793,7 @@ public class NetworkManagerGame : NobleNetworkManager
     {
     }
 
-    private class SpotMessage : NetworkMessage
+    public class SpotMessage : NetworkMessage
     {
         public int ColorIndex;
         public int SpotId;
