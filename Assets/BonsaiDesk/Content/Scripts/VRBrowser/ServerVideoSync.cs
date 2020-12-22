@@ -17,7 +17,7 @@ public class ServerVideoSync : NetworkBehaviour
 
             case NetworkManagerGame.VideoState.Cued:
                 bool readyToPlay = true;
-                foreach (var player in NetworkManagerGame.singleton.playerInfo)
+                foreach (var player in NetworkManagerGame.singleton.playerInfos)
                 {
                     if (player.Value.youtubePlayerState != 5)
                         readyToPlay = false;

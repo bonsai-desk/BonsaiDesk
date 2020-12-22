@@ -272,13 +272,13 @@ public class NetworkVRPlayer : NetworkBehaviour
     [Command]
     public void CmdUpdateYoutubePlayerState(int state)
     {
-        NetworkManagerGame.singleton.playerInfo[connectionToClient].youtubePlayerState = state;
+        NetworkManagerGame.singleton.playerInfos[connectionToClient].youtubePlayerState = state;
     }
 
     [Command]
     public void CmdUpdateYoutubePlayerCurrentTime(float currentTime)
     {
-        NetworkManagerGame.singleton.playerInfo[connectionToClient].youtubePlayerCurrentTime = currentTime;
+        NetworkManagerGame.singleton.playerInfos[connectionToClient].youtubePlayerCurrentTime = currentTime;
     }
 
     [Command]
