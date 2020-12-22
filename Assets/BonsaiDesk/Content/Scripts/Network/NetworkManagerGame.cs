@@ -38,11 +38,6 @@ public class NetworkManagerGame : NobleNetworkManager
         }
     }
 
-    public void ResetPlayerInfoTime()
-    {
-        foreach (var player in playerInfo) player.Value.youtubePlayerCurrentTime = 0;
-    }
-
     private readonly bool[] spotInUse = new bool[2];
 
     public static int colorIndex;
@@ -123,13 +118,8 @@ public class NetworkManagerGame : NobleNetworkManager
 
     #endregion
 
-    #region Buttons
-
-    public void ClickRelayFailed()
-    {
-        StartCoroutine(StopHostFadeReturnToLoading());
-    }
-
+    #region Utilities
+    
     private IEnumerator StopHostFadeReturnToLoading()
     {
         fader.FadeOut();
@@ -139,49 +129,6 @@ public class NetworkManagerGame : NobleNetworkManager
         State = ConnectionState.Loading;
         fader.FadeIn();
     }
-
-    public void ClickStartHost()
-    {
-        State = ConnectionState.HostCreating;
-    }
-
-    public void ClickStopHost()
-    {
-        State = ConnectionState.Neutral;
-    }
-
-    public void ClickStartClient()
-    {
-        State = ConnectionState.ClientEntry;
-    }
-
-    public void AppendRoomString(string s)
-    {
-        _enteredRoomTag += s;
-        if (_enteredRoomTag.Length >= roomTagLength && _roomRequest == null)
-            State = ConnectionState.ClientConnecting;
-        else
-            UpdateClientEntryText();
-    }
-
-    public void ClickStopClient()
-    {
-        State = ConnectionState.Loading;
-    }
-
-    public void ClickExitClient()
-    {
-        StartCoroutine(FadeThenReturnToLoading());
-    }
-
-    public void ClickExitHost()
-    {
-        State = ConnectionState.Loading;
-    }
-
-    #endregion Buttons
-
-    #region Utilities
 
     private void UpdateClientEntryText()
     {
@@ -793,6 +740,54 @@ public class NetworkManagerGame : NobleNetworkManager
     }
 
     #endregion
+    
+    #region Buttons
+
+    public void ClickRelayFailed()
+    {
+        StartCoroutine(StopHostFadeReturnToLoading());
+    }
+
+    public void ClickStartHost()
+    {
+        State = ConnectionState.HostCreating;
+    }
+
+    public void ClickStopHost()
+    {
+        State = ConnectionState.Neutral;
+    }
+    
+    public void ClickExitHost()
+    {
+        State = ConnectionState.Loading;
+    }
+
+    public void AppendRoomString(string s)
+    {
+        _enteredRoomTag += s;
+        if (_enteredRoomTag.Length >= roomTagLength && _roomRequest == null)
+            State = ConnectionState.ClientConnecting;
+        else
+            UpdateClientEntryText();
+    }
+    
+    public void ClickStartClient()
+    {
+        State = ConnectionState.ClientEntry;
+    }
+
+    public void ClickStopClient()
+    {
+        State = ConnectionState.Loading;
+    }
+
+    public void ClickExitClient()
+    {
+        StartCoroutine(FadeThenReturnToLoading());
+    }
+
+    #endregion Buttons
 
     #region Messages
 
