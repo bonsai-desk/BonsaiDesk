@@ -10,29 +10,29 @@ public class ServerVideoSync : NetworkBehaviour
 
     private void SyncUpdate()
     {
-        switch (NetworkManagerGame.singleton.videoState)
+        switch (NetworkManagerGame.Singleton.videoState)
         {
-            case NetworkManagerGame.VideoState.none:
+            case NetworkManagerGame.VideoState.None:
                 break;
 
-            case NetworkManagerGame.VideoState.cued:
+            case NetworkManagerGame.VideoState.Cued:
                 bool readyToPlay = true;
-                foreach (var player in NetworkManagerGame.singleton.playerInfo)
+                foreach (var player in NetworkManagerGame.Singleton.PlayerInfos)
                 {
                     if (player.Value.youtubePlayerState != 5)
                         readyToPlay = false;
                 }
                 if (readyToPlay)
                 {
-                    NetworkManagerGame.singleton.videoState = NetworkManagerGame.VideoState.playing;
+                    NetworkManagerGame.Singleton.videoState = NetworkManagerGame.VideoState.Playing;
                     NetworkServer.SendToAll(new NetworkManagerGame.ActionMessage()
                     {
-                        actionId = 0
+                        ActionId = 0
                     });
                 }
                 break;
 
-            case NetworkManagerGame.VideoState.playing:
+            case NetworkManagerGame.VideoState.Playing:
                 // float acceptableDifference = 1f;
                 // float min = Mathf.Infinity;
                 // foreach (var player in NetworkManagerGame.singleton.playerInfo)

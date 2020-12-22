@@ -201,7 +201,7 @@ public class NetworkVRPlayer : NetworkBehaviour
     [Command]
     private void CmdPlayVideo(string videoId)
     {
-        NetworkManagerGame.singleton.videoState = NetworkManagerGame.VideoState.cued;
+        NetworkManagerGame.Singleton.videoState = NetworkManagerGame.VideoState.Cued;
         RpcPlayVideo(videoId);
     }
 
@@ -259,7 +259,7 @@ public class NetworkVRPlayer : NetworkBehaviour
     [Command]
     private void CmdStopVideo()
     {
-        NetworkManagerGame.singleton.videoState = NetworkManagerGame.VideoState.none;
+        NetworkManagerGame.Singleton.videoState = NetworkManagerGame.VideoState.None;
         RpcStopVideo();
     }
 
@@ -272,13 +272,13 @@ public class NetworkVRPlayer : NetworkBehaviour
     [Command]
     public void CmdUpdateYoutubePlayerState(int state)
     {
-        NetworkManagerGame.singleton.playerInfo[connectionToClient].youtubePlayerState = state;
+        NetworkManagerGame.Singleton.PlayerInfos[connectionToClient].youtubePlayerState = state;
     }
 
     [Command]
     public void CmdUpdateYoutubePlayerCurrentTime(float currentTime)
     {
-        NetworkManagerGame.singleton.playerInfo[connectionToClient].youtubePlayerCurrentTime = currentTime;
+        NetworkManagerGame.Singleton.PlayerInfos[connectionToClient].youtubePlayerCurrentTime = currentTime;
     }
 
     [Command]

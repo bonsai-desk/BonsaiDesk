@@ -17,7 +17,7 @@ public class VRNetworkHUD : MonoBehaviour
 
     private void Start()
     {
-        manager = NetworkManagerGame.singleton;
+        manager = NetworkManagerGame.Singleton;
     }
 
     private void Update()

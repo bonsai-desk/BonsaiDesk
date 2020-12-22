@@ -55,17 +55,17 @@ public class NetworkControl : MonoBehaviour
 
     public void startHost()
     {
-        NetworkManagerGame.singleton.StartHost();
+        NetworkManagerGame.Singleton.StartHost();
     }
 
     public void startServer()
     {
-        NetworkManagerGame.singleton.StartServer();
+        NetworkManagerGame.Singleton.StartServer();
     }
 
     public void join()
     {
-        NetworkManagerGame.singleton.networkAddress = "192.168.1.126";
-        NetworkManagerGame.singleton.StartClient();
+        NetworkManagerGame.Singleton.networkAddress = "192.168.1.126";
+        NetworkManagerGame.Singleton.StartClient();
     }
 }

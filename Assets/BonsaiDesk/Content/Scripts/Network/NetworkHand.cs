@@ -38,7 +38,7 @@ public class NetworkHand : NetworkBehaviour
             renderedFingerRotations[i] = 0;
 
         if (hasAuthority)
-            CmdSetColor(NetworkManagerGame.colorIndex);
+            CmdSetColor(NetworkManagerGame.AssignedColorIndex);
 
         UpdateColor();
     }
