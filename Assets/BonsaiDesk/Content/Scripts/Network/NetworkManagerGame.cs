@@ -21,7 +21,7 @@ public class NetworkManagerGame : NobleNetworkManager
 
     #region Player Props
 
-    public readonly Dictionary<NetworkConnection, PlayerInfo> playerInfos = new Dictionary<NetworkConnection, PlayerInfo>();
+    public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos = new Dictionary<NetworkConnection, PlayerInfo>();
 
     [Serializable]
     public class PlayerInfo
@@ -635,7 +635,7 @@ public class NetworkManagerGame : NobleNetworkManager
         }
 
         _spotInUse[openSpotId] = true;
-        playerInfos.Add(conn, new PlayerInfo(openSpotId));
+        PlayerInfos.Add(conn, new PlayerInfo(openSpotId));
 
         // triggers when client joins
         if (NetworkServer.connections.Count > 1) State = ConnectionState.Hosting;
@@ -646,8 +646,8 @@ public class NetworkManagerGame : NobleNetworkManager
         Debug.Log("[BONSAI] OnServerAddPlayer");
         conn.Send(new SpotMessage
         {
-            spotId = playerInfos[conn].spot,
-            colorIndex = playerInfos[conn].spot
+            spotId = PlayerInfos[conn].spot,
+            colorIndex = PlayerInfos[conn].spot
         });
 
         base.OnServerAddPlayer(conn);
@@ -659,14 +659,14 @@ public class NetworkManagerGame : NobleNetworkManager
 
         if (conn.isAuthenticated)
         {
-            var spotId = playerInfos[conn].spot;
+            var spotId = PlayerInfos[conn].spot;
 
             var spotUsedCount = 0;
-            foreach (var player in playerInfos)
+            foreach (var player in PlayerInfos)
                 if (player.Value.spot == spotId)
                     spotUsedCount++;
             if (spotUsedCount <= 1) _spotInUse[spotId] = false;
-            playerInfos.Remove(conn);
+            PlayerInfos.Remove(conn);
 
             var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
             foreach (var netIdentity in tmp)

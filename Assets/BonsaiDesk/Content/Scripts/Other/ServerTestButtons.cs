@@ -16,7 +16,7 @@ public class ServerTestButtons : MonoBehaviour
     {
         print("----------");
         bool first = true;
-        foreach (var player in NetworkManagerGame.singleton.playerInfos)
+        foreach (var player in NetworkManagerGame.singleton.PlayerInfos)
         {
             if (!first)
                 print("---");
