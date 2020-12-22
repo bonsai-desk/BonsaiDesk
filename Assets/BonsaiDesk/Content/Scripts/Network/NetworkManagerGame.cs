@@ -89,9 +89,13 @@ public class NetworkManagerGame : NobleNetworkManager
         set
         {
             if (_connectionState == value) Debug.LogWarning("[BONSAI] Trying to set state to itself: " + State);
-            Debug.Log("[BONSAI] HandleState Setup " + value);
+            
+            Debug.Log("[BONSAI] HandleState Cleanup " + _connectionState);
             HandleState(_connectionState, Work.Cleanup);
+            
             _connectionState = value;
+            
+            Debug.Log("[BONSAI] HandleState Setup " + value);
             HandleState(value, Work.Setup);
         }
     }
@@ -178,7 +182,6 @@ public class NetworkManagerGame : NobleNetworkManager
             case ConnectionState.RelayError:
                 if (work == Work.Setup)
                 {
-                    //if (fader.currentAlpha != 0) fader.FadeIn();
                     isLANOnly = true;
                     textMesh.text = "Internet Disconnected!\n\n\n\n(reconnect)";
                     Debug.Log("[BONSAI] RelayError Setup");
@@ -186,7 +189,6 @@ public class NetworkManagerGame : NobleNetworkManager
                 }
                 else
                 {
-                    Debug.Log("[BONSAI] RelayError Cleanup");
                     DisableButtons(relayFailedButtons);
                 }
 
@@ -318,9 +320,6 @@ public class NetworkManagerGame : NobleNetworkManager
                 Debug.LogError("[BONSAI] HandleState not handled");
                 break;
         }
-
-        //if (work == Work.Setup && updateText)
-        //    UpdateText(textMesh, state, _assignedRoomTag, _enteredRoomTag, _fakeRoomTag);
     }
 
     private IEnumerator StartHostAfterDisconnect()
