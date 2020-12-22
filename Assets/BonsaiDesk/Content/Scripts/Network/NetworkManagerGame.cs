@@ -38,7 +38,7 @@ public class NetworkManagerGame : NobleNetworkManager
         }
     }
 
-    private readonly bool[] spotInUse = new bool[2];
+    private readonly bool[] _spotInUse = new bool[2];
 
     public static int ColorIndex;
 
@@ -579,8 +579,8 @@ public class NetworkManagerGame : NobleNetworkManager
 
         _camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
 
-        for (var i = 0; i < spotInUse.Length; i++)
-            spotInUse[i] = false;
+        for (var i = 0; i < _spotInUse.Length; i++)
+            _spotInUse[i] = false;
 
         _fakeRoomTag = new string('-', roomTagLength);
 
@@ -621,8 +621,8 @@ public class NetworkManagerGame : NobleNetworkManager
 
         base.OnServerConnect(conn);
         var openSpotId = -1;
-        for (var i = 0; i < spotInUse.Length; i++)
-            if (!spotInUse[i])
+        for (var i = 0; i < _spotInUse.Length; i++)
+            if (!_spotInUse[i])
             {
                 openSpotId = i;
                 break;
@@ -634,7 +634,7 @@ public class NetworkManagerGame : NobleNetworkManager
             openSpotId = 0;
         }
 
-        spotInUse[openSpotId] = true;
+        _spotInUse[openSpotId] = true;
         playerInfos.Add(conn, new PlayerInfo(openSpotId));
 
         // triggers when client joins
@@ -665,7 +665,7 @@ public class NetworkManagerGame : NobleNetworkManager
             foreach (var player in playerInfos)
                 if (player.Value.spot == spotId)
                     spotUsedCount++;
-            if (spotUsedCount <= 1) spotInUse[spotId] = false;
+            if (spotUsedCount <= 1) _spotInUse[spotId] = false;
             playerInfos.Remove(conn);
 
             var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
