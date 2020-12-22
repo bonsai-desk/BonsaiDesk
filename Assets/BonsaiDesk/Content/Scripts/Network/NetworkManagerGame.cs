@@ -40,7 +40,7 @@ public class NetworkManagerGame : NobleNetworkManager
 
     private readonly bool[] _spotInUse = new bool[2];
 
-    public static int ColorIndex;
+    public static int AssignedColorIndex;
 
     #endregion
 
@@ -820,7 +820,7 @@ public class NetworkManagerGame : NobleNetworkManager
                 break;
         }
 
-        ColorIndex = msg.ColorIndex;
+        AssignedColorIndex = msg.ColorIndex;
     }
 
     private static void OnAction(NetworkConnection conn, ActionMessage msg)
