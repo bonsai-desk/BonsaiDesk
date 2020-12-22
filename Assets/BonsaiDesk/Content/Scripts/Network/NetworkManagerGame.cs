@@ -657,36 +657,34 @@ public class NetworkManagerGame : NobleNetworkManager
     {
         Debug.Log("[BONSAI] OnServerDisconnect");
 
-        if (conn.isAuthenticated)
-        {
-            var spotId = PlayerInfos[conn].spot;
+        if (!conn.isAuthenticated) return;
+        
+        var spotId = PlayerInfos[conn].spot;
 
-            var spotUsedCount = 0;
-            foreach (var player in PlayerInfos)
-                if (player.Value.spot == spotId)
-                    spotUsedCount++;
-            if (spotUsedCount <= 1) _spotInUse[spotId] = false;
-            PlayerInfos.Remove(conn);
+        var spotUsedCount = 0;
+        foreach (var player in PlayerInfos)
+            if (player.Value.spot == spotId)
+                spotUsedCount++;
+        if (spotUsedCount <= 1) _spotInUse[spotId] = false;
+        PlayerInfos.Remove(conn);
 
-            var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
-            foreach (var netIdentity in tmp)
-                if (netIdentity != null && (netIdentity.gameObject.CompareTag("KeepOnDisconnect") ||
-                                            netIdentity.gameObject.CompareTag("BlockArea")))
-                    netIdentity.RemoveClientAuthority();
+        var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
+        foreach (var netIdentity in tmp)
+            if (netIdentity != null && (netIdentity.gameObject.CompareTag("KeepOnDisconnect") ||
+                                        netIdentity.gameObject.CompareTag("BlockArea")))
+                netIdentity.RemoveClientAuthority();
 
-            base.OnServerDisconnect(conn);
+        base.OnServerDisconnect(conn);
 
-            // triggers when last client leaves
-            if (NetworkServer.connections.Count == 1) State = ConnectionState.Loading;
-        }
+        // triggers when last client leaves
+        if (NetworkServer.connections.Count == 1) State = ConnectionState.Loading;
     }
 
     public override void OnClientConnect(NetworkConnection conn)
     {
         Debug.Log("[BONSAI] OnClientConnect");
 
-        // TODO explain this
-        //if (conn.isReady && conn.connectionId == NetworkServer.localConnection.connectionId) return;
+        // For some reason OnClientConnect triggers twice occasionally. This is a hack to ignore the second trigger.
         if (conn.isReady) return;
 
         base.OnClientConnect(conn);
