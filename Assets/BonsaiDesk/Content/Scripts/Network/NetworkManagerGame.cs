@@ -646,8 +646,8 @@ public class NetworkManagerGame : NobleNetworkManager
         Debug.Log("[BONSAI] OnServerAddPlayer");
         conn.Send(new SpotMessage
         {
-            spotId = PlayerInfos[conn].spot,
-            colorIndex = PlayerInfos[conn].spot
+            SpotId = PlayerInfos[conn].spot,
+            ColorIndex = PlayerInfos[conn].spot
         });
 
         base.OnServerAddPlayer(conn);
@@ -797,8 +797,8 @@ public class NetworkManagerGame : NobleNetworkManager
 
     private class SpotMessage : NetworkMessage
     {
-        public int colorIndex;
-        public int spotId;
+        public int ColorIndex;
+        public int SpotId;
     }
 
     public class ActionMessage : NetworkMessage
@@ -808,7 +808,7 @@ public class NetworkManagerGame : NobleNetworkManager
 
     private static void OnSpot(NetworkConnection conn, SpotMessage msg)
     {
-        switch (msg.spotId)
+        switch (msg.SpotId)
         {
             case 0:
                 GameObject.Find("GameManager").GetComponent<MoveToDesk>()
@@ -820,7 +820,7 @@ public class NetworkManagerGame : NobleNetworkManager
                 break;
         }
 
-        ColorIndex = msg.colorIndex;
+        ColorIndex = msg.ColorIndex;
     }
 
     private static void OnAction(NetworkConnection conn, ActionMessage msg)
