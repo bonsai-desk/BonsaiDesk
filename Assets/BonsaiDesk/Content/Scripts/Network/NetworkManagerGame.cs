@@ -803,7 +803,7 @@ public class NetworkManagerGame : NobleNetworkManager
 
     public class ActionMessage : NetworkMessage
     {
-        public int actionId;
+        public int ActionId;
     }
 
     private static void OnSpot(NetworkConnection conn, SpotMessage msg)
@@ -825,7 +825,7 @@ public class NetworkManagerGame : NobleNetworkManager
 
     private static void OnAction(NetworkConnection conn, ActionMessage msg)
     {
-        switch (msg.actionId)
+        switch (msg.ActionId)
         {
             case 0: //play video
                 BrowserManager.instance.StartVideo();

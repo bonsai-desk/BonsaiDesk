@@ -27,7 +27,7 @@ public class ServerVideoSync : NetworkBehaviour
                     NetworkManagerGame.singleton.videoState = NetworkManagerGame.VideoState.Playing;
                     NetworkServer.SendToAll(new NetworkManagerGame.ActionMessage()
                     {
-                        actionId = 0
+                        ActionId = 0
                     });
                 }
                 break;
