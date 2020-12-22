@@ -21,7 +21,7 @@ public class NetworkManagerGame : NobleNetworkManager
 
     #region Player Props
 
-    public Dictionary<NetworkConnection, PlayerInfo> playerInfos = new Dictionary<NetworkConnection, PlayerInfo>();
+    public readonly Dictionary<NetworkConnection, PlayerInfo> playerInfos = new Dictionary<NetworkConnection, PlayerInfo>();
 
     [Serializable]
     public class PlayerInfo
