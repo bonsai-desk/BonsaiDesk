@@ -201,7 +201,7 @@ public class NetworkVRPlayer : NetworkBehaviour
     [Command]
     private void CmdPlayVideo(string videoId)
     {
-        NetworkManagerGame.singleton.videoState = NetworkManagerGame.VideoState.cued;
+        NetworkManagerGame.singleton.videoState = NetworkManagerGame.VideoState.Cued;
         RpcPlayVideo(videoId);
     }
 
@@ -259,7 +259,7 @@ public class NetworkVRPlayer : NetworkBehaviour
     [Command]
     private void CmdStopVideo()
     {
-        NetworkManagerGame.singleton.videoState = NetworkManagerGame.VideoState.none;
+        NetworkManagerGame.singleton.videoState = NetworkManagerGame.VideoState.None;
         RpcStopVideo();
     }
 

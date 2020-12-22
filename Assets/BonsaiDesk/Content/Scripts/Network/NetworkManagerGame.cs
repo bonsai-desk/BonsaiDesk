@@ -48,12 +48,12 @@ public class NetworkManagerGame : NobleNetworkManager
 
     public enum VideoState
     {
-        none,
-        cued,
-        playing
+        None,
+        Cued,
+        Playing
     }
 
-    public VideoState videoState = VideoState.none;
+    public VideoState videoState = VideoState.None;
 
     #endregion
 

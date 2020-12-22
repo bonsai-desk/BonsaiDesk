@@ -12,10 +12,10 @@ public class ServerVideoSync : NetworkBehaviour
     {
         switch (NetworkManagerGame.singleton.videoState)
         {
-            case NetworkManagerGame.VideoState.none:
+            case NetworkManagerGame.VideoState.None:
                 break;
 
-            case NetworkManagerGame.VideoState.cued:
+            case NetworkManagerGame.VideoState.Cued:
                 bool readyToPlay = true;
                 foreach (var player in NetworkManagerGame.singleton.playerInfo)
                 {
@@ -24,7 +24,7 @@ public class ServerVideoSync : NetworkBehaviour
                 }
                 if (readyToPlay)
                 {
-                    NetworkManagerGame.singleton.videoState = NetworkManagerGame.VideoState.playing;
+                    NetworkManagerGame.singleton.videoState = NetworkManagerGame.VideoState.Playing;
                     NetworkServer.SendToAll(new NetworkManagerGame.ActionMessage()
                     {
                         actionId = 0
@@ -32,7 +32,7 @@ public class ServerVideoSync : NetworkBehaviour
                 }
                 break;
 
-            case NetworkManagerGame.VideoState.playing:
+            case NetworkManagerGame.VideoState.Playing:
                 // float acceptableDifference = 1f;
                 // float min = Mathf.Infinity;
                 // foreach (var player in NetworkManagerGame.singleton.playerInfo)
