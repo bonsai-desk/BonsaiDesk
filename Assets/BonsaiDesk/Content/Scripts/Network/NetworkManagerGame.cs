@@ -28,7 +28,7 @@ public struct ShouldDisconnectMessage : NetworkMessage
 
 public class NetworkManagerGame : NobleNetworkManager
 {
-    public new static NetworkManagerGame Singleton;
+    public static NetworkManagerGame Singleton;
 
     public MoveToDesk moveToDesk;
 
