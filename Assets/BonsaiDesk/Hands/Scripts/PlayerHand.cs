@@ -93,6 +93,12 @@ public class PlayerHand : MonoBehaviour
 
     public Camera mainCamera;
     private int handLayer;
+    
+    private bool lastPinkyPinch = false;
+
+    public GetRaycastObject raycastObject;
+
+    // public Transform test;
 
     public void ToggleDeleteMode()
     {
@@ -277,19 +283,26 @@ public class PlayerHand : MonoBehaviour
         return difference;
     }
 
-    private bool lastPinkyPinch = false;
-
     private void Update()
     {
-        // if (Input.GetKeyDown(KeyCode.Space))
+        // if(test != null)
         // {
-        //     test.parent = null;
-        // }
-        // if (Input.GetKeyUp(KeyCode.Space))
-        // {
-        //     test.parent = transform;
+        //     if (Input.GetKeyDown(KeyCode.Space))
+        //     {
+        //         test.parent = null;
+        //     }
+        //
+        //     if (Input.GetKeyUp(KeyCode.Space))
+        //     {
+        //         test.parent = transform;
+        //     }
         // }
 
+        if (raycastObject.hitObject != null)
+        {
+            // print("Hit: " + Time.time);
+        }
+        
         if (oVRPhysicsHand.IsDataValid && oVRPhysicsHand.IsDataHighConfidence)
         {
             mainCamera.cullingMask |= 1 << handLayer;
