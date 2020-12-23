@@ -297,17 +297,15 @@ public class PlayerHand : MonoBehaviour
         bool fist = fistMinStrength > 0.7f;
         bool weakFist = fistMinStrength > 0.5f;
 
-        togglePause.Point(_skeletonType, raycastObject.hitObject != null && oVRSkeleton.IsDataHighConfidence);
-        if (raycastObject.hitObject != null && weakFist)
+        togglePause.Point(_skeletonType, raycastObject.hitObject != null && oVRSkeleton.IsDataHighConfidence, transform.position);
+        if (weakFist)
         {
-            if (!lastWeakFist)
+            if (raycastObject.hitObject != null && !lastWeakFist)
                 togglePause.StartToggleGesture(_skeletonType, transform.position);
             togglePause.UpdateToggleGesturePosition(_skeletonType, transform.position);
         }
-        else
-        {
+        if(!weakFist)
             togglePause.StopToggleGesture(_skeletonType, transform.position);
-        }
 
         if (oVRPhysicsHand.IsDataValid && oVRPhysicsHand.IsDataHighConfidence)
         {

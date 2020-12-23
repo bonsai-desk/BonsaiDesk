@@ -651,6 +651,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   gestureActivateDistance: 0.075
+  pointMovement: 0.05
   iconRenderer: {fileID: 848667924}
   togglePauseMorph: {fileID: 848667923}
 --- !u!1 &117227473
