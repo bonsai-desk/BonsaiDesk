@@ -4,7 +4,11 @@ using UnityEngine;
 
 public class CubicBezier
 {
+    //https://cubic-bezier.com/
+    //https://easings.net/
+    
     public static readonly CubicBezier Linear = new CubicBezier(0, 0, 1, 1);
+    public static readonly CubicBezier EaseInOut = new CubicBezier(0.42f, 0, 0.58f, 1);
     
     private readonly int _numSamples;
 
@@ -12,7 +16,7 @@ public class CubicBezier
 
     private CubicBezier(float p1X, float p1Y, float p2X, float p2Y)
     {
-        _numSamples = 5;
+        _numSamples = 25;
         var p1 = new Vector2(p1X, p1Y);
         var p2 = new Vector2(p2X, p2Y);
         
@@ -42,11 +46,29 @@ public class CubicBezier
         if (t >= 1f)
             return 1f;
         
-        for (var i = 1; i <= _numSamples; i++)
+        var l = 0;
+        var r = _numSamples - 1;
+        var i = 0;
+        while (l <= r)
         {
-            if (_samples[i].x > t)
+            i++;
+            if (i > 1000)
             {
-                return MathUtils.lineSegmentFunction(_samples[i - 1], _samples[i], t);
+                Debug.LogError("Binary search failed.");
+                return 0f;
+            }
+            var m = l + (r - l) / 2;
+            if (t >= _samples[m].x && t <= _samples[m + 1].x)
+            {
+                return MathUtils.lineSegmentFunction(_samples[m], _samples[m + 1], t);
+            }
+            else if (_samples[m].x < t)
+            {
+                l = m + 1;
+            }
+            else
+            {
+                r = m - 1;
             }
         }
 

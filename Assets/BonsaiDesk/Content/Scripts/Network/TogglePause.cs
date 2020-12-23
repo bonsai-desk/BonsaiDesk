@@ -26,9 +26,6 @@ public class TogglePause : NetworkBehaviour
     {
         startPosition = transform.position;
         updateIcons(paused);
-        
-        for (float i = 0f; i < 1.01f; i += 0.1f)
-            print(i + " " + CubicBezier.Linear.Sample(i));
     }
 
     private void Update()
@@ -113,7 +110,7 @@ public class TogglePause : NetworkBehaviour
             float lerp = Mathf.Clamp01(distance / gestureActivateDistance);
             if (!paused)
                 lerp = 1 - lerp;
-            togglePauseMorph.SetLerp(lerp);
+            togglePauseMorph.SetLerp(CubicBezier.EaseInOut.Sample(lerp));
         }
     }
 }
