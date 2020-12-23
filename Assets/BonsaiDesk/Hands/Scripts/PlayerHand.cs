@@ -84,11 +84,11 @@ public class PlayerHand : MonoBehaviour
 
     private bool lastPinkyPinch = false;
 
-    public GetRaycastObject raycastObject;
+    public AngleToObject angleToObject;
 
     public TogglePause togglePause;
 
-    // public Transform test;
+    public Transform test;
 
     public void ToggleDeleteMode()
     {
@@ -278,18 +278,18 @@ public class PlayerHand : MonoBehaviour
 
     private void Update()
     {
-        // if(test != null)
-        // {
-        //     if (Input.GetKeyDown(KeyCode.Space))
-        //     {
-        //         test.parent = null;
-        //     }
-        //
-        //     if (Input.GetKeyUp(KeyCode.Space))
-        //     {
-        //         test.parent = transform;
-        //     }
-        // }
+        if(test != null)
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                test.parent = null;
+            }
+        
+            if (Input.GetKeyUp(KeyCode.Space))
+            {
+                test.parent = transform;
+            }
+        }
 
         bool indexPinching = Pinching();
         bool pinch = AnyPinching();
@@ -297,15 +297,18 @@ public class PlayerHand : MonoBehaviour
         bool fist = fistMinStrength > 0.7f;
         bool weakFist = fistMinStrength > 0.5f;
 
-        togglePause.Point(_skeletonType, raycastObject.hitObject != null && oVRSkeleton.IsDataHighConfidence, transform.position);
+        bool pointingAtScreen = angleToObject.angleBelowThreshold();
+        togglePause.Point(_skeletonType, pointingAtScreen && oVRSkeleton.IsDataHighConfidence,
+            holdPosition.position);
         if (weakFist)
         {
-            if (raycastObject.hitObject != null && !lastWeakFist)
-                togglePause.StartToggleGesture(_skeletonType, transform.position);
-            togglePause.UpdateToggleGesturePosition(_skeletonType, transform.position);
+            if (pointingAtScreen && !lastWeakFist)
+                togglePause.StartToggleGesture(_skeletonType, holdPosition.position);
+            togglePause.UpdateToggleGesturePosition(_skeletonType, holdPosition.position);
         }
-        if(!weakFist)
-            togglePause.StopToggleGesture(_skeletonType, transform.position);
+
+        if (!weakFist)
+            togglePause.StopToggleGesture(_skeletonType, holdPosition.position);
 
         if (oVRPhysicsHand.IsDataValid && oVRPhysicsHand.IsDataHighConfidence)
         {
