@@ -6,13 +6,11 @@ using UnityEngine;
 public class TogglePauseMorph : MonoBehaviour
 {
     private Material material;
-    
+
     void Start()
     {
         var meshFilter = GetComponent<MeshFilter>();
-        material = GetComponent<MeshRenderer>().material;
-        material.SetFloat("_Lerp", 0f);
-
+        
         var mesh = new Mesh();
         mesh.vertices = new[]
         {
@@ -48,5 +46,12 @@ public class TogglePauseMorph : MonoBehaviour
         };
 
         meshFilter.sharedMesh = mesh;
+    }
+
+    public void SetLerp(float lerp)
+    {
+        if(material == null)
+            material = GetComponent<MeshRenderer>().material;
+        material.SetFloat("_Lerp", Mathf.Clamp01(lerp));
     }
 }

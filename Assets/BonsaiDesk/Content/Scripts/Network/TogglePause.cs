@@ -7,9 +7,9 @@ using UnityEngine;
 
 public class TogglePause : NetworkBehaviour
 {
-    public GameObject icons;
-    public GameObject playIcon;
-    public GameObject pauseIcon;
+    public float gestureActivateDistance;
+    public MeshRenderer iconRenderer;
+    public TogglePauseMorph togglePauseMorph;
 
     [SyncVar(hook = nameof(SetPaused))] private bool paused = true;
 
@@ -18,7 +18,6 @@ public class TogglePause : NetworkBehaviour
 
     private OVRSkeleton.SkeletonType currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
     private Vector3 gestureStartPosition = Vector3.zero;
-    private bool gestureComplete = false;
 
     private void Start()
     {
@@ -27,7 +26,8 @@ public class TogglePause : NetworkBehaviour
 
     private void Update()
     {
-        icons.SetActive(leftPointing || rightPointing || currentGestureSkeleton != OVRSkeleton.SkeletonType.None);
+        iconRenderer.enabled =
+            (leftPointing || rightPointing || currentGestureSkeleton != OVRSkeleton.SkeletonType.None);
     }
 
     [Command(ignoreAuthority = true)]
@@ -40,13 +40,12 @@ public class TogglePause : NetworkBehaviour
     {
         updateIcons(newPaused);
     }
-    
+
     void updateIcons(bool paused)
     {
-        playIcon.SetActive(paused);
-        pauseIcon.SetActive(!paused);
+        togglePauseMorph.SetLerp(paused ? 0 : 1);
     }
-    
+
     public void Point(OVRSkeleton.SkeletonType skeletonType, bool pointing)
     {
         if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
@@ -59,17 +58,27 @@ public class TogglePause : NetworkBehaviour
     {
         if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None)
         {
-            gestureComplete = false;
             currentGestureSkeleton = skeletonType;
             gestureStartPosition = position;
         }
     }
 
-    public void StopToggleGesture(OVRSkeleton.SkeletonType skeletonType)
+    public void StopToggleGesture(OVRSkeleton.SkeletonType skeletonType, Vector3 position)
     {
         if (currentGestureSkeleton == skeletonType)
         {
             currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
+            float distance = Vector3.Distance(gestureStartPosition, position);
+            bool currentlyPaused = paused;
+            if (distance > gestureActivateDistance)
+            {
+                updateIcons(!currentlyPaused);
+                CmdSetPaused(!paused);
+            }
+            else
+            {
+                updateIcons(currentlyPaused);
+            }
         }
     }
 
@@ -78,11 +87,10 @@ public class TogglePause : NetworkBehaviour
         if (currentGestureSkeleton == skeletonType)
         {
             float distance = Vector3.Distance(gestureStartPosition, position);
-            if (distance > 0.1f && !gestureComplete)
-            {
-                gestureComplete = true;
-                CmdSetPaused(!paused);
-            }
+            float lerp = Mathf.Clamp01(distance / gestureActivateDistance);
+            if (!paused)
+                lerp = 1 - lerp;
+            togglePauseMorph.SetLerp(lerp);
         }
     }
 }

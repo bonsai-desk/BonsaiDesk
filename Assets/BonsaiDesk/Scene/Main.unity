@@ -615,6 +615,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: -0.05}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
+  - {fileID: 848667926}
   - {fileID: 1963356105}
   m_Father: {fileID: 506092257}
   m_RootOrder: 1
@@ -649,9 +650,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  icons: {fileID: 1963356104}
-  playIcon: {fileID: 295618600}
-  pauseIcon: {fileID: 62701750}
+  gestureActivateDistance: 0.075
+  iconRenderer: {fileID: 848667924}
+  togglePauseMorph: {fileID: 848667923}
 --- !u!1 &117227473
 GameObject:
   m_ObjectHideFlags: 0
@@ -10635,7 +10636,7 @@ GameObject:
   - component: {fileID: 848667924}
   - component: {fileID: 848667923}
   m_Layer: 0
-  m_Name: Quad
+  m_Name: Icon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10660,7 +10661,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 848667922}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -10708,11 +10709,11 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 848667922}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.018, y: 0.44, z: 0.42202473}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 13
+  m_Father: {fileID: 96659936}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!54 &858535379
 Rigidbody:
@@ -21492,7 +21493,7 @@ Transform:
   - {fileID: 295618601}
   - {fileID: 62701751}
   m_Father: {fileID: 96659936}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1965015617 stripped
 Transform:

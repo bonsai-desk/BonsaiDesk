@@ -33,6 +33,7 @@ public class PlayerHand : MonoBehaviour
     public PinchSpawn pinchSpawn;
 
     private bool lastFist;
+    private bool lastWeakFist;
 
     [HideInInspector] public Material material;
 
@@ -294,17 +295,18 @@ public class PlayerHand : MonoBehaviour
         bool pinch = AnyPinching();
         float fistMinStrength = MinFingerCloseStrength();
         bool fist = fistMinStrength > 0.7f;
+        bool weakFist = fistMinStrength > 0.5f;
 
         togglePause.Point(_skeletonType, raycastObject.hitObject != null && oVRSkeleton.IsDataHighConfidence);
-        if (raycastObject != null && fist)
+        if (raycastObject.hitObject != null && weakFist)
         {
-            if (!lastFist)
+            if (!lastWeakFist)
                 togglePause.StartToggleGesture(_skeletonType, transform.position);
             togglePause.UpdateToggleGesturePosition(_skeletonType, transform.position);
         }
         else
         {
-            togglePause.StopToggleGesture(_skeletonType);
+            togglePause.StopToggleGesture(_skeletonType, transform.position);
         }
 
         if (oVRPhysicsHand.IsDataValid && oVRPhysicsHand.IsDataHighConfidence)
@@ -488,6 +490,7 @@ public class PlayerHand : MonoBehaviour
         }
 
         lastFist = fist;
+        lastWeakFist = weakFist;
         lastIndexPinching = indexPinching;
     }
 
