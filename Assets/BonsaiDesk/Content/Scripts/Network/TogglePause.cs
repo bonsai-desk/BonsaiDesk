@@ -28,7 +28,7 @@ public class TogglePause : NetworkBehaviour
         updateIcons(paused);
         
         for (float i = 0f; i < 1.01f; i += 0.1f)
-            print(i + " " + MathUtils.CubicBezierFunction(0, 0, 1, 1, i));
+            print(i + " " + CubicBezier.Linear.Sample(i));
     }
 
     private void Update()
