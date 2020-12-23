@@ -2380,7 +2380,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &265990173
 Transform:
   m_ObjectHideFlags: 0
@@ -12839,6 +12839,20 @@ MonoBehaviour:
   fadeColor: {r: 0.01, g: 0.01, b: 0.01, a: 1}
   fadeOnStart: 0
   renderQueue: 5000
+--- !u!114 &1129058234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1129058232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cb156aacd20cd64f840600217106bdc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetObject: {fileID: 506092257}
+  angleThreshold: 32.5
 --- !u!1 &1134487932 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2537125333393509694, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
@@ -19465,7 +19479,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetObject: {fileID: 506092257}
-  angleThreshold: 32.5
+  angleThreshold: 37.5
 --- !u!1 &1709370302
 GameObject:
   m_ObjectHideFlags: 0
@@ -20293,7 +20307,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetObject: {fileID: 506092257}
-  angleThreshold: 32.5
+  angleThreshold: 37.5
 --- !u!4 &1805792899
 Transform:
   m_ObjectHideFlags: 0
@@ -26479,6 +26493,7 @@ MonoBehaviour:
   oPointerPose: {fileID: 0}
   mainCamera: {fileID: 1365805663}
   angleToObject: {fileID: 1702261044}
+  headAngleToObject: {fileID: 1129058234}
   togglePause: {fileID: 96659938}
   test: {fileID: 1702261043}
 --- !u!4 &4081732858402026843
@@ -26613,6 +26628,7 @@ MonoBehaviour:
   oPointerPose: {fileID: 0}
   mainCamera: {fileID: 1365805663}
   angleToObject: {fileID: 1805792898}
+  headAngleToObject: {fileID: 1129058234}
   togglePause: {fileID: 96659938}
   test: {fileID: 0}
 --- !u!4 &6019446922972710339

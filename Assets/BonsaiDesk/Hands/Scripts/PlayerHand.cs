@@ -83,8 +83,10 @@ public class PlayerHand : MonoBehaviour
     private int handLayer;
 
     private bool lastPinkyPinch = false;
+    private bool lastPointingAtScreen = false;
 
     public AngleToObject angleToObject;
+    public AngleToObject headAngleToObject;
 
     public TogglePause togglePause;
 
@@ -278,18 +280,18 @@ public class PlayerHand : MonoBehaviour
 
     private void Update()
     {
-        if(test != null)
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                test.parent = null;
-            }
-        
-            if (Input.GetKeyUp(KeyCode.Space))
-            {
-                test.parent = transform;
-            }
-        }
+        // if(test != null)
+        // {
+        //     if (Input.GetKeyDown(KeyCode.Space))
+        //     {
+        //         test.parent = null;
+        //     }
+        //
+        //     if (Input.GetKeyUp(KeyCode.Space))
+        //     {
+        //         test.parent = transform;
+        //     }
+        // }
 
         bool indexPinching = Pinching();
         bool pinch = AnyPinching();
@@ -297,7 +299,9 @@ public class PlayerHand : MonoBehaviour
         bool fist = fistMinStrength > 0.7f;
         bool weakFist = fistMinStrength > 0.5f;
 
-        bool pointingAtScreen = angleToObject.angleBelowThreshold();
+        bool pointingAtScreen = false;
+        if (!lastPointingAtScreen && fistMinStrength < 0.35f && headAngleToObject.angleBelowThreshold() || lastPointingAtScreen)
+            pointingAtScreen = angleToObject.angleBelowThreshold();
         togglePause.Point(_skeletonType, pointingAtScreen && oVRSkeleton.IsDataHighConfidence,
             holdPosition.position);
         if (weakFist)
@@ -493,6 +497,7 @@ public class PlayerHand : MonoBehaviour
         lastFist = fist;
         lastWeakFist = weakFist;
         lastIndexPinching = indexPinching;
+        lastPointingAtScreen = pointingAtScreen;
     }
 
     public PlayerHand OtherHand()
