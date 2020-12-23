@@ -5,9 +5,12 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/BonsaiDesk/Scene/Main.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/BonsaiDesk/Scene/Dev.unity
+    guid: 3e33696e0feaae04ea733efea6cc6eba
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: d57f92069e1343041ab4379c579b7279,
       type: 2}

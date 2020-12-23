@@ -9686,7 +9686,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sceneId: 3058546188
   serverOnly: 1
-  m_AssetId: 866a06ab751f3bc4db1cb20d951dc957
+  m_AssetId: 
   hasSpawned: 0
 --- !u!4 &752779476
 Transform:
