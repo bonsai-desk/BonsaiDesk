@@ -84,7 +84,7 @@ public class PlayerHand : MonoBehaviour
     private bool lastPinkyPinch = false;
 
     public GetRaycastObject raycastObject;
-    
+
     public TogglePause togglePause;
 
     // public Transform test;
@@ -289,14 +289,22 @@ public class PlayerHand : MonoBehaviour
         //         test.parent = transform;
         //     }
         // }
-        
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+
+        bool indexPinching = Pinching();
+        bool pinch = AnyPinching();
+        float fistMinStrength = MinFingerCloseStrength();
+        bool fist = fistMinStrength > 0.7f;
+
+        togglePause.Point(_skeletonType, raycastObject.hitObject != null && oVRSkeleton.IsDataHighConfidence);
+        if (raycastObject != null && fist)
         {
-            togglePause.leftPoint(raycastObject.hitObject != null && oVRSkeleton.IsDataHighConfidence);
+            if (!lastFist)
+                togglePause.StartToggleGesture(_skeletonType, transform.position);
+            togglePause.UpdateToggleGesturePosition(_skeletonType, transform.position);
         }
         else
         {
-            togglePause.rightPoint(raycastObject.hitObject != null && oVRSkeleton.IsDataHighConfidence);
+            togglePause.StopToggleGesture(_skeletonType);
         }
 
         if (oVRPhysicsHand.IsDataValid && oVRPhysicsHand.IsDataHighConfidence)
@@ -337,7 +345,6 @@ public class PlayerHand : MonoBehaviour
 
         lastPinkyPinch = pinkyPinch;
 
-        bool indexPinching = Pinching();
         bool hitPullBox = false;
         if (indexPinching && !lastIndexPinching)
         {
@@ -430,9 +437,7 @@ public class PlayerHand : MonoBehaviour
             }
         }
 
-        bool pinch = AnyPinching();
-        float fistMinStrength = MinFingerCloseStrength();
-        if ((pinch || fistMinStrength > 0.7f) && !objectAttached)
+        if ((pinch || fist) && !objectAttached)
         {
             if (heldJoint == null && !menu.activeInHierarchy)
             {
@@ -482,7 +487,7 @@ public class PlayerHand : MonoBehaviour
             }
         }
 
-        lastFist = fistMinStrength > 0.7f;
+        lastFist = fist;
         lastIndexPinching = indexPinching;
     }
 

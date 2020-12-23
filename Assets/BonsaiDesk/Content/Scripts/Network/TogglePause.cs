@@ -16,6 +16,10 @@ public class TogglePause : NetworkBehaviour
     private bool leftPointing = false;
     private bool rightPointing = false;
 
+    private OVRSkeleton.SkeletonType currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
+    private Vector3 gestureStartPosition = Vector3.zero;
+    private bool gestureComplete = false;
+
     private void Start()
     {
         updateIcons(paused);
@@ -23,7 +27,7 @@ public class TogglePause : NetworkBehaviour
 
     private void Update()
     {
-        icons.SetActive(leftPointing || rightPointing);
+        icons.SetActive(leftPointing || rightPointing || currentGestureSkeleton != OVRSkeleton.SkeletonType.None);
     }
 
     [Command(ignoreAuthority = true)]
@@ -32,29 +36,53 @@ public class TogglePause : NetworkBehaviour
         this.paused = paused;
     }
 
-    public void SetPaused(bool paused)
-    {
-        CmdSetPaused(paused);
-    }
-
     void SetPaused(bool oldPaused, bool newPaused)
     {
         updateIcons(newPaused);
     }
-
+    
     void updateIcons(bool paused)
     {
         playIcon.SetActive(paused);
         pauseIcon.SetActive(!paused);
     }
-
-    public void leftPoint(bool pointing)
+    
+    public void Point(OVRSkeleton.SkeletonType skeletonType, bool pointing)
     {
-        leftPointing = pointing;
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+            leftPointing = pointing;
+        else
+            rightPointing = pointing;
     }
 
-    public void rightPoint(bool pointing)
+    public void StartToggleGesture(OVRSkeleton.SkeletonType skeletonType, Vector3 position)
     {
-        rightPointing = pointing;
+        if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None)
+        {
+            gestureComplete = false;
+            currentGestureSkeleton = skeletonType;
+            gestureStartPosition = position;
+        }
+    }
+
+    public void StopToggleGesture(OVRSkeleton.SkeletonType skeletonType)
+    {
+        if (currentGestureSkeleton == skeletonType)
+        {
+            currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
+        }
+    }
+
+    public void UpdateToggleGesturePosition(OVRSkeleton.SkeletonType skeletonType, Vector3 position)
+    {
+        if (currentGestureSkeleton == skeletonType)
+        {
+            float distance = Vector3.Distance(gestureStartPosition, position);
+            if (distance > 0.1f && !gestureComplete)
+            {
+                gestureComplete = true;
+                CmdSetPaused(!paused);
+            }
+        }
     }
 }
