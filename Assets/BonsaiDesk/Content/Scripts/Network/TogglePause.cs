@@ -18,6 +18,7 @@ public class TogglePause : NetworkBehaviour
 
     private OVRSkeleton.SkeletonType currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
     private Vector3 gestureStartPosition = Vector3.zero;
+    private bool pausedStateAtGestureStart;
 
     private Vector3 startPosition;
 
@@ -42,14 +43,15 @@ public class TogglePause : NetworkBehaviour
 
     void SetPaused(bool oldPaused, bool newPaused)
     {
-        updateIcons(newPaused);
+        if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None)
+            updateIcons(newPaused);
     }
 
     void updateIcons(bool paused)
     {
         togglePauseMorph.SetLerp(paused ? 0 : 1);
     }
-
+    
     public void Point(OVRSkeleton.SkeletonType skeletonType, bool pointing, Vector3 position)
     {
         if (currentPointSkeleton == OVRSkeleton.SkeletonType.None || currentPointSkeleton == skeletonType)
@@ -79,9 +81,10 @@ public class TogglePause : NetworkBehaviour
         {
             currentGestureSkeleton = skeletonType;
             gestureStartPosition = position;
+            pausedStateAtGestureStart = paused;
         }
     }
-
+    
     public void StopToggleGesture(OVRSkeleton.SkeletonType skeletonType, Vector3 position)
     {
         if (currentGestureSkeleton == skeletonType)
@@ -91,12 +94,12 @@ public class TogglePause : NetworkBehaviour
             bool currentlyPaused = paused;
             if (distance > gestureActivateDistance)
             {
-                updateIcons(!currentlyPaused);
-                CmdSetPaused(!paused);
+                updateIcons(!pausedStateAtGestureStart);
+                CmdSetPaused(!pausedStateAtGestureStart);
             }
             else
             {
-                updateIcons(currentlyPaused);
+                updateIcons(paused);
             }
         }
     }
