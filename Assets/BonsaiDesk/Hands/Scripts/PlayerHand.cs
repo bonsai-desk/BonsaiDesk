@@ -1,5 +1,6 @@
 ﻿using Mirror;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerHand : MonoBehaviour
 {
@@ -8,25 +9,20 @@ public class PlayerHand : MonoBehaviour
     public OVRHand oVRHand;
     public OVRSkeleton oVRSkeleton;
 
-    [HideInInspector]
-    public OVRPhysicsHand oVRPhysicsHand;
+    [HideInInspector] public OVRPhysicsHand oVRPhysicsHand;
 
-    [HideInInspector]
-    public Transform[] fingerTips;
+    [HideInInspector] public Transform[] fingerTips;
 
     public Transform[] physicsFingerTips;
     public Transform[] physicsFingerPads;
 
-    [HideInInspector]
-    public Rigidbody body;
+    [HideInInspector] public Rigidbody body;
 
     public Transform holdPosition;
 
-    [HideInInspector]
-    public ConfigurableJoint heldJoint;
+    [HideInInspector] public ConfigurableJoint heldJoint;
 
-    [HideInInspector]
-    public Rigidbody heldBody;
+    [HideInInspector] public Rigidbody heldBody;
 
     private bool heldObjectGravity;
     private float heldObjectDrag;
@@ -37,15 +33,13 @@ public class PlayerHand : MonoBehaviour
     public PinchSpawn pinchSpawn;
 
     private bool lastFist;
+    private bool lastWeakFist;
 
-    [HideInInspector]
-    public Material material;
+    [HideInInspector] public Material material;
 
-    [HideInInspector]
-    public bool deleteMode = false;
+    [HideInInspector] public bool deleteMode = false;
 
-    [HideInInspector]
-    public bool deleteAllMode = false;
+    [HideInInspector] public bool deleteAllMode = false;
 
     public GameObject menu;
 
@@ -55,8 +49,7 @@ public class PlayerHand : MonoBehaviour
 
     public Transform pointerPose;
 
-    [HideInInspector]
-    public Transform beamHold;
+    [HideInInspector] public Transform beamHold;
 
     private Color beamHoldOriginalColor;
     private MeshRenderer beamHoldRenderer;
@@ -65,13 +58,11 @@ public class PlayerHand : MonoBehaviour
 
     private bool lastIndexPinching;
 
-    [HideInInspector]
-    public bool objectAttached = false;
+    [HideInInspector] public bool objectAttached = false;
 
     public ConfigurableJoint beamJoint;
 
-    [HideInInspector]
-    public Rigidbody beamJointBody;
+    [HideInInspector] public Rigidbody beamJointBody;
 
     // float beamStartDistance;
     // float beamStartLength;
@@ -80,19 +71,26 @@ public class PlayerHand : MonoBehaviour
 
     private Vector3 hitPoint;
 
-    [HideInInspector]
-    public float ropeLength;
+    [HideInInspector] public float ropeLength;
 
     public OVRHandTransformMapper mapper;
 
-    [HideInInspector]
-    public float hitDistance = Mathf.Infinity;
+    [HideInInspector] public float hitDistance = Mathf.Infinity;
 
-    [HideInInspector]
-    public Transform oPointerPose;
+    [HideInInspector] public Transform oPointerPose;
 
     public Camera mainCamera;
     private int handLayer;
+
+    private bool lastPinkyPinch = false;
+    private bool lastPointingAtScreen = false;
+
+    public AngleToObject angleToObject;
+    public AngleToObject headAngleToObject;
+
+    public TogglePause togglePause;
+
+    public Transform test;
 
     public void ToggleDeleteMode()
     {
@@ -168,7 +166,8 @@ public class PlayerHand : MonoBehaviour
             };
             beamJoint.linearLimit = softJointLimit;
 
-            ropeLength = jointLimit + Vector3.Distance(beamJointBody.transform.position, OtherHand().beamJointBody.transform.position);
+            ropeLength = jointLimit + Vector3.Distance(beamJointBody.transform.position,
+                OtherHand().beamJointBody.transform.position);
 
             beamJoint.connectedBody = beamHold.GetComponent<Rigidbody>();
 
@@ -239,6 +238,7 @@ public class PlayerHand : MonoBehaviour
             BackToOriginalColor();
             // beamHoldRenderer.material.SetColor("_Color", Color.white);
         }
+
         beamHoldRenderer = null;
         beamHoldControl.SetActive(false);
     }
@@ -273,22 +273,46 @@ public class PlayerHand : MonoBehaviour
             OtherHand().DetachObject();
             DetachObject();
         }
+
         // lastFingerDistance = fingerDistance;
         return difference;
     }
 
-    private bool lastPinkyPinch = false;
-
     private void Update()
     {
-        // if (Input.GetKeyDown(KeyCode.Space))
+        // if(test != null)
         // {
-        //     test.parent = null;
+        //     if (Input.GetKeyDown(KeyCode.Space))
+        //     {
+        //         test.parent = null;
+        //     }
+        //
+        //     if (Input.GetKeyUp(KeyCode.Space))
+        //     {
+        //         test.parent = transform;
+        //     }
         // }
-        // if (Input.GetKeyUp(KeyCode.Space))
-        // {
-        //     test.parent = transform;
-        // }
+
+        bool indexPinching = Pinching();
+        bool pinch = AnyPinching();
+        float fistMinStrength = MinFingerCloseStrength();
+        bool fist = fistMinStrength > 0.7f;
+        bool weakFist = fistMinStrength > 0.5f;
+
+        bool pointingAtScreen = false;
+        if (!lastPointingAtScreen && fistMinStrength < 0.35f && headAngleToObject.angleBelowThreshold() || lastPointingAtScreen)
+            pointingAtScreen = angleToObject.angleBelowThreshold();
+        togglePause.Point(_skeletonType, pointingAtScreen && oVRSkeleton.IsDataHighConfidence,
+            holdPosition.position);
+        if (weakFist)
+        {
+            if (pointingAtScreen && !lastWeakFist)
+                togglePause.StartToggleGesture(_skeletonType, holdPosition.position);
+            togglePause.UpdateToggleGesturePosition(_skeletonType, holdPosition.position);
+        }
+
+        if (!weakFist)
+            togglePause.StopToggleGesture(_skeletonType, holdPosition.position);
 
         if (oVRPhysicsHand.IsDataValid && oVRPhysicsHand.IsDataHighConfidence)
         {
@@ -302,7 +326,8 @@ public class PlayerHand : MonoBehaviour
         oPointerPose.position = cameraRig.TransformPoint(oVRHand.PointerPose.position);
         oPointerPose.rotation = cameraRig.rotation * oVRHand.PointerPose.rotation;
 
-        if (oVRHand.IsPointerPoseValid && Physics.Raycast(oPointerPose.position, oPointerPose.forward, out RaycastHit uiHit, 10f, LayerMask.GetMask("UI")))
+        if (oVRHand.IsPointerPoseValid && Physics.Raycast(oPointerPose.position, oPointerPose.forward,
+            out RaycastHit uiHit, 10f, LayerMask.GetMask("UI")))
         {
             hitDistance = uiHit.distance;
         }
@@ -324,15 +349,16 @@ public class PlayerHand : MonoBehaviour
             {
             }
         }
+
         lastPinkyPinch = pinkyPinch;
 
-        bool indexPinching = Pinching();
         bool hitPullBox = false;
         if (indexPinching && !lastIndexPinching)
         {
             if (oVRPhysicsHand.thumbTipTarget != null)
             {
-                var hits = Physics.OverlapSphere(oVRPhysicsHand.thumbTipTarget.position, 0, allButHands, QueryTriggerInteraction.Collide);
+                var hits = Physics.OverlapSphere(oVRPhysicsHand.thumbTipTarget.position, 0, allButHands,
+                    QueryTriggerInteraction.Collide);
                 foreach (var hit in hits)
                 {
                     if (hit.CompareTag("BeamPinch"))
@@ -344,8 +370,10 @@ public class PlayerHand : MonoBehaviour
                 }
             }
         }
+
         bool hitObject = false;
-        if (!objectAttached && !hitPullBox && !OtherHand().objectAttached && OtherHand().beamHold == null && heldJoint == null)
+        if (!objectAttached && !hitPullBox && !OtherHand().objectAttached && OtherHand().beamHold == null &&
+            heldJoint == null)
         {
             if (indexPinching)
             {
@@ -354,7 +382,8 @@ public class PlayerHand : MonoBehaviour
                 float loops = 5;
                 for (float t = 0; t < 2f * Mathf.PI; t += Mathf.PI * 2f / 15.25744f / loops)
                 {
-                    Vector3 posOnCircle = new Vector3(Mathf.Cos(t * loops) * t / (Mathf.PI * 2f) * r * 2f, Mathf.Sin(t * loops) * t / (Mathf.PI * 2f) * r * 2f, length);
+                    Vector3 posOnCircle = new Vector3(Mathf.Cos(t * loops) * t / (Mathf.PI * 2f) * r * 2f,
+                        Mathf.Sin(t * loops) * t / (Mathf.PI * 2f) * r * 2f, length);
                     Vector3 origin = pointerPose.position;
                     Vector3 end = pointerPose.TransformPoint(posOnCircle);
                     // pointerPose.tran
@@ -369,7 +398,8 @@ public class PlayerHand : MonoBehaviour
                             check = check.parent;
                             hitBody = check.GetComponent<Rigidbody>();
                         }
-                        if (hitBody != null/* && !hitBody.isKinematic*/)
+
+                        if (hitBody != null /* && !hitBody.isKinematic*/)
                         {
                             //found valid object
 
@@ -407,24 +437,25 @@ public class PlayerHand : MonoBehaviour
                     }
                 }
             }
+
             if (!hitObject)
             {
                 StopBeam();
             }
         }
 
-        bool pinch = AnyPinching();
-        float fistMinStrength = MinFingerCloseStrength();
-        if ((pinch || fistMinStrength > 0.7f) && !objectAttached)
+        if ((pinch || fist) && !objectAttached)
         {
             if (heldJoint == null && !menu.activeInHierarchy)
             {
                 Collider[] pinchHits = new Collider[0];
                 if (pinch && oVRPhysicsHand.thumbTipTarget != null)
-                    pinchHits = Physics.OverlapSphere(oVRPhysicsHand.thumbTipTarget.position, 0, allButHands, QueryTriggerInteraction.Ignore);
+                    pinchHits = Physics.OverlapSphere(oVRPhysicsHand.thumbTipTarget.position, 0, allButHands,
+                        QueryTriggerInteraction.Ignore);
                 Collider[] fistHits = new Collider[0];
                 if (fistMinStrength > 0.7f)
-                    fistHits = Physics.OverlapSphere(holdPosition.position, 0.02f, allButHands, QueryTriggerInteraction.Ignore);
+                    fistHits = Physics.OverlapSphere(holdPosition.position, 0.02f, allButHands,
+                        QueryTriggerInteraction.Ignore);
                 Collider[] hits = new Collider[pinchHits.Length + fistHits.Length];
                 pinchHits.CopyTo(hits, 0);
                 fistHits.CopyTo(hits, pinchHits.Length);
@@ -437,7 +468,8 @@ public class PlayerHand : MonoBehaviour
                         check = check.parent;
                         hitBody = check.GetComponent<Rigidbody>();
                     }
-                    if (hitBody != null/* && !hitBody.isKinematic*/)
+
+                    if (hitBody != null /* && !hitBody.isKinematic*/)
                     {
                         BlockArea ba = hitBody.GetComponent<BlockArea>();
                         if (ba != null && ba.blocks.Count > 4)
@@ -462,84 +494,10 @@ public class PlayerHand : MonoBehaviour
             }
         }
 
-        float angleToFace = 180f;
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
-            angleToFace = Vector3.Angle(-holdPosition.right, head.forward);
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
-            angleToFace = Vector3.Angle(holdPosition.right, head.forward);
-        // float angleToSky = Vector3.Angle(holdPosition.forward, Vector3.up);
-
-        if (fistMinStrength > 0.7f)
-        {
-            if (!menu.activeInHierarchy && !lastFist && angleToFace < 70f) // && angleToSky < 90f
-            {
-                if (heldJoint != null)
-                {
-                    heldBody.useGravity = heldObjectGravity;
-                    heldBody.drag = heldObjectDrag;
-                    heldBody.angularDrag = heldObjectAngularDrag;
-                    Destroy(heldJoint);
-                    heldJoint = null;
-                    heldBody = null;
-                }
-
-                // bool flip = true;
-                // if (_skeletonType == OVRSkeleton.SkeletonType.HandRight && PlayerHands.hands.blockSelectMenu.transform.GetChild(0).localPosition.x > 0
-                // || _skeletonType == OVRSkeleton.SkeletonType.HandLeft && PlayerHands.hands.blockSelectMenu.transform.GetChild(0).localPosition.x < 0)
-                //     flip = false;
-                // if (flip)
-                // {
-                //     for (int i = 0; i < 2; i++)
-                //     {
-                //         Vector3 pos = PlayerHands.hands.blockSelectMenu.transform.GetChild(i).localPosition;
-                //         pos.x *= -1f;
-                //         PlayerHands.hands.blockSelectMenu.transform.GetChild(i).localPosition = pos;
-                //     }
-                // }
-
-                menu.transform.position = holdPosition.position;
-
-                //Vector3 forward = holdPosition.position - PlayerHands.hands.head.position;
-                //forward.y = 0;
-                Vector3 forward = PlayerHands.hands.head.forward;
-                //forward.y = 0;
-                menu.transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
-
-                menu.SetActive(true);
-            }
-        }
-        else
-        {
-            if (menu.activeInHierarchy)
-            {
-                var fistHits = Physics.OverlapSphere(holdPosition.position, 0.01f, allButHands, QueryTriggerInteraction.Collide);
-                foreach (var hit in fistHits)
-                {
-                    TriggerAction triggerAction = hit.GetComponent<TriggerAction>();
-                    if (triggerAction != null)
-                    {
-                        if (triggerAction.action != null)
-                            triggerAction.action.Invoke();
-                        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
-                        {
-                            if (triggerAction.leftAction != null)
-                                triggerAction.leftAction.Invoke();
-                        }
-                        if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
-                        {
-                            if (triggerAction.rightAction != null)
-                                triggerAction.rightAction.Invoke();
-                        }
-
-                        break;
-                    }
-                }
-
-                menu.SetActive(false);
-            }
-        }
-        lastFist = fistMinStrength > 0.7f;
+        lastFist = fist;
+        lastWeakFist = weakFist;
         lastIndexPinching = indexPinching;
+        lastPointingAtScreen = pointingAtScreen;
     }
 
     public PlayerHand OtherHand()
@@ -610,7 +568,8 @@ public class PlayerHand : MonoBehaviour
     {
         if (fingerTips.Length == 0)
             GetFingerTips();
-        return oVRHand.IsTracked && fingerTips.Length > 0 && physicsFingerTips.Length > 0 && physicsFingerPads.Length > 0 && oVRHand.IsDataHighConfidence;
+        return oVRHand.IsTracked && fingerTips.Length > 0 && physicsFingerTips.Length > 0 &&
+               physicsFingerPads.Length > 0 && oVRHand.IsDataHighConfidence;
     }
 
     private void GetFingerTips()
@@ -618,11 +577,11 @@ public class PlayerHand : MonoBehaviour
         if (oVRSkeleton.Bones.Count > 0)
         {
             fingerTips = new Transform[5];
-            fingerTips[0] = oVRSkeleton.Bones[(int)OVRSkeleton.BoneId.Hand_ThumbTip].Transform;
-            fingerTips[1] = oVRSkeleton.Bones[(int)OVRSkeleton.BoneId.Hand_IndexTip].Transform;
-            fingerTips[2] = oVRSkeleton.Bones[(int)OVRSkeleton.BoneId.Hand_MiddleTip].Transform;
-            fingerTips[3] = oVRSkeleton.Bones[(int)OVRSkeleton.BoneId.Hand_RingTip].Transform;
-            fingerTips[4] = oVRSkeleton.Bones[(int)OVRSkeleton.BoneId.Hand_PinkyTip].Transform;
+            fingerTips[0] = oVRSkeleton.Bones[(int) OVRSkeleton.BoneId.Hand_ThumbTip].Transform;
+            fingerTips[1] = oVRSkeleton.Bones[(int) OVRSkeleton.BoneId.Hand_IndexTip].Transform;
+            fingerTips[2] = oVRSkeleton.Bones[(int) OVRSkeleton.BoneId.Hand_MiddleTip].Transform;
+            fingerTips[3] = oVRSkeleton.Bones[(int) OVRSkeleton.BoneId.Hand_RingTip].Transform;
+            fingerTips[4] = oVRSkeleton.Bones[(int) OVRSkeleton.BoneId.Hand_PinkyTip].Transform;
         }
     }
 
@@ -676,8 +635,9 @@ public class PlayerHand : MonoBehaviour
         if (!Tracking())
             return 0;
 
-        float r1 = Vector3.Angle(-oVRSkeleton.transform.right, oVRSkeleton.Bones[(int)boneId].Transform.right);
-        float r2 = Vector3.Angle(oVRSkeleton.Bones[(int)boneId].Transform.right, oVRSkeleton.Bones[(int)boneId + 2].Transform.right);
+        float r1 = Vector3.Angle(-oVRSkeleton.transform.right, oVRSkeleton.Bones[(int) boneId].Transform.right);
+        float r2 = Vector3.Angle(oVRSkeleton.Bones[(int) boneId].Transform.right,
+            oVRSkeleton.Bones[(int) boneId + 2].Transform.right);
 
         r1 /= 60f;
         r2 /= 175f;
