@@ -652,7 +652,6 @@ MonoBehaviour:
   syncInterval: 0.1
   gestureActivateDistance: 0.1
   pointMovement: 0.075
-  fadeAfter: 0
   fadeTime: 0.25
   togglePauseMorph: {fileID: 848667923}
 --- !u!1 &117227473
@@ -9946,6 +9945,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 744943656}
+  - component: {fileID: 744943657}
+  - component: {fileID: 744943658}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -9974,6 +9975,53 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &744943657
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 744943655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1be3296bed52cf542914a9afde0cfa27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  left: {fileID: 5979537780977920961}
+  right: {fileID: 3909230157963041737}
+  fingerTipPositions: []
+  physicsFingerTipPositions: []
+  physicsFingerPadPositions: []
+  head: {fileID: 89707680}
+  activePointerPoseHand: {fileID: 0}
+--- !u!114 &744943658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 744943655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c258f8405c9a4934fab83d3a593be437, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gestureStartDistanceThreshold: 0.375
+  gestureMoveDistance: 0.65
+  action:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1212259449}
+        m_MethodName: ResetPosition
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &752779473
 GameObject:
   m_ObjectHideFlags: 0
@@ -13447,7 +13495,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1212259447}
-  - component: {fileID: 1212259451}
   - component: {fileID: 1212259449}
   - component: {fileID: 1212259446}
   - component: {fileID: 1212259450}
@@ -13545,25 +13592,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   text: {fileID: 1676676881}
---- !u!114 &1212259451
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1212259445}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1be3296bed52cf542914a9afde0cfa27, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  left: {fileID: 5979537780977920961}
-  right: {fileID: 3909230157963041737}
-  fingerTipPositions: []
-  physicsFingerTipPositions: []
-  physicsFingerPadPositions: []
-  head: {fileID: 89707680}
-  activePointerPoseHand: {fileID: 0}
 --- !u!114 &1212259452
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26434,6 +26462,7 @@ GameObject:
   - component: {fileID: 3909230157963041737}
   - component: {fileID: 858535379}
   - component: {fileID: 858535380}
+  - component: {fileID: 3909230157963041738}
   m_Layer: 0
   m_Name: OVRHandPhysicsRight
   m_TagString: Untagged
@@ -26453,7 +26482,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de16159ece05f454f9faca7f82bee2ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _skeletonType: 1
+  skeletonType: 1
   oVRHand: {fileID: 1421644869}
   oVRSkeleton: {fileID: 1123713195}
   oVRPhysicsHand: {fileID: 0}
@@ -26496,6 +26525,21 @@ MonoBehaviour:
   headAngleToObject: {fileID: 1129058234}
   togglePause: {fileID: 96659938}
   test: {fileID: 1702261043}
+--- !u!114 &3909230157963041738
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3909230157963041736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f523ea0cbeb10e445b12274ad43507a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  angleToObject: {fileID: 1702261044}
+  headAngleToObject: {fileID: 1129058234}
+  togglePause: {fileID: 96659938}
 --- !u!4 &4081732858402026843
 Transform:
   m_ObjectHideFlags: 0
@@ -26569,6 +26613,7 @@ GameObject:
   - component: {fileID: 5979537780977920961}
   - component: {fileID: 1438622277}
   - component: {fileID: 1438622275}
+  - component: {fileID: 5979537780977920962}
   m_Layer: 0
   m_Name: OVRHandPhysicsLeft
   m_TagString: Untagged
@@ -26588,7 +26633,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de16159ece05f454f9faca7f82bee2ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _skeletonType: 0
+  skeletonType: 0
   oVRHand: {fileID: 1491494477}
   oVRSkeleton: {fileID: 768559157}
   oVRPhysicsHand: {fileID: 8519293027190434102}
@@ -26631,6 +26676,21 @@ MonoBehaviour:
   headAngleToObject: {fileID: 1129058234}
   togglePause: {fileID: 96659938}
   test: {fileID: 0}
+--- !u!114 &5979537780977920962
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5979537780977920960}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f523ea0cbeb10e445b12274ad43507a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  angleToObject: {fileID: 1805792898}
+  headAngleToObject: {fileID: 1129058234}
+  togglePause: {fileID: 96659938}
 --- !u!4 &6019446922972710339
 Transform:
   m_ObjectHideFlags: 0
