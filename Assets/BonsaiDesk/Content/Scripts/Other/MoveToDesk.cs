@@ -150,13 +150,13 @@ public class MoveToDesk : MonoBehaviour
 
             if (!oriented)
             {
-                if (diff < 0.025f)
+                if (diff < 0.0375f)
                     UpdateState(2);
                 else
                     UpdateState(1);
             }
 
-            if (speed > 0.75f && diff < 0.025f)
+            if (speed > 0.75f && diff < 0.0375f)
             {
                 if (!orientatingSelf)
                 {
