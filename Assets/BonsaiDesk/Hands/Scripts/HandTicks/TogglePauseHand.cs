@@ -13,8 +13,8 @@ public class TogglePauseHand : MonoBehaviour, IHandTick
     public void Tick(PlayerHand playerHand)
     {
         bool pointingAtScreen = false;
-        if (!lastPointingAtScreen && playerHand.GetGesture(PlayerHand.Gesture.WeakPalm) && headAngleToObject.angleBelowThreshold() || lastPointingAtScreen)
-            pointingAtScreen = angleToObject.angleBelowThreshold();
+        if (!lastPointingAtScreen && playerHand.GetGesture(PlayerHand.Gesture.WeakPalm) && headAngleToObject.AngleBelowThreshold() || lastPointingAtScreen)
+            pointingAtScreen = angleToObject.AngleBelowThreshold();
         togglePause.Point(playerHand.skeletonType, pointingAtScreen && playerHand.oVRSkeleton.IsDataHighConfidence,
             playerHand.holdPosition.position);
         if (playerHand.GetGesture(PlayerHand.Gesture.WeakFist))

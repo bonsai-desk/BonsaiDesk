@@ -8476,7 +8476,8 @@ Transform:
   m_LocalRotation: {x: -0.5, y: -0.5, z: -0.5, w: -0.5}
   m_LocalPosition: {x: 0.0727, y: 0.0316, z: -0.0031}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_Children:
+  - {fileID: 1875899301}
   m_Father: {fileID: 633968720}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -180, y: -90, z: -90}
@@ -9136,6 +9137,51 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 152887699}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &704926996
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 704926997}
+  - component: {fileID: 704926998}
+  m_Layer: 0
+  m_Name: PalmOut
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &704926997
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 704926996}
+  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1640790237}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+--- !u!114 &704926998
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 704926996}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cb156aacd20cd64f840600217106bdc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetObject: {fileID: 89707680}
+  angleThreshold: 20
 --- !u!1001 &723724764
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9946,7 +9992,6 @@ GameObject:
   m_Component:
   - component: {fileID: 744943656}
   - component: {fileID: 744943657}
-  - component: {fileID: 744943658}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -9994,34 +10039,6 @@ MonoBehaviour:
   physicsFingerPadPositions: []
   head: {fileID: 89707680}
   activePointerPoseHand: {fileID: 0}
---- !u!114 &744943658
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 744943655}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c258f8405c9a4934fab83d3a593be437, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gestureStartDistanceThreshold: 0.375
-  gestureMoveDistance: 0.45
-  action:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1212259449}
-        m_MethodName: ResetPosition
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
 --- !u!1 &752779473
 GameObject:
   m_ObjectHideFlags: 0
@@ -18765,7 +18782,8 @@ Transform:
   m_LocalRotation: {x: -0.5, y: -0.5, z: 0.5, w: 0.5}
   m_LocalPosition: {x: -0.0727, y: -0.0316, z: 0.0031}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_Children:
+  - {fileID: 704926997}
   m_Father: {fileID: 427825787}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 90}
@@ -20883,6 +20901,51 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1867378336}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1875899300
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1875899301}
+  - component: {fileID: 1875899302}
+  m_Layer: 0
+  m_Name: PalmOut
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1875899301
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875899300}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 576540476}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!114 &1875899302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875899300}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9cb156aacd20cd64f840600217106bdc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetObject: {fileID: 89707680}
+  angleThreshold: 20
 --- !u!1 &1886693200
 GameObject:
   m_ObjectHideFlags: 0
@@ -26464,6 +26527,7 @@ GameObject:
   - component: {fileID: 858535379}
   - component: {fileID: 858535380}
   - component: {fileID: 3909230157963041738}
+  - component: {fileID: 3909230157963041739}
   m_Layer: 0
   m_Name: OVRHandPhysicsRight
   m_TagString: Untagged
@@ -26541,6 +26605,23 @@ MonoBehaviour:
   angleToObject: {fileID: 1702261044}
   headAngleToObject: {fileID: 1129058234}
   togglePause: {fileID: 96659938}
+--- !u!114 &3909230157963041739
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3909230157963041736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e64e3f17d9066d9448f20e9a5b1d8d40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveToDesk: {fileID: 1212259449}
+  angleToHead: {fileID: 704926998}
+  head: {fileID: 89707680}
+  angleToHeadThreshold: 20
+  headAngleToHorizonThreshold: 15
 --- !u!4 &4081732858402026843
 Transform:
   m_ObjectHideFlags: 0
@@ -26615,6 +26696,7 @@ GameObject:
   - component: {fileID: 1438622277}
   - component: {fileID: 1438622275}
   - component: {fileID: 5979537780977920962}
+  - component: {fileID: 5979537780977920963}
   m_Layer: 0
   m_Name: OVRHandPhysicsLeft
   m_TagString: Untagged
@@ -26692,6 +26774,23 @@ MonoBehaviour:
   angleToObject: {fileID: 1805792898}
   headAngleToObject: {fileID: 1129058234}
   togglePause: {fileID: 96659938}
+--- !u!114 &5979537780977920963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5979537780977920960}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e64e3f17d9066d9448f20e9a5b1d8d40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveToDesk: {fileID: 1212259449}
+  angleToHead: {fileID: 1875899302}
+  head: {fileID: 89707680}
+  angleToHeadThreshold: 20
+  headAngleToHorizonThreshold: 15
 --- !u!4 &6019446922972710339
 Transform:
   m_ObjectHideFlags: 0
