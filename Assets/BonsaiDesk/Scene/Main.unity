@@ -652,7 +652,6 @@ MonoBehaviour:
   syncInterval: 0.1
   gestureActivateDistance: 0.1
   pointMovement: 0.075
-  fadeAfter: 0
   fadeTime: 0.25
   togglePauseMorph: {fileID: 848667923}
 --- !u!1 &117227473
@@ -26435,6 +26434,7 @@ GameObject:
   - component: {fileID: 3909230157963041737}
   - component: {fileID: 858535379}
   - component: {fileID: 858535380}
+  - component: {fileID: 3909230157963041738}
   m_Layer: 0
   m_Name: OVRHandPhysicsRight
   m_TagString: Untagged
@@ -26454,7 +26454,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de16159ece05f454f9faca7f82bee2ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _skeletonType: 1
+  skeletonType: 1
   oVRHand: {fileID: 1421644869}
   oVRSkeleton: {fileID: 1123713195}
   oVRPhysicsHand: {fileID: 0}
@@ -26497,6 +26497,18 @@ MonoBehaviour:
   headAngleToObject: {fileID: 1129058234}
   togglePause: {fileID: 96659938}
   test: {fileID: 1702261043}
+--- !u!114 &3909230157963041738
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3909230157963041736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f523ea0cbeb10e445b12274ad43507a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &4081732858402026843
 Transform:
   m_ObjectHideFlags: 0
@@ -26570,6 +26582,7 @@ GameObject:
   - component: {fileID: 5979537780977920961}
   - component: {fileID: 1438622277}
   - component: {fileID: 1438622275}
+  - component: {fileID: 5979537780977920962}
   m_Layer: 0
   m_Name: OVRHandPhysicsLeft
   m_TagString: Untagged
@@ -26589,7 +26602,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de16159ece05f454f9faca7f82bee2ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _skeletonType: 0
+  skeletonType: 0
   oVRHand: {fileID: 1491494477}
   oVRSkeleton: {fileID: 768559157}
   oVRPhysicsHand: {fileID: 8519293027190434102}
@@ -26632,6 +26645,18 @@ MonoBehaviour:
   headAngleToObject: {fileID: 1129058234}
   togglePause: {fileID: 96659938}
   test: {fileID: 0}
+--- !u!114 &5979537780977920962
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5979537780977920960}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f523ea0cbeb10e445b12274ad43507a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &6019446922972710339
 Transform:
   m_ObjectHideFlags: 0

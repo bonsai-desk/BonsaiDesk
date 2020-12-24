@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class PlayerHand : MonoBehaviour
 {
-    public OVRSkeleton.SkeletonType _skeletonType;
+    public OVRSkeleton.SkeletonType skeletonType;
 
     public OVRHand oVRHand;
     public OVRSkeleton oVRSkeleton;
@@ -91,6 +91,8 @@ public class PlayerHand : MonoBehaviour
     public TogglePause togglePause;
 
     public Transform test;
+
+    private IHandTick[] _handTicks;
 
     public void ToggleDeleteMode()
     {
@@ -209,13 +211,15 @@ public class PlayerHand : MonoBehaviour
         beamHoldControl.SetActive(false);
         beamJointBody = beamJoint.GetComponent<Rigidbody>();
 
+        _handTicks = GetComponentsInChildren<IHandTick>();
+
         GameObject oPointerPoseGO = new GameObject
         {
             name = "PointerPoseAdjusted"
         };
         oPointerPose = oPointerPoseGO.transform;
 
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
         {
             handLayer = LayerMask.NameToLayer("LeftHand");
         }
@@ -299,20 +303,25 @@ public class PlayerHand : MonoBehaviour
         bool fist = fistMinStrength > 0.7f;
         bool weakFist = fistMinStrength > 0.5f;
 
+        for (var i = 0; i < _handTicks.Length; i++)
+        {
+            _handTicks[i].Tick(this);
+        }
+
         bool pointingAtScreen = false;
         if (!lastPointingAtScreen && fistMinStrength < 0.35f && headAngleToObject.angleBelowThreshold() || lastPointingAtScreen)
             pointingAtScreen = angleToObject.angleBelowThreshold();
-        togglePause.Point(_skeletonType, pointingAtScreen && oVRSkeleton.IsDataHighConfidence,
+        togglePause.Point(skeletonType, pointingAtScreen && oVRSkeleton.IsDataHighConfidence,
             holdPosition.position);
         if (weakFist)
         {
             if (pointingAtScreen && !lastWeakFist)
-                togglePause.StartToggleGesture(_skeletonType, holdPosition.position);
-            togglePause.UpdateToggleGesturePosition(_skeletonType, holdPosition.position);
+                togglePause.StartToggleGesture(skeletonType, holdPosition.position);
+            togglePause.UpdateToggleGesturePosition(skeletonType, holdPosition.position);
         }
 
         if (!weakFist)
-            togglePause.StopToggleGesture(_skeletonType, holdPosition.position);
+            togglePause.StopToggleGesture(skeletonType, holdPosition.position);
 
         if (oVRPhysicsHand.IsDataValid && oVRPhysicsHand.IsDataHighConfidence)
         {
@@ -342,7 +351,7 @@ public class PlayerHand : MonoBehaviour
         {
             GameObject.Find("GameManager").GetComponent<MoveToDesk>().ResetPosition();
 
-            if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
+            if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
             {
             }
             else
@@ -502,17 +511,17 @@ public class PlayerHand : MonoBehaviour
 
     public PlayerHand OtherHand()
     {
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
             return PlayerHands.hands.right;
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
+        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
             return PlayerHands.hands.left;
         return null;
     }
 
     public void ConnectBody(Rigidbody bodyToConnect, bool changeDrag)
     {
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft && bodyToConnect == PlayerHands.hands.right.heldBody ||
-            _skeletonType == OVRSkeleton.SkeletonType.HandRight && bodyToConnect == PlayerHands.hands.left.heldBody)
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft && bodyToConnect == PlayerHands.hands.right.heldBody ||
+            skeletonType == OVRSkeleton.SkeletonType.HandRight && bodyToConnect == PlayerHands.hands.left.heldBody)
             return;
 
         if (heldJoint != null)
