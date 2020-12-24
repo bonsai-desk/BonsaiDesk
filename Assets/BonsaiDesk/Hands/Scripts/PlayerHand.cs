@@ -89,7 +89,9 @@ public class PlayerHand : MonoBehaviour
     // [HideInInspector] public bool weakFist;
 
     private bool lastIndexPinching;
+
     private bool lastPinkyPinch = false;
+
     // private bool lastPointingAtScreen = false;
     private bool lastFist;
     private bool lastWeakFist;
@@ -115,7 +117,7 @@ public class PlayerHand : MonoBehaviour
 
         return false;
     }
-    
+
     public bool GetLastGesture(Gesture gesture)
     {
         if (_lastGestures.TryGetValue(gesture, out var value))
@@ -129,6 +131,14 @@ public class PlayerHand : MonoBehaviour
     public bool GetGestureStart(Gesture gesture)
     {
         return GetGesture(gesture) && !GetLastGesture(gesture);
+    }
+
+    public void UpdateLastGestures()
+    {
+        foreach (Gesture gesture in (Gesture[]) Gesture.GetValues(typeof(Gesture)))
+        {
+            _lastGestures[gesture] = _gestures[gesture];
+        }
     }
 
     public void ToggleDeleteMode()
@@ -249,7 +259,7 @@ public class PlayerHand : MonoBehaviour
         beamJointBody = beamJoint.GetComponent<Rigidbody>();
 
         _handTicks = GetComponentsInChildren<IHandTick>();
-        
+
         foreach (Gesture gesture in (Gesture[]) Gesture.GetValues(typeof(Gesture)))
         {
             _gestures.Add(gesture, false);
@@ -356,6 +366,8 @@ public class PlayerHand : MonoBehaviour
         {
             _handTicks[i].Tick(this);
         }
+
+        PlayerHands.hands.SetHandGesturesReady(skeletonType);
 
         if (!weakFist)
             togglePause.StopToggleGesture(skeletonType, holdPosition.position);
@@ -544,11 +556,6 @@ public class PlayerHand : MonoBehaviour
         lastWeakFist = weakFist;
         lastIndexPinching = indexPinching;
         // lastPointingAtScreen = pointingAtScreen;
-        
-        foreach (Gesture gesture in (Gesture[]) Gesture.GetValues(typeof(Gesture)))
-        {
-            _lastGestures[gesture] = _gestures[gesture];
-        }
     }
 
     public PlayerHand OtherHand()

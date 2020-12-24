@@ -9945,6 +9945,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 744943656}
+  - component: {fileID: 744943657}
+  - component: {fileID: 744943658}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -9973,6 +9975,37 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &744943657
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 744943655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1be3296bed52cf542914a9afde0cfa27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  left: {fileID: 5979537780977920961}
+  right: {fileID: 3909230157963041737}
+  fingerTipPositions: []
+  physicsFingerTipPositions: []
+  physicsFingerPadPositions: []
+  head: {fileID: 89707680}
+  activePointerPoseHand: {fileID: 0}
+--- !u!114 &744943658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 744943655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c258f8405c9a4934fab83d3a593be437, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &752779473
 GameObject:
   m_ObjectHideFlags: 0
@@ -13446,7 +13479,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1212259447}
-  - component: {fileID: 1212259451}
   - component: {fileID: 1212259449}
   - component: {fileID: 1212259446}
   - component: {fileID: 1212259450}
@@ -13544,25 +13576,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   text: {fileID: 1676676881}
---- !u!114 &1212259451
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1212259445}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1be3296bed52cf542914a9afde0cfa27, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  left: {fileID: 5979537780977920961}
-  right: {fileID: 3909230157963041737}
-  fingerTipPositions: []
-  physicsFingerTipPositions: []
-  physicsFingerPadPositions: []
-  head: {fileID: 89707680}
-  activePointerPoseHand: {fileID: 0}
 --- !u!114 &1212259452
 MonoBehaviour:
   m_ObjectHideFlags: 0
