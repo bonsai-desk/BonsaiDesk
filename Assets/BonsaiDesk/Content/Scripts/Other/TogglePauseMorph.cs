@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,6 +7,11 @@ using UnityEngine;
 public class TogglePauseMorph : MonoBehaviour
 {
     private Material material;
+
+    private void Awake()
+    {
+        material = GetComponent<MeshRenderer>().material;
+    }
 
     void Start()
     {
@@ -50,8 +56,11 @@ public class TogglePauseMorph : MonoBehaviour
 
     public void SetLerp(float lerp)
     {
-        if(material == null)
-            material = GetComponent<MeshRenderer>().material;
         material.SetFloat("_Lerp", Mathf.Clamp01(lerp));
+    }
+
+    public void SetFade(float fade)
+    {
+        material.SetFloat("_Fade", Mathf.Clamp01(fade));
     }
 }

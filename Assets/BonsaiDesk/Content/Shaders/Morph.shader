@@ -4,17 +4,21 @@
     {
         _Color("Color", Color) = (1, 1, 1, 1)
         _Lerp("Lerp", Range(0, 1)) = 0
+        _Fade("Fade", Range(0, 1)) = 1
     }
     SubShader
     {
         Tags
         {
-            "RenderType" = "Opaque"
+            "Queue" = "Transparent"
         }
         LOD 100
 
         Pass
         {
+            ZWrite Off
+            Blend SrcAlpha OneMinusSrcAlpha
+            
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -35,7 +39,7 @@
             };
 
             float4 _Color;
-            float _Lerp;
+            float _Lerp, _Fade;
 
             v2f vert(appdata v)
             {
@@ -46,7 +50,7 @@
 
             fixed4 frag(v2f i) : SV_Target
             {
-                return _Color;
+                return float4(_Color.rgb, lerp(0, _Color.a, _Fade));
             }
             ENDCG
         }

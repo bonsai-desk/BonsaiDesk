@@ -652,7 +652,8 @@ MonoBehaviour:
   syncInterval: 0.1
   gestureActivateDistance: 0.1
   pointMovement: 0.075
-  iconRenderer: {fileID: 848667924}
+  fadeAfter: 0
+  fadeTime: 0.25
   togglePauseMorph: {fileID: 848667923}
 --- !u!1 &117227473
 GameObject:
@@ -10661,7 +10662,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 848667922}
-  m_Enabled: 0
+  m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1

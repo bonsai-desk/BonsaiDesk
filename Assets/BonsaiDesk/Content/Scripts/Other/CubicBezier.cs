@@ -7,8 +7,9 @@ public class CubicBezier
     //https://cubic-bezier.com/
     //https://easings.net/
     
-    public static readonly CubicBezier Linear = new CubicBezier(0, 0, 1, 1);
     public static readonly CubicBezier EaseInOut = new CubicBezier(0.42f, 0, 0.58f, 1);
+    public static readonly CubicBezier EaseIn = new CubicBezier(0.42f, 0, 1, 1);
+    public static readonly CubicBezier EaseOut = new CubicBezier(0, 0, 0.58f, 1);
     
     private readonly int _numSamples;
 
