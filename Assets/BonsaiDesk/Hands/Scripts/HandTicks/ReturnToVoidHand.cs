@@ -8,22 +8,29 @@ public class ReturnToVoidHand : MonoBehaviour, IHandTick
     public AngleToObject angleToHead;
     public Transform head;
     public float angleToHeadThreshold = 20f;
-    public float headAngleToHorizonThreshold = 15f;
+    // public float headAngleToHorizonThreshold = 15f;
 
     public void Tick(PlayerHand playerHand)
     {
+        if (playerHand.GetGestureStart(PlayerHand.Gesture.Fist))
+        {
+            print("---");
+            print(angleToHead.Angle());
+            print(Vector3.Angle(-angleToHead.transform.forward, head.forward));
+        }
+        
         if (moveToDesk.oriented &&
             playerHand.GetGestureStart(PlayerHand.Gesture.Fist) &&
             angleToHead.AngleBelowThreshold() &&
             Vector3.Angle(-angleToHead.transform.forward, head.forward) < angleToHeadThreshold)
         {
-            var forward = head.forward;
-            forward.y = 0;
-            var angle = Vector3.Angle(head.forward, forward);
-            if (angle < headAngleToHorizonThreshold)
-            {
-                moveToDesk.ResetPosition();
-            }
+            // var forward = head.forward;
+            // forward.y = 0;
+            // var angle = Vector3.Angle(head.forward, forward);
+            // if (angle < headAngleToHorizonThreshold)
+            // {
+            moveToDesk.ResetPosition();
+            // }
         }
     }
 }

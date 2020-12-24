@@ -9181,7 +9181,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetObject: {fileID: 89707680}
-  angleThreshold: 20
+  angleThreshold: 25
 --- !u!1001 &723724764
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -20945,7 +20945,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetObject: {fileID: 89707680}
-  angleThreshold: 20
+  angleThreshold: 25
 --- !u!1 &1886693200
 GameObject:
   m_ObjectHideFlags: 0
@@ -26620,8 +26620,7 @@ MonoBehaviour:
   moveToDesk: {fileID: 1212259449}
   angleToHead: {fileID: 704926998}
   head: {fileID: 89707680}
-  angleToHeadThreshold: 20
-  headAngleToHorizonThreshold: 15
+  angleToHeadThreshold: 40
 --- !u!4 &4081732858402026843
 Transform:
   m_ObjectHideFlags: 0
@@ -26789,8 +26788,7 @@ MonoBehaviour:
   moveToDesk: {fileID: 1212259449}
   angleToHead: {fileID: 1875899302}
   head: {fileID: 89707680}
-  angleToHeadThreshold: 20
-  headAngleToHorizonThreshold: 15
+  angleToHeadThreshold: 40
 --- !u!4 &6019446922972710339
 Transform:
   m_ObjectHideFlags: 0
