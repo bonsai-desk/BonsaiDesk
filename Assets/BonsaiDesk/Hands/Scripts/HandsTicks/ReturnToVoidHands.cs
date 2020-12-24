@@ -17,10 +17,10 @@ public class ReturnToVoidHands : MonoBehaviour, IHandsTick
         float? distance = null;
 
         //first frame of both hands fist
-        if (leftPlayerHand.GetGestureStart(PlayerHand.Gesture.Fist) &&
-            rightPlayerHand.GetGesture(PlayerHand.Gesture.Fist) ||
-            leftPlayerHand.GetGesture(PlayerHand.Gesture.Fist) &&
-            rightPlayerHand.GetGestureStart(PlayerHand.Gesture.Fist) &&
+        if (leftPlayerHand.GetGestureStart(PlayerHand.Gesture.WeakFist) &&
+            rightPlayerHand.GetGesture(PlayerHand.Gesture.WeakFist) ||
+            leftPlayerHand.GetGesture(PlayerHand.Gesture.WeakFist) &&
+            rightPlayerHand.GetGestureStart(PlayerHand.Gesture.WeakFist) &&
             !_gestureInProgress)
         {
             _gestureInProgress = true;
@@ -28,7 +28,7 @@ public class ReturnToVoidHands : MonoBehaviour, IHandsTick
             _startDistance = distance.Value;
         }
 
-        if (!leftPlayerHand.GetGesture(PlayerHand.Gesture.Fist) || !rightPlayerHand.GetGesture(PlayerHand.Gesture.Fist))
+        if (!leftPlayerHand.GetGesture(PlayerHand.Gesture.WeakFist) || !rightPlayerHand.GetGesture(PlayerHand.Gesture.WeakFist))
         {
             _gestureInProgress = false;
         }
