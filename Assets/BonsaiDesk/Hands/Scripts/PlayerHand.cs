@@ -1,4 +1,5 @@
-﻿using Mirror;
+﻿using System.Collections.Generic;
+using Mirror;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -32,9 +33,6 @@ public class PlayerHand : MonoBehaviour
 
     public PinchSpawn pinchSpawn;
 
-    private bool lastFist;
-    private bool lastWeakFist;
-
     [HideInInspector] public Material material;
 
     [HideInInspector] public bool deleteMode = false;
@@ -56,18 +54,11 @@ public class PlayerHand : MonoBehaviour
 
     public GameObject beamHoldControl;
 
-    private bool lastIndexPinching;
-
     [HideInInspector] public bool objectAttached = false;
 
     public ConfigurableJoint beamJoint;
 
     [HideInInspector] public Rigidbody beamJointBody;
-
-    // float beamStartDistance;
-    // float beamStartLength;
-
-    // float lastFingerDistance;
 
     private Vector3 hitPoint;
 
@@ -82,9 +73,6 @@ public class PlayerHand : MonoBehaviour
     public Camera mainCamera;
     private int handLayer;
 
-    private bool lastPinkyPinch = false;
-    private bool lastPointingAtScreen = false;
-
     public AngleToObject angleToObject;
     public AngleToObject headAngleToObject;
 
@@ -93,6 +81,48 @@ public class PlayerHand : MonoBehaviour
     public Transform test;
 
     private IHandTick[] _handTicks;
+
+    // [HideInInspector] public bool indexPinching;
+    // [HideInInspector] public bool pinch;
+    // [HideInInspector] public float fistMinStrength;
+    // [HideInInspector] public bool fist;
+    // [HideInInspector] public bool weakFist;
+    
+    private bool lastIndexPinching;
+    private bool lastPinkyPinch = false;
+    private bool lastPointingAtScreen = false;
+    private bool lastFist;
+    private bool lastWeakFist;
+    
+    public enum Gesture
+    {
+        IndexPinching,
+        AnyPinching,
+        Fist
+    }
+
+    private Dictionary<Gesture, bool> _gestures = new Dictionary<Gesture, bool>();
+    private Dictionary<Gesture, bool> _gesturesStart = new Dictionary<Gesture, bool>();
+
+    public bool GetGesture(Gesture gesture)
+    {
+        if (_gestures.TryGetValue(gesture, out var value))
+        {
+            return value;
+        }
+
+        return false;
+    }
+
+    public bool GetGestureStart(Gesture gesture)
+    {
+        if (_gesturesStart.TryGetValue(gesture, out var value))
+        {
+            return value;
+        }
+
+        return false;
+    }
 
     public void ToggleDeleteMode()
     {
@@ -302,6 +332,8 @@ public class PlayerHand : MonoBehaviour
         float fistMinStrength = MinFingerCloseStrength();
         bool fist = fistMinStrength > 0.7f;
         bool weakFist = fistMinStrength > 0.5f;
+
+        _gestures[Gesture.IndexPinching] = indexPinching;
 
         for (var i = 0; i < _handTicks.Length; i++)
         {
