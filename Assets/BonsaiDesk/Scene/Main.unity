@@ -10006,6 +10006,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c258f8405c9a4934fab83d3a593be437, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gestureStartDistanceThreshold: 0.375
+  gestureMoveDistance: 0.65
+  action:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1212259449}
+        m_MethodName: ResetPosition
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &752779473
 GameObject:
   m_ObjectHideFlags: 0
