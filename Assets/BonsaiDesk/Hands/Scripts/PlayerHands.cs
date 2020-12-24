@@ -16,13 +16,13 @@ public class PlayerHands : MonoBehaviour
     // public Transform leftThumbTip;
     // public Transform rightThumbTip;
 
-    [HideInInspector] //0-4 thumb to pinky on left hand, 5-9 thumb to pinky right hand. Will have value of Vector3.zero is not tracking
+    [HideInInspector] //0-4 thumb to pinky on left hand, 5-9 thumb to pinky right hand. Will have value of Vector3.zero if not tracking
     public Vector3[] fingerTipPositions;
 
-    [HideInInspector] //0-4 thumb to pinky on left hand, 5-9 thumb to pinky right hand. Will have value of Vector3.zero is not tracking
+    [HideInInspector] //0-4 thumb to pinky on left hand, 5-9 thumb to pinky right hand. Will have value of Vector3.zero if not tracking
     public Vector3[] physicsFingerTipPositions;
 
-    [HideInInspector] //0-4 thumb to pinky on left hand, 5-9 thumb to pinky right hand. Will have value of Vector3.zero is not tracking
+    [HideInInspector] //0-4 thumb to pinky on left hand, 5-9 thumb to pinky right hand. Will have value of Vector3.zero if not tracking
     public Vector3[] physicsFingerPadPositions;
 
     public Transform head;
@@ -65,73 +65,6 @@ public class PlayerHands : MonoBehaviour
                 activePointerPoseHand = right;
         }
     }
-
-    //   private void FixedUpdate()
-    //   {
-    //       // if (left.tracking() && right.tracking())
-    //       // {
-    //       //     left.beamJointBody.MovePosition(left.fingerTips[0].position);
-    //       //     right.beamJointBody.MovePosition(right.fingerTips[0].position);
-    //       // }
-    //
-    //       // PlayerHand hand = left;
-    //       // if (left.objectAttached)
-    //       //     hand = left;
-    //       // else if (right.objectAttached)
-    //       //     hand = right;
-    //       // else
-    //       // {
-    //       //     left.beamLine.enabled = false;
-    //       //     right.beamLine.enabled = false;
-    //       //     return;
-    //       // }
-    //       // Vector3 attachPoint = hand.beamHold.TransformPoint(hand.beamJoint.connectedAnchor);
-    //       // if (!left.tracking() || !right.tracking())
-    //       // {
-    //       //     hand.beamLine.SetPosition(3, attachPoint);
-    //       //     return;
-    //       // }
-    //       // left.beamLine.enabled = false;
-    //       // right.beamLine.enabled = false;
-    //
-    //       // float fingerDistance = Vector3.Distance(left.beamJointBody.transform.position, right.beamJointBody.transform.position);
-    //
-    //       // float ld = left.FixedUpdateExternal(fingerDistance);
-    //       // float rd = right.FixedUpdateExternal(fingerDistance);
-    //       // float difference = Mathf.Max(ld, rd);
-    //
-    //       // float ropeLeft = hand.ropeLength - hand.beamJoint.linearLimit.limit;
-    //       // if (hand.beamJoint.linearLimit.limit <= 0.001f && fingerDistance > ropeLeft + 0.001f)
-    //       // {
-    //       //     Vector3 direction = Quaternion.LookRotation(hand.otherHand().beamJointBody.transform.position - hand.beamJointBody.transform.position) * Vector3.forward;
-    //       //     Vector3 start = hand.beamJointBody.transform.position + (direction * ropeLeft);
-    //       //     hand.beamLine.SetPosition(0, start);
-    //       //     hand.beamLine.SetPosition(1, (start + hand.beamJointBody.transform.position) / 2f);
-    //       // }
-    //       // else
-    //       // {
-    //       //     hand.beamLine.SetPosition(0, hand.otherHand().beamJointBody.transform.position);
-    //       //     Vector3 ropeBottom = (hand.otherHand().beamJointBody.transform.position + hand.beamJointBody.transform.position) / 2f;
-    //       //     float extraRope = hand.beamJoint.linearLimit.limit - Vector3.Distance(hand.beamJointBody.transform.position, attachPoint);
-    //       //     extraRope = Mathf.Clamp(extraRope - difference, 0, Mathf.Infinity);
-    //       //     float a = fingerDistance / 2f;
-    //       //     float c = (fingerDistance + extraRope) / 2f;
-    //       //     Vector3 down = Quaternion.LookRotation(hand.beamJointBody.transform.position - hand.otherHand().beamJointBody.transform.position) * Vector3.down;
-    //       //     float downDistance = Mathf.Sqrt(Mathf.Abs((c * c) - (a * a)));
-    //       //     if (!float.IsNaN(downDistance))
-    //       //         ropeBottom += down * downDistance;
-    //       //     hand.beamLine.SetPosition(1, ropeBottom);
-    //       // }
-    //
-    //       // hand.beamLine.enabled = true;
-    //       // hand.beamLine.SetPosition(2, hand.beamJointBody.transform.position);
-    //       // hand.beamLine.SetPosition(3, attachPoint);
-    //   }
-    //
-    //   // public static void DestroyJoint(Object obj)
-    //   // {
-    //   //     Destroy(obj);
-    //   // }
 
     public bool Tracking()
     {
