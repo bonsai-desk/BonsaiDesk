@@ -87,22 +87,24 @@ public class PlayerHand : MonoBehaviour
     // [HideInInspector] public float fistMinStrength;
     // [HideInInspector] public bool fist;
     // [HideInInspector] public bool weakFist;
-    
+
     private bool lastIndexPinching;
     private bool lastPinkyPinch = false;
-    private bool lastPointingAtScreen = false;
+    // private bool lastPointingAtScreen = false;
     private bool lastFist;
     private bool lastWeakFist;
-    
+
     public enum Gesture
     {
-        IndexPinching,
         AnyPinching,
-        Fist
+        IndexPinching,
+        Fist,
+        WeakFist,
+        WeakPalm
     }
 
     private Dictionary<Gesture, bool> _gestures = new Dictionary<Gesture, bool>();
-    private Dictionary<Gesture, bool> _gesturesStart = new Dictionary<Gesture, bool>();
+    private Dictionary<Gesture, bool> _lastGestures = new Dictionary<Gesture, bool>();
 
     public bool GetGesture(Gesture gesture)
     {
@@ -113,15 +115,20 @@ public class PlayerHand : MonoBehaviour
 
         return false;
     }
-
-    public bool GetGestureStart(Gesture gesture)
+    
+    public bool GetLastGesture(Gesture gesture)
     {
-        if (_gesturesStart.TryGetValue(gesture, out var value))
+        if (_lastGestures.TryGetValue(gesture, out var value))
         {
             return value;
         }
 
         return false;
+    }
+
+    public bool GetGestureStart(Gesture gesture)
+    {
+        return GetGesture(gesture) && !GetLastGesture(gesture);
     }
 
     public void ToggleDeleteMode()
@@ -242,6 +249,12 @@ public class PlayerHand : MonoBehaviour
         beamJointBody = beamJoint.GetComponent<Rigidbody>();
 
         _handTicks = GetComponentsInChildren<IHandTick>();
+        
+        foreach (Gesture gesture in (Gesture[]) Gesture.GetValues(typeof(Gesture)))
+        {
+            _gestures.Add(gesture, false);
+            _lastGestures.Add(gesture, false);
+        }
 
         GameObject oPointerPoseGO = new GameObject
         {
@@ -280,7 +293,7 @@ public class PlayerHand : MonoBehaviour
     public float FixedUpdateExternal(float fingerDistance)
     {
         float difference = 0;
-        bool indexPinching = Pinching();
+        bool indexPinching = IndexPinching();
         if (indexPinching)
         {
             if (OtherHand().beamHold != null)
@@ -327,29 +340,21 @@ public class PlayerHand : MonoBehaviour
         //     }
         // }
 
-        bool indexPinching = Pinching();
+        bool indexPinching = IndexPinching();
         bool pinch = AnyPinching();
-        float fistMinStrength = MinFingerCloseStrength();
+        float fistMinStrength = FistStrength();
         bool fist = fistMinStrength > 0.7f;
         bool weakFist = fistMinStrength > 0.5f;
 
-        _gestures[Gesture.IndexPinching] = indexPinching;
+        _gestures[Gesture.AnyPinching] = AnyPinching();
+        _gestures[Gesture.IndexPinching] = IndexPinching();
+        _gestures[Gesture.Fist] = fistMinStrength > 0.7f;
+        _gestures[Gesture.WeakFist] = fistMinStrength > 0.5f;
+        _gestures[Gesture.WeakPalm] = fistMinStrength < 0.35f;
 
         for (var i = 0; i < _handTicks.Length; i++)
         {
             _handTicks[i].Tick(this);
-        }
-
-        bool pointingAtScreen = false;
-        if (!lastPointingAtScreen && fistMinStrength < 0.35f && headAngleToObject.angleBelowThreshold() || lastPointingAtScreen)
-            pointingAtScreen = angleToObject.angleBelowThreshold();
-        togglePause.Point(skeletonType, pointingAtScreen && oVRSkeleton.IsDataHighConfidence,
-            holdPosition.position);
-        if (weakFist)
-        {
-            if (pointingAtScreen && !lastWeakFist)
-                togglePause.StartToggleGesture(skeletonType, holdPosition.position);
-            togglePause.UpdateToggleGesturePosition(skeletonType, holdPosition.position);
         }
 
         if (!weakFist)
@@ -538,7 +543,12 @@ public class PlayerHand : MonoBehaviour
         lastFist = fist;
         lastWeakFist = weakFist;
         lastIndexPinching = indexPinching;
-        lastPointingAtScreen = pointingAtScreen;
+        // lastPointingAtScreen = pointingAtScreen;
+        
+        foreach (Gesture gesture in (Gesture[]) Gesture.GetValues(typeof(Gesture)))
+        {
+            _lastGestures[gesture] = _gestures[gesture];
+        }
     }
 
     public PlayerHand OtherHand()
@@ -639,12 +649,17 @@ public class PlayerHand : MonoBehaviour
         return true;
     }
 
-    public bool Pinching()
+    public bool Pinching(OVRHand.HandFinger finger)
     {
         if (Tracking())
-            return oVRHand.GetFingerIsPinching(OVRHand.HandFinger.Index);
+            return oVRHand.GetFingerIsPinching(finger);
         else
             return false;
+    }
+
+    public bool IndexPinching()
+    {
+        return Pinching(OVRHand.HandFinger.Index);
     }
 
     public float AnyPinchingStrength()
@@ -687,21 +702,6 @@ public class PlayerHand : MonoBehaviour
     }
 
     public float FistStrength()
-    {
-        float strength = 0f;
-        strength += FingerCloseStrength(OVRSkeleton.BoneId.Hand_Index1);
-        strength += FingerCloseStrength(OVRSkeleton.BoneId.Hand_Middle1);
-        strength += FingerCloseStrength(OVRSkeleton.BoneId.Hand_Ring1);
-        strength += FingerCloseStrength(OVRSkeleton.BoneId.Hand_Pinky1);
-        return Mathf.Clamp01(strength / 4f);
-    }
-
-    public bool Fist()
-    {
-        return FistStrength() >= 0.8f;
-    }
-
-    public float MinFingerCloseStrength()
     {
         float minStrength = FingerCloseStrength(OVRSkeleton.BoneId.Hand_Index1);
         float strength = FingerCloseStrength(OVRSkeleton.BoneId.Hand_Middle1);

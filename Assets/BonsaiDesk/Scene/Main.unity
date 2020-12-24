@@ -26509,6 +26509,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f523ea0cbeb10e445b12274ad43507a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  angleToObject: {fileID: 1702261044}
+  headAngleToObject: {fileID: 1129058234}
+  togglePause: {fileID: 96659938}
 --- !u!4 &4081732858402026843
 Transform:
   m_ObjectHideFlags: 0
@@ -26657,6 +26660,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f523ea0cbeb10e445b12274ad43507a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  angleToObject: {fileID: 1805792898}
+  headAngleToObject: {fileID: 1129058234}
+  togglePause: {fileID: 96659938}
 --- !u!4 &6019446922972710339
 Transform:
   m_ObjectHideFlags: 0
