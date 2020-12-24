@@ -367,8 +367,6 @@ public class PlayerHand : MonoBehaviour
             _handTicks[i].Tick(this);
         }
 
-        PlayerHands.hands.SetHandGesturesReady(skeletonType);
-
         if (!weakFist)
             togglePause.StopToggleGesture(skeletonType, holdPosition.position);
 
@@ -552,10 +550,11 @@ public class PlayerHand : MonoBehaviour
             }
         }
 
+        PlayerHands.hands.SetHandGesturesReady(skeletonType);
+
         lastFist = fist;
         lastWeakFist = weakFist;
         lastIndexPinching = indexPinching;
-        // lastPointingAtScreen = pointingAtScreen;
     }
 
     public PlayerHand OtherHand()
