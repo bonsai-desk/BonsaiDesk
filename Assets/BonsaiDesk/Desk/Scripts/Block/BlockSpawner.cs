@@ -55,7 +55,7 @@ public class BlockSpawner : MonoBehaviour
 
     private void InstantiateObject()
     {
-        NetworkVRPlayer.self.CmdSpawnBlock(transform.position, transform.rotation, BlockId);
+        // NetworkVRPlayer.self.CmdSpawnBlock(transform.position, transform.rotation, BlockId);
 
         // GameObject newObject = Instantiate(blockAreaPrefab.GetPrefab());
         // newObject.GetComponent<BlockArea>().startBlockId = blockId;

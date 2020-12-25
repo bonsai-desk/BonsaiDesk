@@ -1,12 +1,14 @@
-﻿using Mirror;
+﻿using System.Collections.Generic;
+using Mirror;
+using Oculus.Platform.Models;
 using UnityEngine;
 
-public class SyncListVector3 : SyncList<Vector3> { }
+public class SyncListVector3 : SyncList<Vector3>
+{
+}
 
 public class NetworkVRPlayer : NetworkBehaviour
 {
-    public static NetworkVRPlayer self;
-
     public GameObject networkHandLeftPrefab;
     public GameObject networkHandRightPrefab;
 
@@ -15,26 +17,19 @@ public class NetworkVRPlayer : NetworkBehaviour
     public LineRenderer beamLine;
     // readonly SyncListVector3 beamLinePoints = new SyncListVector3();
 
-    [SyncVar]
-    private Vector3 beamAttachPoint;
+    [SyncVar] private Vector3 beamAttachPoint;
 
-    [SyncVar]
-    private NetworkIdentity attachedObjectNetId;
+    [SyncVar] private NetworkIdentity attachedObjectNetId;
 
-    [SyncVar]
-    private NetworkIdentity leftHandId;
+    [SyncVar] private NetworkIdentity leftHandId;
 
-    [SyncVar]
-    private NetworkIdentity rightHandId;
+    [SyncVar] private NetworkIdentity rightHandId;
 
-    [SyncVar]
-    private float ropeLength;
+    [SyncVar] private float ropeLength;
 
-    [SyncVar]
-    private int ropeHandIndex = 0;
+    [SyncVar] private int ropeHandIndex = 0;
 
-    [SyncVar]
-    private bool ropeActive = false;
+    [SyncVar] private bool ropeActive = false;
 
     private Transform leftFingerTip;
     private Transform rightFingerTip;
@@ -45,9 +40,6 @@ public class NetworkVRPlayer : NetworkBehaviour
 
         if (!isLocalPlayer)
             return;
-
-        if (self == null)
-            self = this;
 
         CmdSpawnHands();
     }
@@ -70,19 +62,22 @@ public class NetworkVRPlayer : NetworkBehaviour
                 // beamLine.SetPosition(1, rightFingerTip.position);
                 // beamLine.SetPosition(2, rightFingerTip.position);
                 if (ropeHandIndex == 0)
-                    SetBeamPoints(leftFingerTip.position, rightFingerTip.position, beamAttachPoint, attachedObjectNetId.transform, ropeLength);
+                    SetBeamPoints(leftFingerTip.position, rightFingerTip.position, beamAttachPoint,
+                        attachedObjectNetId.transform, ropeLength);
                 else
-                    SetBeamPoints(rightFingerTip.position, leftFingerTip.position, beamAttachPoint, attachedObjectNetId.transform, ropeLength);
+                    SetBeamPoints(rightFingerTip.position, leftFingerTip.position, beamAttachPoint,
+                        attachedObjectNetId.transform, ropeLength);
             }
             else
             {
                 for (int i = 0; i < 4; i++)
                     beamLine.SetPosition(i, Vector3.zero);
             }
+
+            return;
         }
 
-        if (!isLocalPlayer)
-            return;
+        //code below if is local player
     }
 
     private void FixedUpdate()
@@ -136,10 +131,12 @@ public class NetworkVRPlayer : NetworkBehaviour
 
         if (hand.beamJoint != null && hand.beamJoint.connectedBody != null)
         {
-            SetBeamPoints(hand.OtherHand().beamJointBody.transform.position, hand.beamJointBody.transform.position, hand.beamJoint.connectedAnchor, hand.beamJoint.connectedBody.transform, hand.ropeLength);
+            SetBeamPoints(hand.OtherHand().beamJointBody.transform.position, hand.beamJointBody.transform.position,
+                hand.beamJoint.connectedAnchor, hand.beamJoint.connectedBody.transform, hand.ropeLength);
 
             if (!ropeActive)
-                CmdSetBeamPoints(hand.beamJoint.connectedAnchor, hand.beamJoint.connectedBody.GetComponent<NetworkIdentity>(), hand.ropeLength, ropeHandIndex);
+                CmdSetBeamPoints(hand.beamJoint.connectedAnchor,
+                    hand.beamJoint.connectedBody.GetComponent<NetworkIdentity>(), hand.ropeLength, ropeHandIndex);
         }
     }
 
@@ -288,7 +285,8 @@ public class NetworkVRPlayer : NetworkBehaviour
     }
 
     [Command]
-    private void CmdSetBeamPoints(Vector3 attachPoint, NetworkIdentity attachObject, float ropeLength, int ropeHandIndex)
+    private void CmdSetBeamPoints(Vector3 attachPoint, NetworkIdentity attachObject, float ropeLength,
+        int ropeHandIndex)
     {
         beamAttachPoint = attachPoint;
         attachedObjectNetId = attachObject;
@@ -313,27 +311,8 @@ public class NetworkVRPlayer : NetworkBehaviour
     public void CmdSpawnBlock(Vector3 position, Quaternion rotation, int blockid)
     {
         GameObject block = Instantiate(blockAreaPrefab, position, rotation);
-        block.GetComponent<BlockArea>().networkBlocks.Add(Vector3Int.zero, new NetworkBlockInfo() { id = (byte)blockid, rotation = BlockArea.IdentityByte() });
+        block.GetComponent<BlockArea>().networkBlocks.Add(Vector3Int.zero,
+            new NetworkBlockInfo() {id = (byte) blockid, rotation = BlockArea.IdentityByte()});
         NetworkServer.Spawn(block, connectionToClient);
-    }
-
-    [Command(ignoreAuthority = true)]
-    public void CmdReceiveOwnershipOfObject(NetworkIdentity objectNetId)
-    {
-        if (objectNetId == null)
-            return;
-
-        if (objectNetId.connectionToClient == connectionToClient)
-        {
-            return;
-        }
-        else
-        {
-            if (objectNetId.connectionToClient != null)
-            {
-                objectNetId.RemoveClientAuthority();
-            }
-            objectNetId.AssignClientAuthority(connectionToClient);
-        }
     }
 }

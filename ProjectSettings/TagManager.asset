@@ -10,10 +10,8 @@ TagManager:
   - PointerTip
   - BlockSelect
   - Block
-  - BlockArea
   - BeamPinch
   - Bearing
-  - KeepOnDisconnect
   layers:
   - Default
   - TransparentFX
