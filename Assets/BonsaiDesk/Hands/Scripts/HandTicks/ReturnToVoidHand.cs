@@ -12,13 +12,6 @@ public class ReturnToVoidHand : MonoBehaviour, IHandTick
 
     public void Tick(PlayerHand playerHand)
     {
-        if (playerHand.GetGestureStart(PlayerHand.Gesture.Fist))
-        {
-            print("---");
-            print(angleToHead.Angle());
-            print(Vector3.Angle(-angleToHead.transform.forward, head.forward));
-        }
-        
         if (moveToDesk.oriented &&
             playerHand.GetGestureStart(PlayerHand.Gesture.Fist) &&
             angleToHead.AngleBelowThreshold() &&
