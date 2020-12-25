@@ -429,9 +429,10 @@ public class PlayerHand : MonoBehaviour
             }
         }
 
+        //TODO fix pinch pull
         bool hitObject = false;
         if (!objectAttached && !hitPullBox && !OtherHand().objectAttached && OtherHand().beamHold == null &&
-            heldJoint == null)
+            heldJoint == null && false)
         {
             if (indexPinching)
             {
