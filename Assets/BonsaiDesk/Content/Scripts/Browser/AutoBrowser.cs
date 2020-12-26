@@ -21,7 +21,6 @@ public class AutoBrowser : MonoBehaviour
 
     private Vector2Int _resolution;
     
-    private OVROverlay _overlay;
     private WebViewPrefab _webViewPrefab;
 
     public Material holePuncherMaterial;
