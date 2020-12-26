@@ -26612,7 +26612,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 682cc1c4b5cef12478329714a5d5583e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialURL: http://192.168.1.122:3000/
   width: 0.75
   aspect: {x: 16, y: 9}
   xResolution: 850
@@ -26651,6 +26650,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7442f4bc421d1534e9173115168ec26d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  initialURL: http://192.168.1.122:3000/
 --- !u!1 &1912258022280695894
 GameObject:
   m_ObjectHideFlags: 0

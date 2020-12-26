@@ -3,9 +3,12 @@ using System.Collections;
 using UnityEngine;
 using Vuplex.WebView;
 
+public delegate void BrowserReadyEvent();
+
 public class AutoBrowser : MonoBehaviour
 {
-    public string initialURL;
+    public event BrowserReadyEvent BrowserReady;
+    
     public float width = 1;
     public Vector2 aspect = new Vector2(16, 9);
 
@@ -73,7 +76,6 @@ public class AutoBrowser : MonoBehaviour
 
     private IEnumerator SetupWebView(object sender, EventArgs eventArgs)
     {
-        _webViewPrefab.WebView.LoadUrl(initialURL);
 
 #if UNITY_ANDROID && !UNITY_EDITOR
         while (_overlay.externalSurfaceObject == IntPtr.Zero || _webViewPrefab.WebView == null)
@@ -93,6 +95,9 @@ public class AutoBrowser : MonoBehaviour
         (_webViewPrefab.WebView as AndroidGeckoWebView).SetSurface(surface);
         Debug.Log("[BONSAI] Done SetSurface");
 #endif
+        
+        BrowserReady?.Invoke();
+        
         yield break;
     }
 
@@ -133,5 +138,10 @@ public class AutoBrowser : MonoBehaviour
         return (int) Math.Round(
             pixelPerDegree * (360f / (2 * Math.PI)) * 2 * Math.Atan(width / (2 * distanceEstimate))
         );
+    }
+
+    public void LoadUrl(string url)
+    {
+        _webViewPrefab.WebView.LoadUrl(url);
     }
 }

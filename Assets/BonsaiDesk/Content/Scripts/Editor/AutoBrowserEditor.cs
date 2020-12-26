@@ -9,8 +9,6 @@ public class AutoBrowserEditor : Editor
     {
 
         var autoBrowser = target as AutoBrowser;
-        
-        autoBrowser.initialURL = EditorGUILayout.TextField("Initial URL", autoBrowser.initialURL);
 
         autoBrowser.width = EditorGUILayout.FloatField("Width", autoBrowser.width);
 
