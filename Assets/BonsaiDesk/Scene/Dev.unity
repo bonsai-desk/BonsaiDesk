@@ -178,6 +178,7 @@ MonoBehaviour:
   distanceEstimate: 1.25
   pixelPerDegree: 16
   dummyTexture: {fileID: 2800000, guid: 5bd94f9c216be6e47abdc6a1eced3862, type: 3}
+  holePuncherMaterial: {fileID: 2100000, guid: 13c0664d10ae3514ea9d893740bf2046, type: 2}
 --- !u!1 &1057658624
 GameObject:
   m_ObjectHideFlags: 0

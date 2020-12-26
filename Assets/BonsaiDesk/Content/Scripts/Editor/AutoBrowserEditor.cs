@@ -46,6 +46,8 @@ public class AutoBrowserEditor : Editor
         
         autoBrowser.dummyTexture = (Texture) EditorGUILayout.ObjectField("Dummy Texture", autoBrowser.dummyTexture, typeof(Texture), true);
 
+        autoBrowser.holePuncherMaterial = (Material) EditorGUILayout.ObjectField("Hole Puncher Material",
+            autoBrowser.holePuncherMaterial, typeof(Material), true);
     }
 
     private void OnValidate()

@@ -17,9 +17,12 @@ public class AutoBrowser : MonoBehaviour
     public Texture dummyTexture;
 
     private OVROverlay _overlay;
+    private GameObject _holePuncher;
 
     private Vector2Int _resolution;
     private WebViewPrefab _webViewPrefab;
+
+    public Material holePuncherMaterial;
 
     private void Start()
     {
@@ -35,10 +38,31 @@ public class AutoBrowser : MonoBehaviour
             _resolution = new Vector2Int(xResolution, (int) Math.Round(xResolution * aspect.y / aspect.x));
         }
 
+        var localScale = new Vector3(width, width * aspect.y / aspect.x, 1);
+
         _overlay = gameObject.AddComponent<OVROverlay>();
         _overlay.externalSurfaceWidth = _resolution.x;
         _overlay.externalSurfaceHeight = _resolution.y;
-        _overlay.transform.localScale = new Vector3(width, width * aspect.y / aspect.x, 1);
+        _overlay.transform.localScale = localScale;
+        _overlay.currentOverlayType = OVROverlay.OverlayType.Underlay;
+
+// TODO         
+#if UNITY_ANDROID && !UNITY_EDITOR
+        AndroidGeckoWebView.EnableRemoteDebugging();
+        AndroidGeckoWebView.SetUserPreferences(@"
+            user_pref('media.autoplay.default', 0);
+            user_pref('media.geckoview.autoplay.request', false);
+        ");
+#endif
+        
+        
+#if UNITY_ANDROID && !UNITY_EDITOR
+        _holePuncher = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        _holePuncher.transform.SetParent(transform, false);
+        _holePuncher.GetComponent<Renderer>().material = holePuncherMaterial;
+        _holePuncher.transform.localScale = new Vector3(0.995f,0.995f,1f);
+#endif
+        
         
         if (dummyTexture)
             _overlay.textures = new Texture[] {dummyTexture, dummyTexture};
