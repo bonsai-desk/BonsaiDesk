@@ -10,8 +10,6 @@ public class AutoAuthority : NetworkBehaviour
     [SyncVar] private double _lastInteractTime;
     [SyncVar] private uint _ownerIdentityId = uint.MaxValue;
 
-    public bool debug;
-
     public Material hasAuthorityMaterial;
     public Material noAuthorityMaterial;
     public MeshRenderer meshRenderer;
@@ -25,6 +23,8 @@ public class AutoAuthority : NetworkBehaviour
         if (isServer)
         {
             _lastInteractTime = NetworkTime.time;
+            if (connectionToClient != null)
+                _ownerIdentityId = connectionToClient.identity.netId;
         }
 
         _body = GetComponent<Rigidbody>();
@@ -35,12 +35,6 @@ public class AutoAuthority : NetworkBehaviour
 
     private void Update()
     {
-        if (debug)
-        {
-            debug = false;
-            print(NetworkTime.time + " " + _lastInteractTime + " " + _ownerIdentityId);
-        }
-
         UpdateMaterial();
 
         //if you don't have control over the object
@@ -79,6 +73,9 @@ public class AutoAuthority : NetworkBehaviour
 
     private void UpdateMaterial()
     {
+        if (meshRenderer == null || hasAuthorityMaterial == null || noAuthorityMaterial == null)
+            return;
+
         meshRenderer.sharedMaterial =
             isServer && !isClient && ServerHasAuthority() || isClient && ClientHasAuthority()
                 ? hasAuthorityMaterial
@@ -122,16 +119,6 @@ public class AutoAuthority : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdSetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime)
     {
-        //if passed owner is null, remove authority then return
-        if (newOwnerIdentityId == uint.MaxValue)
-        {
-            netIdentity.RemoveClientAuthority();
-            _ownerIdentityId = uint.MaxValue;
-            // _lastInteractTime = NetworkTime.time;
-            _lastInteractTime = fromLastInteractTime;
-            return;
-        }
-
         //if owner already has authority return
         if (_ownerIdentityId == newOwnerIdentityId)
         {
@@ -144,9 +131,12 @@ public class AutoAuthority : NetworkBehaviour
             netIdentity.RemoveClientAuthority();
         }
 
-        //give the new owner authority
-        netIdentity.AssignClientAuthority(NetworkIdentity.spawned[newOwnerIdentityId].connectionToClient);
-        // _lastInteractTime = NetworkTime.time;
+        //if the new owner is no the server, give them authority
+        if (newOwnerIdentityId != uint.MaxValue)
+        {
+            netIdentity.AssignClientAuthority(NetworkIdentity.spawned[newOwnerIdentityId].connectionToClient);
+        }
+
         _lastInteractTime = fromLastInteractTime;
         _ownerIdentityId = newOwnerIdentityId;
     }
