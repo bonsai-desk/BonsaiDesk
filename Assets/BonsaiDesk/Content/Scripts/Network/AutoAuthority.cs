@@ -10,13 +10,14 @@ public class AutoAuthority : NetworkBehaviour
     [SyncVar] private double _lastInteractTime;
     [SyncVar] private uint _ownerIdentityId = uint.MaxValue;
 
-    public Material hasAuthorityMaterial;
-    public Material noAuthorityMaterial;
+    public bool visualizeAuthority;
+    public Material visualizeAuthorityMaterial;
     public MeshRenderer meshRenderer;
 
     private Rigidbody _body;
     private int _lastInteractFrame;
     private int _lastSetNewOwnerFrame;
+    private Material defaultMaterial;
 
     private void Start()
     {
@@ -30,6 +31,8 @@ public class AutoAuthority : NetworkBehaviour
         _body = GetComponent<Rigidbody>();
         _body.isKinematic = true;
 
+        if (meshRenderer != null)
+            defaultMaterial = meshRenderer.sharedMaterial;
         UpdateMaterial();
     }
 
@@ -73,13 +76,13 @@ public class AutoAuthority : NetworkBehaviour
 
     private void UpdateMaterial()
     {
-        if (meshRenderer == null || hasAuthorityMaterial == null || noAuthorityMaterial == null)
+        if (meshRenderer == null || defaultMaterial == null || visualizeAuthorityMaterial == null)
             return;
 
         meshRenderer.sharedMaterial =
-            isServer && !isClient && ServerHasAuthority() || isClient && ClientHasAuthority()
-                ? hasAuthorityMaterial
-                : noAuthorityMaterial;
+            visualizeAuthority && (isServer && !isClient && ServerHasAuthority() || isClient && ClientHasAuthority())
+                ? visualizeAuthorityMaterial
+                : defaultMaterial;
     }
 
     public void Interact(uint identityId)
