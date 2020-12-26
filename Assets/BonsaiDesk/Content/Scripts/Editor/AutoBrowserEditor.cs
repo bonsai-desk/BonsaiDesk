@@ -30,7 +30,7 @@ public class AutoBrowserEditor : Editor
         else
         {
             EditorGUILayout.LabelField("Calculated X Resolution", 
-                AutoBrowser.GetResolution(
+                AutoBrowser.ResolvablePixels(
                   autoBrowser.width, 
                     autoBrowser.distanceEstimate,
                     autoBrowser.pixelPerDegree
