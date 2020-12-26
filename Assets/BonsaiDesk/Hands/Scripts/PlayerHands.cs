@@ -27,8 +27,11 @@ public class PlayerHands : MonoBehaviour
 
     public Transform head;
 
-    [HideInInspector]
-    public PlayerHand activePointerPoseHand;
+    [HideInInspector] public PlayerHand activePointerPoseHand;
+
+    private IHandsTick[] _handsTicks;
+    private bool leftHandGesturesReady;
+    private bool rightHandGesturesReady;
 
     private void Awake()
     {
@@ -40,6 +43,8 @@ public class PlayerHands : MonoBehaviour
     {
         // left = new PlayerHand(OVRHandLeft.GetComponent<OVRHand>(), OVRHandLeft.GetComponent<OVRSkeleton>(), leftHandBody, OVRSkeleton.SkeletonType.HandLeft, leftThumbTip);
         // right = new PlayerHand(OVRHandRight.GetComponent<OVRHand>(), OVRHandRight.GetComponent<OVRSkeleton>(), rightHandBody, OVRSkeleton.SkeletonType.HandRight, rightThumbTip);
+
+        _handsTicks = GetComponentsInChildren<IHandsTick>();
 
         fingerTipPositions = new Vector3[10];
         physicsFingerTipPositions = new Vector3[10];
@@ -53,6 +58,11 @@ public class PlayerHands : MonoBehaviour
         // left.Update();
         // right.Update();
 
+        for (var i = 0; i < _handsTicks.Length; i++)
+        {
+            _handsTicks[i].Tick(left, right);
+        }
+
         if (left.hitDistance > 1000f && right.hitDistance > 1000f)
         {
             activePointerPoseHand = null;
@@ -63,6 +73,27 @@ public class PlayerHands : MonoBehaviour
                 activePointerPoseHand = left;
             else
                 activePointerPoseHand = right;
+        }
+    }
+
+    public void SetHandGesturesReady(OVRSkeleton.SkeletonType skeletonType)
+    {
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+            leftHandGesturesReady = true;
+        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
+            rightHandGesturesReady = true;
+
+        if (leftHandGesturesReady && rightHandGesturesReady)
+        {
+            for (var i = 0; i < _handsTicks.Length; i++)
+            {
+                _handsTicks[i].Tick(left, right);
+            }
+            
+            left.UpdateLastGestures();
+            right.UpdateLastGestures();
+            leftHandGesturesReady = false;
+            rightHandGesturesReady = true;
         }
     }
 
@@ -92,6 +123,7 @@ public class PlayerHands : MonoBehaviour
                 physicsFingerPadPositions[n] = Vector3.zero;
             }
         }
+
         if (right.Tracking())
         {
             for (int i = 0; i < 5; i++, n++)

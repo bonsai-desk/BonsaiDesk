@@ -19,9 +19,9 @@ public class UIHandSelector : MonoBehaviour
         {
             lineRenderer.enabled = true;
             inputModule.rayTransform = PlayerHands.hands.activePointerPoseHand.oPointerPose;
-            if (PlayerHands.hands.activePointerPoseHand._skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+            if (PlayerHands.hands.activePointerPoseHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft)
                 inputModule.joyPadClickButton = OVRInput.Button.Three;
-            else if (PlayerHands.hands.activePointerPoseHand._skeletonType == OVRSkeleton.SkeletonType.HandRight)
+            else if (PlayerHands.hands.activePointerPoseHand.skeletonType == OVRSkeleton.SkeletonType.HandRight)
                 inputModule.joyPadClickButton = OVRInput.Button.One;
             else
                 inputModule.joyPadClickButton = OVRInput.Button.None;

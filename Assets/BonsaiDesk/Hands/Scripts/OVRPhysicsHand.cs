@@ -263,7 +263,7 @@ public class OVRPhysicsHand : MonoBehaviour
                     if (n == 1)
                     {
                         var capsuleRigidBody = capsuleRigidBodyGO.AddComponent<Rigidbody>();
-                        capsuleRigidBodyGO.AddComponent<HandAuthority>();
+                        // capsuleRigidBodyGO.AddComponent<HandAuthority>();
                         capsuleRigidBody.mass = mass * (1f - bonesToSkinRatio) / 19f;
                         capsuleRigidBody.useGravity = false;
                         capsuleRigidBody.angularDrag = 0;

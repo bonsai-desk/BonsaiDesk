@@ -1,10 +1,11 @@
-﻿using Mirror;
+﻿using System.Collections.Generic;
+using Mirror;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PlayerHand : MonoBehaviour
 {
-    public OVRSkeleton.SkeletonType _skeletonType;
+    public OVRSkeleton.SkeletonType skeletonType;
 
     public OVRHand oVRHand;
     public OVRSkeleton oVRSkeleton;
@@ -32,9 +33,6 @@ public class PlayerHand : MonoBehaviour
 
     public PinchSpawn pinchSpawn;
 
-    private bool lastFist;
-    private bool lastWeakFist;
-
     [HideInInspector] public Material material;
 
     [HideInInspector] public bool deleteMode = false;
@@ -56,18 +54,11 @@ public class PlayerHand : MonoBehaviour
 
     public GameObject beamHoldControl;
 
-    private bool lastIndexPinching;
-
     [HideInInspector] public bool objectAttached = false;
 
     public ConfigurableJoint beamJoint;
 
     [HideInInspector] public Rigidbody beamJointBody;
-
-    // float beamStartDistance;
-    // float beamStartLength;
-
-    // float lastFingerDistance;
 
     private Vector3 hitPoint;
 
@@ -82,15 +73,75 @@ public class PlayerHand : MonoBehaviour
     public Camera mainCamera;
     private int handLayer;
 
-    private bool lastPinkyPinch = false;
-    private bool lastPointingAtScreen = false;
-
     public AngleToObject angleToObject;
     public AngleToObject headAngleToObject;
 
     public TogglePause togglePause;
 
     public Transform test;
+
+    private IHandTick[] _handTicks;
+
+    // [HideInInspector] public bool indexPinching;
+    // [HideInInspector] public bool pinch;
+    // [HideInInspector] public float fistMinStrength;
+    // [HideInInspector] public bool fist;
+    // [HideInInspector] public bool weakFist;
+
+    private bool lastIndexPinching;
+
+    private bool lastPinkyPinch = false;
+
+    // private bool lastPointingAtScreen = false;
+    private bool lastFist;
+    private bool lastWeakFist;
+
+    public enum Gesture
+    {
+        AnyPinching,
+        IndexPinching,
+        Fist,
+        FlatFist,
+        WeakFist,
+        WeakFlatFist,
+        WeakPalm
+    }
+
+    private Dictionary<Gesture, bool> _gestures = new Dictionary<Gesture, bool>();
+    private Dictionary<Gesture, bool> _lastGestures = new Dictionary<Gesture, bool>();
+
+    public bool GetGesture(Gesture gesture)
+    {
+        if (_gestures.TryGetValue(gesture, out var value))
+        {
+            return value;
+        }
+
+        return false;
+    }
+
+    public bool GetLastGesture(Gesture gesture)
+    {
+        if (_lastGestures.TryGetValue(gesture, out var value))
+        {
+            return value;
+        }
+
+        return false;
+    }
+
+    public bool GetGestureStart(Gesture gesture)
+    {
+        return GetGesture(gesture) && !GetLastGesture(gesture);
+    }
+
+    public void UpdateLastGestures()
+    {
+        foreach (Gesture gesture in (Gesture[]) Gesture.GetValues(typeof(Gesture)))
+        {
+            _lastGestures[gesture] = _gestures[gesture];
+        }
+    }
 
     public void ToggleDeleteMode()
     {
@@ -209,13 +260,21 @@ public class PlayerHand : MonoBehaviour
         beamHoldControl.SetActive(false);
         beamJointBody = beamJoint.GetComponent<Rigidbody>();
 
+        _handTicks = GetComponentsInChildren<IHandTick>();
+
+        foreach (Gesture gesture in (Gesture[]) Gesture.GetValues(typeof(Gesture)))
+        {
+            _gestures.Add(gesture, false);
+            _lastGestures.Add(gesture, false);
+        }
+
         GameObject oPointerPoseGO = new GameObject
         {
             name = "PointerPoseAdjusted"
         };
         oPointerPose = oPointerPoseGO.transform;
 
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
         {
             handLayer = LayerMask.NameToLayer("LeftHand");
         }
@@ -246,7 +305,7 @@ public class PlayerHand : MonoBehaviour
     public float FixedUpdateExternal(float fingerDistance)
     {
         float difference = 0;
-        bool indexPinching = Pinching();
+        bool indexPinching = IndexPinching();
         if (indexPinching)
         {
             if (OtherHand().beamHold != null)
@@ -293,26 +352,25 @@ public class PlayerHand : MonoBehaviour
         //     }
         // }
 
-        bool indexPinching = Pinching();
+        bool indexPinching = IndexPinching();
         bool pinch = AnyPinching();
-        float fistMinStrength = MinFingerCloseStrength();
+        float fistMinStrength = FistStrength();
+        float flatFistStrength = FlatFistStrength();
         bool fist = fistMinStrength > 0.7f;
         bool weakFist = fistMinStrength > 0.5f;
 
-        bool pointingAtScreen = false;
-        if (!lastPointingAtScreen && fistMinStrength < 0.35f && headAngleToObject.angleBelowThreshold() || lastPointingAtScreen)
-            pointingAtScreen = angleToObject.angleBelowThreshold();
-        togglePause.Point(_skeletonType, pointingAtScreen && oVRSkeleton.IsDataHighConfidence,
-            holdPosition.position);
-        if (weakFist)
-        {
-            if (pointingAtScreen && !lastWeakFist)
-                togglePause.StartToggleGesture(_skeletonType, holdPosition.position);
-            togglePause.UpdateToggleGesturePosition(_skeletonType, holdPosition.position);
-        }
+        _gestures[Gesture.AnyPinching] = AnyPinching();
+        _gestures[Gesture.IndexPinching] = IndexPinching();
+        _gestures[Gesture.Fist] = fistMinStrength > 0.7f;
+        _gestures[Gesture.FlatFist] = flatFistStrength > 0.7f;
+        _gestures[Gesture.WeakFist] = fistMinStrength > 0.5f;
+        _gestures[Gesture.WeakFlatFist] = flatFistStrength > 0.5f;
+        _gestures[Gesture.WeakPalm] = fistMinStrength < 0.35f;
 
-        if (!weakFist)
-            togglePause.StopToggleGesture(_skeletonType, holdPosition.position);
+        for (var i = 0; i < _handTicks.Length; i++)
+        {
+            _handTicks[i].Tick(this);
+        }
 
         if (oVRPhysicsHand.IsDataValid && oVRPhysicsHand.IsDataHighConfidence)
         {
@@ -342,7 +400,7 @@ public class PlayerHand : MonoBehaviour
         {
             GameObject.Find("GameManager").GetComponent<MoveToDesk>().ResetPosition();
 
-            if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
+            if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
             {
             }
             else
@@ -371,9 +429,10 @@ public class PlayerHand : MonoBehaviour
             }
         }
 
+        //TODO fix pinch pull
         bool hitObject = false;
         if (!objectAttached && !hitPullBox && !OtherHand().objectAttached && OtherHand().beamHold == null &&
-            heldJoint == null)
+            heldJoint == null && false)
         {
             if (indexPinching)
             {
@@ -494,25 +553,26 @@ public class PlayerHand : MonoBehaviour
             }
         }
 
+        PlayerHands.hands.SetHandGesturesReady(skeletonType);
+
         lastFist = fist;
         lastWeakFist = weakFist;
         lastIndexPinching = indexPinching;
-        lastPointingAtScreen = pointingAtScreen;
     }
 
     public PlayerHand OtherHand()
     {
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
             return PlayerHands.hands.right;
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
+        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
             return PlayerHands.hands.left;
         return null;
     }
 
     public void ConnectBody(Rigidbody bodyToConnect, bool changeDrag)
     {
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft && bodyToConnect == PlayerHands.hands.right.heldBody ||
-            _skeletonType == OVRSkeleton.SkeletonType.HandRight && bodyToConnect == PlayerHands.hands.left.heldBody)
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft && bodyToConnect == PlayerHands.hands.right.heldBody ||
+            skeletonType == OVRSkeleton.SkeletonType.HandRight && bodyToConnect == PlayerHands.hands.left.heldBody)
             return;
 
         if (heldJoint != null)
@@ -598,12 +658,17 @@ public class PlayerHand : MonoBehaviour
         return true;
     }
 
-    public bool Pinching()
+    public bool Pinching(OVRHand.HandFinger finger)
     {
         if (Tracking())
-            return oVRHand.GetFingerIsPinching(OVRHand.HandFinger.Index);
+            return oVRHand.GetFingerIsPinching(finger);
         else
             return false;
+    }
+
+    public bool IndexPinching()
+    {
+        return Pinching(OVRHand.HandFinger.Index);
     }
 
     public float AnyPinchingStrength()
@@ -645,22 +710,32 @@ public class PlayerHand : MonoBehaviour
         return Mathf.Clamp01((r1 + r2) / 2f);
     }
 
+    public float FlatFingerStrength(OVRSkeleton.BoneId boneId)
+    {
+        if (!Tracking())
+            return 0;
+
+        float r1 = Vector3.Angle(-oVRSkeleton.transform.right, oVRSkeleton.Bones[(int) boneId].Transform.right);
+        r1 /= 60f;
+        return Mathf.Clamp01(r1);
+    }
+
+    public float FlatFistStrength()
+    {
+        float minStrength = FlatFingerStrength(OVRSkeleton.BoneId.Hand_Index1);
+        float strength = FlatFingerStrength(OVRSkeleton.BoneId.Hand_Middle1);
+        if (strength < minStrength)
+            minStrength = strength;
+        strength = FlatFingerStrength(OVRSkeleton.BoneId.Hand_Ring1);
+        if (strength < minStrength)
+            minStrength = strength;
+        strength = FlatFingerStrength(OVRSkeleton.BoneId.Hand_Pinky1);
+        if (strength < minStrength)
+            minStrength = strength;
+        return minStrength;
+    }
+
     public float FistStrength()
-    {
-        float strength = 0f;
-        strength += FingerCloseStrength(OVRSkeleton.BoneId.Hand_Index1);
-        strength += FingerCloseStrength(OVRSkeleton.BoneId.Hand_Middle1);
-        strength += FingerCloseStrength(OVRSkeleton.BoneId.Hand_Ring1);
-        strength += FingerCloseStrength(OVRSkeleton.BoneId.Hand_Pinky1);
-        return Mathf.Clamp01(strength / 4f);
-    }
-
-    public bool Fist()
-    {
-        return FistStrength() >= 0.8f;
-    }
-
-    public float MinFingerCloseStrength()
     {
         float minStrength = FingerCloseStrength(OVRSkeleton.BoneId.Hand_Index1);
         float strength = FingerCloseStrength(OVRSkeleton.BoneId.Hand_Middle1);

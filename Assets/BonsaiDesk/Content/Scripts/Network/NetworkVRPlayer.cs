@@ -131,7 +131,7 @@ public class NetworkVRPlayer : NetworkBehaviour
         // float difference = Mathf.Max(ld, rd);
 
         int ropeHandIndex = 0;
-        if (hand._skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        if (hand.skeletonType == OVRSkeleton.SkeletonType.HandLeft)
             ropeHandIndex = 1;
 
         if (hand.beamJoint != null && hand.beamJoint.connectedBody != null)

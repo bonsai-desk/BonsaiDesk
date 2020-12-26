@@ -70,7 +70,6 @@ public class MoveToDesk : MonoBehaviour
         playerOrientations = new List<PlayerOrientation>();
 
         ResetPosition();
-
     }
 
     private void Update()
@@ -97,6 +96,9 @@ public class MoveToDesk : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (oriented)
+            return;
+
         if (!PlayerHands.hands.Tracking())
         {
             orientatingSelf = false;
@@ -148,13 +150,13 @@ public class MoveToDesk : MonoBehaviour
 
             if (!oriented)
             {
-                if (diff < 0.025f)
+                if (diff < 0.0375f)
                     UpdateState(2);
                 else
                     UpdateState(1);
             }
 
-            if (speed > 0.75f && diff < 0.025f)
+            if (speed > 0.75f && diff < 0.0375f)
             {
                 if (!orientatingSelf)
                 {
