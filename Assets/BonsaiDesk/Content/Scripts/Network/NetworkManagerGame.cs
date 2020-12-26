@@ -667,12 +667,13 @@ public class NetworkManagerGame : NobleNetworkManager
                 spotUsedCount++;
         if (spotUsedCount <= 1) _spotInUse[spotId] = false;
         PlayerInfos.Remove(conn);
-
-        // foreach (var identity in conn.clientOwnedObjects)
-        // {
-        //     if (identity.GetComponent<AutoAuthority>() != null)
-        //         identity.RemoveClientAuthority();
-        // }
+        
+        var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
+        foreach (var identity in tmp)
+        {
+            if (identity.GetComponent<AutoAuthority>() != null)
+                identity.RemoveClientAuthority();
+        }
 
         base.OnServerDisconnect(conn);
 

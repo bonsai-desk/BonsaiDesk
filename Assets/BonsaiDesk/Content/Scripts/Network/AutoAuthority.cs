@@ -26,7 +26,7 @@ public class AutoAuthority : NetworkBehaviour
         {
             _lastInteractTime = NetworkTime.time;
         }
-        
+
         _body = GetComponent<Rigidbody>();
         _body.isKinematic = true;
 
@@ -89,7 +89,7 @@ public class AutoAuthority : NetworkBehaviour
     {
         if (!isClient)
             return;
-        
+
         if (_lastInteractFrame != Time.frameCount)
         {
             _lastInteractFrame = Time.frameCount;
@@ -160,9 +160,12 @@ public class AutoAuthority : NetworkBehaviour
         if (autoAuthority == null)
             return;
 
+        //TODO handle this unlikely case
+        // if (_lastInteractTime == autoAuthority._lastInteractTime)
+
         if (_lastInteractTime < autoAuthority._lastInteractTime)
             return;
-        
+
         // print("---");
         // print(_lastInteractTime + " " + autoAuthority._lastInteractTime + " " + _ownerIdentityId + " " + autoAuthority._ownerIdentityId);
         // print(isClient && !autoAuthority.ClientHasAuthority());
