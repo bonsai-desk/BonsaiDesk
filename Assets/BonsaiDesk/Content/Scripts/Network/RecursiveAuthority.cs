@@ -28,7 +28,7 @@ public class RecursiveAuthority : NetworkBehaviour
     {
         if (!hasAuthority)
             return;
-
+        
         HandleAuthorityChange(collision);
     }
 
@@ -37,19 +37,19 @@ public class RecursiveAuthority : NetworkBehaviour
         NetworkIdentity objectNetId = collision.gameObject.GetComponent<NetworkIdentity>();
         if (objectNetId != null && collision.gameObject.GetComponent<Rigidbody>() != null)
         {
-            if (!NetworkVRPlayer.self.netIdentity.connectionToServer.clientOwnedObjects.Contains(objectNetId))
+            if (!objectNetId.hasAuthority)
             {
                 RecursiveAuthority ra = collision.gameObject.GetComponent<RecursiveAuthority>();
                 if (ra != null)
                 {
                     if (authorityChangeTime > ra.authorityChangeTime)
                     {
-                        NetworkVRPlayer.self.CmdReceiveOwnershipOfObject(objectNetId);
+                        // NetworkVRPlayer.self.CmdReceiveOwnershipOfObject(objectNetId);
                     }
                 }
                 else
                 {
-                    NetworkVRPlayer.self.CmdReceiveOwnershipOfObject(objectNetId);
+                    // NetworkVRPlayer.self.CmdReceiveOwnershipOfObject(objectNetId);
                 }
             }
         }

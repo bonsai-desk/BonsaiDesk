@@ -56,7 +56,7 @@ internal class BrowserManager : MonoBehaviour
         set
         {
             _youtubePlayerState = value;
-            NetworkVRPlayer.self.CmdUpdateYoutubePlayerState(value);
+            // NetworkVRPlayer.self.CmdUpdateYoutubePlayerState(value);
         }
     }
 
@@ -201,7 +201,7 @@ internal class BrowserManager : MonoBehaviour
             case "ended":
                 YoutubePlayerState = 0;
                 print("ended message");
-                NetworkVRPlayer.self.StopVideo();
+                // NetworkVRPlayer.self.StopVideo();
                 break;
 
             case "playing":
@@ -243,7 +243,7 @@ internal class BrowserManager : MonoBehaviour
     {
         float timeFloat = float.Parse(time, CultureInfo.InvariantCulture);
         print("Time Float: " + timeFloat);
-        NetworkVRPlayer.self.CmdUpdateYoutubePlayerCurrentTime(timeFloat);
+        // NetworkVRPlayer.self.CmdUpdateYoutubePlayerCurrentTime(timeFloat);
     }
 
     public void LoadVideo(string videoId)
