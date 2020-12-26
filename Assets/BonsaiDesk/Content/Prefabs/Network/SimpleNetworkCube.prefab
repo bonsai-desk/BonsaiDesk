@@ -200,7 +200,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
+  debug: 0
   hasAuthorityMaterial: {fileID: 2100000, guid: 8940f74d5921148489d63c58c23c6999,
     type: 2}
   noAuthorityMaterial: {fileID: 2100000, guid: eb42784b59de82f47882166715c02945, type: 2}
-  renderer: {fileID: 5091729340588248539}
+  meshRenderer: {fileID: 5091729340588248539}

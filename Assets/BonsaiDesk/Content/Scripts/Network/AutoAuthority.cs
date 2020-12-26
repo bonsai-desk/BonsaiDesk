@@ -7,53 +7,95 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class AutoAuthority : NetworkBehaviour
 {
-    [SyncVar] public double _lastInteractTime = 0f;
-    public double lastInteractTime => _lastInteractTime;
+    [SyncVar] private double _lastInteractTime;
+    [SyncVar] private uint _ownerIdentityId = uint.MaxValue;
+
+    public bool debug;
 
     public Material hasAuthorityMaterial;
     public Material noAuthorityMaterial;
-    public MeshRenderer renderer;
+    public MeshRenderer meshRenderer;
 
-    private Rigidbody body;
-    private int lastInteractFrame;
-    private int lastSetNewOwnerFrame;
+    private Rigidbody _body;
+    private int _lastInteractFrame;
+    private int _lastSetNewOwnerFrame;
 
     private void Start()
     {
-        body = GetComponent<Rigidbody>();
-        body.isKinematic = true;
+        if (isServer)
+        {
+            _lastInteractTime = NetworkTime.time;
+        }
         
+        _body = GetComponent<Rigidbody>();
+        _body.isKinematic = true;
+
         UpdateMaterial();
     }
 
     private void Update()
     {
+        if (debug)
+        {
+            debug = false;
+            print(NetworkTime.time + " " + _lastInteractTime + " " + _ownerIdentityId);
+        }
+
         UpdateMaterial();
 
         //if you don't have control over the object
-        if (!hasAuthority)
+        if (!HasAuthority())
         {
-            body.isKinematic = true;
+            _body.isKinematic = true;
             return;
         }
 
         //code past this point if you have control over the object
-        body.isKinematic = false;
+        _body.isKinematic = false;
+    }
+
+    //Hello function. I am a client. Do I have authority over this object?
+    private bool ClientHasAuthority()
+    {
+        if (!isClient)
+            Debug.LogError("ClientHasAuthority is only valid when called from a client.");
+        return NetworkClient.connection != null && NetworkClient.connection.identity != null &&
+               _ownerIdentityId == NetworkClient.connection.identity.netId;
+    }
+
+    //Hello function. I am a server. Do I have authority over this object?
+    private bool ServerHasAuthority()
+    {
+        if (!isServer)
+            Debug.LogError("ServerHasAuthority is only valid when called from a server.");
+        return _ownerIdentityId == uint.MaxValue;
+    }
+
+    //Hello function. I don't know if I'm a client or a server, but whatever I am, do I have authority over this object?
+    private bool HasAuthority()
+    {
+        return isServer && ServerHasAuthority() || isClient && ClientHasAuthority();
     }
 
     private void UpdateMaterial()
     {
-        renderer.sharedMaterial = hasAuthority ? hasAuthorityMaterial : noAuthorityMaterial;
+        meshRenderer.sharedMaterial =
+            isServer && !isClient && ServerHasAuthority() || isClient && ClientHasAuthority()
+                ? hasAuthorityMaterial
+                : noAuthorityMaterial;
     }
 
-    public void Interact(NetworkIdentity ownerIdentity)
+    public void Interact(uint identityId)
     {
-        if (lastInteractFrame != Time.frameCount)
+        if (!isClient)
+            return;
+        
+        if (_lastInteractFrame != Time.frameCount)
         {
-            lastInteractFrame = Time.frameCount;
-            if (!hasAuthority)
+            _lastInteractFrame = Time.frameCount;
+            if (!ClientHasAuthority())
             {
-                SetNewOwner(ownerIdentity, NetworkTime.time);
+                SetNewOwner(identityId, NetworkTime.time);
             }
             else
             {
@@ -68,29 +110,30 @@ public class AutoAuthority : NetworkBehaviour
         _lastInteractTime = NetworkTime.time;
     }
 
-    private void SetNewOwner(NetworkIdentity ownerIdentity, double fromLastInteractTime)
+    private void SetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime)
     {
-        if (lastSetNewOwnerFrame != Time.frameCount)
+        if (_lastSetNewOwnerFrame != Time.frameCount)
         {
-            lastSetNewOwnerFrame = Time.frameCount;
-            CmdSetNewOwner(ownerIdentity, fromLastInteractTime);
+            _lastSetNewOwnerFrame = Time.frameCount;
+            CmdSetNewOwner(newOwnerIdentityId, fromLastInteractTime);
         }
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdSetNewOwner(NetworkIdentity ownerIdentity, double fromLastInteractTime)
+    private void CmdSetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime)
     {
         //if passed owner is null, remove authority then return
-        if (ownerIdentity == null)
+        if (newOwnerIdentityId == uint.MaxValue)
         {
             netIdentity.RemoveClientAuthority();
+            _ownerIdentityId = uint.MaxValue;
             // _lastInteractTime = NetworkTime.time;
             _lastInteractTime = fromLastInteractTime;
             return;
         }
 
         //if owner already has authority return
-        if (netIdentity.connectionToClient == ownerIdentity.connectionToClient)
+        if (_ownerIdentityId == newOwnerIdentityId)
         {
             return;
         }
@@ -102,27 +145,49 @@ public class AutoAuthority : NetworkBehaviour
         }
 
         //give the new owner authority
-        netIdentity.AssignClientAuthority(ownerIdentity.connectionToClient);
+        netIdentity.AssignClientAuthority(NetworkIdentity.spawned[newOwnerIdentityId].connectionToClient);
         // _lastInteractTime = NetworkTime.time;
         _lastInteractTime = fromLastInteractTime;
+        _ownerIdentityId = newOwnerIdentityId;
     }
 
     private void HandleRecursiveAuthority(Collision collision)
     {
-        if (!hasAuthority)
+        if (!HasAuthority())
             return;
 
         var autoAuthority = collision.gameObject.GetComponent<AutoAuthority>();
         if (autoAuthority == null)
             return;
 
-        if (lastInteractTime < autoAuthority.lastInteractTime)
+        if (_lastInteractTime < autoAuthority._lastInteractTime)
             return;
+        
+        // print("---");
+        // print(_lastInteractTime + " " + autoAuthority._lastInteractTime + " " + _ownerIdentityId + " " + autoAuthority._ownerIdentityId);
+        // print(isClient && !autoAuthority.ClientHasAuthority());
 
-        if (!autoAuthority.hasAuthority)
+        if (isClient && ClientHasAuthority() && !autoAuthority.ClientHasAuthority())
         {
-            autoAuthority.SetNewOwner(NetworkClient.connection.identity, lastInteractTime);
+            autoAuthority.SetNewOwner(NetworkClient.connection.identity.netId, _lastInteractTime);
         }
+        else if (isServer && ServerHasAuthority() && !autoAuthority.ServerHasAuthority())
+        {
+            autoAuthority.SetNewOwner(uint.MaxValue, _lastInteractTime);
+        }
+
+        // if (!autoAuthority.HasAuthority())
+        // {
+        //     print("yeeeeee");
+        //     if (isClient && ClientHasAuthority())
+        //         autoAuthority.SetNewOwner(NetworkClient.connection.identity, _lastInteractTime);
+        //     else if (isServer && ServerHasAuthority())
+        //         autoAuthority.SetNewOwner(null, _lastInteractTime);
+        // }
+        // else
+        // {
+        //     print("nooooo");
+        // }
     }
 
     private void OnCollisionEnter(Collision collision)

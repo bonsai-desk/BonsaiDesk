@@ -18,7 +18,7 @@ public class HandAuthority : MonoBehaviour
         var autoAuthority = collision.gameObject.GetComponent<AutoAuthority>();
         if (autoAuthority != null)
         {
-            autoAuthority.Interact(NetworkClient.connection.identity);
+            autoAuthority.Interact(NetworkClient.connection.identity.netId);
         }
     }
 }

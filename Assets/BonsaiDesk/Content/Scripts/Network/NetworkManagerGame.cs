@@ -668,11 +668,11 @@ public class NetworkManagerGame : NobleNetworkManager
         if (spotUsedCount <= 1) _spotInUse[spotId] = false;
         PlayerInfos.Remove(conn);
 
-        foreach (var identity in conn.clientOwnedObjects)
-        {
-            if (identity.GetComponent<AutoAuthority>() != null)
-                identity.RemoveClientAuthority();
-        }
+        // foreach (var identity in conn.clientOwnedObjects)
+        // {
+        //     if (identity.GetComponent<AutoAuthority>() != null)
+        //         identity.RemoveClientAuthority();
+        // }
 
         base.OnServerDisconnect(conn);
 
