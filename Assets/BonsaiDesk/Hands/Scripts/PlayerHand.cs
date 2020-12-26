@@ -223,8 +223,8 @@ public class PlayerHand : MonoBehaviour
             beamJoint.connectedBody = beamHold.GetComponent<Rigidbody>();
 
             var nid = beamHold.GetComponent<NetworkIdentity>();
-            if (nid != null)
-                NetworkVRPlayer.self.CmdReceiveOwnershipOfObject(nid);
+            // if (nid != null)
+            //     NetworkVRPlayer.self.CmdReceiveOwnershipOfObject(nid);
 
             BackToOriginalColor();
 
