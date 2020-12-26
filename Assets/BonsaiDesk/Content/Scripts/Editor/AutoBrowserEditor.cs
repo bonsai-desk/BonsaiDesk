@@ -43,11 +43,12 @@ public class AutoBrowserEditor : Editor
         }
             
         EditorGUILayout.Space();
-        
-        autoBrowser.dummyTexture = (Texture) EditorGUILayout.ObjectField("Dummy Texture", autoBrowser.dummyTexture, typeof(Texture), true);
 
         autoBrowser.holePuncherMaterial = (Material) EditorGUILayout.ObjectField("Hole Puncher Material",
             autoBrowser.holePuncherMaterial, typeof(Material), true);
+        
+        autoBrowser.dummyMaterial = (Material) EditorGUILayout.ObjectField("Dummy Material",
+            autoBrowser.dummyMaterial, typeof(Material), true);
     }
 
     private void OnValidate()

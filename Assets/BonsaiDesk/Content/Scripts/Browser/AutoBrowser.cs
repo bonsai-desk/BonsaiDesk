@@ -14,8 +14,6 @@ public class AutoBrowser : MonoBehaviour
     public float distanceEstimate = 1;
     public int pixelPerDegree = 16;
 
-    public Texture dummyTexture;
-
     private OVROverlay _overlay;
     private GameObject _holePuncher;
 
@@ -24,6 +22,7 @@ public class AutoBrowser : MonoBehaviour
     private WebViewPrefab _webViewPrefab;
 
     public Material holePuncherMaterial;
+    public Material dummyMaterial;
 
     private void Start()
     {
@@ -49,20 +48,19 @@ public class AutoBrowser : MonoBehaviour
 #endif
         
         
-#if UNITY_ANDROID && !UNITY_EDITOR
         _holePuncher = GameObject.CreatePrimitive(PrimitiveType.Quad);
         _holePuncher.transform.SetParent(transform, false);
-        _holePuncher.GetComponent<Renderer>().material = holePuncherMaterial;
         _holePuncher.transform.localScale = new Vector3(0.995f,0.995f,1f);
+        
+#if UNITY_ANDROID && !UNITY_EDITOR
+        _holePuncher.GetComponent<Renderer>().material = holePuncherMaterial;
+#else
+        _holePuncher.GetComponent<Renderer>().material = dummyMaterial;
 #endif
-        
-        
-        if (dummyTexture)
-            _overlay.textures = new[] {dummyTexture, dummyTexture};
 
 #if UNITY_EDITOR
         _overlay.isExternalSurface = false;
-        _overlay.previewInEditor = true;
+        _overlay.previewInEditor = false;
 #else
         _overlay.isExternalSurface = true;
 #endif
