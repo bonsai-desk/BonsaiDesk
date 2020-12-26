@@ -90,7 +90,7 @@ public class TabletPhysics : NetworkBehaviour
                     canActivate = false;
                     if (!string.IsNullOrEmpty(videoId))
                     {
-                        NetworkVRPlayer.self.PlayVideo(videoId);
+                        // NetworkVRPlayer.self.PlayVideo(videoId);
                         print("play");
                     }
                 }
@@ -109,7 +109,7 @@ public class TabletPhysics : NetworkBehaviour
             body.useGravity = true;
             if (!canActivate && !inArea)
             {
-                NetworkVRPlayer.self.StopVideo();
+                // NetworkVRPlayer.self.StopVideo();
                 canActivate = true;
             }
         }

@@ -554,6 +554,8 @@ MonoBehaviour:
   blockAreaPrefab: {fileID: 4318712806008556002, guid: 61623eb8f304be045b6363ec45c2e007,
     type: 3}
   beamLine: {fileID: 1629970178986108462}
+  spawnObject: {fileID: 5091729340588248543, guid: fc3dae8c141f5d446a0d64a88cd562d1,
+    type: 3}
 --- !u!114 &397433653346894428
 MonoBehaviour:
   m_ObjectHideFlags: 0

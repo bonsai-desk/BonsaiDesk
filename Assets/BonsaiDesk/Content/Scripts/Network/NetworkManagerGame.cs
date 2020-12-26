@@ -21,7 +21,8 @@ public class NetworkManagerGame : NobleNetworkManager
 
     #region Player Props
 
-    public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos = new Dictionary<NetworkConnection, PlayerInfo>();
+    public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos =
+        new Dictionary<NetworkConnection, PlayerInfo>();
 
     [Serializable]
     public class PlayerInfo
@@ -89,12 +90,12 @@ public class NetworkManagerGame : NobleNetworkManager
         set
         {
             if (_connectionState == value) Debug.LogWarning("[BONSAI] Trying to set state to itself: " + State);
-            
+
             Debug.Log("[BONSAI] HandleState Cleanup " + _connectionState);
             HandleState(_connectionState, Work.Cleanup);
-            
+
             _connectionState = value;
-            
+
             Debug.Log("[BONSAI] HandleState Setup " + value);
             HandleState(value, Work.Setup);
         }
@@ -123,7 +124,7 @@ public class NetworkManagerGame : NobleNetworkManager
     #endregion
 
     #region Utilities
-    
+
     private IEnumerator StopHostFadeReturnToLoading()
     {
         fader.FadeOut();
@@ -410,7 +411,7 @@ public class NetworkManagerGame : NobleNetworkManager
         if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) return;
         SetCommsActive(_comms, oriented);
     }
-    
+
     #endregion Utilities
 
     #region Requests
@@ -657,7 +658,7 @@ public class NetworkManagerGame : NobleNetworkManager
         Debug.Log("[BONSAI] OnServerDisconnect");
 
         if (!conn.isAuthenticated) return;
-        
+
         var spotId = PlayerInfos[conn].spot;
 
         var spotUsedCount = 0;
@@ -666,12 +667,13 @@ public class NetworkManagerGame : NobleNetworkManager
                 spotUsedCount++;
         if (spotUsedCount <= 1) _spotInUse[spotId] = false;
         PlayerInfos.Remove(conn);
-
+        
         var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
-        foreach (var netIdentity in tmp)
-            if (netIdentity != null && (netIdentity.gameObject.CompareTag("KeepOnDisconnect") ||
-                                        netIdentity.gameObject.CompareTag("BlockArea")))
-                netIdentity.RemoveClientAuthority();
+        foreach (var identity in tmp)
+        {
+            if (identity.GetComponent<AutoAuthority>() != null)
+                identity.RemoveClientAuthority();
+        }
 
         base.OnServerDisconnect(conn);
 
@@ -737,7 +739,7 @@ public class NetworkManagerGame : NobleNetworkManager
     }
 
     #endregion
-    
+
     #region Buttons
 
     public void ClickRelayFailed()
@@ -754,7 +756,7 @@ public class NetworkManagerGame : NobleNetworkManager
     {
         State = ConnectionState.Neutral;
     }
-    
+
     public void ClickExitHost()
     {
         State = ConnectionState.Loading;
@@ -768,7 +770,7 @@ public class NetworkManagerGame : NobleNetworkManager
         else
             UpdateClientEntryText();
     }
-    
+
     public void ClickStartClient()
     {
         State = ConnectionState.ClientEntry;
