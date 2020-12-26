@@ -26651,6 +26651,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   initialURL: http://192.168.1.122:3000/
+  togglePause: {fileID: 96659938}
 --- !u!1 &1912258022280695894
 GameObject:
   m_ObjectHideFlags: 0

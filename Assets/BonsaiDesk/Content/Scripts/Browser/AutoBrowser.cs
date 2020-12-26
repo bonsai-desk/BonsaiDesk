@@ -144,4 +144,14 @@ public class AutoBrowser : MonoBehaviour
     {
         _webViewPrefab.WebView.LoadUrl(url);
     }
+
+    public void SendKeyInput(string key)
+    {
+        _webViewPrefab.WebView.HandleKeyboardInput(key);
+    }
+
+    public void PostMessage(string data)
+    {
+        _webViewPrefab.WebView.PostMessage(data);
+    }
 }

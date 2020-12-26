@@ -9,7 +9,7 @@ public delegate void PauseEvent(bool paused);
 
 public class TogglePause : NetworkBehaviour
 {
-    public static event PauseEvent PauseChanged;
+    public event PauseEvent PauseChanged;
     
     public float gestureActivateDistance;
     public float pointMovement;
@@ -60,6 +60,7 @@ public class TogglePause : NetworkBehaviour
 
     void SetPaused(bool oldPaused, bool newPaused)
     {
+        Debug.Log("[BONSAI] SetPaused " + newPaused);
         if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None)
             updateIcons(newPaused);
         
