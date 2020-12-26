@@ -5,8 +5,12 @@ using System.Resources;
 using Mirror;
 using UnityEngine;
 
+public delegate void PauseEvent(bool paused);
+
 public class TogglePause : NetworkBehaviour
 {
+    public static event PauseEvent PauseChanged;
+    
     public float gestureActivateDistance;
     public float pointMovement;
     public float fadeTime;
@@ -58,6 +62,8 @@ public class TogglePause : NetworkBehaviour
     {
         if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None)
             updateIcons(newPaused);
+        
+        PauseChanged?.Invoke(newPaused);
     }
 
     void updateIcons(bool paused)
