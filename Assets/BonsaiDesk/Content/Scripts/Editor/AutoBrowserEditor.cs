@@ -9,8 +9,6 @@ public class AutoBrowserEditor : Editor
     {
 
         var autoBrowser = target as AutoBrowser;
-        
-        autoBrowser.initialURL = EditorGUILayout.TextField("Initial URL", autoBrowser.initialURL);
 
         autoBrowser.width = EditorGUILayout.FloatField("Width", autoBrowser.width);
 
@@ -30,7 +28,7 @@ public class AutoBrowserEditor : Editor
         else
         {
             EditorGUILayout.LabelField("Calculated X Resolution", 
-                AutoBrowser.GetResolution(
+                AutoBrowser.ResolvablePixels(
                   autoBrowser.width, 
                     autoBrowser.distanceEstimate,
                     autoBrowser.pixelPerDegree
@@ -43,9 +41,12 @@ public class AutoBrowserEditor : Editor
         }
             
         EditorGUILayout.Space();
-        
-        autoBrowser.dummyTexture = (Texture) EditorGUILayout.ObjectField("Dummy Texture", autoBrowser.dummyTexture, typeof(Texture), true);
 
+        autoBrowser.holePuncherMaterial = (Material) EditorGUILayout.ObjectField("Hole Puncher Material",
+            autoBrowser.holePuncherMaterial, typeof(Material), true);
+        
+        autoBrowser.dummyMaterial = (Material) EditorGUILayout.ObjectField("Dummy Material",
+            autoBrowser.dummyMaterial, typeof(Material), true);
     }
 
     private void OnValidate()
