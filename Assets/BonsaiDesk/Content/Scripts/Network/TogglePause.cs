@@ -24,14 +24,11 @@ public class TogglePause : NetworkBehaviour
     private float gestureStartDistance;
     private bool pausedStateAtGestureStart;
 
-    private Vector3 startPosition;
-
     private float lastInteractTime = -10f;
     private float interactStartTime = -10f;
 
     private void Start()
     {
-        startPosition = transform.position;
         updateIcons(paused);
     }
 
@@ -88,10 +85,10 @@ public class TogglePause : NetworkBehaviour
 
                 if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None)
                 {
-                    Vector3 direction = (position - startPosition).normalized;
-                    Vector3 newPosition = startPosition + (direction * pointMovement);
+                    Vector3 direction = (position - transform.position).normalized;
+                    Vector3 newPosition = transform.position + (direction * pointMovement);
                     newPosition.z = Mathf.Clamp(newPosition.z, 0.0001f, newPosition.z);
-                    transform.position = newPosition;
+                    togglePauseMorph.transform.position = newPosition;
                 }
             }
             else
@@ -106,7 +103,7 @@ public class TogglePause : NetworkBehaviour
         if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None && currentPointSkeleton == skeletonType)
         {
             currentGestureSkeleton = skeletonType;
-            gestureStartDistance = Vector3.Distance(startPosition, position);
+            gestureStartDistance = Vector3.Distance(transform.position, position);
             pausedStateAtGestureStart = paused;
         }
     }
@@ -117,7 +114,7 @@ public class TogglePause : NetworkBehaviour
         {
             currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
             lastInteractTime = Time.time;
-            if (Vector3.Distance(startPosition, position) - gestureStartDistance > gestureActivateDistance)
+            if (Vector3.Distance(transform.position, position) - gestureStartDistance > gestureActivateDistance)
             {
                 updateIcons(!pausedStateAtGestureStart);
                 CmdSetPaused(!pausedStateAtGestureStart);
@@ -133,7 +130,7 @@ public class TogglePause : NetworkBehaviour
     {
         if (currentGestureSkeleton == skeletonType)
         {
-            float distance = Vector3.Distance(startPosition, position) - gestureStartDistance;
+            float distance = Vector3.Distance(transform.position, position) - gestureStartDistance;
             float lerp = Mathf.Clamp01(distance / gestureActivateDistance);
             if (!paused)
                 lerp = 1 - lerp;
