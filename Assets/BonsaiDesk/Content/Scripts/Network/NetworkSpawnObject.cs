@@ -9,11 +9,10 @@ public class NetworkSpawnObject : NetworkBehaviour
     public Transform spawnPoint;
 
     [Command(ignoreAuthority = true)]
-    private void CmdSpawnObject(NetworkIdentity ownerIdentity)
+    private void CmdSpawnObject(NetworkIdentity caller)
     {
         GameObject spawnedObject = Instantiate(spawnObject, spawnPoint.position, spawnPoint.rotation);
-        // NetworkServer.Spawn(spawnedObject, ownerIdentity.connectionToClient);
-        NetworkServer.Spawn(spawnedObject);
+        NetworkServer.Spawn(spawnedObject, caller.connectionToClient);
     }
 
     public void SpawnObject()

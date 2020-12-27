@@ -15,6 +15,8 @@ public class NetworkManagerGame : NobleNetworkManager
 {
     public static NetworkManagerGame Singleton;
 
+    public bool visualizeAuthority;
+
     public MoveToDesk moveToDesk;
 
     private Camera _camera;

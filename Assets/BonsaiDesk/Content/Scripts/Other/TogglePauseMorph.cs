@@ -15,8 +15,12 @@ public class TogglePauseMorph : MonoBehaviour
 
     void Start()
     {
+        var iconColor = Color.white;
+        // var backgroundColor = Color.black;
+
         var meshFilter = GetComponent<MeshFilter>();
-        
+
+        // float backgroundOffset = 0.00001f;
         var mesh = new Mesh();
         mesh.vertices = new[]
         {
@@ -29,6 +33,11 @@ public class TogglePauseMorph : MonoBehaviour
             new Vector3(0.5f, 0.5f, 0),
             new Vector3(0.5f, -0.5f, 0),
             new Vector3(0.1f, -0.5f, 0)
+            
+            // new Vector3(-0.6f, 0.6f, backgroundOffset),
+            // new Vector3(0.6f, 0.6f, backgroundOffset),
+            // new Vector3(0.6f, -0.6f, backgroundOffset),
+            // new Vector3(-0.6f, -0.6f, backgroundOffset)
         };
         mesh.tangents = new[]
         {
@@ -41,6 +50,28 @@ public class TogglePauseMorph : MonoBehaviour
             new Vector4(0.5f, 0, 0, 1),
             new Vector4(0.5f, 0, 0, 1),
             new Vector4(0, -0.25f, 0, 1)
+            
+            // new Vector4(-0.6f, 0.6f, backgroundOffset, 1),
+            // new Vector4(0.6f, 0, backgroundOffset, 1),
+            // new Vector4(0.6f, 0, backgroundOffset, 1),
+            // new Vector4(-0.6f, -0.6f, backgroundOffset, 1)
+        };
+        mesh.colors = new[]
+        {
+            iconColor,
+            iconColor,
+            iconColor,
+            iconColor,
+            
+            iconColor,
+            iconColor,
+            iconColor,
+            iconColor
+            
+            // backgroundColor,
+            // backgroundColor,
+            // backgroundColor,
+            // backgroundColor
         };
         mesh.triangles = new[]
         {
@@ -49,6 +80,9 @@ public class TogglePauseMorph : MonoBehaviour
             
             4, 5, 6,
             7, 4, 6
+            
+            // 8, 9, 10,
+            // 10, 11, 8
         };
 
         meshFilter.sharedMesh = mesh;
@@ -61,6 +95,6 @@ public class TogglePauseMorph : MonoBehaviour
 
     public void SetFade(float fade)
     {
-        material.SetFloat("_Fade", Mathf.Clamp01(fade));
+        material.SetFloat("_Alpha", Mathf.Clamp01(fade));
     }
 }
