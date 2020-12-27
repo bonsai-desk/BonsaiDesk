@@ -22,8 +22,8 @@ public class TogglePause : NetworkBehaviour
 
     private Vector3 startPosition;
 
-    private float lastInteractTime = 0;
-    private float interactStartTime = 0;
+    private float lastInteractTime = -10f;
+    private float interactStartTime = -10f;
 
     private void Start()
     {
