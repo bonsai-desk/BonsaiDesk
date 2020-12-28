@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Resources;
 using Mirror;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public delegate void PauseEvent(bool paused);
 
@@ -25,8 +26,10 @@ public class TogglePause : NetworkBehaviour
     private bool pausedStateAtGestureStart;
 
     private float _visibility;
+    private float _position;
 
     private Vector3 _targetLocalPosition = Vector3.zero;
+    private Vector3 _localPosition = Vector3.zero;
 
     private void Start()
     {
@@ -35,30 +38,43 @@ public class TogglePause : NetworkBehaviour
 
     private void Update()
     {
-        float targetVisibility;
-        CubicBezier easeFunction;
+        bool interacting = currentPointSkeleton != OVRSkeleton.SkeletonType.None ||
+                           currentGestureSkeleton != OVRSkeleton.SkeletonType.None;
 
-        //if pointing or mid gesture
-        if (currentPointSkeleton != OVRSkeleton.SkeletonType.None ||
-            currentGestureSkeleton != OVRSkeleton.SkeletonType.None)
-        {
-            targetVisibility = 1;
-            easeFunction = CubicBezier.EaseOut;
-        }
-        else
-        {
-            targetVisibility = 0;
-            easeFunction = CubicBezier.EaseIn;
-        }
+        bool shouldBeVisible = paused || interacting;
 
+        float targetVisibility = shouldBeVisible ? 1 : 0;
+        float targetPosition = interacting ? 1 : 0;
+
+        if (Mathf.Approximately(_position, 0))
+            _localPosition = _targetLocalPosition;
+        _localPosition = Vector3.MoveTowards(_localPosition, _targetLocalPosition, Time.deltaTime);
+        
+        //if not already at the target
         if (!Mathf.Approximately(_visibility, targetVisibility))
         {
+            CubicBezier easeFunction = shouldBeVisible ? CubicBezier.EaseOut : CubicBezier.EaseIn;
             float t = easeFunction.SampleInverse(_visibility);
             float step = (1f / fadeTime) * Time.deltaTime;
             t = Mathf.MoveTowards(t, targetVisibility, step);
             _visibility = easeFunction.Sample(t);
             togglePauseMorph.SetVisibility(_visibility);
+            
+            print(Time.time);
         }
+
+        if (!Mathf.Approximately(_position, targetPosition))
+        {
+            CubicBezier easeFunction = interacting ? CubicBezier.EaseOut : CubicBezier.EaseIn;
+            float t = easeFunction.SampleInverse(_position);
+            float step = (1f / fadeTime) * Time.deltaTime;
+            t = Mathf.MoveTowards(t, targetPosition, step);
+            _position = easeFunction.Sample(t);
+            
+            print(Time.time);
+        }
+
+        togglePauseMorph.transform.localPosition = _localPosition * _position;
     }
 
     [Command(ignoreAuthority = true)]
@@ -83,24 +99,17 @@ public class TogglePause : NetworkBehaviour
 
     public void Point(OVRSkeleton.SkeletonType skeletonType, bool pointing, Vector3 position)
     {
-        if (currentPointSkeleton == OVRSkeleton.SkeletonType.None &&
-            currentGestureSkeleton == OVRSkeleton.SkeletonType.None && pointing)
-        {
-            interactStartTime = Time.time;
-        }
-
         if (currentPointSkeleton == OVRSkeleton.SkeletonType.None || currentPointSkeleton == skeletonType)
         {
             if (pointing)
             {
                 currentPointSkeleton = skeletonType;
-                lastInteractTime = Time.time;
 
                 if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None)
                 {
                     Vector3 direction = (position - transform.position).normalized;
                     Vector3 newPosition = transform.position + (direction * pointMovement);
-                    togglePauseMorph.transform.position = newPosition;
+                    _targetLocalPosition = transform.InverseTransformPoint(newPosition);
                 }
             }
             else
@@ -125,7 +134,6 @@ public class TogglePause : NetworkBehaviour
         if (currentGestureSkeleton == skeletonType)
         {
             currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
-            lastInteractTime = Time.time;
             if (Vector3.Distance(transform.position, position) - gestureStartDistance > gestureActivateDistance)
             {
                 updateIcons(!pausedStateAtGestureStart);
