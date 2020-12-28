@@ -23,4 +23,13 @@ public class AutoBrowserController : MonoBehaviour
         Debug.Log("[BONSAI] HandlePauseChange " + message);
         _autoBrowser.PostMessage(message);
     }
+
+    public void Set169()
+    {
+        StartCoroutine(_autoBrowser.SetNewAspect(new Vector2(16, 9)));
+    }
+    public void Set11()
+    {
+        StartCoroutine(_autoBrowser.SetNewAspect(new Vector2(1, 1)));
+    }
 }

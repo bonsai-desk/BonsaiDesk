@@ -21,6 +21,7 @@ public class AutoBrowser : MonoBehaviour
     public Material holePuncherMaterial;
     public Material dummyMaterial;
     private GameObject _holePuncher;
+    private Vector3 _holePuncherFixedScale = new Vector3(0.995f, 0.995f, 1f);
 
     private OVROverlay _overlay;
 
@@ -36,7 +37,12 @@ public class AutoBrowser : MonoBehaviour
             ? GetAutoResolution(width, distanceEstimate, pixelPerDegree, aspect)
             : GetResolutionFromX(xResolution, aspect);
 
+        
+        
         SetOverlay();
+        
+        transform.position =
+            new Vector3(transform.position.x, transform.localScale.y / 2, transform.position.z);
 
 // TODO         
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -50,7 +56,7 @@ public class AutoBrowser : MonoBehaviour
 
         _holePuncher = GameObject.CreatePrimitive(PrimitiveType.Quad);
         _holePuncher.transform.SetParent(transform, false);
-        _holePuncher.transform.localScale = new Vector3(0.995f, 0.995f, 1f);
+        _holePuncher.transform.localScale = _holePuncherFixedScale;
 
 #if UNITY_ANDROID && !UNITY_EDITOR
         _holePuncher.GetComponent<Renderer>().material = holePuncherMaterial;
@@ -111,18 +117,9 @@ public class AutoBrowser : MonoBehaviour
         yield break;
     }
 
-    public void SetNewAspect(Vector2 newAspect)
+    private Vector3 GetScale()
     {
-        aspect = newAspect;
-        
-        _resolution = autoSetResolution
-            ? GetAutoResolution(width, distanceEstimate, pixelPerDegree, aspect)
-            : GetResolutionFromX(xResolution, aspect);
-        
-        _webViewPrefab.WebView.SetResolution(1);
-        _webViewPrefab.WebView.Resize(_resolution.x, _resolution.y);
-        
-        SetOverlay();
+        return new Vector3(width, width * aspect.y / aspect.x, 1);
     }
     
     private void SetOverlay()
@@ -131,7 +128,7 @@ public class AutoBrowser : MonoBehaviour
         _overlay = gameObject.AddComponent<OVROverlay>();
         _overlay.externalSurfaceWidth = _resolution.x;
         _overlay.externalSurfaceHeight = _resolution.y;
-        _overlay.transform.localScale = new Vector3(width, width * aspect.y / aspect.x, 1);
+        _overlay.transform.localScale = GetScale();
         _overlay.currentOverlayType = OVROverlay.OverlayType.Underlay;
 
 #if UNITY_EDITOR
@@ -155,16 +152,65 @@ public class AutoBrowser : MonoBehaviour
     {
         return new Vector2Int(xResolution, (int) Math.Round(xResolution * aspect.y / aspect.x));
     }
-
-    public static int ResolvablePixels(float width, float distanceEstimate, int pixelPerDegree)
+    
+    public IEnumerator SetNewAspect(Vector2 newAspect)
     {
-        // calculates the optimal resolution along some dimension
-        // width : side of billboard in unity units
-        // distanceEstimate : estimated closest distance from (user) --- (billboard)
-        // pixelPerDegree : resolving resolution of headset
-        return (int) Math.Round(
-            pixelPerDegree * (360f / (2 * Math.PI)) * 2 * Math.Atan(width / (2 * distanceEstimate))
-        );
+        float height;
+        float initialY;
+        
+        height = GetScale().y;
+        initialY = transform.position.y;
+        yield return DropHolePunch(1f, height, initialY);
+        
+        aspect = newAspect;
+        
+        _resolution = autoSetResolution
+            ? GetAutoResolution(width, distanceEstimate, pixelPerDegree, aspect)
+            : GetResolutionFromX(xResolution, aspect);
+        
+        _webViewPrefab.WebView.SetResolution(1);
+        _webViewPrefab.WebView.Resize(_resolution.x, _resolution.y);
+        
+        yield return new WaitForSeconds(0.5f);
+        
+        SetOverlay();
+        
+        transform.position =
+            new Vector3(transform.position.x, -transform.localScale.y / 2, transform.position.z);
+        
+        yield return new WaitForSeconds(0.5f);
+
+        height = GetScale().y;
+        initialY = transform.position.y;
+        
+        yield return RaiseHolePunch(1f, height, initialY);
+    }
+
+    private IEnumerator DropHolePunch(float duration, float height, float initialY)
+    {
+        float counter = 0;
+        while (counter < duration)
+        {
+            counter += Time.deltaTime;
+            var a = CubicBezier.EaseIn.Sample(counter / duration);
+            Debug.Log(initialY);
+            transform.position = new Vector3(transform.position.x, (1 - a) * initialY + a * -height/2, transform.position.z);
+            yield return null;
+        }
+        
+    }
+    
+    private IEnumerator RaiseHolePunch(float duration, float height, float initialY)
+    {
+        float counter = 0;
+        while (counter < duration)
+        {
+            counter += Time.deltaTime;
+            var a = CubicBezier.EaseOut.Sample(counter / duration);
+            transform.position = new Vector3(transform.position.x, (1 - a) * initialY + a * height/2, transform.position.z);
+            yield return null;
+        }
+        
     }
 
     public void LoadUrl(string url)
@@ -175,5 +221,16 @@ public class AutoBrowser : MonoBehaviour
     public void PostMessage(string data)
     {
         _webViewPrefab.WebView.PostMessage(data);
+    }
+    
+    public static int ResolvablePixels(float width, float distanceEstimate, int pixelPerDegree)
+    {
+        // calculates the optimal resolution along some dimension
+        // width : side of billboard in unity units
+        // distanceEstimate : estimated closest distance from (user) --- (billboard)
+        // pixelPerDegree : resolving resolution of headset
+        return (int) Math.Round(
+            pixelPerDegree * (360f / (2 * Math.PI)) * 2 * Math.Atan(width / (2 * distanceEstimate))
+        );
     }
 }
