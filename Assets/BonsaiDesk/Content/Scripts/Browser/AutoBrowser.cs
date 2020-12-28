@@ -7,19 +7,19 @@ public delegate void BrowserReadyEvent();
 
 public class AutoBrowser : MonoBehaviour
 {
-    public float width = 1;
+    public float height = 1;
 
     public Vector2 aspect = new Vector2(16, 9);
 
-    public int xResolution = 850;
+    public int yResolution = 850;
     public bool autoSetResolution;
     public float distanceEstimate = 1;
     public int pixelPerDegree = 16;
 
     public Material holePuncherMaterial;
     public Material dummyMaterial;
-    private GameObject _holePuncher;
     private readonly Vector3 _holePuncherFixedScale = new Vector3(1f, 1f, 1f);
+    private GameObject _holePuncher;
 
     private OVROverlay _overlay;
 
@@ -30,8 +30,8 @@ public class AutoBrowser : MonoBehaviour
     private void Start()
     {
         _resolution = autoSetResolution
-            ? GetAutoResolution(width, distanceEstimate, pixelPerDegree, aspect)
-            : GetResolutionFromX(xResolution, aspect);
+            ? GetAutoResolution(height, distanceEstimate, pixelPerDegree, aspect)
+            : GetResolutionFromY(yResolution, aspect);
 
 
         SetOverlay();
@@ -60,7 +60,7 @@ public class AutoBrowser : MonoBehaviour
 #endif
 
 
-        _webViewPrefab = WebViewPrefab.Instantiate(width, width * aspect.y / aspect.x);
+        _webViewPrefab = WebViewPrefab.Instantiate(aspect.x / aspect.y * height, height);
         _webViewPrefab.Visible = false;
         _webViewPrefab.Initialized +=
             (sender, eventArgs) => StartCoroutine(SetupWebView(sender, eventArgs));
@@ -115,7 +115,7 @@ public class AutoBrowser : MonoBehaviour
 
     private Vector3 GetScale()
     {
-        return new Vector3(width, width * aspect.y / aspect.x, 1);
+        return new Vector3(aspect.x / aspect.y * height, height, 1);
     }
 
     private void SetOverlay()
@@ -136,50 +136,37 @@ public class AutoBrowser : MonoBehaviour
         StartCoroutine(SwapSurface());
     }
 
-    private static Vector2Int GetAutoResolution(float width, float distanceEstimate, int pixelPerDegree, Vector2 aspect)
+    private static Vector2Int GetAutoResolution(float height, float distanceEstimate, int pixelPerDegree,
+        Vector2 aspect)
     {
-        var height = width * aspect.y / aspect.x;
-        var xRes = ResolvablePixels(width, distanceEstimate, pixelPerDegree);
         var yRes = ResolvablePixels(height, distanceEstimate, pixelPerDegree);
-        return new Vector2Int(xRes, yRes);
+        return GetResolutionFromY(yRes, aspect);
     }
 
-    private static Vector2Int GetResolutionFromX(int xResolution, Vector2 aspect)
+    private static Vector2Int GetResolutionFromY(int yResolution, Vector2 aspect)
     {
-        return new Vector2Int(xResolution, (int) Math.Round(xResolution * aspect.y / aspect.x));
+        return new Vector2Int((int) (aspect.x / aspect.y * yResolution), yResolution);
     }
 
-    public IEnumerator SetNewAspect(Vector2 newAspect)
+    public void ChangeAspect(Vector2 newAspect)
     {
-        float height;
-
-        height = GetScale().y;
-        yield return DropHolePunch(1f, height);
+        Debug.Log("[BONSAI] NewAspect " + newAspect);
 
         aspect = newAspect;
 
         _resolution = autoSetResolution
-            ? GetAutoResolution(width, distanceEstimate, pixelPerDegree, aspect)
-            : GetResolutionFromX(xResolution, aspect);
+            ? GetAutoResolution(height, distanceEstimate, pixelPerDegree, aspect)
+            : GetResolutionFromY(yResolution, aspect);
+
+        Debug.Log("[BONSAI] NewResolution " + _resolution);
 
         _webViewPrefab.WebView.SetResolution(1);
         _webViewPrefab.WebView.Resize(_resolution.x, _resolution.y);
 
-        yield return new WaitForSeconds(0.5f);
-
         SetOverlay();
-
-        transform.position =
-            new Vector3(transform.position.x, -transform.localScale.y / 2, transform.position.z);
-
-        yield return new WaitForSeconds(0.5f);
-
-        height = GetScale().y;
-
-        yield return RaiseHolePunch(1f, height);
     }
 
-    private IEnumerator DropHolePunch(float duration, float height)
+    public IEnumerator DropScreen(float duration)
     {
         float counter = 0;
         while (counter < duration)
@@ -206,7 +193,7 @@ public class AutoBrowser : MonoBehaviour
         }
     }
 
-    private IEnumerator RaiseHolePunch(float duration, float height)
+    public IEnumerator RaiseScreen(float duration)
     {
         float counter = 0;
         while (counter < duration)
@@ -253,7 +240,7 @@ public class AutoBrowser : MonoBehaviour
         // distanceEstimate : estimated closest distance from (user) --- (billboard)
         // pixelPerDegree : resolving resolution of headset
         return (int) Math.Round(
-            pixelPerDegree * (360f / (2 * Math.PI)) * 2 * Math.Atan(width / (2 * distanceEstimate))
+            pixelPerDegree * (360f / (2f * Math.PI)) * 2f * Math.Atan(width / (2f * distanceEstimate))
         );
     }
 }
