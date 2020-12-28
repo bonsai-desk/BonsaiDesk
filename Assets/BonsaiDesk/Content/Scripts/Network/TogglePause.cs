@@ -10,7 +10,7 @@ public delegate void PauseEvent(bool paused);
 public class TogglePause : NetworkBehaviour
 {
     public event PauseEvent PauseChanged;
-    
+
     public float gestureActivateDistance;
     public float pointMovement;
     public float fadeTime;
@@ -34,18 +34,24 @@ public class TogglePause : NetworkBehaviour
 
     private void Update()
     {
+        // if (paused)
+        // {
+        //     togglePauseMorph.SetVisibility(1);
+        //     return;
+        // }
+
         if (currentPointSkeleton != OVRSkeleton.SkeletonType.None ||
             currentGestureSkeleton != OVRSkeleton.SkeletonType.None)
         {
             float t = Time.time - interactStartTime;
             float lerp = Mathf.Clamp01(t / fadeTime);
-            togglePauseMorph.SetFade(CubicBezier.EaseOut.Sample(lerp));
+            togglePauseMorph.SetVisibility(CubicBezier.EaseOut.Sample(lerp));
         }
         else
         {
             float t = Time.time - lastInteractTime;
             float lerp = Mathf.Clamp01(t / fadeTime);
-            togglePauseMorph.SetFade(1 - CubicBezier.EaseIn.Sample(lerp));
+            togglePauseMorph.SetVisibility(1 - CubicBezier.EaseIn.Sample(lerp));
         }
     }
 
@@ -60,18 +66,19 @@ public class TogglePause : NetworkBehaviour
         Debug.Log("[BONSAI] SetPaused " + newPaused);
         if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None)
             updateIcons(newPaused);
-        
+
         PauseChanged?.Invoke(newPaused);
     }
 
     void updateIcons(bool paused)
     {
-        togglePauseMorph.SetLerp(paused ? 0 : 1);
+        togglePauseMorph.SetPaused(paused ? 1 : 0);
     }
 
     public void Point(OVRSkeleton.SkeletonType skeletonType, bool pointing, Vector3 position)
     {
-        if (currentPointSkeleton == OVRSkeleton.SkeletonType.None && currentGestureSkeleton == OVRSkeleton.SkeletonType.None && pointing)
+        if (currentPointSkeleton == OVRSkeleton.SkeletonType.None &&
+            currentGestureSkeleton == OVRSkeleton.SkeletonType.None && pointing)
         {
             interactStartTime = Time.time;
         }
@@ -87,7 +94,6 @@ public class TogglePause : NetworkBehaviour
                 {
                     Vector3 direction = (position - transform.position).normalized;
                     Vector3 newPosition = transform.position + (direction * pointMovement);
-                    newPosition.z = Mathf.Clamp(newPosition.z, 0.0001f, newPosition.z);
                     togglePauseMorph.transform.position = newPosition;
                 }
             }
@@ -132,9 +138,9 @@ public class TogglePause : NetworkBehaviour
         {
             float distance = Vector3.Distance(transform.position, position) - gestureStartDistance;
             float lerp = Mathf.Clamp01(distance / gestureActivateDistance);
-            if (!paused)
+            if (paused)
                 lerp = 1 - lerp;
-            togglePauseMorph.SetLerp(CubicBezier.EaseInOut.Sample(lerp));
+            togglePauseMorph.SetPaused(CubicBezier.EaseInOut.Sample(lerp));
         }
     }
 }

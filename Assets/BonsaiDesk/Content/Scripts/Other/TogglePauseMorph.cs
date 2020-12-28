@@ -7,20 +7,20 @@ using UnityEngine;
 public class TogglePauseMorph : MonoBehaviour
 {
     private Material material;
+    private int pausedId;
+    private int visibilityId;
 
     private void Awake()
     {
         material = GetComponent<MeshRenderer>().material;
+        pausedId = Shader.PropertyToID("_Paused");
+        visibilityId = Shader.PropertyToID("_Visibility");
     }
 
     void Start()
     {
-        var iconColor = Color.white;
-        // var backgroundColor = Color.black;
-
         var meshFilter = GetComponent<MeshFilter>();
-
-        // float backgroundOffset = 0.00001f;
+        
         var mesh = new Mesh();
         mesh.vertices = new[]
         {
@@ -33,11 +33,6 @@ public class TogglePauseMorph : MonoBehaviour
             new Vector3(0.5f, 0.5f, 0),
             new Vector3(0.5f, -0.5f, 0),
             new Vector3(0.1f, -0.5f, 0)
-            
-            // new Vector3(-0.6f, 0.6f, backgroundOffset),
-            // new Vector3(0.6f, 0.6f, backgroundOffset),
-            // new Vector3(0.6f, -0.6f, backgroundOffset),
-            // new Vector3(-0.6f, -0.6f, backgroundOffset)
         };
         mesh.tangents = new[]
         {
@@ -50,28 +45,6 @@ public class TogglePauseMorph : MonoBehaviour
             new Vector4(0.5f, 0, 0, 1),
             new Vector4(0.5f, 0, 0, 1),
             new Vector4(0, -0.25f, 0, 1)
-            
-            // new Vector4(-0.6f, 0.6f, backgroundOffset, 1),
-            // new Vector4(0.6f, 0, backgroundOffset, 1),
-            // new Vector4(0.6f, 0, backgroundOffset, 1),
-            // new Vector4(-0.6f, -0.6f, backgroundOffset, 1)
-        };
-        mesh.colors = new[]
-        {
-            iconColor,
-            iconColor,
-            iconColor,
-            iconColor,
-            
-            iconColor,
-            iconColor,
-            iconColor,
-            iconColor
-            
-            // backgroundColor,
-            // backgroundColor,
-            // backgroundColor,
-            // backgroundColor
         };
         mesh.triangles = new[]
         {
@@ -80,21 +53,24 @@ public class TogglePauseMorph : MonoBehaviour
             
             4, 5, 6,
             7, 4, 6
-            
-            // 8, 9, 10,
-            // 10, 11, 8
         };
 
         meshFilter.sharedMesh = mesh;
     }
 
-    public void SetLerp(float lerp)
+    /// <summary>
+    /// 0 is playing, 1 is paused
+    /// </summary>
+    public void SetPaused(float pauseLerp)
     {
-        material.SetFloat("_Lerp", Mathf.Clamp01(lerp));
+        material.SetFloat(pausedId, Mathf.Clamp01(pauseLerp));
     }
 
-    public void SetFade(float fade)
+    /// <summary>
+    /// 0 is fully transparent, 1 is fully opaque
+    /// </summary>
+    public void SetVisibility(float visibility)
     {
-        material.SetFloat("_Alpha", Mathf.Clamp01(fade));
+        material.SetFloat(visibilityId, Mathf.Clamp01(visibility));
     }
 }
