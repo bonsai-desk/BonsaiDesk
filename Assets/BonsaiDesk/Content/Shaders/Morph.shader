@@ -9,7 +9,7 @@
     {
         Tags
         {
-            "Queue" = "Transparent"
+            "Queue" = "Geometry"
         }
         LOD 100
 
@@ -34,7 +34,7 @@
             struct v2f
             {
                 float4 vertex : SV_POSITION;
-                float3 color : TEXCOORD0;
+                float4 color : TEXCOORD0;
             };
             
             float _Lerp, _Alpha;
@@ -42,14 +42,15 @@
             v2f vert(appdata v)
             {
                 v2f o;
-                o.vertex = UnityObjectToClipPos(lerp(v.vertex, v.vertex2, _Lerp));
-                o.color = v.color.rgb;
+                float4 vertex = lerp(v.vertex, v.vertex2, _Lerp);
+                o.vertex = UnityObjectToClipPos(vertex * _Alpha);
+                o.color = v.color;
                 return o;
             }
 
             fixed4 frag(v2f i) : SV_Target
             {
-                return float4(i.color, _Alpha);
+                return i.color;
             }
             ENDCG
         }
