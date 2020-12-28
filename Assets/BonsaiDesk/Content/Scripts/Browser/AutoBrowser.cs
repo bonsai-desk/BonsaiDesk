@@ -21,26 +21,14 @@ public class AutoBrowser : MonoBehaviour
 
     private GameObject _holePuncher;
     private OVROverlay _overlay;
-    private Vector2Int _resolution;
     private WebViewPrefab _webViewPrefab;
 
     private void Start()
     {
-        // Set resolution from aspect
-        ResetResolution();
-        RebuildOverlay();
-
         // Set screen to below desk
         transform.position = new Vector3(transform.position.x, -height / 2, transform.position.z);
 
         // Enable autoplay
-#if UNITY_ANDROID && !UNITY_EDITOR
-        AndroidGeckoWebView.EnableRemoteDebugging();
-        AndroidGeckoWebView.SetUserPreferences(@"
-            user_pref('media.autoplay.default', 0);
-            user_pref('media.geckoview.autoplay.request', false);
-        ");
-#endif
 
         // Create hole-puncher surface
         _holePuncher = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -50,12 +38,23 @@ public class AutoBrowser : MonoBehaviour
 #else
         _holePuncher.GetComponent<Renderer>().material = dummyMaterial;
 #endif
-
+        
         // Spin up WebView prefab
+#if UNITY_ANDROID && !UNITY_EDITOR
+        AndroidGeckoWebView.EnableRemoteDebugging();
+        AndroidGeckoWebView.SetUserPreferences(@"
+            user_pref('media.autoplay.default', 0);
+            user_pref('media.geckoview.autoplay.request', false);
+        ");
+#endif
         _webViewPrefab = WebViewPrefab.Instantiate(aspect.x / aspect.y * height, height);
         _webViewPrefab.Visible = false;
         _webViewPrefab.Initialized +=
-            (sender, eventArgs) => StartCoroutine(SetupWebView(sender, eventArgs));
+            (sender, eventArgs) =>
+            {
+                ChangeAspect(aspect);
+                BrowserReady?.Invoke();
+            };
     }
 
     #region interface
@@ -64,16 +63,12 @@ public class AutoBrowser : MonoBehaviour
 
     public void ChangeAspect(Vector2 newAspect)
     {
-        Debug.Log("[BONSAI] NewAspect " + newAspect);
-
         aspect = newAspect;
 
-        ResetResolution();
-
-        Debug.Log("[BONSAI] NewResolution " + _resolution);
+        var resolution = Resolution();
 
         _webViewPrefab.WebView.SetResolution(1);
-        _webViewPrefab.WebView.Resize(_resolution.x, _resolution.y);
+        _webViewPrefab.WebView.Resize(resolution.x, resolution.y);
 
         RebuildOverlay();
     }
@@ -86,7 +81,9 @@ public class AutoBrowser : MonoBehaviour
             counter += Time.deltaTime;
             var a = CubicBezier.EaseIn.Sample(counter / duration);
 
-            transform.position = new Vector3(transform.position.x, (1 - a) * height / 2 + a * -height / 2,
+            transform.position = new Vector3(
+                transform.position.x, 
+                (1 - a) * height / 2 + a * -height / 2,
                 transform.position.z);
 
             _holePuncher.transform.localPosition = new Vector3(
@@ -149,38 +146,13 @@ public class AutoBrowser : MonoBehaviour
 
     #region private methods
 
-    private IEnumerator SetupWebView(object sender, EventArgs eventArgs)
-    {
-#if UNITY_ANDROID && !UNITY_EDITOR
-        while (_overlay.externalSurfaceObject == IntPtr.Zero || _webViewPrefab.WebView == null)
-        {
-            Debug.Log("[BONSAI] while WebView not setup\nexternalSurfaceObject: <" + _overlay.externalSurfaceObject + ">\nWebView: <" + _webViewPrefab.WebView + ">");
-            yield return null;
-        }
-#endif
-
-        _webViewPrefab.WebView.SetResolution(1);
-        _webViewPrefab.WebView.Resize(_resolution.x, _resolution.y);
-
-        var surface = _overlay.externalSurfaceObject;
-
-#if UNITY_ANDROID && !UNITY_EDITOR
-        Debug.Log("[BONSAI] SetSurface" + surface + ", WebView " + _webViewPrefab.WebView);
-        (_webViewPrefab.WebView as AndroidGeckoWebView).SetSurface(surface);
-        Debug.Log("[BONSAI] Done SetSurface");
-#endif
-
-        BrowserReady?.Invoke();
-
-        yield break;
-    }
-
     private void RebuildOverlay()
     {
+        var resolution = Resolution();
         Destroy(_overlay);
         _overlay = gameObject.AddComponent<OVROverlay>();
-        _overlay.externalSurfaceWidth = _resolution.x;
-        _overlay.externalSurfaceHeight = _resolution.y;
+        _overlay.externalSurfaceWidth = resolution.x;
+        _overlay.externalSurfaceHeight = resolution.y;
         _overlay.transform.localScale = new Vector3(aspect.x / aspect.y * height, height, 1);
         _overlay.currentOverlayType = OVROverlay.OverlayType.Underlay;
 
@@ -202,19 +174,18 @@ public class AutoBrowser : MonoBehaviour
             yield return null;
         }
 #endif
-        var surface = _overlay.externalSurfaceObject;
 
 #if UNITY_ANDROID && !UNITY_EDITOR
-        Debug.Log("[BONSAI] SetSurface" + surface + ", WebView " + _webViewPrefab.WebView);
-        (_webViewPrefab.WebView as AndroidGeckoWebView).SetSurface(surface);
+        Debug.Log("[BONSAI] SetSurface" + _overlay.externalSurfaceObject + ", WebView " + _webViewPrefab.WebView);
+        (_webViewPrefab.WebView as AndroidGeckoWebView).SetSurface(_overlay.externalSurfaceObject);
         Debug.Log("[BONSAI] Done SetSurface");
 #endif
         yield break;
     }
 
-    private void ResetResolution()
+    private Vector2Int Resolution()
     {
-        _resolution = autoSetResolution
+        return autoSetResolution
             ? AutoResolution(height, distanceEstimate, pixelPerDegree, aspect)
             : ResolutionFromY(yResolution, aspect);
     }
