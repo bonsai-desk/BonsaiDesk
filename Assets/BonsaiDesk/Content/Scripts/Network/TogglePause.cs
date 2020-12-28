@@ -10,18 +10,18 @@ public delegate void PauseEvent(bool paused);
 
 public class TogglePause : NetworkBehaviour
 {
-    public event PauseEvent PauseChanged;
+    [SyncVar(hook = nameof(SetPaused))] private bool paused = true;
 
     public float gestureActivateDistance;
     public float pointMovement;
     public float fadeTime;
     public TogglePauseMorph togglePauseMorph;
-
-    [SyncVar(hook = nameof(SetPaused))] private bool paused = true;
+    
+    public event PauseEvent PauseChanged;
 
     private OVRSkeleton.SkeletonType currentPointSkeleton = OVRSkeleton.SkeletonType.None;
 
-    private OVRSkeleton.SkeletonType currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
+    [HideInInspector] public OVRSkeleton.SkeletonType currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
     private float gestureStartDistance;
     private bool pausedStateAtGestureStart;
 
@@ -49,7 +49,7 @@ public class TogglePause : NetworkBehaviour
         if (Mathf.Approximately(_position, 0))
             _localPosition = _targetLocalPosition;
         _localPosition = Vector3.MoveTowards(_localPosition, _targetLocalPosition, Time.deltaTime);
-        
+
         //if not already at the target
         if (!Mathf.Approximately(_visibility, targetVisibility))
         {
@@ -59,8 +59,6 @@ public class TogglePause : NetworkBehaviour
             t = Mathf.MoveTowards(t, targetVisibility, step);
             _visibility = easeFunction.Sample(t);
             togglePauseMorph.SetVisibility(_visibility);
-            
-            print(Time.time);
         }
 
         if (!Mathf.Approximately(_position, targetPosition))
@@ -70,8 +68,6 @@ public class TogglePause : NetworkBehaviour
             float step = (1f / fadeTime) * Time.deltaTime;
             t = Mathf.MoveTowards(t, targetPosition, step);
             _position = easeFunction.Sample(t);
-            
-            print(Time.time);
         }
 
         togglePauseMorph.transform.localPosition = _localPosition * _position;
@@ -134,12 +130,8 @@ public class TogglePause : NetworkBehaviour
         if (currentGestureSkeleton == skeletonType)
         {
             currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
-            if (Vector3.Distance(transform.position, position) - gestureStartDistance > gestureActivateDistance)
-            {
-                updateIcons(!pausedStateAtGestureStart);
-                CmdSetPaused(!pausedStateAtGestureStart);
-            }
-            else
+            float distance = Vector3.Distance(transform.position, position) - gestureStartDistance;
+            if (distance <= gestureActivateDistance)
             {
                 updateIcons(paused);
             }
@@ -156,6 +148,14 @@ public class TogglePause : NetworkBehaviour
             if (paused)
                 pausedLerp = 1 - pausedLerp;
             togglePauseMorph.SetPaused(pausedLerp);
+
+            if (distance > gestureActivateDistance)
+            {
+                currentPointSkeleton = OVRSkeleton.SkeletonType.None;
+                currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
+                updateIcons(!pausedStateAtGestureStart);
+                CmdSetPaused(!pausedStateAtGestureStart);
+            }
         }
     }
 }
