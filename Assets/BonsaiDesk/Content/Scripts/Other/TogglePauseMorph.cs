@@ -7,10 +7,14 @@ using UnityEngine;
 public class TogglePauseMorph : MonoBehaviour
 {
     private Material material;
+    private int pausedId;
+    private int visibilityId;
 
     private void Awake()
     {
         material = GetComponent<MeshRenderer>().material;
+        pausedId = Shader.PropertyToID("_Paused");
+        visibilityId = Shader.PropertyToID("_Visibility");
     }
 
     void Start()
@@ -54,13 +58,19 @@ public class TogglePauseMorph : MonoBehaviour
         meshFilter.sharedMesh = mesh;
     }
 
-    public void SetLerp(float lerp)
+    /// <summary>
+    /// 0 is playing, 1 is paused
+    /// </summary>
+    public void SetPaused(float pauseLerp)
     {
-        material.SetFloat("_Lerp", Mathf.Clamp01(lerp));
+        material.SetFloat(pausedId, Mathf.Clamp01(pauseLerp));
     }
 
-    public void SetFade(float fade)
+    /// <summary>
+    /// 0 is fully transparent, 1 is fully opaque
+    /// </summary>
+    public void SetVisibility(float visibility)
     {
-        material.SetFloat("_Fade", Mathf.Clamp01(fade));
+        material.SetFloat(visibilityId, Mathf.Clamp01(visibility));
     }
 }

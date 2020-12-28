@@ -234,8 +234,7 @@ GameObject:
   - component: {fileID: 4318712806008556000}
   - component: {fileID: 4318712806008556015}
   - component: {fileID: -699837060220722056}
-  - component: {fileID: 8885528750644732243}
-  - component: {fileID: 1196586881314587573}
+  - component: {fileID: 2498230184249292274}
   m_Layer: 0
   m_Name: BlockArea
   m_TagString: BlockArea
@@ -324,6 +323,7 @@ MonoBehaviour:
   isScaleCompressed: 0
   isVelocityCompressed: 0
   isAngularVelocityCompressed: 0
+  automaticallyResetTime: 1
   isSmoothingAuthorityChanges: 1
   transformSource: 0
   whenToUpdateTransform: 0
@@ -424,7 +424,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5aba5c1211a7fca448b14c1fc7f0209c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &8885528750644732243
+--- !u!114 &2498230184249292274
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -433,24 +433,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 4318712806008556002}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f32f7ac7bcc13c4c99183dad9b1f91a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1196586881314587573
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4318712806008556002}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5287d90c38470004c858275dfe7892bc, type: 3}
+  m_Script: {fileID: 11500000, guid: 112d05256fc51aa4286464ba7a35345e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  authorityChangeTime: 0
+  visualizeAuthority: 0
+  visualizeAuthorityMaterial: {fileID: 0}
+  meshRenderer: {fileID: 0}
 --- !u!1 &4318712806339903219
 GameObject:
   m_ObjectHideFlags: 0
