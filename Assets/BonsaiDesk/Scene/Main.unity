@@ -509,7 +509,7 @@ PrefabInstance:
     - target: {fileID: 2537125333393509692, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
         type: 3}
       propertyPath: action.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: ResizePlayer
+      value: ToggleVideo
       objectReference: {fileID: 0}
     - target: {fileID: 2537125333393509692, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
         type: 3}
@@ -519,7 +519,7 @@ PrefabInstance:
     - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
         type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
         type: 3}
@@ -17589,6 +17589,36 @@ Transform:
   m_Father: {fileID: 874699798}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1397003481
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1397003482}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1397003482
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1397003481}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.434547, y: -0.013305664, z: 0.11350512}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 13
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1400358825 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400144, guid: 442d5b4503ed83c4897ef44659446587,
@@ -26699,7 +26729,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1443090083749991583}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -26722,7 +26752,7 @@ MonoBehaviour:
   aspect: {x: 1, y: 1}
   yResolution: 850
   autoSetResolution: 1
-  distanceEstimate: 0.8
+  distanceEstimate: 0.833
   pixelPerDegree: 16
   holePuncherMaterial: {fileID: 2100000, guid: 13c0664d10ae3514ea9d893740bf2046, type: 2}
   dummyMaterial: {fileID: 2100000, guid: e83ff810abd3dc146bd558b83fc6c8ed, type: 2}

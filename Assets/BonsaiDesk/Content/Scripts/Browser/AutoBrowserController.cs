@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using OVRSimpleJSON;
 using UnityEngine;
@@ -11,18 +10,23 @@ public class AutoBrowserController : MonoBehaviour
     public TogglePause togglePause;
     private AutoBrowser _autoBrowser;
 
-    private int i;
+    private int i = 0;
 
     private void Start()
     {
         _autoBrowser = GetComponent<AutoBrowser>();
         _autoBrowser.BrowserReady += () =>
         {
-            Debug.Log("_autoBrowser.BrowserReady");
-            _autoBrowser.LoadUrl(initialURL);
-            LoadNewVideo("PWMTDRWJqu4");
+            StartCoroutine(StartUp());
+            togglePause.PauseChanged += HandlePauseChange;
         };
-        togglePause.PauseChanged += HandlePauseChange;
+    }
+
+    private IEnumerator StartUp()
+    {
+        _autoBrowser.LoadUrl(initialURL);
+        yield return new WaitForSeconds(0.25f);
+        yield return _autoBrowser.RaiseScreen(0.5f);
     }
 
     private void HandlePauseChange(bool paused)
@@ -32,11 +36,11 @@ public class AutoBrowserController : MonoBehaviour
         _autoBrowser.PostMessage(message);
     }
 
-    public void ResizePlayer()
+    public void ToggleVideo()
     {
         var vidIds = new List<string> {"V1bFr2SWP1I", "AqqaYs7LjlM", "V1bFr2SWP1I", "Cg0QwoHh9w4"};
         StartCoroutine(LoadNewVideo(vidIds[i]));
-        i += 1;
+        i = i == 3 ? 0 : i + 1;
     }
 
     private IEnumerator LoadNewVideo(string videoId)
@@ -61,7 +65,7 @@ public class AutoBrowserController : MonoBehaviour
             var req = www.SendWebRequest();
 
             yield return _autoBrowser.DropScreen(0.5f);
-            
+
             _autoBrowser.PostMessage(loadVideoId);
 
             yield return req;
@@ -82,7 +86,7 @@ public class AutoBrowserController : MonoBehaviour
 
             // TODO verify that window resize has finished
             _autoBrowser.PostMessage(resizePlayer);
-            yield return new WaitForSeconds(0.05f);
+            yield return new WaitForSeconds(0.1f);
 
             yield return _autoBrowser.RaiseScreen(0.5f);
         }

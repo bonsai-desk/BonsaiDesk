@@ -12,7 +12,7 @@ public class AutoBrowserEditor : Editor
 
         autoBrowser.height = EditorGUILayout.FloatField("Height", autoBrowser.height);
 
-        autoBrowser.aspect = EditorGUILayout.Vector2Field("Aspect Ratio", autoBrowser.aspect);
+        autoBrowser.aspect = EditorGUILayout.Vector2Field("Initial Aspect Ratio", autoBrowser.aspect);
         
         EditorGUILayout.Space();
         
