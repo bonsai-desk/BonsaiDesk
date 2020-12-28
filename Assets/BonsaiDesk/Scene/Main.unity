@@ -26830,7 +26830,6 @@ MonoBehaviour:
   autoSetResolution: 1
   distanceEstimate: 0.8
   pixelPerDegree: 16
-  offsetY: 0.2
   holePuncherMaterial: {fileID: 2100000, guid: 13c0664d10ae3514ea9d893740bf2046, type: 2}
   dummyMaterial: {fileID: 2100000, guid: e83ff810abd3dc146bd558b83fc6c8ed, type: 2}
 --- !u!1 &1443090083749991583
