@@ -24,8 +24,9 @@ public class TogglePause : NetworkBehaviour
     private float gestureStartDistance;
     private bool pausedStateAtGestureStart;
 
-    private float lastInteractTime = -10f;
-    private float interactStartTime = -10f;
+    private float _visibility;
+
+    private Vector3 _targetLocalPosition = Vector3.zero;
 
     private void Start()
     {
@@ -34,24 +35,29 @@ public class TogglePause : NetworkBehaviour
 
     private void Update()
     {
-        // if (paused)
-        // {
-        //     togglePauseMorph.SetVisibility(1);
-        //     return;
-        // }
+        float targetVisibility;
+        CubicBezier easeFunction;
 
+        //if pointing or mid gesture
         if (currentPointSkeleton != OVRSkeleton.SkeletonType.None ||
             currentGestureSkeleton != OVRSkeleton.SkeletonType.None)
         {
-            float t = Time.time - interactStartTime;
-            float lerp = Mathf.Clamp01(t / fadeTime);
-            togglePauseMorph.SetVisibility(CubicBezier.EaseOut.Sample(lerp));
+            targetVisibility = 1;
+            easeFunction = CubicBezier.EaseOut;
         }
         else
         {
-            float t = Time.time - lastInteractTime;
-            float lerp = Mathf.Clamp01(t / fadeTime);
-            togglePauseMorph.SetVisibility(1 - CubicBezier.EaseIn.Sample(lerp));
+            targetVisibility = 0;
+            easeFunction = CubicBezier.EaseIn;
+        }
+
+        if (!Mathf.Approximately(_visibility, targetVisibility))
+        {
+            float t = easeFunction.SampleInverse(_visibility);
+            float step = (1f / fadeTime) * Time.deltaTime;
+            t = Mathf.MoveTowards(t, targetVisibility, step);
+            _visibility = easeFunction.Sample(t);
+            togglePauseMorph.SetVisibility(_visibility);
         }
     }
 
@@ -138,9 +144,10 @@ public class TogglePause : NetworkBehaviour
         {
             float distance = Vector3.Distance(transform.position, position) - gestureStartDistance;
             float lerp = Mathf.Clamp01(distance / gestureActivateDistance);
+            float pausedLerp = CubicBezier.EaseInOut.Sample(lerp);
             if (paused)
-                lerp = 1 - lerp;
-            togglePauseMorph.SetPaused(CubicBezier.EaseInOut.Sample(lerp));
+                pausedLerp = 1 - pausedLerp;
+            togglePauseMorph.SetPaused(pausedLerp);
         }
     }
 }

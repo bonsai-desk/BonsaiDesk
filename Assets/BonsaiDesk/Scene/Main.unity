@@ -572,7 +572,7 @@ MonoBehaviour:
   syncInterval: 0.1
   gestureActivateDistance: 0.1
   pointMovement: 0.075
-  fadeTime: 0.25
+  fadeTime: 0.2
   togglePauseMorph: {fileID: 848667923}
 --- !u!1 &117227473
 GameObject:
