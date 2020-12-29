@@ -13128,7 +13128,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cb156aacd20cd64f840600217106bdc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetObject: {fileID: 506092257}
+  targetObject: {fileID: 1443090083749991568}
   angleThreshold: 32.5
 --- !u!1 &1134487932 stripped
 GameObject:
@@ -19739,7 +19739,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cb156aacd20cd64f840600217106bdc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetObject: {fileID: 506092257}
+  targetObject: {fileID: 1443090083749991568}
   angleThreshold: 37.5
 --- !u!1 &1709370302
 GameObject:
@@ -20567,7 +20567,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cb156aacd20cd64f840600217106bdc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetObject: {fileID: 506092257}
+  targetObject: {fileID: 1443090083749991568}
   angleThreshold: 37.5
 --- !u!4 &1805792899
 Transform:
@@ -26646,6 +26646,7 @@ MonoBehaviour:
   pixelPerDegree: 16
   holePuncherMaterial: {fileID: 2100000, guid: 13c0664d10ae3514ea9d893740bf2046, type: 2}
   holePuncher: {fileID: 1965982993}
+  startingAspect: {x: 0, y: 0}
   togglePause: {fileID: 96659938}
 --- !u!1 &1443090083749991583
 GameObject:
