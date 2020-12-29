@@ -18349,8 +18349,7 @@ MonoBehaviour:
 
     good lighting and both hands
 
-    are visible
-    to the cameras'
+    are visible to the cameras'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -26646,7 +26645,7 @@ MonoBehaviour:
   pixelPerDegree: 16
   holePuncherMaterial: {fileID: 2100000, guid: 13c0664d10ae3514ea9d893740bf2046, type: 2}
   holePuncher: {fileID: 1965982993}
-  startingAspect: {x: 0, y: 0}
+  startingAspect: {x: 16, y: 9}
   togglePause: {fileID: 96659938}
 --- !u!1 &1443090083749991583
 GameObject:

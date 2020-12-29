@@ -13,30 +13,28 @@ public class AutoBrowser : MonoBehaviour
     public int pixelPerDegree = 16;
 
     public Material holePuncherMaterial;
-
-    private Transform _overlayObject;
     public Transform holePuncher;
     public Vector2 startingAspect;
 
     public TogglePause togglePause;
-
-    private OVROverlay _overlay;
-    private WebViewPrefab _webViewPrefab;
-
-    private Vector3 _defaultLocalPosition;
     private Vector3 _belowTableLocalPosition;
 
     private Vector2 _bounds;
+
+    private Vector3 _defaultLocalPosition;
     private MeshRenderer _holePuncherRenderer;
 
-    public event BrowserReadyEvent BrowserReady;
+    private OVROverlay _overlay;
+
+    private Transform _overlayObject;
+    private WebViewPrefab _webViewPrefab;
 
     private void Start()
     {
         togglePause.SetInteractable(false);
-        
+
         //create empty overlay object
-        _overlayObject = (new GameObject()).transform;
+        _overlayObject = new GameObject().transform;
         _overlayObject.name = "OverlayObject";
         _overlayObject.SetParent(transform, false);
 
@@ -46,6 +44,11 @@ public class AutoBrowser : MonoBehaviour
         _defaultLocalPosition = transform.localPosition;
         _belowTableLocalPosition = _defaultLocalPosition;
         _belowTableLocalPosition.y = -holePuncher.localScale.y / 2f;
+        
+        //TODO
+        _holePuncherRenderer.enabled = false;
+        transform.localPosition = _belowTableLocalPosition;
+        holePuncher.localPosition = _belowTableLocalPosition;
 
         // If android, set holePuncher material to underlay punch through
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -72,17 +75,17 @@ public class AutoBrowser : MonoBehaviour
             };
     }
 
+    public event BrowserReadyEvent BrowserReady;
+
     #region interface
 
     public void ChangeAspect(Vector2 newAspect)
     {
-        float aspectRatio = newAspect.x / newAspect.y;
+        var aspectRatio = newAspect.x / newAspect.y;
         holePuncher.localScale = new Vector3(_bounds.x, _bounds.y, 1);
         holePuncher.localScale = new Vector3(holePuncher.localScale.y * aspectRatio, holePuncher.localScale.y, 1);
         if (holePuncher.localScale.x > _bounds.x)
-        {
             holePuncher.localScale = new Vector3(_bounds.x, _bounds.x * (1f / aspectRatio), 1);
-        }
 
         var resolution = Resolution();
 
@@ -113,23 +116,23 @@ public class AutoBrowser : MonoBehaviour
         float counter = 0;
         while (counter < 1f)
         {
-            counter += (1f / duration) * Time.deltaTime;
+            counter += 1f / duration * Time.deltaTime;
             var t = easeFunction.Sample(counter);
 
             //lerp browser height
             transform.localPosition = Vector3.Lerp(from, to, t);
 
             //lerp hole puncher
-            float height = _overlayObject.localScale.y;
-            float halfHeight = height / 2f;
+            var height = _overlayObject.localScale.y;
+            var halfHeight = height / 2f;
             t = (transform.localPosition.y + halfHeight) / height;
             t = Mathf.Clamp01(t); //1 is visible, 0 is invisible
 
-            Vector3 holePunchScale = holePuncher.localScale;
+            var holePunchScale = holePuncher.localScale;
             holePunchScale.y = _overlayObject.localScale.y * t;
             holePuncher.localScale = holePunchScale;
 
-            Vector3 holePunchPosition = holePuncher.localPosition;
+            var holePunchPosition = holePuncher.localPosition;
             holePunchPosition.y = halfHeight * (1f - t);
             holePuncher.localPosition = holePunchPosition;
 
@@ -161,7 +164,7 @@ public class AutoBrowser : MonoBehaviour
         _overlay = _overlayObject.gameObject.AddComponent<OVROverlay>();
         _overlay.externalSurfaceWidth = resolution.x;
         _overlay.externalSurfaceHeight = resolution.y;
-        Vector3 localScale = new Vector3(holePuncher.localScale.x / holePuncher.localScale.y * holePuncher.localScale.y,
+        var localScale = new Vector3(holePuncher.localScale.x / holePuncher.localScale.y * holePuncher.localScale.y,
             holePuncher.localScale.y, 1);
         _overlayObject.localScale = localScale;
         holePuncher.localScale = localScale;

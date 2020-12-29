@@ -1,8 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using OVRSimpleJSON;
 using UnityEngine;
 using UnityEngine.Networking;
+using Random = System.Random;
 
 [RequireComponent(typeof(AutoBrowser))]
 public class AutoBrowserController : MonoBehaviour
@@ -11,25 +13,19 @@ public class AutoBrowserController : MonoBehaviour
     public TogglePause togglePause;
     private AutoBrowser _autoBrowser;
 
-    private int i = 0;
+    private PlayerState State { get; set; }
 
     private void Start()
     {
+        State = PlayerState.Neutral;
+
         _autoBrowser = GetComponent<AutoBrowser>();
         _autoBrowser.BrowserReady += () =>
         {
             _autoBrowser.LoadUrl(initialURL);
-            // StartCoroutine(StartUp());
             togglePause.PauseChanged += HandlePauseChange;
         };
     }
-    
-    // private IEnumerator StartUp()
-    // {
-    //     _autoBrowser.LoadUrl(initialURL);
-    //     yield return new WaitForSeconds(0.25f);
-    //     yield return _autoBrowser.RaiseScreen(0.5f);
-    // }
 
     private void HandlePauseChange(bool paused)
     {
@@ -40,12 +36,38 @@ public class AutoBrowserController : MonoBehaviour
 
     public void ToggleVideo()
     {
+        
+        var rnd = new Random();
         var vidIds = new List<string> {"V1bFr2SWP1I", "AqqaYs7LjlM", "jNQXAC9IVRw", "Cg0QwoHh9w4"};
-        StartCoroutine(LoadNewVideo(vidIds[i]));
-        i = i == vidIds.Count - 1 ? 0 : i + 1;
+        
+        switch (State)
+        {
+            case PlayerState.Neutral:
+                State = PlayerState.YouTube;
+                StartCoroutine(LoadVideo(vidIds[rnd.Next(0, vidIds.Count)]));
+                break;
+
+            case PlayerState.YouTube:
+                State = PlayerState.Neutral;
+                StartCoroutine(ReturnToNeutral());
+                break;
+
+            case PlayerState.Twitch:
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 
-    private IEnumerator LoadNewVideo(string videoId)
+    private IEnumerator ReturnToNeutral()
+    {
+        yield return _autoBrowser.DropScreen(1f);
+        _autoBrowser.PostMessage(loadVideoIdMessage(""));
+    }
+    
+
+    private IEnumerator LoadVideo(string videoId)
     {
         var newAspect = new Vector2(16, 9);
 
@@ -56,19 +78,12 @@ public class AutoBrowserController : MonoBehaviour
                                     "\"command\": \"resize\" " +
                                     "}";
 
-        var loadVideoId = "{" +
-                          "\"type\": \"video\", " +
-                          "\"command\": \"load\", " +
-                          $"\"video_id\": \"{videoId}\" " +
-                          "}";
 
         using (var www = UnityWebRequest.Get(videoInfoUrl))
         {
             var req = www.SendWebRequest();
 
-            yield return _autoBrowser.DropScreen(0.5f);
-
-            _autoBrowser.PostMessage(loadVideoId);
+            _autoBrowser.PostMessage(loadVideoIdMessage(videoId));
 
             yield return req;
 
@@ -92,5 +107,21 @@ public class AutoBrowserController : MonoBehaviour
 
             yield return _autoBrowser.RaiseScreen(0.5f);
         }
+    }
+
+    private string loadVideoIdMessage(string videoId)
+    {
+        return "{" +
+               "\"type\": \"video\", " +
+               "\"command\": \"load\", " +
+               $"\"video_id\": \"{videoId}\" " +
+               "}";
+    }
+
+    private enum PlayerState
+    {
+        Neutral,
+        YouTube,
+        Twitch
     }
 }
