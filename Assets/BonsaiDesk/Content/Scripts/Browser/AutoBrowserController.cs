@@ -4,6 +4,7 @@ using OVRSimpleJSON;
 using UnityEngine;
 using UnityEngine.Networking;
 
+[RequireComponent(typeof(AutoBrowser))]
 public class AutoBrowserController : MonoBehaviour
 {
     public string initialURL;
@@ -17,17 +18,18 @@ public class AutoBrowserController : MonoBehaviour
         _autoBrowser = GetComponent<AutoBrowser>();
         _autoBrowser.BrowserReady += () =>
         {
-            StartCoroutine(StartUp());
+            _autoBrowser.LoadUrl(initialURL);
+            // StartCoroutine(StartUp());
             togglePause.PauseChanged += HandlePauseChange;
         };
     }
-
-    private IEnumerator StartUp()
-    {
-        _autoBrowser.LoadUrl(initialURL);
-        yield return new WaitForSeconds(0.25f);
-        yield return _autoBrowser.RaiseScreen(0.5f);
-    }
+    
+    // private IEnumerator StartUp()
+    // {
+    //     _autoBrowser.LoadUrl(initialURL);
+    //     yield return new WaitForSeconds(0.25f);
+    //     yield return _autoBrowser.RaiseScreen(0.5f);
+    // }
 
     private void HandlePauseChange(bool paused)
     {
@@ -38,9 +40,9 @@ public class AutoBrowserController : MonoBehaviour
 
     public void ToggleVideo()
     {
-        var vidIds = new List<string> {"V1bFr2SWP1I", "AqqaYs7LjlM", "V1bFr2SWP1I", "Cg0QwoHh9w4"};
+        var vidIds = new List<string> {"V1bFr2SWP1I", "AqqaYs7LjlM", "jNQXAC9IVRw", "Cg0QwoHh9w4"};
         StartCoroutine(LoadNewVideo(vidIds[i]));
-        i = i == 3 ? 0 : i + 1;
+        i = i == vidIds.Count - 1 ? 0 : i + 1;
     }
 
     private IEnumerator LoadNewVideo(string videoId)

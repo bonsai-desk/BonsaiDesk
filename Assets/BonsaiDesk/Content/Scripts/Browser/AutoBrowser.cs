@@ -7,39 +7,52 @@ public delegate void BrowserReadyEvent();
 
 public class AutoBrowser : MonoBehaviour
 {
-    public float height = 1;
-
-    public Vector2 aspect = new Vector2(16, 9);
-
     public int yResolution = 850;
     public bool autoSetResolution;
     public float distanceEstimate = 1;
     public int pixelPerDegree = 16;
 
     public Material holePuncherMaterial;
-    public Material dummyMaterial;
 
-    private GameObject _holePuncher;
+    private Transform _overlayObject;
+    public Transform holePuncher;
+    public Vector2 startingAspect;
+
+    public TogglePause togglePause;
+
     private OVROverlay _overlay;
     private WebViewPrefab _webViewPrefab;
 
+    private Vector3 _defaultLocalPosition;
+    private Vector3 _belowTableLocalPosition;
+
+    private Vector2 _bounds;
+    private MeshRenderer _holePuncherRenderer;
+
+    public event BrowserReadyEvent BrowserReady;
+
     private void Start()
     {
-        // Set screen to below desk
-        transform.position = new Vector3(transform.position.x, -height / 2, transform.position.z);
-
-        // Enable autoplay
-
-        // Create hole-puncher surface
-        _holePuncher = GameObject.CreatePrimitive(PrimitiveType.Quad);
-        _holePuncher.transform.SetParent(transform, false);
-#if UNITY_ANDROID && !UNITY_EDITOR
-        _holePuncher.GetComponent<Renderer>().material = holePuncherMaterial;
-#else
-        _holePuncher.GetComponent<Renderer>().material = dummyMaterial;
-#endif
+        togglePause.SetInteractable(false);
         
-        // Spin up WebView prefab
+        //create empty overlay object
+        _overlayObject = (new GameObject()).transform;
+        _overlayObject.name = "OverlayObject";
+        _overlayObject.SetParent(transform, false);
+
+        //setup hole puncher object
+        _holePuncherRenderer = holePuncher.GetComponent<MeshRenderer>();
+        _bounds = holePuncher.transform.localScale.xy();
+        _defaultLocalPosition = transform.localPosition;
+        _belowTableLocalPosition = _defaultLocalPosition;
+        _belowTableLocalPosition.y = -holePuncher.localScale.y / 2f;
+
+        // If android, set holePuncher material to underlay punch through
+#if UNITY_ANDROID && !UNITY_EDITOR
+        holePuncher.GetComponent<Renderer>().sharedMaterial = holePuncherMaterial;
+#endif
+
+        // Enable autoplay and remote debugging
 #if UNITY_ANDROID && !UNITY_EDITOR
         AndroidGeckoWebView.EnableRemoteDebugging();
         AndroidGeckoWebView.SetUserPreferences(@"
@@ -47,23 +60,29 @@ public class AutoBrowser : MonoBehaviour
             user_pref('media.geckoview.autoplay.request', false);
         ");
 #endif
-        _webViewPrefab = WebViewPrefab.Instantiate(aspect.x / aspect.y * height, height);
+        _webViewPrefab =
+            WebViewPrefab.Instantiate(holePuncher.localScale.x / holePuncher.localScale.y * holePuncher.localScale.y,
+                holePuncher.localScale.y);
         _webViewPrefab.Visible = false;
         _webViewPrefab.Initialized +=
             (sender, eventArgs) =>
             {
-                ChangeAspect(aspect);
+                ChangeAspect(startingAspect);
                 BrowserReady?.Invoke();
             };
     }
 
     #region interface
 
-    public event BrowserReadyEvent BrowserReady;
-
     public void ChangeAspect(Vector2 newAspect)
     {
-        aspect = newAspect;
+        float aspectRatio = newAspect.x / newAspect.y;
+        holePuncher.localScale = new Vector3(_bounds.x, _bounds.y, 1);
+        holePuncher.localScale = new Vector3(holePuncher.localScale.y * aspectRatio, holePuncher.localScale.y, 1);
+        if (holePuncher.localScale.x > _bounds.x)
+        {
+            holePuncher.localScale = new Vector3(_bounds.x, _bounds.x * (1f / aspectRatio), 1);
+        }
 
         var resolution = Resolution();
 
@@ -75,61 +94,50 @@ public class AutoBrowser : MonoBehaviour
 
     public IEnumerator DropScreen(float duration)
     {
-        float counter = 0;
-        while (counter < duration)
-        {
-            counter += Time.deltaTime;
-            var a = CubicBezier.EaseIn.Sample(counter / duration);
-
-            transform.position = new Vector3(
-                transform.position.x, 
-                (1 - a) * height / 2 + a * -height / 2,
-                transform.position.z);
-
-            _holePuncher.transform.localPosition = new Vector3(
-                _holePuncher.transform.localPosition.x,
-                a / 2,
-                _holePuncher.transform.localPosition.z
-            );
-
-            _holePuncher.transform.localScale = new Vector3(
-                _holePuncher.transform.localScale.x,
-                1 - a,
-                _holePuncher.transform.localScale.z
-            );
-
-            yield return null;
-        }
+        togglePause.SetInteractable(false);
+        yield return MoveScreen(duration, CubicBezier.EaseIn,
+            _defaultLocalPosition, _belowTableLocalPosition);
+        _holePuncherRenderer.enabled = false;
     }
 
     public IEnumerator RaiseScreen(float duration)
     {
+        _holePuncherRenderer.enabled = true;
+        yield return MoveScreen(duration, CubicBezier.EaseOut,
+            _belowTableLocalPosition, _defaultLocalPosition);
+        togglePause.SetInteractable(true);
+    }
+
+    public IEnumerator MoveScreen(float duration, CubicBezier easeFunction, Vector3 from, Vector3 to)
+    {
         float counter = 0;
-        while (counter < duration)
+        while (counter < 1f)
         {
-            counter += Time.deltaTime;
-            var a = CubicBezier.EaseOut.Sample(counter / duration);
+            counter += (1f / duration) * Time.deltaTime;
+            var t = easeFunction.Sample(counter);
 
-            transform.position = new Vector3(
-                transform.position.x,
-                -((1 - a) * height / 2) + a * height / 2,
-                transform.position.z
-            );
+            //lerp browser height
+            transform.localPosition = Vector3.Lerp(from, to, t);
 
-            _holePuncher.transform.localPosition = new Vector3(
-                _holePuncher.transform.localPosition.x,
-                (1 - a) / 2,
-                _holePuncher.transform.localPosition.z
-            );
+            //lerp hole puncher
+            float height = _overlayObject.localScale.y;
+            float halfHeight = height / 2f;
+            t = (transform.localPosition.y + halfHeight) / height;
+            t = Mathf.Clamp01(t); //1 is visible, 0 is invisible
 
-            _holePuncher.transform.localScale = new Vector3(
-                _holePuncher.transform.localScale.x,
-                a,
-                _holePuncher.transform.localScale.z
-            );
+            Vector3 holePunchScale = holePuncher.localScale;
+            holePunchScale.y = _overlayObject.localScale.y * t;
+            holePuncher.localScale = holePunchScale;
+
+            Vector3 holePunchPosition = holePuncher.localPosition;
+            holePunchPosition.y = halfHeight * (1f - t);
+            holePuncher.localPosition = holePunchPosition;
 
             yield return null;
         }
+
+        holePuncher.localScale = _overlayObject.localScale;
+        holePuncher.localPosition = new Vector3(holePuncher.localPosition.x, 0, holePuncher.localPosition.z);
     }
 
     public void LoadUrl(string url)
@@ -150,10 +158,13 @@ public class AutoBrowser : MonoBehaviour
     {
         var resolution = Resolution();
         Destroy(_overlay);
-        _overlay = gameObject.AddComponent<OVROverlay>();
+        _overlay = _overlayObject.gameObject.AddComponent<OVROverlay>();
         _overlay.externalSurfaceWidth = resolution.x;
         _overlay.externalSurfaceHeight = resolution.y;
-        _overlay.transform.localScale = new Vector3(aspect.x / aspect.y * height, height, 1);
+        Vector3 localScale = new Vector3(holePuncher.localScale.x / holePuncher.localScale.y * holePuncher.localScale.y,
+            holePuncher.localScale.y, 1);
+        _overlayObject.localScale = localScale;
+        holePuncher.localScale = localScale;
         _overlay.currentOverlayType = OVROverlay.OverlayType.Underlay;
 
 #if UNITY_EDITOR
@@ -173,9 +184,7 @@ public class AutoBrowser : MonoBehaviour
             Debug.Log("[BONSAI] while WebView not setup\nexternalSurfaceObject: <" + _overlay.externalSurfaceObject + ">\nWebView: <" + _webViewPrefab.WebView + ">");
             yield return null;
         }
-#endif
 
-#if UNITY_ANDROID && !UNITY_EDITOR
         Debug.Log("[BONSAI] SetSurface" + _overlay.externalSurfaceObject + ", WebView " + _webViewPrefab.WebView);
         (_webViewPrefab.WebView as AndroidGeckoWebView).SetSurface(_overlay.externalSurfaceObject);
         Debug.Log("[BONSAI] Done SetSurface");
@@ -186,22 +195,22 @@ public class AutoBrowser : MonoBehaviour
     private Vector2Int Resolution()
     {
         return autoSetResolution
-            ? AutoResolution(height, distanceEstimate, pixelPerDegree, aspect)
-            : ResolutionFromY(yResolution, aspect);
+            ? AutoResolution(holePuncher.localScale.y, distanceEstimate, pixelPerDegree, holePuncher.localScale.xy())
+            : ResolutionFromY(yResolution, holePuncher.localScale.xy());
     }
 
     #endregion private methods
 
     #region static methods
 
-    public static int ResolvablePixels(float width, float distanceEstimate, int pixelPerDegree)
+    public static int ResolvablePixels(float height, float distanceEstimate, int pixelPerDegree)
     {
         // calculates the optimal resolution along some dimension
-        // width : side of billboard in unity units
+        // height : side of billboard in unity units
         // distanceEstimate : estimated closest distance from (user) --- (billboard)
         // pixelPerDegree : resolving resolution of headset
         return (int) Math.Round(
-            pixelPerDegree * (360f / (2f * Math.PI)) * 2f * Math.Atan(width / (2f * distanceEstimate))
+            pixelPerDegree * (360f / (2f * Math.PI)) * 2f * Math.Atan(height / (2f * distanceEstimate))
         );
     }
 

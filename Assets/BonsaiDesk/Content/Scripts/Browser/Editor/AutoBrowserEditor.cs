@@ -7,29 +7,37 @@ public class AutoBrowserEditor : Editor
 {
     public override void OnInspectorGUI()
     {
-
         var autoBrowser = target as AutoBrowser;
 
-        autoBrowser.height = EditorGUILayout.FloatField("Height", autoBrowser.height);
+        autoBrowser.startingAspect = EditorGUILayout.Vector2Field("Starting Aspect", autoBrowser.startingAspect);
+        
+        autoBrowser.holePuncher = (Transform) EditorGUILayout.ObjectField("Bounds",
+            autoBrowser.holePuncher, typeof(Transform), true);
 
-        autoBrowser.aspect = EditorGUILayout.Vector2Field("Initial Aspect Ratio", autoBrowser.aspect);
-        
         EditorGUILayout.Space();
+
+        autoBrowser.togglePause = (TogglePause) EditorGUILayout.ObjectField("Toggle Pause",
+            autoBrowser.togglePause, typeof(TogglePause), true);
         
-        autoBrowser.autoSetResolution = GUILayout.Toggle(autoBrowser.autoSetResolution, 
+        autoBrowser.holePuncherMaterial = (Material) EditorGUILayout.ObjectField("Hole Puncher Material",
+            autoBrowser.holePuncherMaterial, typeof(Material), true);
+
+        EditorGUILayout.Space();
+
+        autoBrowser.autoSetResolution = GUILayout.Toggle(autoBrowser.autoSetResolution,
             " Automatically Determine Resolution");
-        
+
         EditorGUILayout.Space();
 
         if (!autoBrowser.autoSetResolution)
         {
             autoBrowser.yResolution = EditorGUILayout.IntField("Y Resolution", autoBrowser.yResolution);
         }
-        else
+        else if (autoBrowser.holePuncher != null)
         {
-            EditorGUILayout.LabelField("Calculated Y Resolution", 
+            EditorGUILayout.LabelField("Calculated Y Resolution",
                 AutoBrowser.ResolvablePixels(
-                  autoBrowser.height, 
+                    autoBrowser.holePuncher.localScale.y,
                     autoBrowser.distanceEstimate,
                     autoBrowser.pixelPerDegree
                 ).ToString()
@@ -39,14 +47,10 @@ public class AutoBrowserEditor : Editor
             autoBrowser.pixelPerDegree =
                 EditorGUILayout.IntField("Pixels Per Degree", autoBrowser.pixelPerDegree);
         }
-            
-        EditorGUILayout.Space();
-
-        autoBrowser.holePuncherMaterial = (Material) EditorGUILayout.ObjectField("Hole Puncher Material",
-            autoBrowser.holePuncherMaterial, typeof(Material), true);
-        
-        autoBrowser.dummyMaterial = (Material) EditorGUILayout.ObjectField("Dummy Material",
-            autoBrowser.dummyMaterial, typeof(Material), true);
+        else
+        {
+            EditorGUILayout.LabelField("Hole Puncher must be set to use auto resolution");
+        }
     }
 
     private void OnValidate()
