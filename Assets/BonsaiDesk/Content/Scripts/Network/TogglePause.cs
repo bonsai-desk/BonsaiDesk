@@ -16,6 +16,7 @@ public class TogglePause : NetworkBehaviour
     public float pointMovement;
     public float fadeTime;
     public TogglePauseMorph togglePauseMorph;
+    public MeshRenderer iconRenderer;
     
     public event PauseEvent PauseChanged;
 
@@ -31,6 +32,8 @@ public class TogglePause : NetworkBehaviour
     private Vector3 _targetLocalPosition = Vector3.zero;
     private Vector3 _localPosition = Vector3.zero;
 
+    private bool _interactable = true;
+
     private void Start()
     {
         updateIcons(paused);
@@ -38,6 +41,9 @@ public class TogglePause : NetworkBehaviour
 
     private void Update()
     {
+        if (!_interactable)
+            return;
+
         bool interacting = currentPointSkeleton != OVRSkeleton.SkeletonType.None ||
                            currentGestureSkeleton != OVRSkeleton.SkeletonType.None;
 
@@ -73,6 +79,19 @@ public class TogglePause : NetworkBehaviour
         togglePauseMorph.transform.localPosition = _localPosition * _position;
     }
 
+    public void SetInteractable(bool interactable)
+    {
+        _interactable = interactable;
+
+        iconRenderer.enabled = _interactable;
+        if (!_interactable)
+        {
+            currentPointSkeleton = OVRSkeleton.SkeletonType.None;
+            currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
+            updateIcons(paused);
+        }
+    }
+
     [Command(ignoreAuthority = true)]
     void CmdSetPaused(bool paused)
     {
@@ -95,6 +114,9 @@ public class TogglePause : NetworkBehaviour
 
     public void Point(OVRSkeleton.SkeletonType skeletonType, bool pointing, Vector3 position)
     {
+        if (!_interactable)
+            return;
+        
         if (currentPointSkeleton == OVRSkeleton.SkeletonType.None || currentPointSkeleton == skeletonType)
         {
             if (pointing)
@@ -117,6 +139,9 @@ public class TogglePause : NetworkBehaviour
 
     public void StartToggleGesture(OVRSkeleton.SkeletonType skeletonType, Vector3 position)
     {
+        if (!_interactable)
+            return;
+        
         if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None && currentPointSkeleton == skeletonType)
         {
             currentGestureSkeleton = skeletonType;
@@ -127,6 +152,9 @@ public class TogglePause : NetworkBehaviour
 
     public void StopToggleGesture(OVRSkeleton.SkeletonType skeletonType, Vector3 position)
     {
+        if (!_interactable)
+            return;
+        
         if (currentGestureSkeleton == skeletonType)
         {
             currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
@@ -140,6 +168,9 @@ public class TogglePause : NetworkBehaviour
 
     public void UpdateToggleGesturePosition(OVRSkeleton.SkeletonType skeletonType, Vector3 position)
     {
+        if (!_interactable)
+            return;
+        
         if (currentGestureSkeleton == skeletonType)
         {
             float distance = Vector3.Distance(transform.position, position) - gestureStartDistance;
