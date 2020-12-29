@@ -10,9 +10,9 @@ public class AutoBrowserEditor : Editor
 
         var autoBrowser = target as AutoBrowser;
 
-        autoBrowser.width = EditorGUILayout.FloatField("Width", autoBrowser.width);
+        autoBrowser.height = EditorGUILayout.FloatField("Height", autoBrowser.height);
 
-        autoBrowser.aspect = EditorGUILayout.Vector2Field("Aspect Ratio", autoBrowser.aspect);
+        autoBrowser.aspect = EditorGUILayout.Vector2Field("Initial Aspect Ratio", autoBrowser.aspect);
         
         EditorGUILayout.Space();
         
@@ -23,13 +23,13 @@ public class AutoBrowserEditor : Editor
 
         if (!autoBrowser.autoSetResolution)
         {
-            autoBrowser.xResolution = EditorGUILayout.IntField("X Resolution", autoBrowser.xResolution);
+            autoBrowser.yResolution = EditorGUILayout.IntField("Y Resolution", autoBrowser.yResolution);
         }
         else
         {
-            EditorGUILayout.LabelField("Calculated X Resolution", 
+            EditorGUILayout.LabelField("Calculated Y Resolution", 
                 AutoBrowser.ResolvablePixels(
-                  autoBrowser.width, 
+                  autoBrowser.height, 
                     autoBrowser.distanceEstimate,
                     autoBrowser.pixelPerDegree
                 ).ToString()
