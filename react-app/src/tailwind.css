@@ -1,0 +1,17 @@
+@import "tailwindcss/base";
+
+@import "tailwindcss/components";
+
+@import "tailwindcss/utilities";
+
+.link, a {
+  @apply text-blue-500;
+  @apply transition;
+  @apply duration-75;
+  @apply ease-in-out;
+  @apply select-none
+}
+
+.link:hover, a:hover {
+  @apply text-blue-400;
+}
