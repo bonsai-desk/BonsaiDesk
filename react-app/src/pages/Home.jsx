@@ -23,10 +23,6 @@ let Video = () => {
 
     let [player, setPlayer] = useState(null);
 
-    let [cue, setCue] = useState(true);
-
-    let [videoId, setVideoId] = useState("Cg0QwoHh9w4");
-
     let addEventListeners = (player) => {
         window.vuplex.addEventListener('message', event => {
             let json = JSON.parse(event.data);
@@ -45,9 +41,7 @@ let Video = () => {
                     break;
                 case "load":
                     if (json.video_id != null) {
-                        setVideoId(json.video_id);
-                        setCue(true);
-                        player.loadVideoById(json.video_id);
+                        player.cueVideoById(json.video_id);
                     }
                     break;
                 default:
@@ -89,19 +83,16 @@ let Video = () => {
                 console.log("bonsai: ended")
                 break
             case playing:
-                if (cue) {
-                    console.log("bonsai: playing -> cue")
-                    player.pauseVideo();
-                    setCue(false);
-                } else {
-                    console.log("bonsai: playing")
-                }
+                console.log("bonsai: playing")
                 break
             case paused:
+                console.log("bonsai: paused")
                 break;
             case buffering:
+                console.log("bonsai: buffering")
                 break
             case videoCued:
+                console.log("bonsai: videoCued")
                 break
             default:
                 break;
@@ -111,7 +102,6 @@ let Video = () => {
     return (
         <div>
             <YouTube
-                videoId={videoId}
                 opts={opts}
                 onReady={onReady}
                 onPlay={onPlay}

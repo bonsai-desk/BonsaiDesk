@@ -16,7 +16,6 @@ public class AutoBrowser : MonoBehaviour
     public Transform holePuncher;
     public Vector2 startingAspect;
 
-    public TogglePause togglePause;
     private Vector3 _belowTableLocalPosition;
 
     private Vector2 _bounds;
@@ -31,8 +30,6 @@ public class AutoBrowser : MonoBehaviour
 
     private void Start()
     {
-        togglePause.SetInteractable(false);
-
         //create empty overlay object
         _overlayObject = new GameObject().transform;
         _overlayObject.name = "OverlayObject";
@@ -97,7 +94,6 @@ public class AutoBrowser : MonoBehaviour
 
     public IEnumerator DropScreen(float duration)
     {
-        togglePause.SetInteractable(false);
         yield return MoveScreen(duration, CubicBezier.EaseIn,
             _defaultLocalPosition, _belowTableLocalPosition);
         _holePuncherRenderer.enabled = false;
@@ -108,7 +104,6 @@ public class AutoBrowser : MonoBehaviour
         _holePuncherRenderer.enabled = true;
         yield return MoveScreen(duration, CubicBezier.EaseOut,
             _belowTableLocalPosition, _defaultLocalPosition);
-        togglePause.SetInteractable(true);
     }
 
     public IEnumerator MoveScreen(float duration, CubicBezier easeFunction, Vector3 from, Vector3 to)

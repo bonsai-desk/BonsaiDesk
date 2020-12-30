@@ -17,6 +17,8 @@ public class AutoBrowserController : MonoBehaviour
 
     private void Start()
     {
+        togglePause.SetInteractable(false);
+        
         State = PlayerState.Neutral;
 
         _autoBrowser = GetComponent<AutoBrowser>();
@@ -62,10 +64,12 @@ public class AutoBrowserController : MonoBehaviour
 
     private IEnumerator ReturnToNeutral()
     {
+        //TODO reset to paused
+        togglePause.CmdSetPaused(true);
+        togglePause.SetInteractable(false);
         yield return _autoBrowser.DropScreen(1f);
         _autoBrowser.PostMessage(loadVideoIdMessage(""));
     }
-    
 
     private IEnumerator LoadVideo(string videoId)
     {
@@ -106,6 +110,7 @@ public class AutoBrowserController : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
 
             yield return _autoBrowser.RaiseScreen(0.5f);
+            togglePause.SetInteractable(true);
         }
     }
 

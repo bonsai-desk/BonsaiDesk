@@ -15,9 +15,6 @@ public class AutoBrowserEditor : Editor
             autoBrowser.holePuncher, typeof(Transform), true);
 
         EditorGUILayout.Space();
-
-        autoBrowser.togglePause = (TogglePause) EditorGUILayout.ObjectField("Toggle Pause",
-            autoBrowser.togglePause, typeof(TogglePause), true);
         
         autoBrowser.holePuncherMaterial = (Material) EditorGUILayout.ObjectField("Hole Puncher Material",
             autoBrowser.holePuncherMaterial, typeof(Material), true);
