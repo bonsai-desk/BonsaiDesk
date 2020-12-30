@@ -2142,6 +2142,7 @@ MonoBehaviour:
   maxRelayRefreshAttempts: 3
   relayLifetime: 30
   isDisconnecting: 0
+  serverOnlyIfEditor: 0
   visualizeAuthority: 0
   moveToDesk: {fileID: 1212259449}
   videoState: 0
@@ -17432,36 +17433,6 @@ Transform:
   m_Father: {fileID: 874699798}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1397003481
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1397003482}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1397003482
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1397003481}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.434547, y: -0.013305664, z: 0.11350512}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 13
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1400358825 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400144, guid: 442d5b4503ed83c4897ef44659446587,
@@ -26640,14 +26611,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 682cc1c4b5cef12478329714a5d5583e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  yResolution: 850
-  autoSetResolution: 1
+  startingAspect: {x: 16, y: 9}
+  holePuncher: {fileID: 1965982993}
+  togglePause: {fileID: 96659938}
+  holePuncherMaterial: {fileID: 2100000, guid: 13c0664d10ae3514ea9d893740bf2046, type: 2}
   distanceEstimate: 0.833
   pixelPerDegree: 16
-  holePuncherMaterial: {fileID: 2100000, guid: 13c0664d10ae3514ea9d893740bf2046, type: 2}
-  holePuncher: {fileID: 1965982993}
-  startingAspect: {x: 0, y: 0}
-  togglePause: {fileID: 96659938}
 --- !u!1 &1443090083749991583
 GameObject:
   m_ObjectHideFlags: 0

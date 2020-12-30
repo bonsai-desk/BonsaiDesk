@@ -10,11 +10,13 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Android;
 using UnityEngine.Networking;
+using UnityEngine.XR.Management;
 
 public class NetworkManagerGame : NobleNetworkManager
 {
     public static NetworkManagerGame Singleton;
 
+    public bool serverOnlyIfEditor;
     public bool visualizeAuthority;
 
     public MoveToDesk moveToDesk;
@@ -223,6 +225,9 @@ public class NetworkManagerGame : NobleNetworkManager
 
                     if (fader.currentAlpha != 0) fader.FadeIn();
                     ActivateButtons(neutralButtons, waitBeforeSpawnButton);
+
+                    if (serverOnlyIfEditor && Application.isEditor)
+                        State = ConnectionState.HostCreating;
                 }
                 else
                 {
@@ -333,7 +338,10 @@ public class NetworkManagerGame : NobleNetworkManager
         {
             Debug.Log("[BONSAI] StartHostAfterDisconnect StartHost ");
             isLANOnly = false;
-            StartHost();
+            if (serverOnlyIfEditor && Application.isEditor)
+                StartServer();
+            else
+                StartHost();
         }
         else
         {
@@ -515,7 +523,7 @@ public class NetworkManagerGame : NobleNetworkManager
             }
         }
     }
-
+    
     private IEnumerator DeleteRoom()
     {
         using (var www = UnityWebRequest.Delete(apiBaseUri + "/rooms/" + _assignedRoomTag))
@@ -597,6 +605,23 @@ public class NetworkManagerGame : NobleNetworkManager
         OVRManager.HMDUnmounted += VoidAndDeafen;
 
         MoveToDesk.OrientationChanged += HandleOrientationChange;
+
+        if (serverOnlyIfEditor && Application.isEditor)
+        {
+            hostButtons.SetActive(false);
+            neutralButtons.SetActive(false);
+        }
+
+        if (Application.isEditor && !serverOnlyIfEditor)
+        {
+            StartCoroutine(StartXR());
+        }
+    }
+    
+    private IEnumerator StartXR()
+    {
+        yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
+        XRGeneralSettings.Instance.Manager.StartSubsystems();
     }
 
     public override void OnFatalError(string error)
@@ -669,7 +694,7 @@ public class NetworkManagerGame : NobleNetworkManager
                 spotUsedCount++;
         if (spotUsedCount <= 1) _spotInUse[spotId] = false;
         PlayerInfos.Remove(conn);
-        
+
         var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
         foreach (var identity in tmp)
         {
