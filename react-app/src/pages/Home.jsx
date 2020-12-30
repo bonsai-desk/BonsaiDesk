@@ -75,24 +75,33 @@ let Video = () => {
         console.log("onEnd", event);
     };
     let onStateChange = (event) => {
+        let postStateChange = (message) => {
+            window.vuplex.postMessage({type: "stateChange", message: message});
+        }
         switch (event.data) {
             case unstarted:
                 console.log("bonsai: unstarted")
+                postStateChange("unstarted")
                 break
             case ended:
                 console.log("bonsai: ended")
+                postStateChange("ended")
                 break
             case playing:
                 console.log("bonsai: playing")
+                postStateChange("playing")
                 break
             case paused:
                 console.log("bonsai: paused")
+                postStateChange("paused")
                 break;
             case buffering:
                 console.log("bonsai: buffering")
-                break
+                postStateChange("buffering")
+                break;
             case videoCued:
                 console.log("bonsai: videoCued")
+                postStateChange("videoCued")
                 break
             default:
                 break;
