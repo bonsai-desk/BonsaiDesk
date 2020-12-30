@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using OVRSimpleJSON;
 using UnityEngine;
 using UnityEngine.Networking;
+using Vuplex.WebView;
 using Random = System.Random;
 
 [RequireComponent(typeof(AutoBrowser))]
 public class AutoBrowserController : MonoBehaviour
 {
-    public string initialURL;
+    public string hotReloadUrl;
     public TogglePause togglePause;
     private AutoBrowser _autoBrowser;
 
@@ -18,30 +19,58 @@ public class AutoBrowserController : MonoBehaviour
     private void Start()
     {
         togglePause.SetInteractable(false);
-        
+
         State = PlayerState.Neutral;
 
         _autoBrowser = GetComponent<AutoBrowser>();
         _autoBrowser.BrowserReady += () =>
         {
-            _autoBrowser.LoadUrl(initialURL);
+            
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            _autoBrowser.LoadUrl(hotReloadUrl);
+#else
+            _autoBrowser.LoadHTML(BonsaiUI.Html);
+#endif
+            
             togglePause.PauseChanged += HandlePauseChange;
+            _autoBrowser.OnMessageEmitted(HandleMessageEmitted);
         };
+    }
+
+    private void HandleMessageEmitted(object sender, EventArgs<string> eventArgs)
+    {
+        var jsonNode = JSONNode.Parse(eventArgs.Value) as JSONObject;
+        
+        Debug.Log("[BONSAI] JSON recieved " + eventArgs.Value);
+        
+        if ((string)jsonNode?["type"] != "stateChange" || jsonNode["message"] is null) return;
+        
+        switch ((string)jsonNode["message"])
+        {
+            case "PAUSED_AFTER_INITIAL_BUFFER":
+                StartCoroutine(PlayAfterSeconds(2));
+                break;
+        }
+    }
+
+    private IEnumerator PlayAfterSeconds(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        _autoBrowser.PostMessage(PlayVideoMessage());
     }
 
     private void HandlePauseChange(bool paused)
     {
         var message = "{\"type\": \"video\", \"command\": \"" + (paused ? "pause" : "play") + "\"}";
-        Debug.Log("[BONSAI] HandlePauseChange " + message);
         _autoBrowser.PostMessage(message);
     }
 
     public void ToggleVideo()
     {
-        
         var rnd = new Random();
-        var vidIds = new List<string> {"V1bFr2SWP1I", "AqqaYs7LjlM", "jNQXAC9IVRw", "Cg0QwoHh9w4"};
-        
+        //var vidIds = new List<string> {"V1bFr2SWP1I", "AqqaYs7LjlM", "jNQXAC9IVRw", "Cg0QwoHh9w4", "kJQP7kiw5Fk"};
+        var vidIds = new List<string> {"HPoZ42JKhuc", "zvpVRTobCC0", "16GeJe0Mjh4", "p1skpV2fhN0"};
+
         switch (State)
         {
             case PlayerState.Neutral:
@@ -120,6 +149,14 @@ public class AutoBrowserController : MonoBehaviour
                "\"type\": \"video\", " +
                "\"command\": \"load\", " +
                $"\"video_id\": \"{videoId}\" " +
+               "}";
+    }
+
+    private string PlayVideoMessage()
+    {
+        return "{" +
+               "\"type\": \"video\", " +
+               "\"command\": \"play\" " +
                "}";
     }
 

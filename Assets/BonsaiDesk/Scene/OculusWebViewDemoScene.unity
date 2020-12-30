@@ -469,7 +469,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pos: {x: 0.35, y: 0.2, z: 0}
-  initURL: https://www.youtube.com/embed/au3Zt6De7M0?autoplay=1
+  initURL: https://www.cnn.com/2020/12/30/politics/treasury-second-round-stimulus-payments/index.html
 --- !u!4 &1095864364
 Transform:
   m_ObjectHideFlags: 0

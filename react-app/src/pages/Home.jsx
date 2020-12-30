@@ -12,16 +12,20 @@ let opts = {
     }
 }
 
-const unstarted = -1;
-const ended = 0;
-const playing = 1;
-const paused = 2;
-const buffering = 3;
-const videoCued = 5;
+const PlayerState = {
+    UNSTARTED: -1,
+    ENDED: 0,
+    PLAYING: 1,
+    PAUSED: 2,
+    BUFFERING: 3,
+    CUED: 5,
+};
 
 let Video = () => {
 
     let [player, setPlayer] = useState(null);
+
+    let [initialBufferComplete, setInitialBufferComplete] = useState(false);
 
     let addEventListeners = (player) => {
         window.vuplex.addEventListener('message', event => {
@@ -59,49 +63,61 @@ let Video = () => {
                 addEventListeners(player)
             })
         }
+        setInterval(() => {console.log(player.getCurrentTime())}, 1000)
     }, [player])
 
     let onReady = (event) => {
         console.log("onReady", event);
         setPlayer(event.target);
     };
-    let onPlay = (event) => {
-        console.log("onPlay", event);
-    };
-    let onPause = (event) => {
-        console.log("onPause", event);
-    };
-    let onEnd = (event) => {
-        console.log("onEnd", event);
+    let onError = (event) => {
+        console.log("onError", event);
     };
     let onStateChange = (event) => {
         let postStateChange = (message) => {
-            window.vuplex.postMessage({type: "stateChange", message: message});
+            window.vuplex.postMessage({type: "stateChange", message: message, current_time: player.getCurrentTime()});
         }
         switch (event.data) {
-            case unstarted:
+            case PlayerState.UNSTARTED:
                 console.log("bonsai: unstarted")
-                postStateChange("unstarted")
-                break
-            case ended:
+                postStateChange("UNSTARTED")
+                break;
+            case PlayerState.ENDED:
                 console.log("bonsai: ended")
-                postStateChange("ended")
+                postStateChange("ENDED")
                 break
-            case playing:
+            case PlayerState.PLAYING:
                 console.log("bonsai: playing")
-                postStateChange("playing")
+                if (!initialBufferComplete) {
+                    // this means the buffer has completed
+                    // so now pause the video and update (initialBufferComplete)
+                    player.pauseVideo();
+                } else {
+                    if (player.isMuted()) {
+                        player.unMute();
+                    }
+                    postStateChange("PLAYING")
+                }
                 break
-            case paused:
+            case PlayerState.PAUSED:
                 console.log("bonsai: paused")
-                postStateChange("paused")
+                if (!initialBufferComplete) {
+                    setInitialBufferComplete(true);
+                    player.seekTo(0);
+                    postStateChange("PAUSED_AFTER_INITIAL_BUFFER")
+                } else {
+                    postStateChange("PAUSED")
+                }
                 break;
-            case buffering:
+            case PlayerState.BUFFERING:
                 console.log("bonsai: buffering")
-                postStateChange("buffering")
+                postStateChange("BUFFERING")
                 break;
-            case videoCued:
+            case PlayerState.CUED:
                 console.log("bonsai: videoCued")
-                postStateChange("videoCued")
+                postStateChange("CUED")
+                player.mute();
+                setInitialBufferComplete(false);
                 break
             default:
                 break;
@@ -113,9 +129,7 @@ let Video = () => {
             <YouTube
                 opts={opts}
                 onReady={onReady}
-                onPlay={onPlay}
-                onPause={onPause}
-                onEnd={onEnd}
+                onError={onError}
                 onStateChange={onStateChange}
             />
         </div>

@@ -53,6 +53,7 @@ public class AutoBrowser : MonoBehaviour
 #endif
 
         // Enable autoplay and remote debugging
+        // TODO enable mobile mode
 #if UNITY_ANDROID && !UNITY_EDITOR
         AndroidGeckoWebView.EnableRemoteDebugging();
         AndroidGeckoWebView.SetUserPreferences(@"
@@ -143,14 +144,25 @@ public class AutoBrowser : MonoBehaviour
         _webViewPrefab.WebView.LoadUrl(url);
     }
 
+    public void LoadHTML(string html)
+    {
+        _webViewPrefab.WebView.LoadHtml(html);
+    }
+
     public void PostMessage(string data)
     {
+        Debug.Log("[BONSAI] PostMessage " + data);
         _webViewPrefab.WebView.PostMessage(data);
     }
 
     #endregion interface
 
     #region private methods
+
+    public void OnMessageEmitted(EventHandler<EventArgs<string>> messageEmitted)
+    {
+        _webViewPrefab.WebView.MessageEmitted += messageEmitted;
+    }
 
     private void RebuildOverlay()
     {
