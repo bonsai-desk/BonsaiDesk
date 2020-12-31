@@ -705,7 +705,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   syncMode: 0
-  syncInterval: 0.1
+  syncInterval: 0.033333335
   gestureActivateDistance: 0.1
   pointMovement: 0.075
   fadeTime: 0.2
@@ -2176,6 +2176,7 @@ MonoBehaviour:
   serverOnlyIfEditor: 0
   visualizeAuthority: 0
   moveToDesk: {fileID: 1212259449}
+  togglePause: {fileID: 96659938}
   videoState: 0
   textMesh: {fileID: 205315705}
   fader: {fileID: 1129058233}

@@ -20,6 +20,8 @@ public class TogglePause : NetworkBehaviour
     [SyncVar(hook = nameof(OnSetAuthority))]
     private uint _authorityIdentityId = uint.MaxValue;
 
+    public uint AuthorityIdentityId => _authorityIdentityId;
+
     [SyncVar] private float _visibilitySynced;
     private float _visibilityLocal;
 
@@ -29,18 +31,26 @@ public class TogglePause : NetworkBehaviour
     [SyncVar] private Vector3 _positionVector3Synced = Vector3.zero;
     private Vector3 _positionVector3Local = Vector3.zero;
 
+    [SyncVar] private float _pauseMorphSynced;
+    private float _pauseMorphLocal;
+
     private float Visibility
     {
         get
         {
-            if (NetworkClient.connection != null && NetworkClient.connection.identity != null && NetworkClient.connection.identity.netId == _authorityIdentityId)
+            if (isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
+                NetworkClient.connection.identity != null &&
+                NetworkClient.connection.identity.netId == _authorityIdentityId)
                 return _visibilityLocal;
             return _visibilitySynced;
         }
         set
-        { 
+        {
             _visibilityLocal = value;
-            CmdSetVisibility(value);
+            if (isServer && !isClient)
+                _visibilitySynced = value;
+            else if (NetworkClient.connection != null && NetworkClient.connection.identity != null)
+                CmdSetVisibility(value);
         }
     }
 
@@ -48,14 +58,19 @@ public class TogglePause : NetworkBehaviour
     {
         get
         {
-            if (NetworkClient.connection != null && NetworkClient.connection.identity != null && NetworkClient.connection.identity.netId == _authorityIdentityId)
+            if (isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
+                NetworkClient.connection.identity != null &&
+                NetworkClient.connection.identity.netId == _authorityIdentityId)
                 return _positionLocal;
             return _positionSynced;
         }
         set
         {
             _positionLocal = value;
-            CmdSetPosition(value);
+            if (isServer && !isClient)
+                _positionSynced = value;
+            else if (NetworkClient.connection != null && NetworkClient.connection.identity != null)
+                CmdSetPosition(value);
         }
     }
 
@@ -63,17 +78,42 @@ public class TogglePause : NetworkBehaviour
     {
         get
         {
-            if (NetworkClient.connection != null && NetworkClient.connection.identity != null && NetworkClient.connection.identity.netId == _authorityIdentityId)
+            if (isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
+                NetworkClient.connection.identity != null &&
+                NetworkClient.connection.identity.netId == _authorityIdentityId)
                 return _positionVector3Local;
             return _positionVector3Synced;
         }
         set
         {
             _positionVector3Local = value;
-            CmdSetPositionVector3(value);
+            if (isServer && !isClient)
+                _positionVector3Synced = value;
+            else if (NetworkClient.connection != null && NetworkClient.connection.identity != null)
+                CmdSetPositionVector3(value);
         }
     }
-    
+
+    private float PauseMorph
+    {
+        get
+        {
+            if (isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
+                NetworkClient.connection.identity != null &&
+                NetworkClient.connection.identity.netId == _authorityIdentityId)
+                return _pauseMorphLocal;
+            return _pauseMorphSynced;
+        }
+        set
+        {
+            _pauseMorphLocal = value;
+            if (isServer && !isClient)
+                _pauseMorphSynced = value;
+            else if (NetworkClient.connection != null && NetworkClient.connection.identity != null)
+                CmdSetPauseMorph(value);
+        }
+    }
+
     public float gestureActivateDistance;
     public float pointMovement;
     public float fadeTime;
@@ -110,7 +150,11 @@ public class TogglePause : NetworkBehaviour
         // if (!_interactable)
         //     return;
         
-        if (!(NetworkClient.connection != null && NetworkClient.connection.identity != null && NetworkClient.connection.identity.netId == _authorityIdentityId))
+        togglePauseMorph.SetPaused(PauseMorph);
+
+        if (!(isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
+            NetworkClient.connection.identity != null &&
+            NetworkClient.connection.identity.netId == _authorityIdentityId))
         {
             togglePauseMorph.SetVisibility(Visibility);
             togglePauseMorph.transform.localPosition = PositionVector3 * Position;
@@ -119,6 +163,12 @@ public class TogglePause : NetworkBehaviour
 
         bool interacting = currentPointSkeleton != OVRSkeleton.SkeletonType.None ||
                            currentGestureSkeleton != OVRSkeleton.SkeletonType.None;
+
+        if (!interacting && _inUse)
+        {
+            _inUse = false;
+            CmdSetInUse(false);
+        }
 
         bool shouldBeVisible = _paused || interacting;
 
@@ -138,7 +188,6 @@ public class TogglePause : NetworkBehaviour
             float step = (1f / fadeTime) * Time.deltaTime;
             t = Mathf.MoveTowards(t, targetVisibility, step);
             Visibility = easeFunction.Sample(t);
-            togglePauseMorph.SetVisibility(Visibility);
         }
 
         if (!Mathf.Approximately(Position, targetPosition))
@@ -150,6 +199,7 @@ public class TogglePause : NetworkBehaviour
             Position = easeFunction.Sample(t);
         }
 
+        togglePauseMorph.SetVisibility(Visibility);
         togglePauseMorph.transform.localPosition = PositionVector3 * Position;
     }
 
@@ -190,7 +240,8 @@ public class TogglePause : NetworkBehaviour
 
     private void OnSetAuthority(uint oldValue, uint newValue)
     {
-        if (NetworkClient.connection != null && NetworkClient.connection.identity != null && NetworkClient.connection.identity.netId == newValue)
+        if (NetworkClient.connection != null && NetworkClient.connection.identity != null &&
+            NetworkClient.connection.identity.netId == newValue)
         {
             _visibilityLocal = _visibilitySynced;
             _positionLocal = _positionSynced;
@@ -203,6 +254,16 @@ public class TogglePause : NetworkBehaviour
     {
         _authorityIdentityId = userId;
         _inUse = true;
+        _pauseMorphSynced = _paused ? 1 : 0;
+    }
+
+    [Server]
+    public void RemoveClientAuthority()
+    {
+        _authorityIdentityId = uint.MaxValue;
+        _inUse = false;
+        PauseMorph = _paused ? 1 : 0;
+        togglePauseMorph.SetPaused(PauseMorph);
     }
 
     [Command(ignoreAuthority = true)]
@@ -232,21 +293,13 @@ public class TogglePause : NetworkBehaviour
     private void updateIcons(bool paused)
     {
         togglePauseMorph.SetPaused(paused ? 1 : 0);
+        PauseMorph = paused ? 1 : 0;
     }
 
     [Command(ignoreAuthority = true)]
     private void CmdSetPauseMorph(float pauseValue)
     {
-        togglePauseMorph.SetPaused(pauseValue);
-        RpcSetPauseMorph(pauseValue);
-    }
-    
-    [ClientRpc(excludeOwner = true)]
-    private void RpcSetPauseMorph(float pauseValue)
-    {
-        if (NetworkClient.connection != null && NetworkClient.connection.identity != null && NetworkClient.connection.identity.netId == _authorityIdentityId)
-            return;
-        togglePauseMorph.SetPaused(pauseValue);
+        _pauseMorphSynced = pauseValue;
     }
 
     public void Point(OVRSkeleton.SkeletonType skeletonType, bool pointing, Vector3 position)
@@ -280,12 +333,6 @@ public class TogglePause : NetworkBehaviour
             }
             else
             {
-                uint userId = NetworkClient.connection.identity.netId;
-                if (_authorityIdentityId == userId && _inUse)
-                {
-                    CmdSetInUse(false);
-                }
-
                 currentPointSkeleton = OVRSkeleton.SkeletonType.None;
             }
         }
@@ -319,7 +366,7 @@ public class TogglePause : NetworkBehaviour
             }
         }
     }
-    
+
     public void UpdateToggleGesturePosition(OVRSkeleton.SkeletonType skeletonType, Vector3 position)
     {
         if (!_interactable)
@@ -333,7 +380,7 @@ public class TogglePause : NetworkBehaviour
             if (_paused)
                 pausedLerp = 1 - pausedLerp;
             togglePauseMorph.SetPaused(pausedLerp);
-            CmdSetPauseMorph(pausedLerp);
+            PauseMorph = pausedLerp;
 
             if (distance > gestureActivateDistance)
             {

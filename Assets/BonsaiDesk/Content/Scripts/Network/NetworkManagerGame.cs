@@ -23,6 +23,8 @@ public class NetworkManagerGame : NobleNetworkManager
 
     private Camera _camera;
 
+    public TogglePause togglePause;
+
     #region Player Props
 
     public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos =
@@ -700,6 +702,11 @@ public class NetworkManagerGame : NobleNetworkManager
         {
             if (identity.GetComponent<AutoAuthority>() != null)
                 identity.RemoveClientAuthority();
+        }
+        
+        if (togglePause.AuthorityIdentityId == conn.identity.netId)
+        {
+            togglePause.RemoveClientAuthority();
         }
 
         base.OnServerDisconnect(conn);
