@@ -7,15 +7,23 @@ public delegate void BrowserReadyEvent();
 
 public class AutoBrowser : MonoBehaviour
 {
-    public int yResolution = 850;
-    public bool autoSetResolution;
+    public Vector2 startingAspect = new Vector2(16, 9);
+    public Transform holePuncher;
+    public TogglePause togglePause;
+    public Material holePuncherMaterial;
+    
     public float distanceEstimate = 1;
     public int pixelPerDegree = 16;
 
-    public Material holePuncherMaterial;
-    public Transform holePuncher;
-    public Vector2 startingAspect;
+    // public int yResolution = 850;
+    // public bool autoSetResolution;
 
+    private Transform _overlayObject;
+
+    private OVROverlay _overlay;
+    private WebViewPrefab _webViewPrefab;
+
+    private Vector3 _defaultLocalPosition;
     private Vector3 _belowTableLocalPosition;
 
     private Vector2 _bounds;
@@ -204,9 +212,10 @@ public class AutoBrowser : MonoBehaviour
 
     private Vector2Int Resolution()
     {
-        return autoSetResolution
-            ? AutoResolution(holePuncher.localScale.y, distanceEstimate, pixelPerDegree, holePuncher.localScale.xy())
-            : ResolutionFromY(yResolution, holePuncher.localScale.xy());
+        // return autoSetResolution
+        //     ? AutoResolution(holePuncher.localScale.y, distanceEstimate, pixelPerDegree, holePuncher.localScale.xy())
+        //     : ResolutionFromY(yResolution, holePuncher.localScale.xy());
+        return AutoResolution(holePuncher.localScale.y, distanceEstimate, pixelPerDegree, holePuncher.localScale.xy());
     }
 
     #endregion private methods
