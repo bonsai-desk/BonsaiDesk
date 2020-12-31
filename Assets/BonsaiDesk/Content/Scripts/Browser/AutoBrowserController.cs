@@ -1,18 +1,29 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Mirror;
 using OVRSimpleJSON;
 using UnityEngine;
 using UnityEngine.Networking;
 using Vuplex.WebView;
 using Random = System.Random;
 
+
 [RequireComponent(typeof(AutoBrowser))]
-public class AutoBrowserController : MonoBehaviour
+public class AutoBrowserController : NetworkBehaviour
 {
     public string hotReloadUrl;
     public TogglePause togglePause;
     private AutoBrowser _autoBrowser;
+
+    [SyncVar] private string VideoId;
+    [SyncVar] private string scrub;
+    [SyncVar] private string started;
+
+    private void OnSetVideoId(string oldVideoId, string newVideoId)
+    {
+        StartCoroutine(newVideoId == "" ? ReturnToNeutral() : LoadVideo(newVideoId));
+    }
 
     private PlayerState State { get; set; }
 

@@ -26962,7 +26962,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7442f4bc421d1534e9173115168ec26d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hotReloadUrl: https://www.cnn.com/2020/12/30/politics/treasury-second-round-stimulus-payments/index.html
+  syncMode: 0
+  syncInterval: 0.1
+  hotReloadUrl: http://192.168.1.122:3000/
   togglePause: {fileID: 96659938}
 --- !u!1 &1912258022280695894
 GameObject:
