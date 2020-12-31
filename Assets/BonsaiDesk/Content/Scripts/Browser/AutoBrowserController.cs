@@ -20,7 +20,7 @@ public class AutoBrowserController : MonoBehaviour
         {
             _autoBrowser.LoadUrl(initialURL);
             // StartCoroutine(StartUp());
-            togglePause.PauseChanged += HandlePauseChange;
+            // togglePause.PauseChanged += HandlePauseChange;
         };
     }
     
