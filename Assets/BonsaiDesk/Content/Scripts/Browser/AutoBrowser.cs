@@ -28,13 +28,7 @@ public class AutoBrowser : MonoBehaviour
 
     private Vector2 _bounds;
 
-    private Vector3 _defaultLocalPosition;
     private MeshRenderer _holePuncherRenderer;
-
-    private OVROverlay _overlay;
-
-    private Transform _overlayObject;
-    private WebViewPrefab _webViewPrefab;
 
     private void Start()
     {

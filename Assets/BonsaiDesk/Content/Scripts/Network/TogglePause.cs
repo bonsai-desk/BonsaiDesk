@@ -99,7 +99,7 @@ public class TogglePause : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     public void CmdSetPaused(bool paused)
     {
-        this.paused = paused;
+        this._paused = paused;
     }
 
     private void SetPaused(bool oldPaused, bool newPaused)
