@@ -25,8 +25,6 @@ let Video = () => {
 
     let [player, setPlayer] = useState(null);
 
-    let [initialBufferComplete, setInitialBufferComplete] = useState(false);
-
     let addEventListeners = (player) => {
         window.vuplex.addEventListener('message', event => {
             let json = JSON.parse(event.data);
@@ -88,26 +86,11 @@ let Video = () => {
                 break
             case PlayerState.PLAYING:
                 console.log("bonsai: playing")
-                if (!initialBufferComplete) {
-                    // this means the buffer has completed
-                    // so now pause the video and update (initialBufferComplete)
-                    player.pauseVideo();
-                } else {
-                    if (player.isMuted()) {
-                        player.unMute();
-                    }
-                    postStateChange("PLAYING")
-                }
+                postStateChange("PLAYING")
                 break
             case PlayerState.PAUSED:
                 console.log("bonsai: paused")
-                if (!initialBufferComplete) {
-                    setInitialBufferComplete(true);
-                    player.seekTo(0);
-                    postStateChange("PAUSED_AFTER_INITIAL_BUFFER")
-                } else {
-                    postStateChange("PAUSED")
-                }
+                postStateChange("PAUSED")
                 break;
             case PlayerState.BUFFERING:
                 console.log("bonsai: buffering")
@@ -116,8 +99,6 @@ let Video = () => {
             case PlayerState.CUED:
                 console.log("bonsai: videoCued")
                 postStateChange("CUED")
-                player.mute();
-                setInitialBufferComplete(false);
                 break
             default:
                 break;

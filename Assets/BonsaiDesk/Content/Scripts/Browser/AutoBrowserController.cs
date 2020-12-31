@@ -8,26 +8,50 @@ using UnityEngine.Networking;
 using Vuplex.WebView;
 using Random = System.Random;
 
+public class ClientPingCollector
+{
+    public int NumReporting { get; private set; }
+
+    public double WorstPing { get; private set; }
+
+    public void Include(double ping)
+    {
+        WorstPing = ping > WorstPing ? ping : WorstPing;
+        NumReporting += 1;
+    }
+
+    public void Reset()
+    {
+        NumReporting = 0;
+        WorstPing = 0;
+    }
+}
+
 [RequireComponent(typeof(AutoBrowser))]
 public class AutoBrowserController : NetworkBehaviour
 {
     public string hotReloadUrl;
     public TogglePause togglePause;
+    private readonly (float, float) _delayClamp = (0.1f, 0.75f);
+
+    private readonly double desyncTolerance = 0.2;
 
     private AutoBrowser _autoBrowser;
-    private double _clientsWorstPing;
-    private (float, float) delayClamp = (0.1f, 0.75f);
 
     [SyncVar(hook = nameof(OnSetContentId))]
     private string _contentId;
 
-    private int _numClientsReady;
-    [SyncVar] private string _scrub;
+    private Data _myScrub;
+
+    private int _numClientsReporting;
+
+    private ClientScrubCollector _scrubCollector;
     [SyncVar] private string _started;
 
     [SyncVar] private PlayerState _state;
 
-    #region unity
+    [SyncVar(hook = nameof(OnSetWorstScrub))]
+    private Data _worstScrub;
 
     private void Start()
     {
@@ -47,8 +71,6 @@ public class AutoBrowserController : NetworkBehaviour
         };
     }
 
-    #endregion unity
-
     private string PlayVideoMessage()
     {
         return "{" +
@@ -66,25 +88,31 @@ public class AutoBrowserController : NetworkBehaviour
                "}";
     }
 
-    private enum PlayerState
+    private string PauseMessage()
     {
-        Neutral,
-        YouTube,
-        Twitch
+        return "{\"type\": \"video\", \"command\": \"pause\"}";
     }
 
-    #region handlers
+    private string PlayMessage()
+    {
+        return "{\"type\": \"video\", \"command\": \"pause\"}";
+    }
 
     private void OnPauseChange(bool paused)
     {
-        var message = "{\"type\": \"video\", \"command\": \"" + (paused ? "pause" : "play") + "\"}";
-        _autoBrowser.PostMessage(message);
-    }
-
-    private void OnSetContentId(string oldVideoId, string newVideoId)
-    {
-        Debug.Log("[BONSAI] OnSetVideoId " + oldVideoId + "->" + newVideoId);
-        StartCoroutine(newVideoId == "" ? ReturnToNeutral() : LoadVideo(newVideoId));
+        if (paused)
+        {
+            _autoBrowser.PostMessage(PauseMessage());
+        }
+        else
+        {
+            if (isServer)
+            {
+                Debug.Log("Reset Scrub Collector");
+                _scrubCollector.Reset();
+            }
+            _autoBrowser.PostMessage(PlayMessage());
+        }
     }
 
     private void OnMessageEmitted(object sender, EventArgs<string> eventArgs)
@@ -97,15 +125,42 @@ public class AutoBrowserController : NetworkBehaviour
 
         switch ((string) jsonNode["message"])
         {
-            case "PAUSED_AFTER_INITIAL_BUFFER":
-                CmdClientIsReady(NetworkTime.rtt / 2 + 3 * (NetworkTime.rttSd / 2));
+            case "PLAYING":
+                _myScrub = new Data(jsonNode["current_time"], NetworkTime.time);
+                CmdClientPlaying(_myScrub);
+                break;
+
+            case "PAUSED":
+                _myScrub = new Data(jsonNode["current_time"], NetworkTime.time);
                 break;
         }
     }
 
-    #endregion handlers
+    private void OnSetWorstScrub(Data oldWorstScrub, Data newWorstScrub)
+    {
+        var now = NetworkTime.time;
+        var myTime = _myScrub.CurrentVideoTime(now);
+        var worstTime = newWorstScrub.CurrentVideoTime(now);
+        var desync = myTime - worstTime;
 
-    #region commands
+        if (!(desync > desyncTolerance)) return;
+
+        _autoBrowser.PostMessage(PauseMessage());
+        StartCoroutine(PlayAfter(NetworkTime.time + desync));
+    }
+
+    private void OnSetContentId(string oldVideoId, string newVideoId)
+    {
+        Debug.Log("[BONSAI] OnSetVideoId " + oldVideoId + "->" + newVideoId);
+        StartCoroutine(newVideoId == "" ? ReturnToNeutral() : LoadVideo(newVideoId));
+    }
+
+    [Command(ignoreAuthority = true)]
+    private void CmdClientPlaying(Data data)
+    {
+        _scrubCollector.Include(data);
+        _worstScrub = _scrubCollector.Worst;
+    }
 
     [Command(ignoreAuthority = true)]
     private void CmdSetState(PlayerState newState)
@@ -119,39 +174,11 @@ public class AutoBrowserController : NetworkBehaviour
         _contentId = id;
     }
 
-    [Command(ignoreAuthority = true)]
-    public void CmdClientIsReady(double sigma3Ping)
+    private IEnumerator PlayAfter(double startAfterNetworkTime)
     {
-        Debug.Log("[BONSAI] Client ready with ping: " + sigma3Ping);
-
-        _numClientsReady += 1;
-        _clientsWorstPing = sigma3Ping > _clientsWorstPing ? sigma3Ping : _clientsWorstPing;
-        if (_numClientsReady != NetworkServer.connections.Count) return;
-
-        // Tell clients to all start playing at some time in the future
-        var delta = Mathf.Clamp((float) (1.5 * _clientsWorstPing), delayClamp.Item1, delayClamp.Item2);
-        Debug.Log("[BONSAI] Start Playing Video in +" + delta + " seconds, worst ping is " + _clientsWorstPing);
-        RpcPlay(NetworkTime.time + delta);
-
-        _numClientsReady = 0;
-        _clientsWorstPing = 0;
-    }
-
-    [ClientRpc]
-    public void RpcPlay(double startNetworkTime)
-    {
-        StartCoroutine(PlayAfter(startNetworkTime));
-    }
-
-    #endregion commands
-
-    #region actions
-
-    private IEnumerator PlayAfter(double startNetworkTime)
-    {
-        Debug.Log("[BONSAI] (now-startNetworkTime) = " + (float) (NetworkTime.time - startNetworkTime));
-        while (NetworkTime.time < startNetworkTime) yield return null;
-        Debug.Log("[BONSAI] (now-startNetworkTime) = " + (float) (NetworkTime.time - startNetworkTime));
+        Debug.Log("[BONSAI] (now-startAfterNetworkTime) = " + (float) (NetworkTime.time - startAfterNetworkTime));
+        while (NetworkTime.time < startAfterNetworkTime) yield return null;
+        Debug.Log("[BONSAI] (now-startAfterNetworkTime) = " + (float) (NetworkTime.time - startAfterNetworkTime));
         _autoBrowser.PostMessage(PlayVideoMessage());
     }
 
@@ -225,11 +252,60 @@ public class AutoBrowserController : NetworkBehaviour
 
     private IEnumerator ReturnToNeutral()
     {
-        //TODO reset to paused
-        //togglePause.CmdSetPaused(true);
+        //TODO togglePause.CmdSetPaused(true);
         yield return _autoBrowser.DropScreen(1f);
         _autoBrowser.PostMessage(LoadVideoIdMessage(""));
     }
 
-    #endregion actions
+    private static float GetDelay(double worstPing, (float, float) delayClamp)
+    {
+        return Mathf.Clamp(
+            (float) (1.5 * worstPing), delayClamp.Item1, delayClamp.Item2);
+    }
+
+    private static double Sigma3Ping()
+    {
+        return NetworkTime.rtt / 2 + 3 * (NetworkTime.rttSd / 2);
+    }
+
+    private enum PlayerState
+    {
+        Neutral,
+        YouTube,
+        Twitch
+    }
+
+    public struct Data
+    {
+        public double Scrub;
+        public double NetworkTime;
+
+        public double CurrentVideoTime(double currentNetworkTime)
+        {
+            return Scrub + (currentNetworkTime - NetworkTime);
+        }
+
+        public Data(double scrub, double networkTime)
+        {
+            Scrub = scrub;
+            NetworkTime = networkTime;
+        }
+    }
+
+    public class ClientScrubCollector
+    {
+        public Data Worst = new Data(10e10, 0);
+
+        public void Include(Data data)
+        {
+            if (!(data.Scrub < Worst.Scrub)) return;
+            Worst = data;
+        }
+
+        public void Reset()
+        {
+            Worst.Scrub = 10e10;
+            Worst.NetworkTime = 0;
+        }
+    }
 }
