@@ -8,7 +8,6 @@ using UnityEngine.Networking;
 using Vuplex.WebView;
 using Random = System.Random;
 
-
 [RequireComponent(typeof(AutoBrowser))]
 public class AutoBrowserController : NetworkBehaviour
 {
@@ -16,16 +15,12 @@ public class AutoBrowserController : NetworkBehaviour
     public TogglePause togglePause;
     private AutoBrowser _autoBrowser;
 
-    [SyncVar] private string VideoId;
+    private int _numClientsReady;
     [SyncVar] private string scrub;
     [SyncVar] private string started;
 
-    private void OnSetVideoId(string oldVideoId, string newVideoId)
-    {
-        StartCoroutine(newVideoId == "" ? ReturnToNeutral() : LoadVideo(newVideoId));
-    }
-
-    private PlayerState State { get; set; }
+    [SyncVar] private PlayerState State;
+    [SyncVar(hook = nameof(OnSetVideoId))] private string VideoId;
 
     private void Start()
     {
@@ -34,44 +29,64 @@ public class AutoBrowserController : NetworkBehaviour
         _autoBrowser = GetComponent<AutoBrowser>();
         _autoBrowser.BrowserReady += () =>
         {
-            
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             _autoBrowser.LoadUrl(hotReloadUrl);
 #else
             _autoBrowser.LoadHTML(BonsaiUI.Html);
 #endif
-            
+
             togglePause.PauseChanged += HandlePauseChange;
             _autoBrowser.OnMessageEmitted(HandleMessageEmitted);
         };
     }
 
+    private void OnSetVideoId(string oldVideoId, string newVideoId)
+    {
+        Debug.Log("[BONSAI] OnSetVideoId " + oldVideoId + "->" + newVideoId);
+        StartCoroutine(newVideoId == "" ? ReturnToNeutral() : LoadVideo(newVideoId));
+    }
+
     private void HandleMessageEmitted(object sender, EventArgs<string> eventArgs)
     {
         var jsonNode = JSONNode.Parse(eventArgs.Value) as JSONObject;
-        
+
         Debug.Log("[BONSAI] JSON recieved " + eventArgs.Value);
-        
-        if ((string)jsonNode?["type"] != "stateChange" || jsonNode["message"] is null) return;
-        
-        switch ((string)jsonNode["message"])
+
+        if ((string) jsonNode?["type"] != "stateChange" || jsonNode["message"] is null) return;
+
+        switch ((string) jsonNode["message"])
         {
             case "PAUSED_AFTER_INITIAL_BUFFER":
-                StartCoroutine(PlayAfterSeconds(2));
+                CmdClientIsReady();
                 break;
         }
     }
 
-    private IEnumerator PlayAfterSeconds(float seconds)
+    [Command(ignoreAuthority = true)]
+    public void CmdClientIsReady()
     {
-        yield return new WaitForSeconds(seconds);
-        _autoBrowser.PostMessage(PlayVideoMessage());
+        _numClientsReady += 1;
+        if (_numClientsReady != NetworkServer.connections.Count) return;
+        _numClientsReady = 0;
+        RpcPlay();
     }
 
-    private void HandlePauseChange(bool paused)
+    [Command(ignoreAuthority = true)]
+    public void CmdSetVideoId(string id)
     {
-        var message = "{\"type\": \"video\", \"command\": \"" + (paused ? "pause" : "play") + "\"}";
-        _autoBrowser.PostMessage(message);
+        VideoId = id;
+    }
+
+    [Command(ignoreAuthority = true)]
+    private void CmdSetState(PlayerState newState)
+    {
+        State = newState;
+    }
+
+    [ClientRpc]
+    public void RpcPlay()
+    {
+        _autoBrowser.PostMessage(PlayVideoMessage());
     }
 
     public void ToggleVideo()
@@ -83,13 +98,13 @@ public class AutoBrowserController : NetworkBehaviour
         switch (State)
         {
             case PlayerState.Neutral:
-                State = PlayerState.YouTube;
-                StartCoroutine(LoadVideo(vidIds[rnd.Next(0, vidIds.Count)]));
+                CmdSetVideoId(vidIds[rnd.Next(0, vidIds.Count)]);
+                CmdSetState(PlayerState.YouTube);
                 break;
 
             case PlayerState.YouTube:
-                State = PlayerState.Neutral;
-                StartCoroutine(ReturnToNeutral());
+                CmdSetVideoId("");
+                CmdSetState(PlayerState.Neutral);
                 break;
 
             case PlayerState.Twitch:
@@ -100,10 +115,16 @@ public class AutoBrowserController : NetworkBehaviour
         }
     }
 
+    private void HandlePauseChange(bool paused)
+    {
+        var message = "{\"type\": \"video\", \"command\": \"" + (paused ? "pause" : "play") + "\"}";
+        _autoBrowser.PostMessage(message);
+    }
+
     private IEnumerator ReturnToNeutral()
     {
         //TODO reset to paused
-        togglePause.CmdSetPaused(true);
+        //togglePause.CmdSetPaused(true);
         yield return _autoBrowser.DropScreen(1f);
         _autoBrowser.PostMessage(loadVideoIdMessage(""));
     }
