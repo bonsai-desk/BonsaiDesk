@@ -13,18 +13,20 @@ public class AutoBrowserController : NetworkBehaviour
 {
     public string hotReloadUrl;
     public TogglePause togglePause;
+    
     private AutoBrowser _autoBrowser;
-
+    [SyncVar(hook = nameof(OnSetContentId))] private string _contentId;
     private int _numClientsReady;
-    [SyncVar] private string scrub;
-    [SyncVar] private string started;
+    [SyncVar] private string _scrub;
+    [SyncVar] private string _started;
 
-    [SyncVar] private PlayerState State;
-    [SyncVar(hook = nameof(OnSetVideoId))] private string VideoId;
+    [SyncVar] private PlayerState _state;
 
+    #region unity
+    
     private void Start()
     {
-        State = PlayerState.Neutral;
+        _state = PlayerState.Neutral;
 
         _autoBrowser = GetComponent<AutoBrowser>();
         _autoBrowser.BrowserReady += () =>
@@ -35,18 +37,28 @@ public class AutoBrowserController : NetworkBehaviour
             _autoBrowser.LoadHTML(BonsaiUI.Html);
 #endif
 
-            togglePause.PauseChanged += HandlePauseChange;
-            _autoBrowser.OnMessageEmitted(HandleMessageEmitted);
+            togglePause.PauseChanged += OnPauseChange;
+            _autoBrowser.OnMessageEmitted(OnMessageEmitted);
         };
     }
-
-    private void OnSetVideoId(string oldVideoId, string newVideoId)
+    
+    #endregion unity
+    
+    #region handlers
+    
+    private void OnPauseChange(bool paused)
+    {
+        var message = "{\"type\": \"video\", \"command\": \"" + (paused ? "pause" : "play") + "\"}";
+        _autoBrowser.PostMessage(message);
+    }
+    
+    private void OnSetContentId(string oldVideoId, string newVideoId)
     {
         Debug.Log("[BONSAI] OnSetVideoId " + oldVideoId + "->" + newVideoId);
         StartCoroutine(newVideoId == "" ? ReturnToNeutral() : LoadVideo(newVideoId));
     }
-
-    private void HandleMessageEmitted(object sender, EventArgs<string> eventArgs)
+    
+    private void OnMessageEmitted(object sender, EventArgs<string> eventArgs)
     {
         var jsonNode = JSONNode.Parse(eventArgs.Value) as JSONObject;
 
@@ -61,6 +73,22 @@ public class AutoBrowserController : NetworkBehaviour
                 break;
         }
     }
+    
+    #endregion handlers
+    
+    #region commands
+    
+    [Command(ignoreAuthority = true)]
+    private void CmdSetState(PlayerState newState)
+    {
+        _state = newState;
+    }
+    
+    [Command(ignoreAuthority = true)]
+    public void CmdSetContentId(string id)
+    {
+        _contentId = id;
+    }
 
     [Command(ignoreAuthority = true)]
     public void CmdClientIsReady()
@@ -71,39 +99,31 @@ public class AutoBrowserController : NetworkBehaviour
         RpcPlay();
     }
 
-    [Command(ignoreAuthority = true)]
-    public void CmdSetVideoId(string id)
-    {
-        VideoId = id;
-    }
-
-    [Command(ignoreAuthority = true)]
-    private void CmdSetState(PlayerState newState)
-    {
-        State = newState;
-    }
-
     [ClientRpc]
     public void RpcPlay()
     {
         _autoBrowser.PostMessage(PlayVideoMessage());
     }
 
+    #endregion commands
+    
+    #region actions 
+    
     public void ToggleVideo()
     {
         var rnd = new Random();
         //var vidIds = new List<string> {"V1bFr2SWP1I", "AqqaYs7LjlM", "jNQXAC9IVRw", "Cg0QwoHh9w4", "kJQP7kiw5Fk"};
         var vidIds = new List<string> {"HPoZ42JKhuc", "zvpVRTobCC0", "16GeJe0Mjh4", "p1skpV2fhN0"};
 
-        switch (State)
+        switch (_state)
         {
             case PlayerState.Neutral:
-                CmdSetVideoId(vidIds[rnd.Next(0, vidIds.Count)]);
+                CmdSetContentId(vidIds[rnd.Next(0, vidIds.Count)]);
                 CmdSetState(PlayerState.YouTube);
                 break;
 
             case PlayerState.YouTube:
-                CmdSetVideoId("");
+                CmdSetContentId("");
                 CmdSetState(PlayerState.Neutral);
                 break;
 
@@ -114,21 +134,7 @@ public class AutoBrowserController : NetworkBehaviour
                 throw new ArgumentOutOfRangeException();
         }
     }
-
-    private void HandlePauseChange(bool paused)
-    {
-        var message = "{\"type\": \"video\", \"command\": \"" + (paused ? "pause" : "play") + "\"}";
-        _autoBrowser.PostMessage(message);
-    }
-
-    private IEnumerator ReturnToNeutral()
-    {
-        //TODO reset to paused
-        //togglePause.CmdSetPaused(true);
-        yield return _autoBrowser.DropScreen(1f);
-        _autoBrowser.PostMessage(loadVideoIdMessage(""));
-    }
-
+    
     private IEnumerator LoadVideo(string videoId)
     {
         var newAspect = new Vector2(16, 9);
@@ -145,7 +151,7 @@ public class AutoBrowserController : NetworkBehaviour
         {
             var req = www.SendWebRequest();
 
-            _autoBrowser.PostMessage(loadVideoIdMessage(videoId));
+            _autoBrowser.PostMessage(LoadVideoIdMessage(videoId));
 
             yield return req;
 
@@ -170,21 +176,31 @@ public class AutoBrowserController : NetworkBehaviour
             yield return _autoBrowser.RaiseScreen(0.5f);
         }
     }
-
-    private string loadVideoIdMessage(string videoId)
+    
+    private IEnumerator ReturnToNeutral()
     {
-        return "{" +
-               "\"type\": \"video\", " +
-               "\"command\": \"load\", " +
-               $"\"video_id\": \"{videoId}\" " +
-               "}";
+        //TODO reset to paused
+        //togglePause.CmdSetPaused(true);
+        yield return _autoBrowser.DropScreen(1f);
+        _autoBrowser.PostMessage(LoadVideoIdMessage(""));
     }
-
+    
+    #endregion actions 
+    
     private string PlayVideoMessage()
     {
         return "{" +
                "\"type\": \"video\", " +
                "\"command\": \"play\" " +
+               "}";
+    }
+    
+    private string LoadVideoIdMessage(string videoId)
+    {
+        return "{" +
+               "\"type\": \"video\", " +
+               "\"command\": \"load\", " +
+               $"\"video_id\": \"{videoId}\" " +
                "}";
     }
 
