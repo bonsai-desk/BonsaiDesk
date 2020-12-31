@@ -10,13 +10,69 @@ public delegate void PauseEvent(bool paused);
 
 public class TogglePause : NetworkBehaviour
 {
-    [SyncVar(hook = nameof(SetPaused))] private bool _paused = true;
-    // [SyncVar] private bool _interactable = true;
+    [SyncVar(hook = nameof(OnSetInteractable))]
+    private bool _interactable = true;
 
-    [SyncVar(hook = nameof(SetActiveUser))]
-    private uint _activeUser = uint.MaxValue;
+    [SyncVar(hook = nameof(OnSetPaused))] private bool _paused = true;
 
-    private uint _localActiveUser = uint.MaxValue;
+    [SyncVar] private bool _inUse = false;
+
+    [SyncVar(hook = nameof(OnSetAuthority))]
+    private uint _authorityIdentityId = uint.MaxValue;
+
+    [SyncVar] private float _visibilitySynced;
+    private float _visibilityLocal;
+
+    [SyncVar] private float _positionSynced;
+    private float _positionLocal;
+
+    [SyncVar] private Vector3 _positionVector3Synced = Vector3.zero;
+    private Vector3 _positionVector3Local = Vector3.zero;
+
+    private float Visibility
+    {
+        get
+        {
+            if (NetworkClient.connection != null && NetworkClient.connection.identity != null && NetworkClient.connection.identity.netId == _authorityIdentityId)
+                return _visibilityLocal;
+            return _visibilitySynced;
+        }
+        set
+        { 
+            _visibilityLocal = value;
+            CmdSetVisibility(value);
+        }
+    }
+
+    private float Position
+    {
+        get
+        {
+            if (NetworkClient.connection != null && NetworkClient.connection.identity != null && NetworkClient.connection.identity.netId == _authorityIdentityId)
+                return _positionLocal;
+            return _positionSynced;
+        }
+        set
+        {
+            _positionLocal = value;
+            CmdSetPosition(value);
+        }
+    }
+
+    private Vector3 PositionVector3
+    {
+        get
+        {
+            if (NetworkClient.connection != null && NetworkClient.connection.identity != null && NetworkClient.connection.identity.netId == _authorityIdentityId)
+                return _positionVector3Local;
+            return _positionVector3Synced;
+        }
+        set
+        {
+            _positionVector3Local = value;
+            CmdSetPositionVector3(value);
+        }
+    }
     
     public float gestureActivateDistance;
     public float pointMovement;
@@ -32,11 +88,17 @@ public class TogglePause : NetworkBehaviour
     private float gestureStartDistance;
     private bool pausedStateAtGestureStart;
 
-    private float _visibility;
-    private float _position;
-
     private Vector3 _targetLocalPosition = Vector3.zero;
-    private Vector3 _localPosition = Vector3.zero;
+
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+        if (_paused)
+        {
+            _visibilitySynced = 1;
+            _positionSynced = 0;
+        }
+    }
 
     private void Start()
     {
@@ -47,6 +109,13 @@ public class TogglePause : NetworkBehaviour
     {
         // if (!_interactable)
         //     return;
+        
+        if (!(NetworkClient.connection != null && NetworkClient.connection.identity != null && NetworkClient.connection.identity.netId == _authorityIdentityId))
+        {
+            togglePauseMorph.SetVisibility(Visibility);
+            togglePauseMorph.transform.localPosition = PositionVector3 * Position;
+            return;
+        }
 
         bool interacting = currentPointSkeleton != OVRSkeleton.SkeletonType.None ||
                            currentGestureSkeleton != OVRSkeleton.SkeletonType.None;
@@ -56,53 +125,61 @@ public class TogglePause : NetworkBehaviour
         float targetVisibility = shouldBeVisible ? 1 : 0;
         float targetPosition = interacting ? 1 : 0;
 
-        if (Mathf.Approximately(_position, 0))
-            _localPosition = _targetLocalPosition;
-        _localPosition = Vector3.MoveTowards(_localPosition, _targetLocalPosition, Time.deltaTime);
+        Vector3 start = PositionVector3;
+        if (Mathf.Approximately(Position, 0))
+            start = _targetLocalPosition;
+        PositionVector3 = Vector3.MoveTowards(start, _targetLocalPosition, Time.deltaTime);
 
         //if not already at the target
-        if (!Mathf.Approximately(_visibility, targetVisibility))
+        if (!Mathf.Approximately(Visibility, targetVisibility))
         {
             CubicBezier easeFunction = shouldBeVisible ? CubicBezier.EaseOut : CubicBezier.EaseIn;
-            float t = easeFunction.SampleInverse(_visibility);
+            float t = easeFunction.SampleInverse(Visibility);
             float step = (1f / fadeTime) * Time.deltaTime;
             t = Mathf.MoveTowards(t, targetVisibility, step);
-            _visibility = easeFunction.Sample(t);
-            togglePauseMorph.SetVisibility(_visibility);
+            Visibility = easeFunction.Sample(t);
+            togglePauseMorph.SetVisibility(Visibility);
         }
 
-        if (!Mathf.Approximately(_position, targetPosition))
+        if (!Mathf.Approximately(Position, targetPosition))
         {
             CubicBezier easeFunction = interacting ? CubicBezier.EaseOut : CubicBezier.EaseIn;
-            float t = easeFunction.SampleInverse(_position);
+            float t = easeFunction.SampleInverse(Position);
             float step = (1f / fadeTime) * Time.deltaTime;
             t = Mathf.MoveTowards(t, targetPosition, step);
-            _position = easeFunction.Sample(t);
+            Position = easeFunction.Sample(t);
         }
 
-        togglePauseMorph.transform.localPosition = _localPosition * _position;
+        togglePauseMorph.transform.localPosition = PositionVector3 * Position;
     }
 
-    // public void SetInteractable(bool interactable)
-    // {
-    //     _interactable = interactable;
-    //
-    //     iconRenderer.enabled = _interactable;
-    //     if (!_interactable)
-    //     {
-    //         currentPointSkeleton = OVRSkeleton.SkeletonType.None;
-    //         currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
-    //         updateIcons(_paused);
-    //     }
-    // }
+    [Server] //This is Server only for a reason. Don't make it a command!!!
+    public void SetInteractable(bool interactable)
+    {
+        _interactable = interactable;
+        iconRenderer.enabled = interactable;
+        updateIcons(_paused);
+    }
+
+    private void OnSetInteractable(bool oldValue, bool newValue)
+    {
+        iconRenderer.enabled = newValue;
+        if (!newValue)
+        {
+            currentPointSkeleton = OVRSkeleton.SkeletonType.None;
+            currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
+            updateIcons(_paused);
+        }
+    }
 
     [Command(ignoreAuthority = true)]
     private void CmdSetPaused(bool paused)
     {
-        this._paused = paused;
+        _paused = paused;
+        updateIcons(paused);
     }
 
-    private void SetPaused(bool oldPaused, bool newPaused)
+    private void OnSetPaused(bool oldPaused, bool newPaused)
     {
         Debug.Log("[BONSAI] SetPaused " + newPaused);
         if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None)
@@ -111,15 +188,45 @@ public class TogglePause : NetworkBehaviour
         PauseChanged?.Invoke(newPaused);
     }
 
-    [Command(ignoreAuthority = true)]
-    private void CmdSetActiveUser(uint userId)
+    private void OnSetAuthority(uint oldValue, uint newValue)
     {
-        _activeUser = userId;
+        if (NetworkClient.connection != null && NetworkClient.connection.identity != null && NetworkClient.connection.identity.netId == newValue)
+        {
+            _visibilityLocal = _visibilitySynced;
+            _positionLocal = _positionSynced;
+            _positionVector3Local = _positionVector3Synced;
+        }
     }
 
-    private void SetActiveUser(uint oldUser, uint newUser)
+    [Command(ignoreAuthority = true)]
+    private void CmdSetAuthority(uint userId)
     {
-        _localActiveUser = uint.MaxValue;
+        _authorityIdentityId = userId;
+        _inUse = true;
+    }
+
+    [Command(ignoreAuthority = true)]
+    private void CmdSetInUse(bool inUse)
+    {
+        _inUse = inUse;
+    }
+
+    [Command(ignoreAuthority = true)]
+    private void CmdSetVisibility(float visibility)
+    {
+        _visibilitySynced = visibility;
+    }
+
+    [Command(ignoreAuthority = true)]
+    private void CmdSetPosition(float position)
+    {
+        _positionSynced = position;
+    }
+
+    [Command(ignoreAuthority = true)]
+    private void CmdSetPositionVector3(Vector3 positionVector3)
+    {
+        _positionVector3Synced = positionVector3;
     }
 
     private void updateIcons(bool paused)
@@ -127,25 +234,41 @@ public class TogglePause : NetworkBehaviour
         togglePauseMorph.SetPaused(paused ? 1 : 0);
     }
 
+    [Command(ignoreAuthority = true)]
+    private void CmdSetPauseMorph(float pauseValue)
+    {
+        togglePauseMorph.SetPaused(pauseValue);
+        RpcSetPauseMorph(pauseValue);
+    }
+    
+    [ClientRpc(excludeOwner = true)]
+    private void RpcSetPauseMorph(float pauseValue)
+    {
+        if (NetworkClient.connection != null && NetworkClient.connection.identity != null && NetworkClient.connection.identity.netId == _authorityIdentityId)
+            return;
+        togglePauseMorph.SetPaused(pauseValue);
+    }
+
     public void Point(OVRSkeleton.SkeletonType skeletonType, bool pointing, Vector3 position)
     {
-        // if (!_interactable)
-        //     return;
-
-        uint userId = NetworkClient.connection.identity.netId;
-        bool valid = _activeUser == uint.MaxValue || _activeUser == userId || _localActiveUser == userId;
-        if (!valid)
+        if (!_interactable)
             return;
-        if (_activeUser == uint.MaxValue && _localActiveUser == uint.MaxValue)
-        {
-            _localActiveUser = userId;
-            CmdSetActiveUser(userId);
-        }
 
         if (currentPointSkeleton == OVRSkeleton.SkeletonType.None || currentPointSkeleton == skeletonType)
         {
             if (pointing)
             {
+                uint userId = NetworkClient.connection.identity.netId;
+                if (_authorityIdentityId != userId)
+                {
+                    if (!_inUse)
+                        CmdSetAuthority(userId);
+                    return;
+                }
+
+                if (!_inUse)
+                    CmdSetInUse(true);
+
                 currentPointSkeleton = skeletonType;
 
                 if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None)
@@ -157,17 +280,21 @@ public class TogglePause : NetworkBehaviour
             }
             else
             {
+                uint userId = NetworkClient.connection.identity.netId;
+                if (_authorityIdentityId == userId && _inUse)
+                {
+                    CmdSetInUse(false);
+                }
+
                 currentPointSkeleton = OVRSkeleton.SkeletonType.None;
-                _localActiveUser = uint.MaxValue;
-                CmdSetActiveUser(uint.MaxValue);
             }
         }
     }
 
     public void StartToggleGesture(OVRSkeleton.SkeletonType skeletonType, Vector3 position)
     {
-        // if (!_interactable)
-        //     return;
+        if (!_interactable)
+            return;
 
         if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None && currentPointSkeleton == skeletonType)
         {
@@ -179,8 +306,8 @@ public class TogglePause : NetworkBehaviour
 
     public void StopToggleGesture(OVRSkeleton.SkeletonType skeletonType, Vector3 position)
     {
-        // if (!_interactable)
-        //     return;
+        if (!_interactable)
+            return;
 
         if (currentGestureSkeleton == skeletonType)
         {
@@ -192,11 +319,11 @@ public class TogglePause : NetworkBehaviour
             }
         }
     }
-
+    
     public void UpdateToggleGesturePosition(OVRSkeleton.SkeletonType skeletonType, Vector3 position)
     {
-        // if (!_interactable)
-        //     return;
+        if (!_interactable)
+            return;
 
         if (currentGestureSkeleton == skeletonType)
         {
@@ -206,12 +333,14 @@ public class TogglePause : NetworkBehaviour
             if (_paused)
                 pausedLerp = 1 - pausedLerp;
             togglePauseMorph.SetPaused(pausedLerp);
+            CmdSetPauseMorph(pausedLerp);
 
             if (distance > gestureActivateDistance)
             {
                 currentPointSkeleton = OVRSkeleton.SkeletonType.None;
                 currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
                 updateIcons(!pausedStateAtGestureStart);
+                _paused = !pausedStateAtGestureStart;
                 CmdSetPaused(!pausedStateAtGestureStart);
             }
         }
