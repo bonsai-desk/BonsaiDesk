@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Mirror;
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerHand))]
@@ -9,13 +10,16 @@ public class TogglePauseHand : MonoBehaviour, IHandTick
     public AngleToObject headAngleToObject;
     public TogglePause togglePause;
 
-    private bool lastPointingAtScreen;
+    private bool _lastPointingAtScreen;
 
     public void Tick(PlayerHand playerHand)
     {
+        if (NetworkClient.connection == null || NetworkClient.connection.identity == null)
+            return;
+        
         bool pointingAtScreen = false;
-        if (!lastPointingAtScreen && playerHand.GetGesture(PlayerHand.Gesture.WeakPalm) &&
-            headAngleToObject.AngleBelowThreshold() || lastPointingAtScreen)
+        if (!_lastPointingAtScreen && playerHand.GetGesture(PlayerHand.Gesture.WeakPalm) &&
+            headAngleToObject.AngleBelowThreshold() || _lastPointingAtScreen)
             pointingAtScreen = angleToObject.AngleBelowThreshold();
         
         togglePause.Point(playerHand.skeletonType, pointingAtScreen && playerHand.oVRSkeleton.IsDataHighConfidence,
@@ -39,7 +43,7 @@ public class TogglePauseHand : MonoBehaviour, IHandTick
         {
             pointingAtScreen = false;
         }
-
-        lastPointingAtScreen = pointingAtScreen;
+        
+        _lastPointingAtScreen = pointingAtScreen;
     }
 }

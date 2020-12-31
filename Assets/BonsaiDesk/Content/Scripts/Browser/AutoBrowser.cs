@@ -7,18 +7,18 @@ public delegate void BrowserReadyEvent();
 
 public class AutoBrowser : MonoBehaviour
 {
-    public int yResolution = 850;
-    public bool autoSetResolution;
+    public Vector2 startingAspect = new Vector2(16, 9);
+    public Transform holePuncher;
+    public TogglePause togglePause;
+    public Material holePuncherMaterial;
+    
     public float distanceEstimate = 1;
     public int pixelPerDegree = 16;
 
-    public Material holePuncherMaterial;
+    // public int yResolution = 850;
+    // public bool autoSetResolution;
 
     private Transform _overlayObject;
-    public Transform holePuncher;
-    public Vector2 startingAspect;
-
-    public TogglePause togglePause;
 
     private OVROverlay _overlay;
     private WebViewPrefab _webViewPrefab;
@@ -33,8 +33,6 @@ public class AutoBrowser : MonoBehaviour
 
     private void Start()
     {
-        togglePause.SetInteractable(false);
-        
         //create empty overlay object
         _overlayObject = (new GameObject()).transform;
         _overlayObject.name = "OverlayObject";
@@ -94,7 +92,6 @@ public class AutoBrowser : MonoBehaviour
 
     public IEnumerator DropScreen(float duration)
     {
-        togglePause.SetInteractable(false);
         yield return MoveScreen(duration, CubicBezier.EaseIn,
             _defaultLocalPosition, _belowTableLocalPosition);
         _holePuncherRenderer.enabled = false;
@@ -105,7 +102,6 @@ public class AutoBrowser : MonoBehaviour
         _holePuncherRenderer.enabled = true;
         yield return MoveScreen(duration, CubicBezier.EaseOut,
             _belowTableLocalPosition, _defaultLocalPosition);
-        togglePause.SetInteractable(true);
     }
 
     public IEnumerator MoveScreen(float duration, CubicBezier easeFunction, Vector3 from, Vector3 to)
@@ -194,9 +190,10 @@ public class AutoBrowser : MonoBehaviour
 
     private Vector2Int Resolution()
     {
-        return autoSetResolution
-            ? AutoResolution(holePuncher.localScale.y, distanceEstimate, pixelPerDegree, holePuncher.localScale.xy())
-            : ResolutionFromY(yResolution, holePuncher.localScale.xy());
+        // return autoSetResolution
+        //     ? AutoResolution(holePuncher.localScale.y, distanceEstimate, pixelPerDegree, holePuncher.localScale.xy())
+        //     : ResolutionFromY(yResolution, holePuncher.localScale.xy());
+        return AutoResolution(holePuncher.localScale.y, distanceEstimate, pixelPerDegree, holePuncher.localScale.xy());
     }
 
     #endregion private methods
