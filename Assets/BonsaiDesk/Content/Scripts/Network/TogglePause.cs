@@ -120,7 +120,8 @@ public class TogglePause : NetworkBehaviour
     public TogglePauseMorph togglePauseMorph;
     public MeshRenderer iconRenderer;
 
-    public event PauseEvent PauseChanged;
+    public event PauseEvent PauseChangedServer;
+    public event PauseEvent PauseChangedClient;
 
     private OVRSkeleton.SkeletonType currentPointSkeleton = OVRSkeleton.SkeletonType.None;
 
@@ -227,6 +228,7 @@ public class TogglePause : NetworkBehaviour
     {
         _paused = paused;
         updateIcons(paused);
+        PauseChangedServer?.Invoke(paused);
     }
 
     private void OnSetPaused(bool oldPaused, bool newPaused)
@@ -235,7 +237,7 @@ public class TogglePause : NetworkBehaviour
         if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None)
             updateIcons(newPaused);
 
-        PauseChanged?.Invoke(newPaused);
+        PauseChangedClient?.Invoke(newPaused);
     }
 
     private void OnSetAuthority(uint oldValue, uint newValue)
