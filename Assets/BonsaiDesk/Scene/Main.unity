@@ -321,7 +321,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  visualizeAuthorityMaterial: {fileID: 0}
+  allowPinchPull: 0
   meshRenderer: {fileID: 0}
 --- !u!114 &38786090
 MonoBehaviour:

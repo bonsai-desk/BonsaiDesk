@@ -6,13 +6,21 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 {
     public void Tick(PlayerHand playerHand)
     {
-        if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        //return if not pinching
+        if (!playerHand.GetGesture(PlayerHand.Gesture.IndexPinching))
+        {
+            playerHand.beamHoldControl.SetActive(false);
             return;
-
-        RaycastCone(playerHand);
+        }
+        
+        //perform raycast in a cone from the hand
+        if (RaycastCone(playerHand, out AutoAuthority hitAutoAuthority))
+        {
+            hitAutoAuthority.VisualizePinchPull();
+        }
     }
-
-    private void RaycastCone(PlayerHand playerHand)
+    
+    private bool RaycastCone(PlayerHand playerHand, out AutoAuthority hitAutoAuthority)
     {
         const float length = 1f; //length of raycast
 
@@ -34,7 +42,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
             {
                 //recursivly check if hit object or its parent has an AutoAuthority script
                 var check = hit.transform;
-                var hitAutoAuthority = check.GetComponent<AutoAuthority>();
+                hitAutoAuthority = check.GetComponent<AutoAuthority>();
                 while (hitAutoAuthority == null)
                 {
                     if (check.parent != null)
@@ -43,48 +51,19 @@ public class PinchPullHand : MonoBehaviour, IHandTick
                         break;
                     hitAutoAuthority = check.GetComponent<AutoAuthority>();
                 }
-
+                
                 if (hitAutoAuthority != null)
                 {
-                    hitAutoAuthority.VisualizePinchPull();
+                    if (hit.distance < 0.2f || !hitAutoAuthority.allowPinchPull)
+                        break;
+                    playerHand.beamHoldControl.SetActive(true);
+                    return true;
                 }
-
-                // if (hitBody != null /* && !hitBody.isKinematic*/)
-                // {
-                //     //found valid object
-                //
-                //     if (hit.distance < 0.2f)
-                //         break;
-                //
-                //     if (check != beamHold)
-                //     {
-                //         if (beamHoldRenderer != null)
-                //             BackToOriginalColor();
-                //
-                //         MeshRenderer meshRenderer = check.GetComponent<MeshRenderer>();
-                //         if (meshRenderer == null)
-                //             meshRenderer = check.GetComponentInChildren<MeshRenderer>();
-                //         if (meshRenderer != null)
-                //         {
-                //             beamHoldRenderer = meshRenderer;
-                //             beamHoldOriginalColor = meshRenderer.material.GetColor("_Color");
-                //             meshRenderer.material.SetColor("_Color", Color.yellow);
-                //         }
-                //
-                //         beamHoldControl.SetActive(true);
-                //
-                //         // if (beamHold == null)
-                //         // {
-                //         beamHold = check;
-                //         // }
-                //     }
-                //
-                //     hitPoint = hit.point;
-                //
-                //     hitObject = true;
-                //     break;
-                // }
             }
         }
+
+        playerHand.beamHoldControl.SetActive(false);
+        hitAutoAuthority = null;
+        return false;
     }
 }

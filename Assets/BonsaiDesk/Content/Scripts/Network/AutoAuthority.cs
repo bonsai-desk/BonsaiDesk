@@ -9,6 +9,8 @@ public class AutoAuthority : NetworkBehaviour
 {
     [SyncVar] private double _lastInteractTime;
     [SyncVar] private uint _ownerIdentityId = uint.MaxValue;
+    
+    public bool allowPinchPull = true;
 
     public MeshRenderer meshRenderer;
 
