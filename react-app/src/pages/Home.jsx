@@ -1,11 +1,29 @@
 import React, {useState, useEffect} from "react";
 import YouTube from "react-youtube";
 
+let opts = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+    playerVars: {
+        autoplay: 0,
+        controls: 0,
+        disablekb: 1,
+        rel: 0
+    }
+}
+
+const PlayerState = {
+    UNSTARTED: -1,
+    ENDED: 0,
+    PLAYING: 1,
+    PAUSED: 2,
+    BUFFERING: 3,
+    CUED: 5,
+};
+
 let Video = () => {
 
     let [player, setPlayer] = useState(null);
-
-    let videoID = "";
 
     let addEventListeners = (player) => {
         window.vuplex.addEventListener('message', event => {
@@ -24,26 +42,14 @@ let Video = () => {
                     player.setSize(width, height);
                     break;
                 case "load":
-                    let videoId = json.video_id
-                    if (videoId != null) {
-                        player.loadVideoById(videoId);
+                    if (json.video_id != null) {
+                        player.cueVideoById(json.video_id);
                     }
                     break;
                 default:
                     break;
             }
         })
-    }
-
-    let opts = {
-        width: window.innerWidth,
-        height: window.innerHeight,
-        playerVars: {
-            autoplay: 0,
-            controls: 0,
-            disablekb: 1,
-            rel: 0
-        }
     };
 
     useEffect(() => {
@@ -55,32 +61,58 @@ let Video = () => {
                 addEventListeners(player)
             })
         }
+        setInterval(() => {console.log(player.getCurrentTime())}, 1000)
     }, [player])
 
     let onReady = (event) => {
         console.log("onReady", event);
         setPlayer(event.target);
     };
-    let onPlay = (event) => {
-        console.log("onPlay", event);
+    let onError = (event) => {
+        console.log("onError", event);
     };
-    let onPause = (event) => {
-        console.log("onPause", event);
-    };
-    let onEnd = (event) => {
-        console.log("onEnd", event);
-    };
+    let onStateChange = (event) => {
+        let postStateChange = (message) => {
+            window.vuplex.postMessage({type: "stateChange", message: message, current_time: player.getCurrentTime()});
+        }
+        switch (event.data) {
+            case PlayerState.UNSTARTED:
+                console.log("bonsai: unstarted")
+                postStateChange("UNSTARTED")
+                break;
+            case PlayerState.ENDED:
+                console.log("bonsai: ended")
+                postStateChange("ENDED")
+                break
+            case PlayerState.PLAYING:
+                console.log("bonsai: playing")
+                postStateChange("PLAYING")
+                break
+            case PlayerState.PAUSED:
+                console.log("bonsai: paused")
+                postStateChange("PAUSED")
+                break;
 
+            case PlayerState.BUFFERING:
+                console.log("bonsai: buffering")
+                postStateChange("BUFFERING")
+                break;
+            case PlayerState.CUED:
+                console.log("bonsai: videoCued")
+                postStateChange("CUED")
+                break
+            default:
+                break;
+        }
+    }
 
     return (
         <div>
             <YouTube
-                videoId={videoID}
                 opts={opts}
                 onReady={onReady}
-                onPlay={onPlay}
-                onPause={onPause}
-                onEnd={onEnd}
+                onError={onError}
+                onStateChange={onStateChange}
             />
         </div>
     );
