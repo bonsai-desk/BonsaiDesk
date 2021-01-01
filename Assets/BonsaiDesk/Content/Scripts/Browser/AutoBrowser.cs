@@ -9,7 +9,6 @@ public class AutoBrowser : MonoBehaviour
 {
     public Vector2 startingAspect = new Vector2(16, 9);
     public Transform holePuncher;
-    public TogglePause togglePause;
     public Material holePuncherMaterial;
     
     public float distanceEstimate = 1;
@@ -35,7 +34,7 @@ public class AutoBrowser : MonoBehaviour
         //create empty overlay object
         _overlayObject = new GameObject().transform;
         _overlayObject.name = "OverlayObject";
-        _overlayObject.SetParent(transform, false);
+        _overlayObject.SetParent(transform.GetChild(0), false);
 
         //setup hole puncher object
         _holePuncherRenderer = holePuncher.GetComponent<MeshRenderer>();
