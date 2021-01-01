@@ -29,7 +29,7 @@ public class PlayerHand : MonoBehaviour
     private float heldObjectDrag;
     private float heldObjectAngularDrag;
 
-    private LayerMask allButHands;
+    public static LayerMask AllButHands;
 
     public PinchSpawn pinchSpawn;
 
@@ -73,28 +73,11 @@ public class PlayerHand : MonoBehaviour
     public Camera mainCamera;
     private int handLayer;
 
-    public AngleToObject angleToObject;
-    public AngleToObject headAngleToObject;
-
-    public TogglePause togglePause;
-
-    public Transform test;
-
     private IHandTick[] _handTicks;
-
-    // [HideInInspector] public bool indexPinching;
-    // [HideInInspector] public bool pinch;
-    // [HideInInspector] public float fistMinStrength;
-    // [HideInInspector] public bool fist;
-    // [HideInInspector] public bool weakFist;
 
     private bool lastIndexPinching;
 
     private bool lastPinkyPinch = false;
-
-    // private bool lastPointingAtScreen = false;
-    private bool lastFist;
-    private bool lastWeakFist;
 
     public enum Gesture
     {
@@ -243,6 +226,11 @@ public class PlayerHand : MonoBehaviour
         }
     }
 
+    private void Awake()
+    {
+        AllButHands = ~LayerMask.GetMask("LeftHand", "RightHand", "LeftHeldObject", "RightHeldObject");
+    }
+
     private void Start()
     {
         body = GetComponent<Rigidbody>();
@@ -250,9 +238,6 @@ public class PlayerHand : MonoBehaviour
 
         fingerTips = new Transform[0];
         GetFingerTips();
-
-        allButHands = LayerMask.GetMask("LeftHand", "RightHand", "LeftHeldObject", "RightHeldObject");
-        allButHands = ~allButHands;
 
         UpdateDeleteMaterial();
 
@@ -415,7 +400,7 @@ public class PlayerHand : MonoBehaviour
         {
             if (oVRPhysicsHand.thumbTipTarget != null)
             {
-                var hits = Physics.OverlapSphere(oVRPhysicsHand.thumbTipTarget.position, 0, allButHands,
+                var hits = Physics.OverlapSphere(oVRPhysicsHand.thumbTipTarget.position, 0, AllButHands,
                     QueryTriggerInteraction.Collide);
                 foreach (var hit in hits)
                 {
@@ -447,8 +432,8 @@ public class PlayerHand : MonoBehaviour
                     Vector3 end = pointerPose.TransformPoint(posOnCircle);
                     // pointerPose.tran
 
-                    // if (Physics.Raycast(origin, direction, out RaycastHit hit, 1f, allButHands, QueryTriggerInteraction.Ignore))
-                    if (Physics.Linecast(origin, end, out RaycastHit hit, allButHands, QueryTriggerInteraction.Ignore))
+                    // if (Physics.Raycast(origin, direction, out RaycastHit hit, 1f, AllButHands, QueryTriggerInteraction.Ignore))
+                    if (Physics.Linecast(origin, end, out RaycastHit hit, AllButHands, QueryTriggerInteraction.Ignore))
                     {
                         Transform check = hit.transform;
                         Rigidbody hitBody = check.GetComponent<Rigidbody>();
@@ -509,11 +494,11 @@ public class PlayerHand : MonoBehaviour
             {
                 Collider[] pinchHits = new Collider[0];
                 if (pinch && oVRPhysicsHand.thumbTipTarget != null)
-                    pinchHits = Physics.OverlapSphere(oVRPhysicsHand.thumbTipTarget.position, 0, allButHands,
+                    pinchHits = Physics.OverlapSphere(oVRPhysicsHand.thumbTipTarget.position, 0, AllButHands,
                         QueryTriggerInteraction.Ignore);
                 Collider[] fistHits = new Collider[0];
                 if (fistMinStrength > 0.7f)
-                    fistHits = Physics.OverlapSphere(holdPosition.position, 0.02f, allButHands,
+                    fistHits = Physics.OverlapSphere(holdPosition.position, 0.02f, AllButHands,
                         QueryTriggerInteraction.Ignore);
                 Collider[] hits = new Collider[pinchHits.Length + fistHits.Length];
                 pinchHits.CopyTo(hits, 0);
@@ -555,8 +540,8 @@ public class PlayerHand : MonoBehaviour
 
         PlayerHands.hands.SetHandGesturesReady(skeletonType);
 
-        lastFist = fist;
-        lastWeakFist = weakFist;
+        // lastFist = fist;
+        // lastWeakFist = weakFist;
         lastIndexPinching = indexPinching;
     }
 
