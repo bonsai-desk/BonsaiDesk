@@ -704,7 +704,7 @@ public class NetworkManagerGame : NobleNetworkManager
                 identity.RemoveClientAuthority();
         }
         
-        if (togglePause.AuthorityIdentityId == conn.identity.netId)
+        if (conn.identity != null && togglePause.AuthorityIdentityId == conn.identity.netId)
         {
             togglePause.RemoveClientAuthority();
         }
