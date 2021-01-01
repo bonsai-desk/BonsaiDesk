@@ -14,6 +14,7 @@ public class TogglePause : NetworkBehaviour
     private bool _interactable = true;
 
     [SyncVar(hook = nameof(OnSetPaused))] private bool _paused = true;
+    private bool _probablyPaused = false;
 
     [SyncVar] private bool _inUse = false;
 
@@ -134,11 +135,10 @@ public class TogglePause : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
-        if (_paused)
-        {
-            _visibilitySynced = 1;
-            _positionSynced = 0;
-        }
+
+        _paused = true;
+        _visibilitySynced = 1;
+        _positionSynced = 0;
     }
 
     private void Start()
@@ -150,7 +150,7 @@ public class TogglePause : NetworkBehaviour
     {
         // if (!_interactable)
         //     return;
-        
+
         togglePauseMorph.SetPaused(PauseMorph);
 
         if (!(isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
@@ -171,7 +171,7 @@ public class TogglePause : NetworkBehaviour
             CmdSetInUse(false);
         }
 
-        bool shouldBeVisible = _paused || interacting;
+        bool shouldBeVisible = (_paused || _probablyPaused) || interacting;
 
         float targetVisibility = shouldBeVisible ? 1 : 0;
         float targetPosition = interacting ? 1 : 0;
@@ -223,8 +223,20 @@ public class TogglePause : NetworkBehaviour
         }
     }
 
+    [Server]
+    public void ServerSetPaused(bool paused)
+    {
+        _paused = paused;
+        updateIcons(paused);
+
+        throw new NotImplementedException("[Bonsai] ServerSetPaused");
+        
+        //TODO should this event fire?
+        // PauseChangedServer?.Invoke(paused);
+    }
+
     [Command(ignoreAuthority = true)]
-    public void CmdSetPaused(bool paused)
+    private void CmdSetPaused(bool paused)
     {
         _paused = paused;
         updateIcons(paused);
@@ -236,6 +248,8 @@ public class TogglePause : NetworkBehaviour
         Debug.Log("[BONSAI] SetPaused " + newPaused);
         if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None)
             updateIcons(newPaused);
+
+        _probablyPaused = false;
 
         PauseChangedClient?.Invoke(newPaused);
     }
@@ -389,7 +403,7 @@ public class TogglePause : NetworkBehaviour
                 currentPointSkeleton = OVRSkeleton.SkeletonType.None;
                 currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
                 updateIcons(!pausedStateAtGestureStart);
-                //_paused = !pausedStateAtGestureStart;
+                _probablyPaused = !pausedStateAtGestureStart;
                 CmdSetPaused(!pausedStateAtGestureStart);
             }
         }

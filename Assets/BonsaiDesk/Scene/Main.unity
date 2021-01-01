@@ -2173,7 +2173,7 @@ MonoBehaviour:
   maxRelayRefreshAttempts: 3
   relayLifetime: 30
   isDisconnecting: 0
-  serverOnlyIfEditor: 0
+  serverOnlyIfEditor: 1
   visualizeAuthority: 0
   moveToDesk: {fileID: 1212259449}
   togglePause: {fileID: 96659938}
