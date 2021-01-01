@@ -389,7 +389,7 @@ public class TogglePause : NetworkBehaviour
                 currentPointSkeleton = OVRSkeleton.SkeletonType.None;
                 currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
                 updateIcons(!pausedStateAtGestureStart);
-                _paused = !pausedStateAtGestureStart;
+                //_paused = !pausedStateAtGestureStart;
                 CmdSetPaused(!pausedStateAtGestureStart);
             }
         }

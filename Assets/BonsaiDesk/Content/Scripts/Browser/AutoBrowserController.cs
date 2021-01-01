@@ -8,25 +8,6 @@ using UnityEngine.Networking;
 using Vuplex.WebView;
 using Random = System.Random;
 
-public class ClientPingCollector
-{
-    public int NumReporting { get; private set; }
-
-    public double WorstPing { get; private set; }
-
-    public void Include(double ping)
-    {
-        WorstPing = ping > WorstPing ? ping : WorstPing;
-        NumReporting += 1;
-    }
-
-    public void Reset()
-    {
-        NumReporting = 0;
-        WorstPing = 0;
-    }
-}
-
 [RequireComponent(typeof(AutoBrowser))]
 public class AutoBrowserController : NetworkBehaviour
 {
@@ -45,17 +26,19 @@ public class AutoBrowserController : NetworkBehaviour
 
     private int _numClientsReporting;
 
-    private ClientScrubCollector _scrubCollector;
+    private ClientScrubCollector _scrubCollector = new ClientScrubCollector();
     [SyncVar] private string _started;
 
-    [SyncVar] private PlayerState _state;
+    [SyncVar] private ScreenState _screenState;
+    private PlayerState _playerState;
 
     [SyncVar(hook = nameof(OnSetWorstScrub))]
-    private Data _worstScrub;
+    private Data _worstScrub = new Data(10e10, 0);
 
     private void Start()
     {
-        _state = PlayerState.Neutral;
+        _screenState = ScreenState.Neutral;
+        _playerState = PlayerState.Unstarted;
 
         _autoBrowser = GetComponent<AutoBrowser>();
         _autoBrowser.BrowserReady += () =>
@@ -66,17 +49,10 @@ public class AutoBrowserController : NetworkBehaviour
             _autoBrowser.LoadHTML(BonsaiUI.Html);
 #endif
 
-            togglePause.PauseChanged += OnPauseChange;
+            togglePause.PauseChangedClient += OnPauseChangeClient;
+            togglePause.PauseChangedServer += OnPauseChangeServer;
             _autoBrowser.OnMessageEmitted(OnMessageEmitted);
         };
-    }
-
-    private string PlayVideoMessage()
-    {
-        return "{" +
-               "\"type\": \"video\", " +
-               "\"command\": \"play\" " +
-               "}";
     }
 
     private string LoadVideoIdMessage(string videoId)
@@ -95,24 +71,22 @@ public class AutoBrowserController : NetworkBehaviour
 
     private string PlayMessage()
     {
-        return "{\"type\": \"video\", \"command\": \"pause\"}";
+        return "{\"type\": \"video\", \"command\": \"play\"}";
     }
 
-    private void OnPauseChange(bool paused)
+    private void OnPauseChangeServer(bool paused)
     {
+        Debug.Log("Reset Scrub Collector");
+        _scrubCollector.Reset();
+    }
+
+    private void OnPauseChangeClient(bool paused)
+    {
+        Debug.Log("[BONSAI] OnPauseChangeClient: pause=" + paused);
         if (paused)
-        {
             _autoBrowser.PostMessage(PauseMessage());
-        }
         else
-        {
-            if (isServer)
-            {
-                Debug.Log("Reset Scrub Collector");
-                _scrubCollector.Reset();
-            }
             _autoBrowser.PostMessage(PlayMessage());
-        }
     }
 
     private void OnMessageEmitted(object sender, EventArgs<string> eventArgs)
@@ -125,28 +99,50 @@ public class AutoBrowserController : NetworkBehaviour
 
         switch ((string) jsonNode["message"])
         {
+            case "UNSTARTED":
+                _playerState = PlayerState.Unstarted;
+                break;
+                
+            case "ENDED":
+                _playerState = PlayerState.Ended;
+                break;
+                
             case "PLAYING":
+                _playerState = PlayerState.Playing;
                 _myScrub = new Data(jsonNode["current_time"], NetworkTime.time);
                 CmdClientPlaying(_myScrub);
                 break;
 
             case "PAUSED":
-                _myScrub = new Data(jsonNode["current_time"], NetworkTime.time);
+                _playerState = PlayerState.Paused;
+                //_myScrub = new Data(jsonNode["current_time"], NetworkTime.time);
                 break;
+            
+            case "BUFFERING":
+                _playerState = PlayerState.Buffering;
+                break;
+            
+            case "VIDEOCUED":
+                _playerState = PlayerState.VideoCued;
+                break;
+                
         }
     }
 
     private void OnSetWorstScrub(Data oldWorstScrub, Data newWorstScrub)
     {
+        Debug.Log("[BONSAI] OnSetWorstScrub scrub: " + newWorstScrub.Scrub +" networktime: " + newWorstScrub.NetworkTime);
         var now = NetworkTime.time;
         var myTime = _myScrub.CurrentVideoTime(now);
         var worstTime = newWorstScrub.CurrentVideoTime(now);
-        var desync = myTime - worstTime;
+        var deSync = myTime - worstTime;
 
-        if (!(desync > desyncTolerance)) return;
+        if (!(deSync > desyncTolerance) || _playerState != PlayerState.Playing) return;
+        
+        Debug.Log("[BONSAI] OnSetWorstScrub desync=" + deSync);
 
         _autoBrowser.PostMessage(PauseMessage());
-        StartCoroutine(PlayAfter(NetworkTime.time + desync));
+        StartCoroutine(PlayAfter(NetworkTime.time + deSync));
     }
 
     private void OnSetContentId(string oldVideoId, string newVideoId)
@@ -158,14 +154,15 @@ public class AutoBrowserController : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdClientPlaying(Data data)
     {
+        Debug.Log("[BONSAI] CmdClientPlaying scrub: " + data.Scrub + " time: " + data.NetworkTime);
         _scrubCollector.Include(data);
         _worstScrub = _scrubCollector.Worst;
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdSetState(PlayerState newState)
+    private void CmdSetState(ScreenState newState)
     {
-        _state = newState;
+        _screenState = newState;
     }
 
     [Command(ignoreAuthority = true)]
@@ -179,7 +176,7 @@ public class AutoBrowserController : NetworkBehaviour
         Debug.Log("[BONSAI] (now-startAfterNetworkTime) = " + (float) (NetworkTime.time - startAfterNetworkTime));
         while (NetworkTime.time < startAfterNetworkTime) yield return null;
         Debug.Log("[BONSAI] (now-startAfterNetworkTime) = " + (float) (NetworkTime.time - startAfterNetworkTime));
-        _autoBrowser.PostMessage(PlayVideoMessage());
+        _autoBrowser.PostMessage(PlayMessage());
     }
 
     public void ToggleVideo()
@@ -188,19 +185,19 @@ public class AutoBrowserController : NetworkBehaviour
         //var vidIds = new List<string> {"V1bFr2SWP1I", "AqqaYs7LjlM", "jNQXAC9IVRw", "Cg0QwoHh9w4", "kJQP7kiw5Fk"};
         var vidIds = new List<string> {"HPoZ42JKhuc", "zvpVRTobCC0", "16GeJe0Mjh4", "p1skpV2fhN0"};
 
-        switch (_state)
+        switch (_screenState)
         {
-            case PlayerState.Neutral:
+            case ScreenState.Neutral:
                 CmdSetContentId(vidIds[rnd.Next(0, vidIds.Count)]);
-                CmdSetState(PlayerState.YouTube);
+                CmdSetState(ScreenState.YouTube);
                 break;
 
-            case PlayerState.YouTube:
+            case ScreenState.YouTube:
                 CmdSetContentId("");
-                CmdSetState(PlayerState.Neutral);
+                CmdSetState(ScreenState.Neutral);
                 break;
 
-            case PlayerState.Twitch:
+            case ScreenState.Twitch:
                 break;
 
             default:
@@ -268,11 +265,17 @@ public class AutoBrowserController : NetworkBehaviour
         return NetworkTime.rtt / 2 + 3 * (NetworkTime.rttSd / 2);
     }
 
-    private enum PlayerState
+    private enum ScreenState
     {
         Neutral,
         YouTube,
         Twitch
+    }
+
+    private enum PlayerState
+    {
+        Unstarted, Ended, Playing, Paused, Buffering, VideoCued
+        
     }
 
     public struct Data

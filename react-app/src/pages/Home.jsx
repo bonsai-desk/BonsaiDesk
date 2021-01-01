@@ -92,6 +92,7 @@ let Video = () => {
                 console.log("bonsai: paused")
                 postStateChange("PAUSED")
                 break;
+
             case PlayerState.BUFFERING:
                 console.log("bonsai: buffering")
                 postStateChange("BUFFERING")
