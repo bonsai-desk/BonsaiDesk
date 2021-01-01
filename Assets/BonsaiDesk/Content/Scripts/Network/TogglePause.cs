@@ -39,11 +39,11 @@ public class TogglePause : NetworkBehaviour
     {
         get
         {
-            if (isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
-                NetworkClient.connection.identity != null &&
-                NetworkClient.connection.identity.netId == _authorityIdentityId)
-                return _visibilityLocal;
-            return _visibilitySynced;
+            // if (isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
+            //     NetworkClient.connection.identity != null &&
+            //     NetworkClient.connection.identity.netId == _authorityIdentityId)
+            return _visibilityLocal;
+            // return _visibilitySynced;
         }
         set
         {
@@ -59,11 +59,11 @@ public class TogglePause : NetworkBehaviour
     {
         get
         {
-            if (isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
-                NetworkClient.connection.identity != null &&
-                NetworkClient.connection.identity.netId == _authorityIdentityId)
-                return _positionLocal;
-            return _positionSynced;
+            // if (isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
+            //     NetworkClient.connection.identity != null &&
+            //     NetworkClient.connection.identity.netId == _authorityIdentityId)
+            return _positionLocal;
+            // return _positionSynced;
         }
         set
         {
@@ -79,11 +79,11 @@ public class TogglePause : NetworkBehaviour
     {
         get
         {
-            if (isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
-                NetworkClient.connection.identity != null &&
-                NetworkClient.connection.identity.netId == _authorityIdentityId)
-                return _positionVector3Local;
-            return _positionVector3Synced;
+            // if (isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
+            //     NetworkClient.connection.identity != null &&
+            //     NetworkClient.connection.identity.netId == _authorityIdentityId)
+            return _positionVector3Local;
+            // return _positionVector3Synced;
         }
         set
         {
@@ -99,11 +99,11 @@ public class TogglePause : NetworkBehaviour
     {
         get
         {
-            if (isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
-                NetworkClient.connection.identity != null &&
-                NetworkClient.connection.identity.netId == _authorityIdentityId)
-                return _pauseMorphLocal;
-            return _pauseMorphSynced;
+            // if (isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
+            //     NetworkClient.connection.identity != null &&
+            //     NetworkClient.connection.identity.netId == _authorityIdentityId)
+            return _pauseMorphLocal;
+            // return _pauseMorphSynced;
         }
         set
         {
@@ -148,17 +148,22 @@ public class TogglePause : NetworkBehaviour
 
     private void Update()
     {
-        // if (!_interactable)
-        //     return;
-
-        togglePauseMorph.SetPaused(PauseMorph);
-
         if (!(isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
             NetworkClient.connection.identity != null &&
             NetworkClient.connection.identity.netId == _authorityIdentityId))
         {
+            _visibilityLocal = Mathf.MoveTowards(_visibilityLocal, _visibilitySynced,
+                Mathf.Abs(_visibilitySynced - _visibilityLocal) * Time.deltaTime * (1f / syncInterval));
+            _positionLocal = Mathf.MoveTowards(_positionLocal, _positionSynced,
+                Mathf.Abs(_positionSynced - _positionLocal) * Time.deltaTime * (1f / syncInterval));
+            _positionVector3Local = Vector3.MoveTowards(_positionVector3Local, _positionVector3Synced,
+                Vector3.Distance(_positionVector3Synced, _positionVector3Local) * Time.deltaTime * (1f / syncInterval));
+            _pauseMorphLocal = Mathf.MoveTowards(_pauseMorphLocal, _pauseMorphSynced,
+                Mathf.Abs(_pauseMorphSynced - _pauseMorphLocal) * Time.deltaTime * (1f / syncInterval));
+
             togglePauseMorph.SetVisibility(Visibility);
             togglePauseMorph.transform.localPosition = PositionVector3 * Position;
+            togglePauseMorph.SetPaused(PauseMorph);
             return;
         }
 
@@ -202,6 +207,7 @@ public class TogglePause : NetworkBehaviour
 
         togglePauseMorph.SetVisibility(Visibility);
         togglePauseMorph.transform.localPosition = PositionVector3 * Position;
+        togglePauseMorph.SetPaused(PauseMorph);
     }
 
     [Server] //This is Server only for a reason. Don't make it a command!!!
@@ -210,6 +216,12 @@ public class TogglePause : NetworkBehaviour
         _interactable = interactable;
         iconRenderer.enabled = interactable;
         updateIcons(_paused);
+
+        if (!interactable)
+        {
+            _authorityIdentityId = uint.MaxValue;
+            _inUse = false;
+        }
     }
 
     private void OnSetInteractable(bool oldValue, bool newValue)
@@ -230,7 +242,7 @@ public class TogglePause : NetworkBehaviour
         updateIcons(paused);
 
         throw new NotImplementedException("[Bonsai] ServerSetPaused");
-        
+
         //TODO should this event fire?
         // PauseChangedServer?.Invoke(paused);
     }
@@ -256,13 +268,13 @@ public class TogglePause : NetworkBehaviour
 
     private void OnSetAuthority(uint oldValue, uint newValue)
     {
-        if (NetworkClient.connection != null && NetworkClient.connection.identity != null &&
-            NetworkClient.connection.identity.netId == newValue)
-        {
-            _visibilityLocal = _visibilitySynced;
-            _positionLocal = _positionSynced;
-            _positionVector3Local = _positionVector3Synced;
-        }
+        // if (NetworkClient.connection != null && NetworkClient.connection.identity != null &&
+        //     NetworkClient.connection.identity.netId == newValue)
+        // {
+        _visibilityLocal = _visibilitySynced;
+        _positionLocal = _positionSynced;
+        _positionVector3Local = _positionVector3Synced;
+        // }
     }
 
     [Command(ignoreAuthority = true)]
