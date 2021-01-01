@@ -224,7 +224,7 @@ public class TogglePause : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdSetPaused(bool paused)
+    public void CmdSetPaused(bool paused)
     {
         _paused = paused;
         updateIcons(paused);
@@ -389,7 +389,7 @@ public class TogglePause : NetworkBehaviour
                 currentPointSkeleton = OVRSkeleton.SkeletonType.None;
                 currentGestureSkeleton = OVRSkeleton.SkeletonType.None;
                 updateIcons(!pausedStateAtGestureStart);
-                _paused = !pausedStateAtGestureStart;
+                //_paused = !pausedStateAtGestureStart;
                 CmdSetPaused(!pausedStateAtGestureStart);
             }
         }

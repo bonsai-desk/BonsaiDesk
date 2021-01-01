@@ -2285,7 +2285,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 217350381}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8cb4dc319de88dc4cb76c47aafb46b1c, type: 3}
   m_Name: 
@@ -26931,7 +26931,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startingAspect: {x: 16, y: 9}
   holePuncher: {fileID: 1965982993}
-  togglePause: {fileID: 96659938}
+  togglePause: {fileID: 0}
   holePuncherMaterial: {fileID: 2100000, guid: 13c0664d10ae3514ea9d893740bf2046, type: 2}
   distanceEstimate: 0.833
   pixelPerDegree: 16
@@ -26946,6 +26946,7 @@ GameObject:
   - component: {fileID: 1443090083749991568}
   - component: {fileID: 1443090083749991570}
   - component: {fileID: 1443090083749991584}
+  - component: {fileID: 1443090083749991585}
   m_Layer: 0
   m_Name: AutoBrowser
   m_TagString: Untagged
@@ -26965,8 +26966,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7442f4bc421d1534e9173115168ec26d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialURL: http://192.168.1.122:3000/
+  syncMode: 0
+  syncInterval: 0.1
+  hotReloadUrl: http://192.168.1.122:3000/
   togglePause: {fileID: 96659938}
+--- !u!114 &1443090083749991585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1443090083749991583}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneId: 4075887587
+  serverOnly: 0
+  m_AssetId: 
+  hasSpawned: 0
 --- !u!1 &1912258022280695894
 GameObject:
   m_ObjectHideFlags: 0
