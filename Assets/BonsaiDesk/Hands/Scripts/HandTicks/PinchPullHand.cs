@@ -11,7 +11,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
         RaycastCone(playerHand);
     }
-    
+
     private void RaycastCone(PlayerHand playerHand)
     {
         const float length = 1f; //length of raycast
@@ -46,7 +46,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
                 if (hitAutoAuthority != null)
                 {
-                    print(hitAutoAuthority.name + " " + Time.time);
+                    hitAutoAuthority.VisualizePinchPull();
                 }
 
                 // if (hitBody != null /* && !hitBody.isKinematic*/)
