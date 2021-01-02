@@ -10,6 +10,7 @@ public class AutoBrowser : MonoBehaviour
     public Vector2 startingAspect = new Vector2(16, 9);
     public Transform holePuncher;
     public Material holePuncherMaterial;
+    public Rigidbody screenRigidBody;
 
     public float distanceEstimate = 1;
     public int pixelPerDegree = 16;
@@ -24,12 +25,7 @@ public class AutoBrowser : MonoBehaviour
 
     private Vector2 _bounds;
 
-    //private MeshRenderer _holePuncherRenderer;
-
-    private float TargetHeight;
-    public float Height;
-
-    public bool ShouldBeRaised;
+    public event BrowserReadyEvent BrowserReady;
 
     private void Start()
     {
@@ -38,17 +34,13 @@ public class AutoBrowser : MonoBehaviour
         _overlayObject.name = "OverlayObject";
         _overlayObject.SetParent(transform.GetChild(0), false);
 
-        //setup hole puncher object
-        //_holePuncherRenderer = holePuncher.GetComponent<MeshRenderer>();
+        //set bounds for content contains fit
         _bounds = holePuncher.transform.localScale.xy();
+
+        //setup above and below table location
         _defaultLocalPosition = transform.localPosition;
         _belowTableLocalPosition = _defaultLocalPosition;
         _belowTableLocalPosition.y = -_bounds.y / 2f;
-
-        //TODO
-        //_holePuncherRenderer.enabled = false;
-        transform.localPosition = _belowTableLocalPosition;
-        holePuncher.localPosition = _belowTableLocalPosition;
 
         // If android, set holePuncher material to underlay punch through
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -64,9 +56,9 @@ public class AutoBrowser : MonoBehaviour
             user_pref('media.geckoview.autoplay.request', false);
         ");
 #endif
-        _webViewPrefab =
-            WebViewPrefab.Instantiate(holePuncher.localScale.x / holePuncher.localScale.y * holePuncher.localScale.y,
-                holePuncher.localScale.y);
+
+        //initial size does not matter because it will be immediately resized by ChangeAspect
+        _webViewPrefab = WebViewPrefab.Instantiate(1, 1);
         _webViewPrefab.Visible = false;
         _webViewPrefab.Initialized +=
             (sender, eventArgs) =>
@@ -80,85 +72,60 @@ public class AutoBrowser : MonoBehaviour
 
     public void SetHeight(float t)
     {
+        Vector3 oldPosition = transform.localPosition;
+
         transform.localPosition = Vector3.Lerp(_belowTableLocalPosition, _defaultLocalPosition, Mathf.Clamp01(t));
-        
+
         var height = _overlayObject.localScale.y;
         var halfHeight = height / 2f;
         t = (transform.localPosition.y + halfHeight) / height;
-        t = Mathf.Clamp01(t); //1 is visible, 0 is invisible
+        t = Mathf.Clamp01(t);
 
-        var holePunchScale = holePuncher.localScale;
+        var holePunchScale = _overlayObject.localScale;
         holePunchScale.y = _overlayObject.localScale.y * t;
         holePuncher.localScale = holePunchScale;
 
         var holePunchPosition = holePuncher.localPosition;
         holePunchPosition.y = halfHeight * (1f - t);
         holePuncher.localPosition = holePunchPosition;
-    }
 
-    public event BrowserReadyEvent BrowserReady;
+        //TODO is this laggy? also this runs even if you don't have authority over the screen
+        if (Mathf.Approximately(t, 0))
+        {
+            screenRigidBody.velocity = Vector3.zero;
+            screenRigidBody.angularVelocity = Vector3.zero;
+            transform.GetChild(0).localPosition = Vector3.zero;
+            transform.GetChild(0).localRotation = Quaternion.identity;
+        }
+    }
 
     public void ChangeAspect(Vector2 newAspect)
     {
         var aspectRatio = newAspect.x / newAspect.y;
-        holePuncher.localScale = new Vector3(_bounds.x, _bounds.y, 1);
-        holePuncher.localScale = new Vector3(holePuncher.localScale.y * aspectRatio, holePuncher.localScale.y, 1);
-        if (holePuncher.localScale.x > _bounds.x)
-            holePuncher.localScale = new Vector3(_bounds.x, _bounds.x * (1f / aspectRatio), 1);
+        var localScale = new Vector3(_bounds.y * aspectRatio, _bounds.y, 1);
+        if (localScale.x > _bounds.x)
+            localScale = new Vector3(_bounds.x, _bounds.x * (1f / aspectRatio), 1);
 
-        var resolution = Resolution();
+        var resolution = AutoResolution(localScale.y, distanceEstimate, pixelPerDegree, newAspect);
 
         _webViewPrefab.WebView.SetResolution(1);
         _webViewPrefab.WebView.Resize(resolution.x, resolution.y);
 
-        RebuildOverlay();
-    }
+        Destroy(_overlay);
+        _overlay = _overlayObject.gameObject.AddComponent<OVROverlay>();
+        _overlay.externalSurfaceWidth = resolution.x;
+        _overlay.externalSurfaceHeight = resolution.y;
+        _overlayObject.localScale = localScale;
+        _overlay.currentOverlayType = OVROverlay.OverlayType.Underlay;
 
-//   public IEnumerator DropScreen(float duration)
-//   {
-//       yield return MoveScreen(duration, CubicBezier.EaseIn,
-//           _defaultLocalPosition, _belowTableLocalPosition);
-//       _holePuncherRenderer.enabled = false;
-//   }
-//
-//   public IEnumerator RaiseScreen(float duration)
-//   {
-//       _holePuncherRenderer.enabled = true;
-//       yield return MoveScreen(duration, CubicBezier.EaseOut,
-//           _belowTableLocalPosition, _defaultLocalPosition);
-//   }
-//
-//   public IEnumerator MoveScreen(float duration, CubicBezier easeFunction, Vector3 from, Vector3 to)
-//   {
-//       float counter = 0;
-//       while (counter < 1f)
-//       {
-//           counter += 1f / duration * Time.deltaTime;
-//           var t = easeFunction.Sample(counter);
-//
-//           //lerp browser height
-//           transform.localPosition = Vector3.Lerp(from, to, t);
-//
-//           //lerp hole puncher
-//           var height = _overlayObject.localScale.y;
-//           var halfHeight = height / 2f;
-//           t = (transform.localPosition.y + halfHeight) / height;
-//           t = Mathf.Clamp01(t); //1 is visible, 0 is invisible
-//
-//           var holePunchScale = holePuncher.localScale;
-//           holePunchScale.y = _overlayObject.localScale.y * t;
-//           holePuncher.localScale = holePunchScale;
-//
-//           var holePunchPosition = holePuncher.localPosition;
-//           holePunchPosition.y = halfHeight * (1f - t);
-//           holePuncher.localPosition = holePunchPosition;
-//
-//           yield return null;
-//       }
-//
-//       holePuncher.localScale = _overlayObject.localScale;
-//       holePuncher.localPosition = new Vector3(holePuncher.localPosition.x, 0, holePuncher.localPosition.z);
-//   }
+#if UNITY_EDITOR
+        _overlay.isExternalSurface = false;
+#else
+        _overlay.isExternalSurface = true;
+#endif
+
+        StartCoroutine(UpdateAndroidSurface());
+    }
 
     public void LoadUrl(string url)
     {
@@ -175,7 +142,7 @@ public class AutoBrowser : MonoBehaviour
         Debug.Log("[BONSAI] PostMessage " + data);
         _webViewPrefab.WebView.PostMessage(data);
     }
-    
+
     public void OnMessageEmitted(EventHandler<EventArgs<string>> messageEmitted)
     {
         _webViewPrefab.WebView.MessageEmitted += messageEmitted;
@@ -184,28 +151,6 @@ public class AutoBrowser : MonoBehaviour
     #endregion interface
 
     #region private methods
-
-    private void RebuildOverlay()
-    {
-        var resolution = Resolution();
-        Destroy(_overlay);
-        _overlay = _overlayObject.gameObject.AddComponent<OVROverlay>();
-        _overlay.externalSurfaceWidth = resolution.x;
-        _overlay.externalSurfaceHeight = resolution.y;
-        var localScale = new Vector3(holePuncher.localScale.x / holePuncher.localScale.y * holePuncher.localScale.y,
-            holePuncher.localScale.y, 1);
-        _overlayObject.localScale = localScale;
-        holePuncher.localScale = localScale;
-        _overlay.currentOverlayType = OVROverlay.OverlayType.Underlay;
-
-#if UNITY_EDITOR
-        _overlay.isExternalSurface = false;
-#else
-        _overlay.isExternalSurface = true;
-#endif
-
-        StartCoroutine(UpdateAndroidSurface());
-    }
 
     private IEnumerator UpdateAndroidSurface()
     {
@@ -221,14 +166,6 @@ public class AutoBrowser : MonoBehaviour
         Debug.Log("[BONSAI] Done SetSurface");
 #endif
         yield break;
-    }
-
-    private Vector2Int Resolution()
-    {
-        // return autoSetResolution
-        //     ? AutoResolution(holePuncher.localScale.y, distanceEstimate, pixelPerDegree, holePuncher.localScale.xy())
-        //     : ResolutionFromY(yResolution, holePuncher.localScale.xy());
-        return AutoResolution(holePuncher.localScale.y, distanceEstimate, pixelPerDegree, holePuncher.localScale.xy());
     }
 
     #endregion private methods

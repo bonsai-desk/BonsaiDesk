@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const cheerio = require('cheerio');
 
-console.log('Generating KeyboardUi.cs...')
+console.log('Generating BonsaiUI.cs...')
 const originalHtml = fs.readFileSync('./build/index.html', 'utf8');
 const $ = cheerio.load(originalHtml);
 
@@ -46,20 +46,10 @@ do {
 const escapedHtml = inlinedHtml.replace(/"/g, '""').replace(/\n/g, '');
 
 const cSharpClass = `
-namespace Vuplex.WebView {
-    /**
-    * To simplify usage, the Unity Keyboard web frontend is inlined in this class.
-    * This way, the HTML, JS, and CSS files don't need to be added to the Android
-    * or iOS project.
-    *
-    * The source code for this web frontend is available at
-    * https://github.com/vuplex/unity-keyboard
-    */
-    class BonsaiUI {
+  class BonsaiUI {
 
-        public const string Html = @"${escapedHtml}";
-    }
-}
+      public const string Html = @"${escapedHtml}";
+  }
 `
 
 fs.writeFileSync('../Assets/BonsaiDesk/Content/Scripts/Browser/BonsaiUI.cs', cSharpClass, 'utf8');
