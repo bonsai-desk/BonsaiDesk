@@ -65,6 +65,29 @@ public class AutoBrowserController : NetworkBehaviour
 
     [SyncVar(hook = nameof(OnSetWorstScrub))]
     private ScrubData _worstScrub = new ScrubData(10e10, 0);
+    
+    public void ToggleVideo()
+    {
+        var vidIds = new[] {"pP44EPBMb8A", "Cg0QwoHh9w4"};
+
+        switch (_screenState)
+        {
+            case ScreenState.Neutral:
+                CmdSetContentId(vidIds[_vidId]);
+                _vidId = _vidId == vidIds.Length - 1 ? 0 : _vidId + 1;
+                break;
+
+            case ScreenState.YouTube:
+                CmdSetState(ScreenState.Neutral);
+                break;
+
+            case ScreenState.Twitch:
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
 
     private void Start()
     {
@@ -113,29 +136,6 @@ public class AutoBrowserController : NetworkBehaviour
                 togglePause.SetInteractable(true);
     }
 
-    public void ToggleVideo()
-    {
-        var vidIds = new[] {"pP44EPBMb8A", "Cg0QwoHh9w4"};
-
-        switch (_screenState)
-        {
-            case ScreenState.Neutral:
-                CmdSetContentId(vidIds[_vidId]);
-                _vidId = _vidId == vidIds.Length - 1 ? 0 : _vidId + 1;
-                break;
-
-            case ScreenState.YouTube:
-                CmdSetState(ScreenState.Neutral);
-                break;
-
-            case ScreenState.Twitch:
-                break;
-
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-    }
-
     public override void OnStartServer()
     {
         base.OnStartServer();
@@ -149,7 +149,7 @@ public class AutoBrowserController : NetworkBehaviour
         var targetHeight = browserDown ? 0 : 1;
         _height = targetHeight;
     }
-
+    
     private void OnPauseChangeServer(bool paused)
     {
         Debug.Log("Reset Scrub Collector");
@@ -186,11 +186,13 @@ public class AutoBrowserController : NetworkBehaviour
             case "PLAYING":
                 _playerState = PlayerState.Playing;
                 _myScrub = new ScrubData(jsonNode["current_time"], NetworkTime.time);
-                CmdClientPlaying(_myScrub);
+                CmdIncludeScrub(_myScrub);
                 break;
 
             case "PAUSED":
                 _playerState = PlayerState.Paused;
+                _myScrub = new ScrubData(jsonNode["current_time"], NetworkTime.time);
+                CmdIncludeScrub(_myScrub);
                 break;
 
             case "BUFFERING":
@@ -235,9 +237,9 @@ public class AutoBrowserController : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdClientPlaying(ScrubData scrubData)
+    private void CmdIncludeScrub(ScrubData scrubData)
     {
-        Debug.Log("[BONSAI] CmdClientPlaying scrub: " + scrubData.Scrub + " time: " + scrubData.NetworkTime);
+        Debug.Log("[BONSAI] CmdIncludeScrub scrub: " + scrubData.Scrub + " time: " + scrubData.NetworkTime);
         _scrubCollector.Include(scrubData);
         _worstScrub = _scrubCollector.Worst;
     }
@@ -301,8 +303,6 @@ public class AutoBrowserController : NetworkBehaviour
 
         callback(newAspect);
     }
-
-
 
     private readonly struct ContentInfo
     {
