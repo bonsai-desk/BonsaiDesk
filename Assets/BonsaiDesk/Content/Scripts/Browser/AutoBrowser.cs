@@ -68,6 +68,7 @@ public class AutoBrowser : MonoBehaviour
             };
     }
 
+
     #region interface
 
     public void SetHeight(float t)
@@ -125,6 +126,7 @@ public class AutoBrowser : MonoBehaviour
 #endif
 
         StartCoroutine(UpdateAndroidSurface());
+        
         return resolution;
     }
 

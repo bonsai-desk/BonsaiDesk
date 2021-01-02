@@ -30,21 +30,17 @@ let Video = () => {
             let json = JSON.parse(event.data);
             if (!(json.type === "video")) return;
             switch (json.command) {
-                case "pause":
-                    player.pauseVideo();
+                case "setContent":
+                    player.setSize(json.x, json.y);
+                    if (json.video_id != null) {
+                        player.cueVideoById(json.video_id);
+                    }
                     break;
                 case "play":
                     player.playVideo();
                     break;
-                case "resize":
-                    let x = json.x
-                    let y = json.x
-                    player.setSize(x, y);
-                    break;
-                case "load":
-                    if (json.video_id != null) {
-                        player.cueVideoById(json.video_id);
-                    }
+                case "pause":
+                    player.pauseVideo();
                     break;
                 default:
                     break;

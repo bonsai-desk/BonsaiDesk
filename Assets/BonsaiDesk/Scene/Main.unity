@@ -27504,7 +27504,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  useBuiltHTML: 1
+  useBuiltHTML: 0
   hotReloadUrl: http://192.168.1.122:3000/
   togglePause: {fileID: 96659938}
 --- !u!114 &1443090083749991585
