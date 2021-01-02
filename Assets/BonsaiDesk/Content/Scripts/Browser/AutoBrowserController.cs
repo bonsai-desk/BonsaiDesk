@@ -64,7 +64,9 @@ public class AutoBrowserController : NetworkBehaviour
     private int _vidId;
 
     [SyncVar(hook = nameof(OnSetWorstScrub))]
-    private ScrubData _worstScrub = new ScrubData(10e10, 0);
+    private ScrubData _worstScrub = new ScrubData(Mathf.Infinity, 0);
+
+    private double _playAfter = Mathf.Infinity;
     
     public void ToggleVideo()
     {
@@ -116,6 +118,15 @@ public class AutoBrowserController : NetworkBehaviour
 
     private void Update()
     {
+
+        if (_playerState == PlayerState.Paused && NetworkTime.time > _playAfter)
+        {
+            _autoBrowser.PostMessage(YouTubeMessage.Play);
+            _playAfter = Mathf.Infinity;
+        }
+        
+        #region screen height
+        
         const float transitionTime = 0.5f;
         var browserDown = _screenState == ScreenState.Neutral;
         var targetHeight = browserDown ? 0 : 1;
@@ -134,6 +145,8 @@ public class AutoBrowserController : NetworkBehaviour
         if (isServer)
             if (Mathf.Approximately(_height, 1) && !togglePause.Interactable)
                 togglePause.SetInteractable(true);
+        
+        #endregion
     }
 
     public override void OnStartServer()
@@ -219,7 +232,9 @@ public class AutoBrowserController : NetworkBehaviour
         Debug.Log("[BONSAI] OnSetWorstScrub desync=" + deSync);
 
         _autoBrowser.PostMessage(YouTubeMessage.Pause);
-        StartCoroutine(PlayAfter(NetworkTime.time + deSync));
+
+        _playAfter = NetworkTime.time + deSync;
+
     }
     
     private void OnSetContentInfo(ContentInfo oldInfo, ContentInfo newInfo)
@@ -267,14 +282,6 @@ public class AutoBrowserController : NetworkBehaviour
                 _screenState = ScreenState.YouTube;
             })
         );
-    }
-
-    private IEnumerator PlayAfter(double startAfterNetworkTime)
-    {
-        Debug.Log("[BONSAI] (now-startAfterNetworkTime) = " + (float) (NetworkTime.time - startAfterNetworkTime));
-        while (NetworkTime.time < startAfterNetworkTime) yield return null;
-        Debug.Log("[BONSAI] (now-startAfterNetworkTime) = " + (float) (NetworkTime.time - startAfterNetworkTime));
-        _autoBrowser.PostMessage(YouTubeMessage.Play);
     }
 
     private static IEnumerator FetchYouTubeAspect(string videoId, Action<Vector2> callback)
@@ -352,7 +359,7 @@ public class AutoBrowserController : NetworkBehaviour
 
     public class ClientScrubCollector
     {
-        public ScrubData Worst = new ScrubData(10e10, 0);
+        public ScrubData Worst = new ScrubData(Mathf.Infinity, 0);
 
         public void Include(ScrubData scrubData)
         {
@@ -362,7 +369,7 @@ public class AutoBrowserController : NetworkBehaviour
 
         public void Reset()
         {
-            Worst.Scrub = 10e10;
+            Worst.Scrub = Mathf.Infinity;
             Worst.NetworkTime = 0;
         }
     }
