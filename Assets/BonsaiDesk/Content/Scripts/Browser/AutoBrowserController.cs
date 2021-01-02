@@ -6,6 +6,25 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Vuplex.WebView;
 
+public class YouTubeMessage
+{
+    public static string SetContent(string id, Vector2Int resolution)
+    {
+        return "{" +
+               "\"type\": \"video\", " +
+               "\"command\": \"setContent\", " +
+               $"\"video_id\": \"{id}\", " +
+               $"\"x\": {resolution.x}," +
+               $"\"y\": {resolution.y}" +
+               "}";
+    }
+
+    public static string Pause = "{\"type\": \"video\", \"command\": \"pause\"}";
+
+    public static string Play = "{\"type\": \"video\", \"command\": \"play\"}";
+    
+}
+
 public class PingUtils
 {
     private static float GetDelay(double worstPing, (float, float) delayClamp)
@@ -141,9 +160,9 @@ public class AutoBrowserController : NetworkBehaviour
     {
         Debug.Log("[BONSAI] OnPauseChangeClient: pause=" + paused);
         if (paused)
-            _autoBrowser.PostMessage(PauseMessage());
+            _autoBrowser.PostMessage(YouTubeMessage.Pause);
         else
-            _autoBrowser.PostMessage(PlayMessage());
+            _autoBrowser.PostMessage(YouTubeMessage.Play);
     }
 
     private void OnMessageEmitted(object sender, EventArgs<string> eventArgs)
@@ -197,7 +216,7 @@ public class AutoBrowserController : NetworkBehaviour
 
         Debug.Log("[BONSAI] OnSetWorstScrub desync=" + deSync);
 
-        _autoBrowser.PostMessage(PauseMessage());
+        _autoBrowser.PostMessage(YouTubeMessage.Pause);
         StartCoroutine(PlayAfter(NetworkTime.time + deSync));
     }
     
@@ -207,7 +226,7 @@ public class AutoBrowserController : NetworkBehaviour
 
         Debug.Log("[BONSAI] OnSetContentInfo " + oldInfo.ID + "->" + newInfo.ID + " resolution: " + resolution);
 
-        _autoBrowser.PostMessage(SetContentMessage(newInfo.ID, resolution));
+        _autoBrowser.PostMessage(YouTubeMessage.SetContent(newInfo.ID, resolution));
     }
 
     private void OnSetScreenState(ScreenState oldState, ScreenState newState)
@@ -253,7 +272,7 @@ public class AutoBrowserController : NetworkBehaviour
         Debug.Log("[BONSAI] (now-startAfterNetworkTime) = " + (float) (NetworkTime.time - startAfterNetworkTime));
         while (NetworkTime.time < startAfterNetworkTime) yield return null;
         Debug.Log("[BONSAI] (now-startAfterNetworkTime) = " + (float) (NetworkTime.time - startAfterNetworkTime));
-        _autoBrowser.PostMessage(PlayMessage());
+        _autoBrowser.PostMessage(YouTubeMessage.Play);
     }
 
     private static IEnumerator FetchYouTubeAspect(string videoId, Action<Vector2> callback)
@@ -281,27 +300,6 @@ public class AutoBrowserController : NetworkBehaviour
         }
 
         callback(newAspect);
-    }
-
-    private static string SetContentMessage(string id, Vector2Int resolution)
-    {
-        return "{" +
-               "\"type\": \"video\", " +
-               "\"command\": \"setContent\", " +
-               $"\"video_id\": \"{id}\", " +
-               $"\"x\": {resolution.x}," +
-               $"\"y\": {resolution.y}" +
-               "}";
-    }
-
-    private static string PauseMessage()
-    {
-        return "{\"type\": \"video\", \"command\": \"pause\"}";
-    }
-
-    private static string PlayMessage()
-    {
-        return "{\"type\": \"video\", \"command\": \"play\"}";
     }
 
 
