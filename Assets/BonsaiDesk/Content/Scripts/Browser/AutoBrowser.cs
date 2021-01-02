@@ -10,12 +10,9 @@ public class AutoBrowser : MonoBehaviour
     public Vector2 startingAspect = new Vector2(16, 9);
     public Transform holePuncher;
     public Material holePuncherMaterial;
-    
+
     public float distanceEstimate = 1;
     public int pixelPerDegree = 16;
-
-    // public int yResolution = 850;
-    // public bool autoSetResolution;
 
     private Transform _overlayObject;
 
@@ -27,7 +24,12 @@ public class AutoBrowser : MonoBehaviour
 
     private Vector2 _bounds;
 
-    private MeshRenderer _holePuncherRenderer;
+    //private MeshRenderer _holePuncherRenderer;
+
+    private float TargetHeight;
+    public float Height;
+
+    public bool ShouldBeRaised;
 
     private void Start()
     {
@@ -37,14 +39,14 @@ public class AutoBrowser : MonoBehaviour
         _overlayObject.SetParent(transform.GetChild(0), false);
 
         //setup hole puncher object
-        _holePuncherRenderer = holePuncher.GetComponent<MeshRenderer>();
+        //_holePuncherRenderer = holePuncher.GetComponent<MeshRenderer>();
         _bounds = holePuncher.transform.localScale.xy();
         _defaultLocalPosition = transform.localPosition;
         _belowTableLocalPosition = _defaultLocalPosition;
-        _belowTableLocalPosition.y = -holePuncher.localScale.y / 2f;
-        
+        _belowTableLocalPosition.y = -_bounds.y / 2f;
+
         //TODO
-        _holePuncherRenderer.enabled = false;
+        //_holePuncherRenderer.enabled = false;
         transform.localPosition = _belowTableLocalPosition;
         holePuncher.localPosition = _belowTableLocalPosition;
 
@@ -74,9 +76,27 @@ public class AutoBrowser : MonoBehaviour
             };
     }
 
-    public event BrowserReadyEvent BrowserReady;
-
     #region interface
+
+    public void SetHeight(float t)
+    {
+        transform.localPosition = Vector3.Lerp(_belowTableLocalPosition, _defaultLocalPosition, Mathf.Clamp01(t));
+        
+        var height = _overlayObject.localScale.y;
+        var halfHeight = height / 2f;
+        t = (transform.localPosition.y + halfHeight) / height;
+        t = Mathf.Clamp01(t); //1 is visible, 0 is invisible
+
+        var holePunchScale = holePuncher.localScale;
+        holePunchScale.y = _overlayObject.localScale.y * t;
+        holePuncher.localScale = holePunchScale;
+
+        var holePunchPosition = holePuncher.localPosition;
+        holePunchPosition.y = halfHeight * (1f - t);
+        holePuncher.localPosition = holePunchPosition;
+    }
+
+    public event BrowserReadyEvent BrowserReady;
 
     public void ChangeAspect(Vector2 newAspect)
     {
@@ -94,58 +114,58 @@ public class AutoBrowser : MonoBehaviour
         RebuildOverlay();
     }
 
-    public IEnumerator DropScreen(float duration)
-    {
-        yield return MoveScreen(duration, CubicBezier.EaseIn,
-            _defaultLocalPosition, _belowTableLocalPosition);
-        _holePuncherRenderer.enabled = false;
-    }
-
-    public IEnumerator RaiseScreen(float duration)
-    {
-        _holePuncherRenderer.enabled = true;
-        yield return MoveScreen(duration, CubicBezier.EaseOut,
-            _belowTableLocalPosition, _defaultLocalPosition);
-    }
-
-    public IEnumerator MoveScreen(float duration, CubicBezier easeFunction, Vector3 from, Vector3 to)
-    {
-        float counter = 0;
-        while (counter < 1f)
-        {
-            counter += 1f / duration * Time.deltaTime;
-            var t = easeFunction.Sample(counter);
-
-            //lerp browser height
-            transform.localPosition = Vector3.Lerp(from, to, t);
-
-            //lerp hole puncher
-            var height = _overlayObject.localScale.y;
-            var halfHeight = height / 2f;
-            t = (transform.localPosition.y + halfHeight) / height;
-            t = Mathf.Clamp01(t); //1 is visible, 0 is invisible
-
-            var holePunchScale = holePuncher.localScale;
-            holePunchScale.y = _overlayObject.localScale.y * t;
-            holePuncher.localScale = holePunchScale;
-
-            var holePunchPosition = holePuncher.localPosition;
-            holePunchPosition.y = halfHeight * (1f - t);
-            holePuncher.localPosition = holePunchPosition;
-
-            yield return null;
-        }
-
-        holePuncher.localScale = _overlayObject.localScale;
-        holePuncher.localPosition = new Vector3(holePuncher.localPosition.x, 0, holePuncher.localPosition.z);
-    }
+//   public IEnumerator DropScreen(float duration)
+//   {
+//       yield return MoveScreen(duration, CubicBezier.EaseIn,
+//           _defaultLocalPosition, _belowTableLocalPosition);
+//       _holePuncherRenderer.enabled = false;
+//   }
+//
+//   public IEnumerator RaiseScreen(float duration)
+//   {
+//       _holePuncherRenderer.enabled = true;
+//       yield return MoveScreen(duration, CubicBezier.EaseOut,
+//           _belowTableLocalPosition, _defaultLocalPosition);
+//   }
+//
+//   public IEnumerator MoveScreen(float duration, CubicBezier easeFunction, Vector3 from, Vector3 to)
+//   {
+//       float counter = 0;
+//       while (counter < 1f)
+//       {
+//           counter += 1f / duration * Time.deltaTime;
+//           var t = easeFunction.Sample(counter);
+//
+//           //lerp browser height
+//           transform.localPosition = Vector3.Lerp(from, to, t);
+//
+//           //lerp hole puncher
+//           var height = _overlayObject.localScale.y;
+//           var halfHeight = height / 2f;
+//           t = (transform.localPosition.y + halfHeight) / height;
+//           t = Mathf.Clamp01(t); //1 is visible, 0 is invisible
+//
+//           var holePunchScale = holePuncher.localScale;
+//           holePunchScale.y = _overlayObject.localScale.y * t;
+//           holePuncher.localScale = holePunchScale;
+//
+//           var holePunchPosition = holePuncher.localPosition;
+//           holePunchPosition.y = halfHeight * (1f - t);
+//           holePuncher.localPosition = holePunchPosition;
+//
+//           yield return null;
+//       }
+//
+//       holePuncher.localScale = _overlayObject.localScale;
+//       holePuncher.localPosition = new Vector3(holePuncher.localPosition.x, 0, holePuncher.localPosition.z);
+//   }
 
     public void LoadUrl(string url)
     {
         _webViewPrefab.WebView.LoadUrl(url);
     }
 
-    public void LoadHTML(string html)
+    public void LoadHtml(string html)
     {
         _webViewPrefab.WebView.LoadHtml(html);
     }
@@ -155,15 +175,15 @@ public class AutoBrowser : MonoBehaviour
         Debug.Log("[BONSAI] PostMessage " + data);
         _webViewPrefab.WebView.PostMessage(data);
     }
-
-    #endregion interface
-
-    #region private methods
-
+    
     public void OnMessageEmitted(EventHandler<EventArgs<string>> messageEmitted)
     {
         _webViewPrefab.WebView.MessageEmitted += messageEmitted;
     }
+
+    #endregion interface
+
+    #region private methods
 
     private void RebuildOverlay()
     {
