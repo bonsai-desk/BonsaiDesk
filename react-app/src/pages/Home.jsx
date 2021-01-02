@@ -37,9 +37,9 @@ let Video = () => {
                     player.playVideo();
                     break;
                 case "resize":
-                    let width = window.innerWidth;
-                    let height = window.innerHeight;
-                    player.setSize(width, height);
+                    let x = json.x
+                    let y = json.x
+                    player.setSize(x, y);
                     break;
                 case "load":
                     if (json.video_id != null) {

@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using Mirror;
 using OVRSimpleJSON;
 using UnityEngine;
 using UnityEngine.Networking;
 using Vuplex.WebView;
-using Random = System.Random;
 
 [RequireComponent(typeof(AutoBrowser))]
 public class AutoBrowserController : NetworkBehaviour
@@ -24,20 +22,22 @@ public class AutoBrowserController : NetworkBehaviour
     [SyncVar(hook = nameof(OnSetContentId))]
     private string _contentId;
 
+    private float _height;
+
     private ScrubData _myScrub;
 
     private int _numClientsReporting;
-
-    private ClientScrubCollector _scrubCollector = new ClientScrubCollector();
-    [SyncVar] private string _started;
+    private PlayerState _playerState;
 
     [SyncVar] private ScreenState _screenState;
-    private PlayerState _playerState;
+
+    private readonly ClientScrubCollector _scrubCollector = new ClientScrubCollector();
+    [SyncVar] private string _started;
 
     [SyncVar(hook = nameof(OnSetWorstScrub))]
     private ScrubData _worstScrub = new ScrubData(10e10, 0);
 
-    private float _height;
+    private int vidId;
 
     private void Start()
     {
@@ -53,19 +53,37 @@ public class AutoBrowserController : NetworkBehaviour
 #else
 
             if (useBuiltHTML)
-            {
                 _autoBrowser.LoadHtml(BonsaiUI.Html);
-            }
             else
-            {
                 _autoBrowser.LoadUrl(hotReloadUrl);
-            }
 #endif
 
             togglePause.PauseChangedClient += OnPauseChangeClient;
             togglePause.PauseChangedServer += OnPauseChangeServer;
             _autoBrowser.OnMessageEmitted(OnMessageEmitted);
         };
+    }
+
+    private void Update()
+    {
+        const float transitionTime = 0.5f;
+        var browserDown = _screenState == ScreenState.Neutral;
+        var targetHeight = browserDown ? 0 : 1;
+
+        if (!Mathf.Approximately(_height, targetHeight))
+        {
+            var easeFunction = browserDown ? CubicBezier.EaseOut : CubicBezier.EaseIn;
+            var t = easeFunction.SampleInverse(_height);
+            var step = 1f / transitionTime * Time.deltaTime;
+            t = Mathf.MoveTowards(t, targetHeight, step);
+            _height = easeFunction.Sample(t);
+        }
+
+        _autoBrowser.SetHeight(_height);
+
+        if (isServer)
+            if (Mathf.Approximately(_height, 1) && !togglePause.Interactable)
+                togglePause.SetInteractable(true);
     }
 
     public override void OnStartServer()
@@ -80,32 +98,6 @@ public class AutoBrowserController : NetworkBehaviour
         var browserDown = _screenState == ScreenState.Neutral;
         var targetHeight = browserDown ? 0 : 1;
         _height = targetHeight;
-    }
-
-    private void Update()
-    {
-        const float transitionTime = 0.5f;
-        var browserDown = _screenState == ScreenState.Neutral;
-        var targetHeight = browserDown ? 0 : 1;
-
-        if (!Mathf.Approximately(_height, targetHeight))
-        {
-            var easeFunction = browserDown ? CubicBezier.EaseOut : CubicBezier.EaseIn;
-            var t = easeFunction.SampleInverse(_height);
-            var step = (1f / transitionTime) * Time.deltaTime;
-            t = Mathf.MoveTowards(t, targetHeight, step);
-            _height = easeFunction.Sample(t);
-        }
-
-        _autoBrowser.SetHeight(_height);
-
-        if (isServer)
-        {
-            if (Mathf.Approximately(_height, 1) && !togglePause.Interactable)
-            {
-                togglePause.SetInteractable(true);
-            }
-        }
     }
 
     private string LoadVideoIdMessage(string videoId)
@@ -203,13 +195,9 @@ public class AutoBrowserController : NetworkBehaviour
         Debug.Log("[BONSAI] OnSetVideoId " + oldVideoId + "->" + newVideoId);
 
         if (string.IsNullOrEmpty(newVideoId))
-        {
             ReturnToNeutral();
-        }
         else
-        {
             StartCoroutine(LoadVideo(newVideoId));
-        }
     }
 
     [Command(ignoreAuthority = true)]
@@ -244,8 +232,6 @@ public class AutoBrowserController : NetworkBehaviour
         _autoBrowser.PostMessage(PlayMessage());
     }
 
-    private int vidId = 0;
-
     public void ToggleVideo()
     {
         //var vidIds = new string[] {"V1bFr2SWP1I", "AqqaYs7LjlM", "jNQXAC9IVRw", "Cg0QwoHh9w4", "kJQP7kiw5Fk"};
@@ -272,18 +258,23 @@ public class AutoBrowserController : NetworkBehaviour
         }
     }
 
+    private static string ResizePlayerMessage(Vector2Int resolution)
+    {
+        return "{" +
+               "\"type\": \"video\", " +
+               "\"command\": \"resize\" " +
+               $"\"x\": {resolution.x}" +
+               $"\"y\": {resolution.y}" +
+               "}";
+    }
+
     private IEnumerator LoadVideo(string videoId)
     {
         var newAspect = new Vector2(16, 9);
 
         var videoInfoUrl = $"https://api.desk.link/youtube/{videoId}";
 
-        const string resizePlayer = "{" +
-                                    "\"type\": \"video\", " +
-                                    "\"command\": \"resize\" " +
-                                    "}";
-        
-        
+
         using (var www = UnityWebRequest.Get(videoInfoUrl))
         {
             var req = www.SendWebRequest();
@@ -303,13 +294,8 @@ public class AutoBrowserController : NetworkBehaviour
                 }
             }
 
-            // TODO why do we need to wait here
-            _autoBrowser.ChangeAspect(newAspect);
-            yield return new WaitForSeconds(0.05f);
-
-            // TODO verify that window resize has finished
-            _autoBrowser.PostMessage(resizePlayer);
-            yield return new WaitForSeconds(0.1f);
+            var resolution = _autoBrowser.ChangeAspect(newAspect);
+            _autoBrowser.PostMessage(ResizePlayerMessage(resolution));
         }
     }
 

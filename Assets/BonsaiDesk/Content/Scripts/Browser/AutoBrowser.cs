@@ -99,7 +99,7 @@ public class AutoBrowser : MonoBehaviour
         }
     }
 
-    public void ChangeAspect(Vector2 newAspect)
+    public Vector2Int ChangeAspect(Vector2 newAspect)
     {
         var aspectRatio = newAspect.x / newAspect.y;
         var localScale = new Vector3(_bounds.y * aspectRatio, _bounds.y, 1);
@@ -125,6 +125,7 @@ public class AutoBrowser : MonoBehaviour
 #endif
 
         StartCoroutine(UpdateAndroidSurface());
+        return resolution;
     }
 
     public void LoadUrl(string url)
