@@ -11,6 +11,8 @@ using Random = System.Random;
 [RequireComponent(typeof(AutoBrowser))]
 public class AutoBrowserController : NetworkBehaviour
 {
+    public bool useBuiltHTML = true;
+
     public string hotReloadUrl;
     public TogglePause togglePause;
     private readonly (float, float) _delayClamp = (0.1f, 0.75f);
@@ -43,15 +45,21 @@ public class AutoBrowserController : NetworkBehaviour
         _playerState = PlayerState.Unstarted;
 
         _autoBrowser = GetComponent<AutoBrowser>();
-        
-        _autoBrowser.SetHeight(0);
-            
+
         _autoBrowser.BrowserReady += () =>
         {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            _autoBrowser.LoadUrl(hotReloadUrl);
+#if !DEVELOPMENT_BUILD
+            _autoBrowser.LoadHtml(BonsaiUI.Html);
 #else
-            _autoBrowser.LoadHTML(BonsaiUI.Html);
+
+            if (useBuiltHTML)
+            {
+                _autoBrowser.LoadHtml(BonsaiUI.Html);
+            }
+            else
+            {
+                _autoBrowser.LoadUrl(hotReloadUrl);
+            }
 #endif
 
             togglePause.PauseChangedClient += OnPauseChangeClient;
@@ -60,12 +68,26 @@ public class AutoBrowserController : NetworkBehaviour
         };
     }
 
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+        togglePause.SetInteractable(false);
+    }
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        var browserDown = _screenState == ScreenState.Neutral;
+        var targetHeight = browserDown ? 0 : 1;
+        _height = targetHeight;
+    }
+
     private void Update()
     {
         const float transitionTime = 0.5f;
         var browserDown = _screenState == ScreenState.Neutral;
-        var targetHeight = browserDown ? 0 : 1; 
-        
+        var targetHeight = browserDown ? 0 : 1;
+
         if (!Mathf.Approximately(_height, targetHeight))
         {
             var easeFunction = browserDown ? CubicBezier.EaseOut : CubicBezier.EaseIn;
@@ -73,7 +95,16 @@ public class AutoBrowserController : NetworkBehaviour
             var step = (1f / transitionTime) * Time.deltaTime;
             t = Mathf.MoveTowards(t, targetHeight, step);
             _height = easeFunction.Sample(t);
-            _autoBrowser.SetHeight(_height);
+        }
+
+        _autoBrowser.SetHeight(_height);
+
+        if (isServer)
+        {
+            if (Mathf.Approximately(_height, 1) && !togglePause.Interactable)
+            {
+                togglePause.SetInteractable(true);
+            }
         }
     }
 
@@ -124,11 +155,11 @@ public class AutoBrowserController : NetworkBehaviour
             case "UNSTARTED":
                 _playerState = PlayerState.Unstarted;
                 break;
-                
+
             case "ENDED":
                 _playerState = PlayerState.Ended;
                 break;
-                
+
             case "PLAYING":
                 _playerState = PlayerState.Playing;
                 _myScrub = new ScrubData(jsonNode["current_time"], NetworkTime.time);
@@ -139,28 +170,28 @@ public class AutoBrowserController : NetworkBehaviour
                 _playerState = PlayerState.Paused;
                 //_myScrub = new Data(jsonNode["current_time"], NetworkTime.time);
                 break;
-            
+
             case "BUFFERING":
                 _playerState = PlayerState.Buffering;
                 break;
-            
+
             case "VIDEOCUED":
                 _playerState = PlayerState.VideoCued;
                 break;
-                
         }
     }
 
     private void OnSetWorstScrub(ScrubData oldWorstScrub, ScrubData newWorstScrub)
     {
-        Debug.Log("[BONSAI] OnSetWorstScrub scrub: " + newWorstScrub.Scrub +" networktime: " + newWorstScrub.NetworkTime);
+        Debug.Log("[BONSAI] OnSetWorstScrub scrub: " + newWorstScrub.Scrub + " networktime: " +
+                  newWorstScrub.NetworkTime);
         var now = NetworkTime.time;
         var myTime = _myScrub.CurrentVideoTime(now);
         var worstTime = newWorstScrub.CurrentVideoTime(now);
         var deSync = myTime - worstTime;
 
         if (!(deSync > desyncTolerance) || _playerState != PlayerState.Playing) return;
-        
+
         Debug.Log("[BONSAI] OnSetWorstScrub desync=" + deSync);
 
         _autoBrowser.PostMessage(PauseMessage());
@@ -170,11 +201,12 @@ public class AutoBrowserController : NetworkBehaviour
     private void OnSetContentId(string oldVideoId, string newVideoId)
     {
         Debug.Log("[BONSAI] OnSetVideoId " + oldVideoId + "->" + newVideoId);
-        
+
         if (string.IsNullOrEmpty(newVideoId))
         {
             ReturnToNeutral();
-        } else
+        }
+        else
         {
             LoadVideo(newVideoId);
         }
@@ -192,6 +224,10 @@ public class AutoBrowserController : NetworkBehaviour
     private void CmdSetState(ScreenState newState)
     {
         _screenState = newState;
+
+        //TODO probably don't need to set interactable to false if screen was already down,
+        //but then the default interactable state needs to be false
+        togglePause.SetInteractable(false);
     }
 
     [Command(ignoreAuthority = true)]
@@ -208,16 +244,18 @@ public class AutoBrowserController : NetworkBehaviour
         _autoBrowser.PostMessage(PlayMessage());
     }
 
+    private int vidId = 0;
+
     public void ToggleVideo()
     {
-        var rnd = new Random();
-        //var vidIds = new List<string> {"V1bFr2SWP1I", "AqqaYs7LjlM", "jNQXAC9IVRw", "Cg0QwoHh9w4", "kJQP7kiw5Fk"};
-        var vidIds = new List<string> {"Cg0QwoHh9w4", "zvpVRTobCC0", "16GeJe0Mjh4", "p1skpV2fhN0"};
+        //var vidIds = new string[] {"V1bFr2SWP1I", "AqqaYs7LjlM", "jNQXAC9IVRw", "Cg0QwoHh9w4", "kJQP7kiw5Fk"};
+        var vidIds = new[] {"pP44EPBMb8A", "Cg0QwoHh9w4"};
 
         switch (_screenState)
         {
             case ScreenState.Neutral:
-                CmdSetContentId(vidIds[rnd.Next(0, vidIds.Count)]);
+                CmdSetContentId(vidIds[vidId]);
+                vidId = vidId == vidIds.Length - 1 ? 0 : vidId + 1;
                 CmdSetState(ScreenState.YouTube);
                 break;
 
@@ -301,8 +339,12 @@ public class AutoBrowserController : NetworkBehaviour
 
     private enum PlayerState
     {
-        Unstarted, Ended, Playing, Paused, Buffering, VideoCued
-        
+        Unstarted,
+        Ended,
+        Playing,
+        Paused,
+        Buffering,
+        VideoCued
     }
 
     public struct ScrubData

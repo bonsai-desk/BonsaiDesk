@@ -12,6 +12,7 @@ public class TogglePause : NetworkBehaviour
 {
     [SyncVar(hook = nameof(OnSetInteractable))]
     private bool _interactable = true;
+    public bool Interactable => _interactable;
 
     [SyncVar(hook = nameof(OnSetPaused))] private bool _paused = true;
     private bool _probablyPaused = false;
@@ -141,8 +142,9 @@ public class TogglePause : NetworkBehaviour
         _positionSynced = 0;
     }
 
-    private void Start()
+    public override void OnStartClient()
     {
+        base.OnStartClient();
         updateIcons(_paused);
     }
 
