@@ -22,7 +22,7 @@ public class AutoBrowserController : NetworkBehaviour
     [SyncVar(hook = nameof(OnSetContentId))]
     private string _contentId;
 
-    private Data _myScrub;
+    private ScrubData _myScrub;
 
     private int _numClientsReporting;
 
@@ -33,7 +33,9 @@ public class AutoBrowserController : NetworkBehaviour
     private PlayerState _playerState;
 
     [SyncVar(hook = nameof(OnSetWorstScrub))]
-    private Data _worstScrub = new Data(10e10, 0);
+    private ScrubData _worstScrub = new ScrubData(10e10, 0);
+
+    private float _height;
 
     private void Start()
     {
@@ -41,6 +43,9 @@ public class AutoBrowserController : NetworkBehaviour
         _playerState = PlayerState.Unstarted;
 
         _autoBrowser = GetComponent<AutoBrowser>();
+        
+        _autoBrowser.SetHeight(0);
+            
         _autoBrowser.BrowserReady += () =>
         {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -53,6 +58,23 @@ public class AutoBrowserController : NetworkBehaviour
             togglePause.PauseChangedServer += OnPauseChangeServer;
             _autoBrowser.OnMessageEmitted(OnMessageEmitted);
         };
+    }
+
+    private void Update()
+    {
+        const float transitionTime = 0.5f;
+        var browserDown = _screenState == ScreenState.Neutral;
+        var targetHeight = browserDown ? 0 : 1; 
+        
+        if (!Mathf.Approximately(_height, targetHeight))
+        {
+            var easeFunction = browserDown ? CubicBezier.EaseOut : CubicBezier.EaseIn;
+            var t = easeFunction.SampleInverse(_height);
+            var step = (1f / transitionTime) * Time.deltaTime;
+            t = Mathf.MoveTowards(t, targetHeight, step);
+            _height = easeFunction.Sample(t);
+            _autoBrowser.SetHeight(_height);
+        }
     }
 
     private string LoadVideoIdMessage(string videoId)
@@ -109,7 +131,7 @@ public class AutoBrowserController : NetworkBehaviour
                 
             case "PLAYING":
                 _playerState = PlayerState.Playing;
-                _myScrub = new Data(jsonNode["current_time"], NetworkTime.time);
+                _myScrub = new ScrubData(jsonNode["current_time"], NetworkTime.time);
                 CmdClientPlaying(_myScrub);
                 break;
 
@@ -129,7 +151,7 @@ public class AutoBrowserController : NetworkBehaviour
         }
     }
 
-    private void OnSetWorstScrub(Data oldWorstScrub, Data newWorstScrub)
+    private void OnSetWorstScrub(ScrubData oldWorstScrub, ScrubData newWorstScrub)
     {
         Debug.Log("[BONSAI] OnSetWorstScrub scrub: " + newWorstScrub.Scrub +" networktime: " + newWorstScrub.NetworkTime);
         var now = NetworkTime.time;
@@ -148,14 +170,21 @@ public class AutoBrowserController : NetworkBehaviour
     private void OnSetContentId(string oldVideoId, string newVideoId)
     {
         Debug.Log("[BONSAI] OnSetVideoId " + oldVideoId + "->" + newVideoId);
-        StartCoroutine(newVideoId == "" ? ReturnToNeutral() : LoadVideo(newVideoId));
+        
+        if (string.IsNullOrEmpty(newVideoId))
+        {
+            ReturnToNeutral();
+        } else
+        {
+            LoadVideo(newVideoId);
+        }
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdClientPlaying(Data data)
+    private void CmdClientPlaying(ScrubData scrubData)
     {
-        Debug.Log("[BONSAI] CmdClientPlaying scrub: " + data.Scrub + " time: " + data.NetworkTime);
-        _scrubCollector.Include(data);
+        Debug.Log("[BONSAI] CmdClientPlaying scrub: " + scrubData.Scrub + " time: " + scrubData.NetworkTime);
+        _scrubCollector.Include(scrubData);
         _worstScrub = _scrubCollector.Worst;
     }
 
@@ -183,7 +212,7 @@ public class AutoBrowserController : NetworkBehaviour
     {
         var rnd = new Random();
         //var vidIds = new List<string> {"V1bFr2SWP1I", "AqqaYs7LjlM", "jNQXAC9IVRw", "Cg0QwoHh9w4", "kJQP7kiw5Fk"};
-        var vidIds = new List<string> {"HPoZ42JKhuc", "zvpVRTobCC0", "16GeJe0Mjh4", "p1skpV2fhN0"};
+        var vidIds = new List<string> {"Cg0QwoHh9w4", "zvpVRTobCC0", "16GeJe0Mjh4", "p1skpV2fhN0"};
 
         switch (_screenState)
         {
@@ -236,21 +265,19 @@ public class AutoBrowserController : NetworkBehaviour
                 }
             }
 
+            // TODO why do we need to wait here
             _autoBrowser.ChangeAspect(newAspect);
             yield return new WaitForSeconds(0.05f);
 
             // TODO verify that window resize has finished
             _autoBrowser.PostMessage(resizePlayer);
             yield return new WaitForSeconds(0.1f);
-
-            yield return _autoBrowser.RaiseScreen(0.5f);
         }
     }
 
-    private IEnumerator ReturnToNeutral()
+    private void ReturnToNeutral()
     {
         //TODO togglePause.CmdSetPaused(true);
-        yield return _autoBrowser.DropScreen(1f);
         _autoBrowser.PostMessage(LoadVideoIdMessage(""));
     }
 
@@ -278,7 +305,7 @@ public class AutoBrowserController : NetworkBehaviour
         
     }
 
-    public struct Data
+    public struct ScrubData
     {
         public double Scrub;
         public double NetworkTime;
@@ -288,7 +315,7 @@ public class AutoBrowserController : NetworkBehaviour
             return Scrub + (currentNetworkTime - NetworkTime);
         }
 
-        public Data(double scrub, double networkTime)
+        public ScrubData(double scrub, double networkTime)
         {
             Scrub = scrub;
             NetworkTime = networkTime;
@@ -297,12 +324,12 @@ public class AutoBrowserController : NetworkBehaviour
 
     public class ClientScrubCollector
     {
-        public Data Worst = new Data(10e10, 0);
+        public ScrubData Worst = new ScrubData(10e10, 0);
 
-        public void Include(Data data)
+        public void Include(ScrubData scrubData)
         {
-            if (!(data.Scrub < Worst.Scrub)) return;
-            Worst = data;
+            if (!(scrubData.Scrub < Worst.Scrub)) return;
+            Worst = scrubData;
         }
 
         public void Reset()

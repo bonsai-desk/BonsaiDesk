@@ -27469,6 +27469,8 @@ MonoBehaviour:
   holePuncherMaterial: {fileID: 2100000, guid: 13c0664d10ae3514ea9d893740bf2046, type: 2}
   distanceEstimate: 0.833
   pixelPerDegree: 16
+  Height: 0
+  ShouldBeRaised: 0
 --- !u!1 &1443090083749991583
 GameObject:
   m_ObjectHideFlags: 0
