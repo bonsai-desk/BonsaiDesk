@@ -13,7 +13,7 @@ public class TogglePause : NetworkBehaviour
     [SyncVar(hook = nameof(OnSetInteractable))]
     private bool _interactable = true;
     public bool Interactable => _interactable;
-
+    
     [SyncVar(hook = nameof(OnSetPaused))] private bool _paused = true;
     private bool _probablyPaused = false;
 

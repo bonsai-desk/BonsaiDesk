@@ -35,7 +35,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
             Vector3 start = playerHand.pointerPose.position; //start of raycast
             Vector3 end = playerHand.pointerPose.TransformPoint(posOnCircle); //end of raycast
-
+            
             //linecast includes if start is inside of an object. can hit anything except hands
             if (Physics.Linecast(start, end, out RaycastHit hit, PlayerHand.AllButHands,
                 QueryTriggerInteraction.Ignore))

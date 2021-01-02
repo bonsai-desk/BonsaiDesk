@@ -208,7 +208,7 @@ public class AutoBrowserController : NetworkBehaviour
         }
         else
         {
-            LoadVideo(newVideoId);
+            StartCoroutine(LoadVideo(newVideoId));
         }
     }
 
@@ -282,8 +282,8 @@ public class AutoBrowserController : NetworkBehaviour
                                     "\"type\": \"video\", " +
                                     "\"command\": \"resize\" " +
                                     "}";
-
-
+        
+        
         using (var www = UnityWebRequest.Get(videoInfoUrl))
         {
             var req = www.SendWebRequest();
