@@ -10,13 +10,25 @@ public class AutoAuthority : NetworkBehaviour
     [SyncVar] private double _lastInteractTime;
     [SyncVar] private uint _ownerIdentityId = uint.MaxValue;
     
-    public Material visualizeAuthorityMaterial;
+    public bool allowPinchPull = true;
+
     public MeshRenderer meshRenderer;
 
     private Rigidbody _body;
     private int _lastInteractFrame;
     private int _lastSetNewOwnerFrame;
-    private Material _defaultMaterial;
+
+    private bool _visualizePinchPull = false;
+    private Material _cachedMaterial;
+    private int _colorPropertyId;
+    private int _colorId = 0;
+
+    private Color[] _colors = new[]
+    {
+        Color.white,
+        Color.yellow,
+        Color.green
+    };
 
     private void Start()
     {
@@ -30,14 +42,15 @@ public class AutoAuthority : NetworkBehaviour
         _body = GetComponent<Rigidbody>();
         _body.isKinematic = true;
 
-        if (meshRenderer != null)
-            _defaultMaterial = meshRenderer.sharedMaterial;
-        UpdateMaterial();
+        _colorPropertyId = Shader.PropertyToID("_Color");
+
+        UpdateColor();
     }
 
     private void Update()
     {
-        UpdateMaterial();
+        UpdateColor();
+        _visualizePinchPull = false;
 
         //if you don't have control over the object
         if (!HasAuthority())
@@ -73,15 +86,35 @@ public class AutoAuthority : NetworkBehaviour
         return isServer && ServerHasAuthority() || isClient && ClientHasAuthority();
     }
 
-    private void UpdateMaterial()
+    private void UpdateColor()
     {
-        if (meshRenderer == null || _defaultMaterial == null || visualizeAuthorityMaterial == null)
+        if (meshRenderer == null)
             return;
 
-        meshRenderer.sharedMaterial =
-            NetworkManagerGame.Singleton.visualizeAuthority && (isServer && !isClient && ServerHasAuthority() || isClient && ClientHasAuthority())
-                ? visualizeAuthorityMaterial
-                : _defaultMaterial;
+        bool shouldVisualizeAuthority = NetworkManagerGame.Singleton.visualizeAuthority &&
+                                        (isServer && !isClient && ServerHasAuthority() ||
+                                         isClient && ClientHasAuthority());
+
+        int newColorId = 0;
+        if (_visualizePinchPull)
+            newColorId = 1;
+        else if (shouldVisualizeAuthority)
+            newColorId = 2;
+
+        if (_cachedMaterial == null)
+            _cachedMaterial = meshRenderer.material;
+
+        if (newColorId != _colorId)
+        {
+            _colorId = newColorId;
+            _cachedMaterial.SetColor(_colorPropertyId, _colors[_colorId]);
+        }
+    }
+
+    public void VisualizePinchPull()
+    {
+        _visualizePinchPull = true;
+        UpdateColor();
     }
 
     public void Interact(uint identityId)

@@ -29,7 +29,7 @@ public class PlayerHand : MonoBehaviour
     private float heldObjectDrag;
     private float heldObjectAngularDrag;
 
-    private LayerMask allButHands;
+    public static LayerMask AllButHands;
 
     public PinchSpawn pinchSpawn;
 
@@ -73,28 +73,7 @@ public class PlayerHand : MonoBehaviour
     public Camera mainCamera;
     private int handLayer;
 
-    public AngleToObject angleToObject;
-    public AngleToObject headAngleToObject;
-
-    public TogglePause togglePause;
-
-    public Transform test;
-
     private IHandTick[] _handTicks;
-
-    // [HideInInspector] public bool indexPinching;
-    // [HideInInspector] public bool pinch;
-    // [HideInInspector] public float fistMinStrength;
-    // [HideInInspector] public bool fist;
-    // [HideInInspector] public bool weakFist;
-
-    private bool lastIndexPinching;
-
-    private bool lastPinkyPinch = false;
-
-    // private bool lastPointingAtScreen = false;
-    private bool lastFist;
-    private bool lastWeakFist;
 
     public enum Gesture
     {
@@ -243,6 +222,11 @@ public class PlayerHand : MonoBehaviour
         }
     }
 
+    private void Awake()
+    {
+        AllButHands = ~LayerMask.GetMask("LeftHand", "RightHand", "LeftHeldObject", "RightHeldObject");
+    }
+
     private void Start()
     {
         body = GetComponent<Rigidbody>();
@@ -250,9 +234,6 @@ public class PlayerHand : MonoBehaviour
 
         fingerTips = new Transform[0];
         GetFingerTips();
-
-        allButHands = LayerMask.GetMask("LeftHand", "RightHand", "LeftHeldObject", "RightHeldObject");
-        allButHands = ~allButHands;
 
         UpdateDeleteMaterial();
 
@@ -337,36 +318,24 @@ public class PlayerHand : MonoBehaviour
         return difference;
     }
 
-    private void Update()
+    private void UpdateGestures()
     {
-        // if(test != null)
-        // {
-        //     if (Input.GetKeyDown(KeyCode.Space))
-        //     {
-        //         test.parent = null;
-        //     }
-        //
-        //     if (Input.GetKeyUp(KeyCode.Space))
-        //     {
-        //         test.parent = transform;
-        //     }
-        // }
-
-        bool indexPinching = IndexPinching();
-        bool pinch = AnyPinching();
-        float fistMinStrength = FistStrength();
+        float fistStrength = FistStrength();
         float flatFistStrength = FlatFistStrength();
-        bool fist = fistMinStrength > 0.7f;
-        bool weakFist = fistMinStrength > 0.5f;
 
         _gestures[Gesture.AnyPinching] = AnyPinching();
         _gestures[Gesture.IndexPinching] = IndexPinching();
-        _gestures[Gesture.Fist] = fistMinStrength > 0.7f;
+        _gestures[Gesture.Fist] = fistStrength > 0.7f;
         _gestures[Gesture.FlatFist] = flatFistStrength > 0.7f;
-        _gestures[Gesture.WeakFist] = fistMinStrength > 0.5f;
+        _gestures[Gesture.WeakFist] = fistStrength > 0.5f;
         _gestures[Gesture.WeakFlatFist] = flatFistStrength > 0.5f;
-        _gestures[Gesture.WeakPalm] = fistMinStrength < 0.35f;
+        _gestures[Gesture.WeakPalm] = fistStrength < 0.35f;
+    }
 
+    private void Update()
+    {
+        UpdateGestures();
+        
         for (var i = 0; i < _handTicks.Length; i++)
         {
             _handTicks[i].Tick(this);
@@ -393,127 +362,110 @@ public class PlayerHand : MonoBehaviour
         {
             hitDistance = Mathf.Infinity;
         }
-
-        float pinkyStrength = oVRHand.GetFingerPinchStrength(OVRHand.HandFinger.Pinky);
-        bool pinkyPinch = pinkyStrength > 0.8f;
-        if (pinkyPinch && !lastPinkyPinch && transform.position.y > head.position.y)
-        {
-            GameObject.Find("GameManager").GetComponent<MoveToDesk>().ResetPosition();
-
-            if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
-            {
-            }
-            else
-            {
-            }
-        }
-
-        lastPinkyPinch = pinkyPinch;
-
-        bool hitPullBox = false;
-        if (indexPinching && !lastIndexPinching)
-        {
-            if (oVRPhysicsHand.thumbTipTarget != null)
-            {
-                var hits = Physics.OverlapSphere(oVRPhysicsHand.thumbTipTarget.position, 0, allButHands,
-                    QueryTriggerInteraction.Collide);
-                foreach (var hit in hits)
-                {
-                    if (hit.CompareTag("BeamPinch"))
-                    {
-                        OtherHand().AttachObject();
-                        hitPullBox = true;
-                        break;
-                    }
-                }
-            }
-        }
-
-        //TODO fix pinch pull
-        bool hitObject = false;
-        if (!objectAttached && !hitPullBox && !OtherHand().objectAttached && OtherHand().beamHold == null &&
-            heldJoint == null && false)
-        {
-            if (indexPinching)
-            {
-                float r = 0.15f;
-                float length = 1f;
-                float loops = 5;
-                for (float t = 0; t < 2f * Mathf.PI; t += Mathf.PI * 2f / 15.25744f / loops)
-                {
-                    Vector3 posOnCircle = new Vector3(Mathf.Cos(t * loops) * t / (Mathf.PI * 2f) * r * 2f,
-                        Mathf.Sin(t * loops) * t / (Mathf.PI * 2f) * r * 2f, length);
-                    Vector3 origin = pointerPose.position;
-                    Vector3 end = pointerPose.TransformPoint(posOnCircle);
-                    // pointerPose.tran
-
-                    // if (Physics.Raycast(origin, direction, out RaycastHit hit, 1f, allButHands, QueryTriggerInteraction.Ignore))
-                    if (Physics.Linecast(origin, end, out RaycastHit hit, allButHands, QueryTriggerInteraction.Ignore))
-                    {
-                        Transform check = hit.transform;
-                        Rigidbody hitBody = check.GetComponent<Rigidbody>();
-                        while (hitBody == null && check.parent != null)
-                        {
-                            check = check.parent;
-                            hitBody = check.GetComponent<Rigidbody>();
-                        }
-
-                        if (hitBody != null /* && !hitBody.isKinematic*/)
-                        {
-                            //found valid object
-
-                            if (hit.distance < 0.2f)
-                                break;
-
-                            if (check != beamHold)
-                            {
-                                if (beamHoldRenderer != null)
-                                    BackToOriginalColor();
-
-                                MeshRenderer meshRenderer = check.GetComponent<MeshRenderer>();
-                                if (meshRenderer == null)
-                                    meshRenderer = check.GetComponentInChildren<MeshRenderer>();
-                                if (meshRenderer != null)
-                                {
-                                    beamHoldRenderer = meshRenderer;
-                                    beamHoldOriginalColor = meshRenderer.material.GetColor("_Color");
-                                    meshRenderer.material.SetColor("_Color", Color.yellow);
-                                }
-
-                                beamHoldControl.SetActive(true);
-
-                                // if (beamHold == null)
-                                // {
-                                beamHold = check;
-                                // }
-                            }
-
-                            hitPoint = hit.point;
-
-                            hitObject = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (!hitObject)
-            {
-                StopBeam();
-            }
-        }
-
-        if ((pinch || fist) && !objectAttached)
+        
+        // bool hitPullBox = false;
+        // if (indexPinching && !lastIndexPinching)
+        // {
+        //     if (oVRPhysicsHand.thumbTipTarget != null)
+        //     {
+        //         var hits = Physics.OverlapSphere(oVRPhysicsHand.thumbTipTarget.position, 0, AllButHands,
+        //             QueryTriggerInteraction.Collide);
+        //         foreach (var hit in hits)
+        //         {
+        //             if (hit.CompareTag("BeamPinch"))
+        //             {
+        //                 OtherHand().AttachObject();
+        //                 hitPullBox = true;
+        //                 break;
+        //             }
+        //         }
+        //     }
+        // }
+        //
+        // bool hitObject = false;
+        // if (!objectAttached && !hitPullBox && !OtherHand().objectAttached && OtherHand().beamHold == null &&
+        //     heldJoint == null)
+        // {
+        //     if (indexPinching)
+        //     {
+        //         float r = 0.15f;
+        //         float length = 1f;
+        //         float loops = 5;
+        //         for (float t = 0; t < 2f * Mathf.PI; t += Mathf.PI * 2f / 15.25744f / loops)
+        //         {
+        //             Vector3 posOnCircle = new Vector3(Mathf.Cos(t * loops) * t / (Mathf.PI * 2f) * r * 2f,
+        //                 Mathf.Sin(t * loops) * t / (Mathf.PI * 2f) * r * 2f, length);
+        //             Vector3 origin = pointerPose.position;
+        //             Vector3 end = pointerPose.TransformPoint(posOnCircle);
+        //             // pointerPose.tran
+        //
+        //             // if (Physics.Raycast(origin, direction, out RaycastHit hit, 1f, AllButHands, QueryTriggerInteraction.Ignore))
+        //             if (Physics.Linecast(origin, end, out RaycastHit hit, AllButHands, QueryTriggerInteraction.Ignore))
+        //             {
+        //                 Transform check = hit.transform;
+        //                 Rigidbody hitBody = check.GetComponent<Rigidbody>();
+        //                 while (hitBody == null && check.parent != null)
+        //                 {
+        //                     check = check.parent;
+        //                     hitBody = check.GetComponent<Rigidbody>();
+        //                 }
+        //
+        //                 if (hitBody != null /* && !hitBody.isKinematic*/)
+        //                 {
+        //                     //found valid object
+        //
+        //                     if (hit.distance < 0.2f)
+        //                         break;
+        //
+        //                     if (check != beamHold)
+        //                     {
+        //                         if (beamHoldRenderer != null)
+        //                             BackToOriginalColor();
+        //
+        //                         MeshRenderer meshRenderer = check.GetComponent<MeshRenderer>();
+        //                         if (meshRenderer == null)
+        //                             meshRenderer = check.GetComponentInChildren<MeshRenderer>();
+        //                         if (meshRenderer != null)
+        //                         {
+        //                             beamHoldRenderer = meshRenderer;
+        //                             beamHoldOriginalColor = meshRenderer.material.GetColor("_Color");
+        //                             meshRenderer.material.SetColor("_Color", Color.yellow);
+        //                         }
+        //
+        //                         beamHoldControl.SetActive(true);
+        //
+        //                         // if (beamHold == null)
+        //                         // {
+        //                         beamHold = check;
+        //                         // }
+        //                     }
+        //
+        //                     hitPoint = hit.point;
+        //
+        //                     hitObject = true;
+        //                     break;
+        //                 }
+        //             }
+        //         }
+        //     }
+        //
+        //     if (!hitObject)
+        //     {
+        //         StopBeam();
+        //     }
+        // }
+        
+        if ((GetGesture(Gesture.IndexPinching) || GetGesture(Gesture.Fist)) && !objectAttached)
         {
             if (heldJoint == null && !menu.activeInHierarchy)
             {
                 Collider[] pinchHits = new Collider[0];
-                if (pinch && oVRPhysicsHand.thumbTipTarget != null)
-                    pinchHits = Physics.OverlapSphere(oVRPhysicsHand.thumbTipTarget.position, 0, allButHands,
+                if (GetGesture(Gesture.IndexPinching) && oVRPhysicsHand.thumbTipTarget != null)
+                    pinchHits = Physics.OverlapSphere(oVRPhysicsHand.thumbTipTarget.position, 0, AllButHands,
                         QueryTriggerInteraction.Ignore);
                 Collider[] fistHits = new Collider[0];
-                if (fistMinStrength > 0.7f)
-                    fistHits = Physics.OverlapSphere(holdPosition.position, 0.02f, allButHands,
+                if (GetGesture(Gesture.Fist))
+                    fistHits = Physics.OverlapSphere(holdPosition.position, 0.02f, AllButHands,
                         QueryTriggerInteraction.Ignore);
                 Collider[] hits = new Collider[pinchHits.Length + fistHits.Length];
                 pinchHits.CopyTo(hits, 0);
@@ -554,10 +506,6 @@ public class PlayerHand : MonoBehaviour
         }
 
         PlayerHands.hands.SetHandGesturesReady(skeletonType);
-
-        lastFist = fist;
-        lastWeakFist = weakFist;
-        lastIndexPinching = indexPinching;
     }
 
     public PlayerHand OtherHand()
