@@ -9,7 +9,9 @@ public class AutoAuthority : NetworkBehaviour
 {
     [SyncVar] private double _lastInteractTime;
     [SyncVar] private uint _ownerIdentityId = uint.MaxValue;
-    
+    [SyncVar] private bool _inUse = false;
+    public bool InUse => _inUse;
+
     public bool allowPinchPull = true;
 
     public MeshRenderer meshRenderer;
@@ -30,15 +32,16 @@ public class AutoAuthority : NetworkBehaviour
         Color.green
     };
 
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+        _lastInteractTime = NetworkTime.time;
+        if (connectionToClient != null)
+            _ownerIdentityId = connectionToClient.identity.netId;
+    }
+
     private void Start()
     {
-        if (isServer)
-        {
-            _lastInteractTime = NetworkTime.time;
-            if (connectionToClient != null)
-                _ownerIdentityId = connectionToClient.identity.netId;
-        }
-
         _body = GetComponent<Rigidbody>();
         _body.isKinematic = true;
 
@@ -144,6 +147,10 @@ public class AutoAuthority : NetworkBehaviour
 
     private void SetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime)
     {
+        //cannot switch owner if it is in use (held/pinch pulled/ect)
+        if (_inUse)
+            return;
+
         if (_lastSetNewOwnerFrame != Time.frameCount)
         {
             _lastSetNewOwnerFrame = Time.frameCount;
@@ -154,6 +161,10 @@ public class AutoAuthority : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdSetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime)
     {
+        //cannot switch owner if it is in use (held/pinch pulled/ect)
+        if (_inUse)
+            return;
+
         //if owner already has authority return
         if (_ownerIdentityId == newOwnerIdentityId)
         {

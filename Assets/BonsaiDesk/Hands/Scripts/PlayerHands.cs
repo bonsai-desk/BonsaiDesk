@@ -40,10 +40,11 @@ public class PlayerHands : MonoBehaviour
     {
         CalculateFingerTipPositions();
         
-        for (var i = 0; i < _handsTicks.Length; i++)
-        {
-            _handsTicks[i].Tick(left, right);
-        }
+        left.UpdateGestures();
+        right.UpdateGestures();
+        
+        left.RunHandTicks();
+        right.RunHandTicks();
     }
 
     public void SetHandGesturesReady(OVRSkeleton.SkeletonType skeletonType)
@@ -59,7 +60,7 @@ public class PlayerHands : MonoBehaviour
             {
                 _handsTicks[i].Tick(left, right);
             }
-            
+
             left.UpdateLastGestures();
             right.UpdateLastGestures();
             leftHandGesturesReady = false;

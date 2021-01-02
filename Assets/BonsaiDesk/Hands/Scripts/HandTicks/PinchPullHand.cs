@@ -1,26 +1,72 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 
 public class PinchPullHand : MonoBehaviour, IHandTick
 {
-    public void Tick(PlayerHand playerHand)
+    public PlayerHand playerHand { get; set; }
+
+    public LineRenderer lineRenderer;
+
+    //how far apart your hands can be when starting the pinch pull action
+    private const float PinchPullGestureStartDistance = 0.1f;
+
+    public void Tick()
     {
-        //return if not pinching
-        if (!playerHand.GetGesture(PlayerHand.Gesture.IndexPinching))
+        bool drawLocal = false;
+
+        if (playerHand.GetGestureStart(PlayerHand.Gesture.IndexPinching))
         {
-            playerHand.beamHoldControl.SetActive(false);
-            return;
+            
         }
         
-        //perform raycast in a cone from the hand
-        if (RaycastCone(playerHand, out AutoAuthority hitAutoAuthority))
+        AutoAuthority hitAutoAuthority = GetPinchPullCandidate();
+        if (hitAutoAuthority != null)
         {
             hitAutoAuthority.VisualizePinchPull();
+            drawLocal = true;
         }
+
+        DrawPinchPullLocal(drawLocal);
     }
-    
-    private bool RaycastCone(PlayerHand playerHand, out AutoAuthority hitAutoAuthority)
+
+    private void DrawPinchPullLocal(bool shouldDraw)
+    {
+        if (!shouldDraw)
+        {
+            lineRenderer.SetPosition(0, Vector3.zero);
+            lineRenderer.SetPosition(1, Vector3.zero);
+            return;
+        }
+
+        var from = playerHand.PhysicsPinchPosition();
+        var to = playerHand.OtherHand().PhysicsPinchPosition();
+
+        lineRenderer.SetPosition(0, from);
+        lineRenderer.SetPosition(1, Vector3.MoveTowards(from, to, PinchPullGestureStartDistance));
+    }
+
+    private AutoAuthority GetPinchPullCandidate()
+    {
+        if (PlayerHands.hands.Tracking() && playerHand.GetGesture(PlayerHand.Gesture.IndexPinching))
+        {
+            //perform raycast in a cone from the hand
+            if (RaycastCone(out AutoAuthority hitAutoAuthority))
+            {
+                //if it is valid to perform a pinch pull with the hit object
+                if (hitAutoAuthority.allowPinchPull && !hitAutoAuthority.InUse)
+                {
+                    return hitAutoAuthority;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private bool RaycastCone(out AutoAuthority hitAutoAuthority)
     {
         const float length = 1f; //length of raycast
 
@@ -35,7 +81,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
             Vector3 start = playerHand.pointerPose.position; //start of raycast
             Vector3 end = playerHand.pointerPose.TransformPoint(posOnCircle); //end of raycast
-            
+
             //linecast includes if start is inside of an object. can hit anything except hands
             if (Physics.Linecast(start, end, out RaycastHit hit, PlayerHand.AllButHands,
                 QueryTriggerInteraction.Ignore))
@@ -51,12 +97,11 @@ public class PinchPullHand : MonoBehaviour, IHandTick
                         break;
                     hitAutoAuthority = check.GetComponent<AutoAuthority>();
                 }
-                
+
                 if (hitAutoAuthority != null)
                 {
-                    if (hit.distance < 0.2f || !hitAutoAuthority.allowPinchPull)
+                    if (hit.distance < 0.2f)
                         break;
-                    playerHand.beamHoldControl.SetActive(true);
                     return true;
                 }
             }
