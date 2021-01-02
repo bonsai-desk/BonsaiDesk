@@ -57,7 +57,6 @@ let Video = () => {
                 addEventListeners(player)
             })
         }
-        setInterval(() => {console.log(player.getCurrentTime())}, 1000)
     }, [player])
 
     let onReady = (event) => {
@@ -101,6 +100,7 @@ let Video = () => {
                 break;
         }
     }
+
 
     return (
         <div>

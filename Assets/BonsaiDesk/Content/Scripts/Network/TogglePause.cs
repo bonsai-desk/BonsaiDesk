@@ -243,7 +243,7 @@ public class TogglePause : NetworkBehaviour
         _paused = paused;
         updateIcons(paused);
 
-        throw new NotImplementedException("[Bonsai] ServerSetPaused");
+        //throw new NotImplementedException("[Bonsai] ServerSetPaused");
 
         //TODO should this event fire?
         // PauseChangedServer?.Invoke(paused);
@@ -252,6 +252,8 @@ public class TogglePause : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdSetPaused(bool paused)
     {
+        if (!_interactable) return;
+        
         _paused = paused;
         updateIcons(paused);
         PauseChangedServer?.Invoke(paused);

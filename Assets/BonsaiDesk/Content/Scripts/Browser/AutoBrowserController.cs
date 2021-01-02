@@ -6,6 +6,20 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Vuplex.WebView;
 
+public class PingUtils
+{
+    private static float GetDelay(double worstPing, (float, float) delayClamp)
+    {
+        return Mathf.Clamp(
+            (float) (1.5 * worstPing), delayClamp.Item1, delayClamp.Item2);
+    }
+
+    private static double Sigma3Ping()
+    {
+        return NetworkTime.rtt / 2 + 3 * (NetworkTime.rttSd / 2);
+    }
+}
+
 [RequireComponent(typeof(AutoBrowser))]
 public class AutoBrowserController : NetworkBehaviour
 {
@@ -26,14 +40,12 @@ public class AutoBrowserController : NetworkBehaviour
     private int _numClientsReporting;
     private PlayerState _playerState;
 
-    [SyncVar] private ScreenState _screenState;
+    [SyncVar(hook = nameof(OnSetScreenState))] private ScreenState _screenState;
 
-    [SyncVar] private string _started;
+    private int _vidId;
 
     [SyncVar(hook = nameof(OnSetWorstScrub))]
     private ScrubData _worstScrub = new ScrubData(10e10, 0);
-
-    private int _vidId;
 
     private void Start()
     {
@@ -188,6 +200,20 @@ public class AutoBrowserController : NetworkBehaviour
         _autoBrowser.PostMessage(PauseMessage());
         StartCoroutine(PlayAfter(NetworkTime.time + deSync));
     }
+    
+    private void OnSetContentInfo(ContentInfo oldInfo, ContentInfo newInfo)
+    {
+        var resolution = _autoBrowser.ChangeAspect(newInfo.Aspect);
+
+        Debug.Log("[BONSAI] OnSetContentInfo " + oldInfo.ID + "->" + newInfo.ID + " resolution: " + resolution);
+
+        _autoBrowser.PostMessage(SetContentMessage(newInfo.ID, resolution));
+    }
+
+    private void OnSetScreenState(ScreenState oldState, ScreenState newState)
+    {
+        Debug.Log("[BONSAI] OnSetScreenState " + oldState + " -> " + newState);
+    }
 
     [Command(ignoreAuthority = true)]
     private void CmdClientPlaying(ScrubData scrubData)
@@ -204,6 +230,8 @@ public class AutoBrowserController : NetworkBehaviour
 
         //TODO probably don't need to set interactable to false if screen was already down,
         //but then the default interactable state needs to be false
+        
+        togglePause.ServerSetPaused(true);
         togglePause.SetInteractable(false);
     }
 
@@ -218,15 +246,6 @@ public class AutoBrowserController : NetworkBehaviour
                 _screenState = ScreenState.YouTube;
             })
         );
-    }
-
-    private void OnSetContentInfo(ContentInfo oldInfo, ContentInfo newInfo)
-    {
-        var resolution = _autoBrowser.ChangeAspect(newInfo.Aspect);
-
-        Debug.Log("[BONSAI] OnSetContentInfo " + oldInfo.ID + "->" + newInfo.ID + " resolution: " + resolution);
-
-        _autoBrowser.PostMessage(SetContentMessage(newInfo.ID, resolution));
     }
 
     private IEnumerator PlayAfter(double startAfterNetworkTime)
@@ -285,16 +304,7 @@ public class AutoBrowserController : NetworkBehaviour
         return "{\"type\": \"video\", \"command\": \"play\"}";
     }
 
-    private static float GetDelay(double worstPing, (float, float) delayClamp)
-    {
-        return Mathf.Clamp(
-            (float) (1.5 * worstPing), delayClamp.Item1, delayClamp.Item2);
-    }
 
-    private static double Sigma3Ping()
-    {
-        return NetworkTime.rtt / 2 + 3 * (NetworkTime.rttSd / 2);
-    }
 
     private readonly struct ContentInfo
     {
@@ -303,8 +313,8 @@ public class AutoBrowserController : NetworkBehaviour
 
         public ContentInfo(string id, Vector2 aspect)
         {
-            this.ID = id;
-            this.Aspect = aspect;
+            ID = id;
+            Aspect = aspect;
         }
     }
 
