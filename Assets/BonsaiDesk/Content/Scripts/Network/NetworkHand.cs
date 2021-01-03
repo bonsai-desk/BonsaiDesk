@@ -128,10 +128,40 @@ public class NetworkHand : NetworkBehaviour
     //from is hand holding end of string, to is other hand, end is somewhere on the hit object
     public void RenderPinchPullLine(Vector3 from, Vector3 to, Vector3 end)
     {
-        lineRenderer.SetPosition(0, from);
-        lineRenderer.SetPosition(1, to);
-        lineRenderer.SetPosition(2, end);
-        lineRenderer.SetPosition(3, end);
+        //p1 = from
+        //p2 = to
+
+        var positions = new Vector3[4];
+
+        float fingerDistance = Vector3.Distance(from, to);
+        float fingerToConnectedPosition = Vector3.Distance(to, end);
+        if (fingerDistance > _pinchPullRopeLength - PinchPullHand.MinRopeLength)
+        {
+            Vector3 direction = Quaternion.LookRotation(from - to) * Vector3.forward;
+            Vector3 start = to + (direction * _pinchPullRopeLength);
+
+            positions[0] = start;
+            positions[1] = (start + to) / 2f;
+        }
+        else
+        {
+            positions[0] = from;
+
+            Vector3 ropeBottom = (from + to) / 2f;
+            float extraRope = _pinchPullRopeLength - (fingerDistance + fingerToConnectedPosition);
+            float a = fingerDistance / 2f;
+            float c = (fingerDistance + extraRope) / 2f;
+            Vector3 down = Quaternion.LookRotation(to - from) * Vector3.down;
+            float downDistance = Mathf.Sqrt(Mathf.Abs((c * c) - (a * a)));
+            if (!float.IsNaN(downDistance))
+                ropeBottom += down * downDistance;
+
+            positions[1] = ropeBottom;
+        }
+
+        positions[2] = to;
+        positions[3] = end;
+        lineRenderer.SetPositions(positions);
     }
 
     [Command]
