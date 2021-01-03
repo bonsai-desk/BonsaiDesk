@@ -120,6 +120,12 @@ public class AutoAuthority : NetworkBehaviour
         UpdateColor();
     }
 
+    [Server]
+    public void SetInUse(bool inUse)
+    {
+        _inUse = inUse;
+    }
+
     public void Interact(uint identityId)
     {
         if (!isClient)

@@ -1,35 +1,96 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using JetBrains.Annotations;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PinchPullHand : MonoBehaviour, IHandTick
 {
     public PlayerHand playerHand { get; set; }
 
+    public ConfigurableJoint pinchPullJoint;
+    public Rigidbody pinchPullJointBody;
     public LineRenderer lineRenderer;
+
+    private float _ropeLength;
+    
+    public const float MinRopeLength = 0.05f;
 
     //how far apart your hands can be when starting the pinch pull action
     private const float PinchPullGestureStartDistance = 0.1f;
 
     public void Tick()
     {
+        pinchPullJointBody.MovePosition(playerHand.PhysicsPinchPosition());
+
         bool drawLocal = false;
 
-        if (playerHand.GetGestureStart(PlayerHand.Gesture.IndexPinching))
+        //detach pinch pull object if both hands are not pinching
+        if (pinchPullJoint.connectedBody != null && (!playerHand.GetGesture(PlayerHand.Gesture.IndexPinching) ||
+                                                     !playerHand.OtherHand()
+                                                         .GetGesture(PlayerHand.Gesture.IndexPinching)))
         {
-            
+            DetachObject();
         }
-        
-        AutoAuthority hitAutoAuthority = GetPinchPullCandidate();
-        if (hitAutoAuthority != null)
+
+        //calculate joint length based on finger distance
+        if (pinchPullJoint.connectedBody != null)
         {
-            hitAutoAuthority.VisualizePinchPull();
-            drawLocal = true;
+            var fingerDistance = Vector3.Distance(playerHand.PhysicsPinchPosition(),
+                playerHand.OtherHand().PhysicsPinchPosition());
+
+            var limit = pinchPullJoint.linearLimit;
+            limit.limit = Mathf.Clamp(_ropeLength - fingerDistance, MinRopeLength, _ropeLength);
+            pinchPullJoint.linearLimit = limit;
+        }
+
+        //start pinch pull action. note that the action is started by the hand grabbing the rope
+        if (PlayerHands.hands.Tracking() && playerHand.GetGestureStart(PlayerHand.Gesture.IndexPinching) &&
+            playerHand.OtherHand().GetGesture(PlayerHand.Gesture.IndexPinching) &&
+            Vector3.Distance(playerHand.PhysicsPinchPosition(), playerHand.OtherHand().PhysicsPinchPosition()) <
+            PinchPullGestureStartDistance &&
+            playerHand.OtherHand().GetIHandTick<PinchPullHand>().pinchPullJoint.connectedBody == null)
+        {
+            var otherHitAutoAuthority = playerHand.OtherHand().GetIHandTick<PinchPullHand>().GetPinchPullCandidate();
+            if (otherHitAutoAuthority.hitAutoAuthority != null)
+            {
+                playerHand.OtherHand().GetIHandTick<PinchPullHand>()
+                    .AttachObject(otherHitAutoAuthority.hitAutoAuthority.transform, otherHitAutoAuthority.hitPoint);
+            }
+        }
+
+        //visualize pinch pull candidates
+        if (pinchPullJoint.connectedBody == null &&
+            playerHand.OtherHand().GetIHandTick<PinchPullHand>().pinchPullJoint.connectedBody == null)
+        {
+            //get pinch pull candidate each frame for visual indication
+            var hitAutoAuthority = GetPinchPullCandidate().hitAutoAuthority;
+            if (hitAutoAuthority != null)
+            {
+                hitAutoAuthority.VisualizePinchPull();
+                drawLocal = true;
+            }
         }
 
         DrawPinchPullLocal(drawLocal);
+    }
+    
+    private void AttachObject(Transform attachToObject, Vector3 hitPoint)
+    {
+        pinchPullJoint.connectedAnchor = attachToObject.InverseTransformPoint(hitPoint);
+
+        float jointLimit = Vector3.Distance(pinchPullJoint.transform.position, hitPoint);
+        SoftJointLimit softJointLimit = new SoftJointLimit
+        {
+            limit = jointLimit
+        };
+        pinchPullJoint.linearLimit = softJointLimit;
+
+        pinchPullJoint.connectedBody = attachToObject.GetComponent<Rigidbody>();
+
+        _ropeLength = jointLimit + Vector3.Distance(playerHand.PhysicsPinchPosition(),
+            playerHand.OtherHand().PhysicsPinchPosition());
+    }
+
+    private void DetachObject()
+    {
+        pinchPullJoint.connectedBody = null;
     }
 
     private void DrawPinchPullLocal(bool shouldDraw)
@@ -48,25 +109,25 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         lineRenderer.SetPosition(1, Vector3.MoveTowards(from, to, PinchPullGestureStartDistance));
     }
 
-    private AutoAuthority GetPinchPullCandidate()
+    private (AutoAuthority hitAutoAuthority, Vector3 hitPoint) GetPinchPullCandidate()
     {
         if (PlayerHands.hands.Tracking() && playerHand.GetGesture(PlayerHand.Gesture.IndexPinching))
         {
             //perform raycast in a cone from the hand
-            if (RaycastCone(out AutoAuthority hitAutoAuthority))
+            if (RaycastCone(out AutoAuthority hitAutoAuthority, out Vector3 hitPoint))
             {
                 //if it is valid to perform a pinch pull with the hit object
                 if (hitAutoAuthority.allowPinchPull && !hitAutoAuthority.InUse)
                 {
-                    return hitAutoAuthority;
+                    return (hitAutoAuthority, hitPoint);
                 }
             }
         }
 
-        return null;
+        return (null, Vector3.zero);
     }
 
-    private bool RaycastCone(out AutoAuthority hitAutoAuthority)
+    private bool RaycastCone(out AutoAuthority hitAutoAuthority, out Vector3 hitPoint)
     {
         const float length = 1f; //length of raycast
 
@@ -102,13 +163,14 @@ public class PinchPullHand : MonoBehaviour, IHandTick
                 {
                     if (hit.distance < 0.2f)
                         break;
+                    hitPoint = hit.point;
                     return true;
                 }
             }
         }
 
-        playerHand.beamHoldControl.SetActive(false);
         hitAutoAuthority = null;
+        hitPoint = Vector3.zero;
         return false;
     }
 }

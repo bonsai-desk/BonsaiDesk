@@ -88,11 +88,11 @@ public class NetworkVRPlayer : NetworkBehaviour
         PlayerHand left = PlayerHands.hands.left;
         PlayerHand right = PlayerHands.hands.right;
 
-        if (left.Tracking() && right.Tracking())
-        {
-            left.beamJointBody.MovePosition(left.fingerTips[0].position);
-            right.beamJointBody.MovePosition(right.fingerTips[0].position);
-        }
+        // if (left.Tracking() && right.Tracking())
+        // {
+        //     left.beamJointBody.MovePosition(left.fingerTips[0].position);
+        //     right.beamJointBody.MovePosition(right.fingerTips[0].position);
+        // }
 
         PlayerHand hand;
         if (left.objectAttached)
