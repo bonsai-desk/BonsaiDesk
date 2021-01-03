@@ -51,52 +51,54 @@ public class PingUtils
 [RequireComponent(typeof(AutoBrowser))]
 public class AutoBrowserController : NetworkBehaviour
 {
-    public bool useBuiltHTML = true;
+    #region variables
+
+    public bool useBuiltHtml = true;
 
     public string hotReloadUrl;
-    public TogglePause togglePause;
-    private readonly (float, float) _delayClamp = (0.1f, 0.75f);
-    private readonly ClientScrubCollector _scrubCollector = new ClientScrubCollector();
-    private readonly double desyncTolerance = 0.2;
 
-    private bool _allGood = false;
-    private AutoBrowser _autoBrowser;
+    public TogglePause togglePause;
 
     private readonly Dictionary<uint, double> _clientLastPingTime = new Dictionary<uint, double>();
 
-    [SyncVar(hook = nameof(OnSetContentInfo))]
-    private ContentInfo _contentInfo;
+    private bool _allGood;
+
+    private AutoBrowser _autoBrowser;
 
     private float _height;
-
-    private float _lastPingSentTime;
-    private ScrubData _myScrub;
-    private int _numClientsReporting;
-
-    private double _playAfter = Mathf.Infinity;
-    private PlayerState _playerState;
-
-    [SyncVar(hook = nameof(OnSetScreenState))]
-    private ScreenState _screenState;
-
-    private int _vidId;
-
-    [SyncVar(hook = nameof(OnSetWorstScrub))]
-    private ScrubData _worstScrub = new ScrubData(0, Mathf.NegativeInfinity);
-
-    private float playDelay = 0.1f;
-
-    private float _playerCurrentTime;
 
     private ScrubData _idealScrub;
 
     private Coroutine _idealScrubRoutine;
 
+    private float _lastPingSentTime;
+
+    private int _numClientsReporting;
+
+    private float _playerCurrentTime;
+
+    private PlayerState _playerState;
+
+    private int _vidId;
+
+    #endregion variables
+
+    #region syncvars
+
+    [SyncVar(hook = nameof(OnSetContentInfo))]
+    private ContentInfo _contentInfo;
+
+    [SyncVar(hook = nameof(OnSetScreenState))]
+    private ScreenState _screenState;
+
+    #endregion syncvars
+
+    #region unity
+
     private void Start()
     {
         _screenState = ScreenState.Neutral;
         _playerState = PlayerState.Unstarted;
-
         _autoBrowser = GetComponent<AutoBrowser>();
 
         _autoBrowser.BrowserReady += () =>
@@ -104,24 +106,21 @@ public class AutoBrowserController : NetworkBehaviour
 #if !DEVELOPMENT_BUILD
             _autoBrowser.LoadHtml(BonsaiUI.Html);
 #else
-
-            if (useBuiltHTML)
+            if (useBuiltHtml)
                 _autoBrowser.LoadHtml(BonsaiUI.Html);
             else
                 _autoBrowser.LoadUrl(hotReloadUrl);
 #endif
-
-            togglePause.PauseChangedClient += OnPauseChangeClient;
-            togglePause.PauseChangedServer += OnPauseChangeServer;
             _autoBrowser.OnMessageEmitted(OnMessageEmitted);
         };
     }
 
     private void Update()
     {
+        // check if any of the clients did not ping recently
         if (isServer && _allGood)
         {
-            var pingTolerance = 1f;
+            const float pingTolerance = 1f;
             foreach (var entry in _clientLastPingTime)
                 if (NetworkTime.time - entry.Value > pingTolerance)
                 {
@@ -130,14 +129,13 @@ public class AutoBrowserController : NetworkBehaviour
                 }
         }
 
-        if (!_allGood)
-        {
-            ServerPlayVideoAtTime(0, NetworkTime.time + 0.5);
-        }
+        // trip the failsafe and sync the clients
+        if (!_allGood) ServerPlayVideoAtTime(0, NetworkTime.time + 0.5);
 
+        // ping the server with the client current player time
         if (isClient)
         {
-            var pingInterval = 0.1f;
+            const float pingInterval = 0.1f;
             if (Time.time - _lastPingSentTime > pingInterval)
             {
                 _lastPingSentTime = Time.time;
@@ -169,8 +167,29 @@ public class AutoBrowserController : NetworkBehaviour
         #endregion
     }
 
+    #endregion unity
+
+    #region failsafe
+
+    public struct ScrubData
+    {
+        public double Scrub;
+        public double NetworkTime;
+
+        public double CurrentVideoTime(double currentNetworkTime)
+        {
+            return Scrub + (currentNetworkTime - NetworkTime);
+        }
+
+        public ScrubData(double scrub, double networkTime)
+        {
+            Scrub = scrub;
+            NetworkTime = networkTime;
+        }
+    }
+
     [Server]
-    private void ServerPlayVideoAtTime(float timeStamp, double networkTime)
+    private void ServerPlayVideoAtTime(double timeStamp, double networkTime)
     {
         _clientLastPingTime.Clear();
         _idealScrub = new ScrubData(timeStamp, networkTime);
@@ -179,23 +198,17 @@ public class AutoBrowserController : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void RpcPlayVideoAtTime(float timeStamp, double networkTime)
+    private void RpcPlayVideoAtTime(double timeStamp, double networkTime)
     {
-        if (_idealScrubRoutine != null) {
-            StopCoroutine(_idealScrubRoutine);
-        }
+        if (_idealScrubRoutine != null) StopCoroutine(_idealScrubRoutine);
         _idealScrubRoutine = StartCoroutine(ClientStartAtTime(new ScrubData(timeStamp, networkTime)));
-
     }
 
     private IEnumerator ClientStartAtTime(ScrubData data)
     {
         _autoBrowser.PostMessage(YouTubeMessage.Pause);
         _autoBrowser.PostMessage(YouTubeMessage.SeekTo(data.Scrub));
-        while (NetworkTime.time < data.NetworkTime)
-        {
-            yield return null;
-        }
+        while (NetworkTime.time < data.NetworkTime) yield return null;
         _autoBrowser.PostMessage(YouTubeMessage.Play);
         _idealScrubRoutine = null;
     }
@@ -211,74 +224,13 @@ public class AutoBrowserController : NetworkBehaviour
             _clientLastPingTime.Clear();
             return;
         }
+
         _clientLastPingTime[id] = NetworkTime.time;
     }
 
-    public void ToggleVideo()
-    {
-        var vidIds = new[] {"pP44EPBMb8A", "Cg0QwoHh9w4"};
+    #endregion failsafe
 
-        switch (_screenState)
-        {
-            case ScreenState.Neutral:
-                CmdSetContentId(vidIds[_vidId]);
-                _vidId = _vidId == vidIds.Length - 1 ? 0 : _vidId + 1;
-                break;
-
-            case ScreenState.YouTube:
-                CmdSetScreenState(ScreenState.Neutral);
-                break;
-
-            case ScreenState.Twitch:
-                break;
-
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-    }
-
-    public override void OnStartServer()
-    {
-        base.OnStartServer();
-        togglePause.SetInteractable(false);
-    }
-
-    public override void OnStartClient()
-    {
-        base.OnStartClient();
-        var browserDown = _screenState == ScreenState.Neutral;
-        var targetHeight = browserDown ? 0 : 1;
-        _height = targetHeight;
-    }
-
-    private void OnPauseChangeServer(bool paused)
-    {
-        return;
-        Debug.Log("Reset Scrub Collector");
-        _scrubCollector.Reset();
-        if (!paused) _worstScrub = new ScrubData(_worstScrub.Scrub, NetworkTime.time + 200f);
-    }
-
-    private void OnPauseChangeClient(bool paused)
-    {
-        return;
-        Debug.Log("[BONSAI] OnPauseChangeClient: pause=" + paused);
-        if (paused)
-        {
-            _autoBrowser.PostMessage(YouTubeMessage.Pause);
-        }
-        else
-        {
-            var now = NetworkTime.time;
-            var myTime = _myScrub.Scrub;
-            var worstTime = _worstScrub.CurrentVideoTime(now);
-            var deSync = myTime - worstTime;
-            _playAfter = now + deSync;
-
-            Debug.Log("[BONSAI] ClientPlay myTime ");
-            Debug.Log("[BONSAI] ClientPlay playAfter " + _playAfter);
-        }
-    }
+    #region video loading
 
     private void OnMessageEmitted(object sender, EventArgs<string> eventArgs)
     {
@@ -292,65 +244,34 @@ public class AutoBrowserController : NetworkBehaviour
             return;
         }
 
-        if ((string) jsonNode?["type"] != "stateChange" || jsonNode["message"] is null) return;
+        if (jsonNode?["type"].Value == "stateChange")
+            switch ((string) jsonNode["message"])
+            {
+                case "UNSTARTED":
+                    _playerState = PlayerState.Unstarted;
+                    break;
 
-        switch ((string) jsonNode["message"])
-        {
-            case "UNSTARTED":
-                _playerState = PlayerState.Unstarted;
-                _myScrub = new ScrubData(0, Mathf.NegativeInfinity);
-                break;
+                case "ENDED":
+                    _playerState = PlayerState.Ended;
+                    break;
 
-            case "ENDED":
-                _playerState = PlayerState.Ended;
-                break;
+                case "PLAYING":
+                    _playerState = PlayerState.Playing;
+                    break;
 
-            case "PLAYING":
-                _playerState = PlayerState.Playing;
-                _myScrub = new ScrubData(jsonNode["current_time"], NetworkTime.time);
-                CmdIncludeScrub(_myScrub);
-                break;
+                case "PAUSED":
+                    _playerState = PlayerState.Paused;
+                    break;
 
-            case "PAUSED":
-                _playerState = PlayerState.Paused;
-                _myScrub = new ScrubData(jsonNode["current_time"], Mathf.NegativeInfinity);
-                CmdIncludeScrub(_myScrub);
-                break;
+                case "BUFFERING":
+                    _playerState = PlayerState.Buffering;
+                    // TODO notify the server
+                    break;
 
-            case "BUFFERING":
-                _playerState = PlayerState.Buffering;
-                break;
-
-            case "VIDEOCUED":
-                _playerState = PlayerState.VideoCued;
-                break;
-        }
-    }
-
-    [Command(ignoreAuthority = true)]
-    private void CmdIncludeScrub(ScrubData scrubData)
-    {
-        Debug.Log("[BONSAI] CmdIncludeScrub scrub: " + scrubData.Scrub + " time: " + scrubData.NetworkTime);
-        _scrubCollector.Include(scrubData);
-        _worstScrub = _scrubCollector.Worst;
-    }
-
-    private void OnSetWorstScrub(ScrubData oldWorstScrub, ScrubData newWorstScrub)
-    {
-        Debug.Log("[BONSAI] OnSetWorstScrub scrub: " + newWorstScrub.Scrub + " networktime: " +
-                  newWorstScrub.NetworkTime);
-        var now = NetworkTime.time;
-        var myTime = _myScrub.CurrentVideoTime(now);
-        var worstTime = newWorstScrub.CurrentVideoTime(now);
-        var deSync = myTime - worstTime;
-
-        if (deSync < desyncTolerance || _playerState != PlayerState.Playing) return;
-
-        Debug.Log("[BONSAI] OnSetWorstScrub desync=" + deSync);
-
-        _autoBrowser.PostMessage(YouTubeMessage.Pause);
-
-        _playAfter = NetworkTime.time + deSync;
+                case "VIDEOCUED":
+                    _playerState = PlayerState.VideoCued;
+                    break;
+            }
     }
 
     [Command(ignoreAuthority = true)]
@@ -419,6 +340,43 @@ public class AutoBrowserController : NetworkBehaviour
         callback(newAspect);
     }
 
+    public void ToggleVideo()
+    {
+        var vidIds = new[] {"pP44EPBMb8A", "Cg0QwoHh9w4"};
+
+        switch (_screenState)
+        {
+            case ScreenState.Neutral:
+                CmdSetContentId(vidIds[_vidId]);
+                _vidId = _vidId == vidIds.Length - 1 ? 0 : _vidId + 1;
+                break;
+
+            case ScreenState.YouTube:
+                CmdSetScreenState(ScreenState.Neutral);
+                break;
+
+            case ScreenState.Twitch:
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+        togglePause.SetInteractable(false);
+    }
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        var browserDown = _screenState == ScreenState.Neutral;
+        var targetHeight = browserDown ? 0 : 1;
+        _height = targetHeight;
+    }
+
     private readonly struct ContentInfo
     {
         public readonly string ID;
@@ -448,37 +406,5 @@ public class AutoBrowserController : NetworkBehaviour
         VideoCued
     }
 
-    public struct ScrubData
-    {
-        public double Scrub;
-        public double NetworkTime;
-
-        public double CurrentVideoTime(double currentNetworkTime)
-        {
-            return Scrub + (currentNetworkTime - NetworkTime);
-        }
-
-        public ScrubData(double scrub, double networkTime)
-        {
-            Scrub = scrub;
-            NetworkTime = networkTime;
-        }
-    }
-
-    public class ClientScrubCollector
-    {
-        public ScrubData Worst = new ScrubData(Mathf.Infinity, 0);
-
-        public void Include(ScrubData scrubData)
-        {
-            if (!(scrubData.Scrub < Worst.Scrub)) return;
-            Worst = scrubData;
-        }
-
-        public void Reset()
-        {
-            Worst.Scrub = Mathf.Infinity;
-            Worst.NetworkTime = 0;
-        }
-    }
+    #endregion video loading
 }
