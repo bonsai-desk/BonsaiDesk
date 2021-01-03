@@ -4,5 +4,7 @@ using UnityEngine;
 
 interface IHandTick
 {
-    void Tick(PlayerHand playerHand);
+    PlayerHand playerHand { get; set; }
+
+    void Tick();
 }

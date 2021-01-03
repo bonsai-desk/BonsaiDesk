@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Mirror;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,6 +7,8 @@ using UnityEngine.UI;
 public class PlayerHand : MonoBehaviour
 {
     public OVRSkeleton.SkeletonType skeletonType;
+
+    [HideInInspector] public NetworkHand networkHand;
 
     public OVRHand oVRHand;
     public OVRSkeleton oVRSkeleton;
@@ -74,6 +77,7 @@ public class PlayerHand : MonoBehaviour
     private int handLayer;
 
     private IHandTick[] _handTicks;
+    private Dictionary<Type, IHandTick> _handTicksDictionary;
 
     public enum Gesture
     {
@@ -242,6 +246,12 @@ public class PlayerHand : MonoBehaviour
         beamJointBody = beamJoint.GetComponent<Rigidbody>();
 
         _handTicks = GetComponentsInChildren<IHandTick>();
+        _handTicksDictionary = new Dictionary<Type, IHandTick>();
+        foreach (var handTick in _handTicks)
+        {
+            _handTicksDictionary.Add(handTick.GetType(), handTick);
+            handTick.playerHand = this;
+        }
 
         foreach (Gesture gesture in (Gesture[]) Gesture.GetValues(typeof(Gesture)))
         {
@@ -263,6 +273,11 @@ public class PlayerHand : MonoBehaviour
         {
             handLayer = LayerMask.NameToLayer("RightHand");
         }
+    }
+
+    public T GetIHandTick<T>()
+    {
+        return (T) _handTicksDictionary[typeof(T)];
     }
 
     public void BackToOriginalColor()
@@ -318,7 +333,7 @@ public class PlayerHand : MonoBehaviour
         return difference;
     }
 
-    private void UpdateGestures()
+    public void UpdateGestures()
     {
         float fistStrength = FistStrength();
         float flatFistStrength = FlatFistStrength();
@@ -332,15 +347,16 @@ public class PlayerHand : MonoBehaviour
         _gestures[Gesture.WeakPalm] = fistStrength < 0.35f;
     }
 
-    private void Update()
+    public void RunHandTicks()
     {
-        UpdateGestures();
-        
         for (var i = 0; i < _handTicks.Length; i++)
         {
-            _handTicks[i].Tick(this);
+            _handTicks[i].Tick();
         }
+    }
 
+    private void Update()
+    {
         if (oVRPhysicsHand.IsDataValid && oVRPhysicsHand.IsDataHighConfidence)
         {
             mainCamera.cullingMask |= 1 << handLayer;
@@ -362,7 +378,7 @@ public class PlayerHand : MonoBehaviour
         {
             hitDistance = Mathf.Infinity;
         }
-        
+
         // bool hitPullBox = false;
         // if (indexPinching && !lastIndexPinching)
         // {
@@ -454,7 +470,7 @@ public class PlayerHand : MonoBehaviour
         //         StopBeam();
         //     }
         // }
-        
+
         if ((GetGesture(Gesture.IndexPinching) || GetGesture(Gesture.Fist)) && !objectAttached)
         {
             if (heldJoint == null && !menu.activeInHierarchy)
@@ -639,6 +655,14 @@ public class PlayerHand : MonoBehaviour
     {
         if (Tracking())
             return Vector3.Lerp(fingerTips[0].position, fingerTips[1].position, 0.5f);
+        else
+            return Vector3.zero;
+    }
+
+    public Vector3 PhysicsPinchPosition()
+    {
+        if (Tracking())
+            return Vector3.Lerp(physicsFingerTips[0].position, physicsFingerTips[1].position, 0.5f);
         else
             return Vector3.zero;
     }

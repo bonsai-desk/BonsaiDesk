@@ -525,7 +525,7 @@ public class NetworkManagerGame : NobleNetworkManager
             }
         }
     }
-    
+
     private IEnumerator DeleteRoom()
     {
         using (var www = UnityWebRequest.Delete(apiBaseUri + "/rooms/" + _assignedRoomTag))
@@ -619,7 +619,7 @@ public class NetworkManagerGame : NobleNetworkManager
             StartCoroutine(StartXR());
         }
     }
-    
+
     private IEnumerator StartXR()
     {
         yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
@@ -700,10 +700,15 @@ public class NetworkManagerGame : NobleNetworkManager
         var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
         foreach (var identity in tmp)
         {
-            if (identity.GetComponent<AutoAuthority>() != null)
+            var autoAuthority = identity.GetComponent<AutoAuthority>();
+            if (autoAuthority != null)
+            {
+                if (autoAuthority.InUse)
+                    autoAuthority.SetInUse(false);
                 identity.RemoveClientAuthority();
+            }
         }
-        
+
         if (conn.identity != null && togglePause.AuthorityIdentityId == conn.identity.netId)
         {
             togglePause.RemoveClientAuthority();
