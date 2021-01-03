@@ -24,6 +24,7 @@ public class NetworkManagerGame : NobleNetworkManager
     private Camera _camera;
 
     public TogglePause togglePause;
+    
 
     #region Player Props
 

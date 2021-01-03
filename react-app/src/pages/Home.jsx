@@ -26,6 +26,11 @@ let Video = () => {
     let [player, setPlayer] = useState(null);
 
     let addEventListeners = (player) => {
+
+        setInterval(() => {
+            window.vuplex.postMessage({type: "infoCurrentTime", current_time: player.getCurrentTime()})
+        }, 100)
+
         window.vuplex.addEventListener('message', event => {
             let json = JSON.parse(event.data);
             if (!(json.type === "video")) return;
@@ -42,6 +47,9 @@ let Video = () => {
                 case "pause":
                     player.pauseVideo();
                     break;
+                case "seekTo":
+                    player.seekTo(json.seekTime);
+                    break;
                 default:
                     break;
             }
@@ -50,6 +58,8 @@ let Video = () => {
 
     useEffect(() => {
         if (player == null) return;
+
+
         if (window.vuplex != null) {
             addEventListeners(player);
         } else {
@@ -63,9 +73,11 @@ let Video = () => {
         console.log("onReady", event);
         setPlayer(event.target);
     };
+
     let onError = (event) => {
         console.log("onError", event);
     };
+
     let onStateChange = (event) => {
         let postStateChange = (message) => {
             window.vuplex.postMessage({type: "stateChange", message: message, current_time: player.getCurrentTime()});
@@ -87,7 +99,6 @@ let Video = () => {
                 console.log("bonsai: paused")
                 postStateChange("PAUSED")
                 break;
-
             case PlayerState.BUFFERING:
                 console.log("bonsai: buffering")
                 postStateChange("BUFFERING")
