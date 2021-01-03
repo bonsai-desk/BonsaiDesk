@@ -126,6 +126,12 @@ public class AutoAuthority : NetworkBehaviour
         _inUse = inUse;
     }
 
+    [Command(ignoreAuthority = true)]
+    public void CmdRemoveInUse()
+    {
+        _inUse = false;
+    }
+
     public void Interact(uint identityId)
     {
         if (!isClient)
@@ -160,16 +166,19 @@ public class AutoAuthority : NetworkBehaviour
         if (_lastSetNewOwnerFrame != Time.frameCount)
         {
             _lastSetNewOwnerFrame = Time.frameCount;
-            CmdSetNewOwner(newOwnerIdentityId, fromLastInteractTime);
+            CmdSetNewOwner(newOwnerIdentityId, fromLastInteractTime, false);
         }
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdSetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime)
+    public void CmdSetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime, bool inUse)
     {
         //cannot switch owner if it is in use (held/pinch pulled/ect)
         if (_inUse)
             return;
+
+        if (inUse)
+            _inUse = true;
 
         //if owner already has authority return
         if (_ownerIdentityId == newOwnerIdentityId)
@@ -183,7 +192,7 @@ public class AutoAuthority : NetworkBehaviour
             netIdentity.RemoveClientAuthority();
         }
 
-        //if the new owner is no the server, give them authority
+        //if the new owner is not the server, give them authority
         if (newOwnerIdentityId != uint.MaxValue)
         {
             netIdentity.AssignClientAuthority(NetworkIdentity.spawned[newOwnerIdentityId].connectionToClient);

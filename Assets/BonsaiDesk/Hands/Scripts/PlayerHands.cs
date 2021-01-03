@@ -47,6 +47,24 @@ public class PlayerHands : MonoBehaviour
         right.RunHandTicks();
     }
 
+    public PlayerHand GetHand(OVRSkeleton.SkeletonType skeletonType)
+    {
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+            return left;
+        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
+            return right;
+        return null;
+    }
+    
+    public PlayerHand GetOtherHand(OVRSkeleton.SkeletonType skeletonType)
+    {
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+            return right;
+        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
+            return left;
+        return null;
+    }
+
     public void SetHandGesturesReady(OVRSkeleton.SkeletonType skeletonType)
     {
         if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)

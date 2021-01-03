@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Mirror;
 
 public class PinchPullHand : MonoBehaviour, IHandTick
 {
@@ -9,11 +10,13 @@ public class PinchPullHand : MonoBehaviour, IHandTick
     public LineRenderer lineRenderer;
 
     private float _ropeLength;
-    
+    private uint _attachedToId;
+    private Vector3 _localHitPoint;
+
     public const float MinRopeLength = 0.05f;
 
     //how far apart your hands can be when starting the pinch pull action
-    private const float PinchPullGestureStartDistance = 0.1f;
+    private const float PinchPullGestureStartDistance = 0.15f;
 
     public void Tick()
     {
@@ -51,7 +54,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
             if (otherHitAutoAuthority.hitAutoAuthority != null)
             {
                 playerHand.OtherHand().GetIHandTick<PinchPullHand>()
-                    .AttachObject(otherHitAutoAuthority.hitAutoAuthority.transform, otherHitAutoAuthority.hitPoint);
+                    .AttachObject(otherHitAutoAuthority.hitAutoAuthority, otherHitAutoAuthority.hitPoint);
             }
         }
 
@@ -60,20 +63,38 @@ public class PinchPullHand : MonoBehaviour, IHandTick
             playerHand.OtherHand().GetIHandTick<PinchPullHand>().pinchPullJoint.connectedBody == null)
         {
             //get pinch pull candidate each frame for visual indication
-            var hitAutoAuthority = GetPinchPullCandidate().hitAutoAuthority;
-            if (hitAutoAuthority != null)
+            var hit = GetPinchPullCandidate();
+            if (hit.hitAutoAuthority != null)
             {
-                hitAutoAuthority.VisualizePinchPull();
+                hit.hitAutoAuthority.Interact(NetworkClient.connection.identity.netId);
+                hit.hitAutoAuthority.VisualizePinchPull();
                 drawLocal = true;
+            }
+        }
+
+        if (playerHand.networkHand != null)
+        {
+            if (pinchPullJoint.connectedBody != null &&
+                NetworkIdentity.spawned.TryGetValue(_attachedToId, out NetworkIdentity value))
+            {
+                var from = playerHand.OtherHand().PhysicsPinchPosition();
+                var to = playerHand.PhysicsPinchPosition();
+                var end = value.transform.TransformPoint(_localHitPoint);
+                playerHand.networkHand.RenderPinchPullLine(from, to, end);
+            }
+            else
+            {
+                playerHand.networkHand.StopRenderPinchPullLine();
             }
         }
 
         DrawPinchPullLocal(drawLocal);
     }
-    
-    private void AttachObject(Transform attachToObject, Vector3 hitPoint)
+
+    private void AttachObject(AutoAuthority attachToObject, Vector3 hitPoint)
     {
-        pinchPullJoint.connectedAnchor = attachToObject.InverseTransformPoint(hitPoint);
+        _localHitPoint = attachToObject.transform.InverseTransformPoint(hitPoint);
+        pinchPullJoint.connectedAnchor = _localHitPoint;
 
         float jointLimit = Vector3.Distance(pinchPullJoint.transform.position, hitPoint);
         SoftJointLimit softJointLimit = new SoftJointLimit
@@ -86,13 +107,19 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
         _ropeLength = jointLimit + Vector3.Distance(playerHand.PhysicsPinchPosition(),
             playerHand.OtherHand().PhysicsPinchPosition());
+
+        _attachedToId = attachToObject.netId;
+        attachToObject.CmdSetNewOwner(NetworkClient.connection.identity.netId, NetworkTime.time, true);
+        playerHand.networkHand.CmdSetPinchPullInfo(_attachedToId, _localHitPoint, _ropeLength);
     }
 
     private void DetachObject()
     {
+        pinchPullJoint.connectedBody.GetComponent<AutoAuthority>().CmdRemoveInUse();
         pinchPullJoint.connectedBody = null;
+        playerHand.networkHand.CmdStopPinchPull();
     }
-
+    
     private void DrawPinchPullLocal(bool shouldDraw)
     {
         if (!shouldDraw)

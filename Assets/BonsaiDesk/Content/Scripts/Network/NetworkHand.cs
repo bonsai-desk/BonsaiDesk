@@ -31,6 +31,13 @@ public class NetworkHand : NetworkBehaviour
 
     public LineRenderer lineRenderer;
 
+    [SyncVar] public NetworkIdentity ownerIdentity;
+
+    //pinch pull info
+    [SyncVar] private uint _pinchPullAttachedToId = uint.MaxValue;
+    [SyncVar] private Vector3 _pinchPullLocalHitPoint = Vector3.zero;
+    [SyncVar] private float _pinchPullRopeLength = 0f;
+
     private void Start()
     {
         mapper = GetComponent<OVRHandTransformMapper>();
@@ -61,6 +68,22 @@ public class NetworkHand : NetworkBehaviour
         {
             if (Time.time - lastRotationsUpdateTime < updateInterval)
                 SetFingerRotations( /*hand*/);
+
+            //maxvalue if attached to nothing, so don't draw
+            if (_pinchPullAttachedToId != uint.MaxValue &&
+                NetworkIdentity.spawned.TryGetValue(_pinchPullAttachedToId, out NetworkIdentity value))
+            {
+                var from = ownerIdentity.GetComponent<NetworkVRPlayer>().GetOtherHand(_skeletonType)
+                    .GetComponent<OVRHandTransformMapper>().CustomBones[20].position;
+                var to = GetComponent<OVRHandTransformMapper>().CustomBones[20].position;
+                var end = value.transform.TransformPoint(_pinchPullLocalHitPoint);
+                RenderPinchPullLine(from, to, end);
+            }
+            else
+            {
+                StopRenderPinchPullLine();
+            }
+
             return;
         }
 
@@ -79,6 +102,36 @@ public class NetworkHand : NetworkBehaviour
             var rotations = GetFingerRotations(hand);
             CmdSetFingerRotations(rotations.rotations, rotations.tRotations);
         }
+    }
+
+    [Command]
+    public void CmdSetPinchPullInfo(uint pinchPullAttachedToId, Vector3 pinchPullLocalHitPoint,
+        float pinchPullRopeLength)
+    {
+        _pinchPullAttachedToId = pinchPullAttachedToId;
+        _pinchPullLocalHitPoint = pinchPullLocalHitPoint;
+        _pinchPullRopeLength = pinchPullRopeLength;
+    }
+
+    [Command]
+    public void CmdStopPinchPull()
+    {
+        _pinchPullAttachedToId = uint.MaxValue;
+    }
+
+    public void StopRenderPinchPullLine()
+    {
+        for (int i = 0; i < 4; i++)
+            lineRenderer.SetPosition(i, Vector3.zero);
+    }
+
+    //from is hand holding end of string, to is other hand, end is somewhere on the hit object
+    public void RenderPinchPullLine(Vector3 from, Vector3 to, Vector3 end)
+    {
+        lineRenderer.SetPosition(0, from);
+        lineRenderer.SetPosition(1, to);
+        lineRenderer.SetPosition(2, end);
+        lineRenderer.SetPosition(3, end);
     }
 
     [Command]
