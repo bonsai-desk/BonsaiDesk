@@ -28,7 +28,7 @@ let Video = () => {
     let addEventListeners = (player) => {
 
         setInterval(() => {
-            window.vuplex.postMessage({type: "infoCurrentTime", current_time: player.getCurrentTime()})
+            window.vuplex.postMessage({type: "infoCurrentTime", current_time: player.getCurrentTime() == null ? 0 : player.getCurrentTime()})
         }, 100)
 
         window.vuplex.addEventListener('message', event => {
@@ -36,21 +36,26 @@ let Video = () => {
             if (!(json.type === "video")) return;
             switch (json.command) {
                 case "setContent":
+                    console.log("command: setContent (" + json.x + "," + json.y + ") " + json.video_id)
                     player.setSize(json.x, json.y);
                     if (json.video_id != null) {
                         player.cueVideoById(json.video_id);
                     }
                     break;
                 case "play":
+                    console.log("command: play")
                     player.playVideo();
                     break;
                 case "pause":
+                    console.log("command: pause")
                     player.pauseVideo();
                     break;
                 case "seekTo":
+                    console.log("command: seekTo " + json.seekTime)
                     player.seekTo(json.seekTime);
                     break;
                 default:
+                    console.log("command: not handled " + JSON.stringify(json))
                     break;
             }
         })
