@@ -13,12 +13,26 @@ public class YouTubeMessage
 
     public static string Play = "{\"type\": \"video\", \"command\": \"play\"}";
 
+    public static string GoHome = "{" +
+                                  "\"type\": \"nav\", " +
+                                  "\"command\": \"goHome\" " +
+                                  "}";
+
     public static string SeekTo(double time)
     {
         return "{" +
                "\"type\": \"video\", " +
                "\"command\": \"seekTo\", " +
                $"\"seekTime\": {time}" +
+               "}";
+    }
+    
+    public static string LoadVideo(string id, float ts)
+    {
+        return "{" +
+               "\"type\": \"nav\", " +
+               "\"command\": \"push\", " +
+               $"\"path\": \"/youtube/{id}/{ts}\"" +
                "}";
     }
 }
@@ -137,6 +151,10 @@ public class AutoBrowserController : NetworkBehaviour
         const float transitionTime = 0.5f;
         var browserDown = _screenState == ScreenState.Neutral;
         var targetHeight = browserDown ? 0 : 1;
+        
+        // TODO
+        browserDown = false;
+        targetHeight = 1;
 
         if (!Mathf.Approximately(_height, targetHeight))
         {
@@ -182,7 +200,8 @@ public class AutoBrowserController : NetworkBehaviour
     {
         _clientLastPingTime.Clear();
         _idealScrub = new ScrubData(timeStamp, networkTime);
-        RpcPlayVideoAtTime(timeStamp, networkTime);
+        // TODO
+        //RpcPlayVideoAtTime(timeStamp, networkTime);
         _allGood = true;
     }
 
@@ -239,15 +258,15 @@ public class AutoBrowserController : NetworkBehaviour
                 case "UNSTARTED":
                     _playerState = PlayerState.Unstarted;
                     break;
-                
+
                 case "VIDEOCUED":
                     _playerState = PlayerState.VideoCued;
                     break;
-                
+
                 case "READY":
                     _playerState = PlayerState.Ready;
                     break;
-                
+
                 case "PAUSED":
                     _playerState = PlayerState.Paused;
                     break;
@@ -260,7 +279,7 @@ public class AutoBrowserController : NetworkBehaviour
                     _playerState = PlayerState.Buffering;
                     // TODO notify the server
                     break;
-                
+
                 case "ENDED":
                     _playerState = PlayerState.Ended;
                     break;
@@ -285,7 +304,7 @@ public class AutoBrowserController : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    public void CmdSetContentId(string id)
+    public void CmdLoadVideo(string id)
     {
         StartCoroutine(
             FetchYouTubeAspect(id, newAspect =>
@@ -297,13 +316,26 @@ public class AutoBrowserController : NetworkBehaviour
         );
     }
 
+    [Command(ignoreAuthority = true)]
+    public void CmdCloseVideo()
+    {
+        RpcGoHome();
+        _screenState = ScreenState.Neutral;
+    }
+
+    [ClientRpc]
+    public void RpcGoHome()
+    {
+        _autoBrowser.PostMessage(YouTubeMessage.GoHome);
+    }
+
     private void OnSetContentInfo(ContentInfo oldInfo, ContentInfo newInfo)
     {
         var resolution = _autoBrowser.ChangeAspect(newInfo.Aspect);
 
         Debug.Log("[BONSAI] OnSetContentInfo " + oldInfo.ID + "->" + newInfo.ID + " resolution: " + resolution);
 
-        _autoBrowser.PostMessage(YouTubeMessage.SetContent(newInfo.ID, resolution));
+        _autoBrowser.PostMessage(YouTubeMessage.LoadVideo(newInfo.ID, 0));
     }
 
     private static IEnumerator FetchYouTubeAspect(string videoId, Action<Vector2> callback)
@@ -340,12 +372,14 @@ public class AutoBrowserController : NetworkBehaviour
         switch (_screenState)
         {
             case ScreenState.Neutral:
-                CmdSetContentId(vidIds[_vidId]);
+                //CmdSetContentId(vidIds[_vidId]);
+                CmdLoadVideo(vidIds[_vidId]);
                 _vidId = _vidId == vidIds.Length - 1 ? 0 : _vidId + 1;
                 break;
 
             case ScreenState.YouTube:
-                CmdSetScreenState(ScreenState.Neutral);
+                CmdCloseVideo();
+                //CmdSetScreenState(ScreenState.Neutral);
                 break;
 
             case ScreenState.Twitch:

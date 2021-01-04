@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from "react";
 import YouTube from "react-youtube";
 import {useHistory} from "react-router-dom";
+import {cSharpPageListeners} from "../listeners";
 
 let opts = {
     width: window.innerWidth,
@@ -54,6 +55,8 @@ let Video = (props) => {
 
             window.vuplex.addEventListener('message', event => {
 
+                cSharpPageListeners(history, event)
+
                 let json = JSON.parse(event.data);
 
                 if (json.type === "video") {
@@ -71,7 +74,7 @@ let Video = (props) => {
                             player.seekTo(json.seekTime, true);
                             break;
                         default:
-                            console.log("command: not handled " + JSON.stringify(json))
+                            console.log("command: not handled (video) " + JSON.stringify(json))
                             break;
                     }
                 }

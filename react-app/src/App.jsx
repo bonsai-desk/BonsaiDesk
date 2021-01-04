@@ -8,31 +8,26 @@ let Home = () => {
 
     let history = useHistory();
 
+    let cSharpHomeListeners = (event) => {
+        let json = JSON.parse(event.data);
+
+        console.log(json)
+
+        if (!(json.type === "nav")) return;
+
+        switch (json.command) {
+            case "push":
+                console.log("command: nav " + json.path)
+                history.push(json.path)
+                break;
+            default:
+                console.log("command: not handled (cSharpHomeListeners) " + JSON.stringify(json))
+                break;
+        }
+    }
+
     let addCSharpListeners = () => {
-
-        // ping back the player time every 1/10th of a second
-        window.vuplex.addEventListener('message', event => {
-
-            let json = JSON.parse(event.data);
-
-            if (!(json.type === "nav")) return;
-
-            switch (json.command) {
-                case "push":
-                    console.log("command: nav " + json.path)
-                    history.push(json.path)
-                    break;
-                case "goHome":
-                    console.log("command: goHome pre ")
-                    history.push("/")
-                    window.location.reload(true)
-                    console.log("command: goHome pre post")
-                    break;
-                default:
-                    console.log("command: not handled " + JSON.stringify(json))
-                    break;
-            }
-        })
+        window.vuplex.addEventListener('message', cSharpHomeListeners)
     }
 
     if (window.vuplex != null) {
@@ -50,19 +45,12 @@ let Home = () => {
     )
 }
 
-let Ping = () => {
-    console.log("ping")
-    return <div className={"bg-gray-400"}>ping</div>
-}
-
 function App() {
     console.log("App")
-    return <div>app</div>
     return (
         <Router>
             <div className={"bg-gray-800 h-screen text-green-400"}>
                 <Switch>
-                    <route path={"/ping"} componenet={Ping}/>
 
                     <Route exact path={"/"} component={Home}/>
 
