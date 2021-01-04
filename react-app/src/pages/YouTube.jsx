@@ -31,8 +31,6 @@ let Video = (props) => {
     let [ready, setReady] = useState(false);
     let [player, setPlayer] = useState(null);
 
-    ts = ts == null ? 0 : ts;
-
     // setup the event listeners
     useEffect(() => {
         if (player == null) return;
@@ -58,29 +56,24 @@ let Video = (props) => {
 
                 let json = JSON.parse(event.data);
 
-                if (!(json.type === "video")) return;
-
-                switch (json.command) {
-                    case "play":
-                        console.log("command: play")
-                        player.playVideo();
-                        break;
-                    case "pause":
-                        console.log("command: pause")
-                        player.pauseVideo();
-                        break;
-                    case "seekTo":
-                        console.log("command: seekTo " + json.seekTime)
-                        player.seekTo(json.seekTime);
-                        break;
-                    case "goHome":
-                        history.push("/")
-                        window.location.reload(true)
-                        break;
-
-                    default:
-                        console.log("command: not handled " + JSON.stringify(json))
-                        break;
+                if (json.type === "video") {
+                    switch (json.command) {
+                        case "play":
+                            console.log("command: play")
+                            player.playVideo();
+                            break;
+                        case "pause":
+                            console.log("command: pause")
+                            player.pauseVideo();
+                            break;
+                        case "seekTo":
+                            console.log("command: seekTo " + json.seekTime)
+                            player.seekTo(json.seekTime, true);
+                            break;
+                        default:
+                            console.log("command: not handled " + JSON.stringify(json))
+                            break;
+                    }
                 }
             })
         }
