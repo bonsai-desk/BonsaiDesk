@@ -21,7 +21,7 @@ const PlayerState = {
     CUED: 5,
 };
 
-let Test = (props) => {
+let YoutTubeTest = (props) => {
 
     let { id } = props.match.params;
     let [ready, setReady] = useState(false);
@@ -40,40 +40,44 @@ let Test = (props) => {
     };
 
     let onStateChange = (event) => {
+
+
         switch (event.data) {
             case PlayerState.UNSTARTED:
                 console.log("bonsai: unstarted")
                 break;
             case PlayerState.ENDED:
                 console.log("bonsai: ended")
-                break
+                break;
             case PlayerState.PLAYING:
-                console.log("bonsai: playing")
                 if (!ready) {
-                    player.pauseVideo();
-                    break;
+                    player.pauseVideo()
+                } else {
+                    console.log("bonsai: playing")
                 }
                 break;
             case PlayerState.PAUSED:
-                console.log("bonsai: paused")
                 if (!ready) {
-                    player.seekTo(0, true)
+                    player.seekTo(0);
                     player.unMute();
                     setReady(true);
-                    break;
+                    console.log("bonsai: ready")
+                } else {
+                    console.log("bonsai: paused")
                 }
                 break;
             case PlayerState.BUFFERING:
-                console.log("bonsai: buffering")
+                if (ready) {
+                    console.log("bonsai: buffering")
+                }
                 break;
             case PlayerState.CUED:
                 console.log("bonsai: videoCued")
-                break
+                break;
             default:
                 break;
         }
     }
-
 
     return (
         <div>
@@ -87,4 +91,4 @@ let Test = (props) => {
     );
 };
 
-export default Test;
+export default YoutTubeTest;
