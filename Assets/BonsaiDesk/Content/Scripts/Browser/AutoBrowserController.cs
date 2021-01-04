@@ -26,7 +26,7 @@ public class YouTubeMessage
                $"\"seekTime\": {time}" +
                "}";
     }
-    
+
     public static string LoadVideo(string id, float ts)
     {
         return "{" +
@@ -62,37 +62,49 @@ public class AutoBrowserController : NetworkBehaviour
 
     public TogglePause togglePause;
 
-    private readonly Dictionary<uint, double> _clientLastPingTime = new Dictionary<uint, double>();
-
-    private bool _allGood;
-
     private AutoBrowser _autoBrowser;
-
-    private float _height;
-
-    private ScrubData _idealScrub;
-
-    private Coroutine _idealScrubRoutine;
-
-    private float _lastPingSentTime;
-
-    private int _numClientsReporting;
-
-    private float _playerCurrentTime;
-
-    private PlayerState _playerState;
 
     private int _vidId;
 
     #endregion variables
 
+    #region server vars
+
+    private float _beginReadyUpTime = Mathf.Infinity;
+
+    private bool _started;
+
+    private bool _allGood;
+
+    private readonly Dictionary<uint, double> _clientLastPingTime = new Dictionary<uint, double>();
+
+    private readonly Dictionary<uint, bool> _clientsReady = new Dictionary<uint, bool>();
+
+    private Coroutine _fetchAndReadyCoroutine;
+
+    #endregion server vars
+
+    #region client vars
+
+    private float _height;
+
+    private PlayerState _playerState;
+
+    private float _lastPingSentTime;
+
+    private float _playerCurrentTime;
+
+    private Coroutine _clientStartAtTimeCoroutine;
+
+    #endregion client vars
+
     #region syncvars
 
-    [SyncVar(hook = nameof(OnSetContentInfo))]
-    private ContentInfo _contentInfo;
+    [SyncVar] private ContentInfo _contentInfo;
 
-    [SyncVar(hook = nameof(OnSetScreenState))]
-    private ScreenState _screenState;
+    [SyncVar] private ScreenState _screenState;
+
+    [SyncVar] private ScrubData _idealScrub;
 
     #endregion syncvars
 
@@ -100,7 +112,7 @@ public class AutoBrowserController : NetworkBehaviour
 
     private void Start()
     {
-        _screenState = ScreenState.Neutral;
+        _screenState = ScreenState.Lower;
         _playerState = PlayerState.Unstarted;
         _autoBrowser = GetComponent<AutoBrowser>();
 
@@ -120,20 +132,40 @@ public class AutoBrowserController : NetworkBehaviour
 
     private void Update()
     {
-        // check if any of the clients did not ping recently
-        if (isServer && _allGood)
+        if (isServer)
         {
-            const float pingTolerance = 1f;
-            foreach (var entry in _clientLastPingTime)
-                if (NetworkTime.time - entry.Value > pingTolerance)
-                {
-                    _allGood = false;
-                    break;
-                }
-        }
+            // check if any of the clients did not ping recently
+            if (_allGood)
+            {
+                const float pingTolerance = 1f;
+                foreach (var entry in _clientLastPingTime)
+                    if (NetworkTime.time - entry.Value > pingTolerance)
+                    {
+                        _allGood = false;
+                        break;
+                    }
+            }
 
-        // trip the failsafe and sync the clients
-        if (!_allGood) ServerPlayVideoAtTime(0, NetworkTime.time + 0.5);
+            // TODO trip the failsafe and sync the clients
+            if (!_allGood && _started)
+                ServerPlayVideoAtTime(
+                    0, NetworkTime.time + 0.5
+                );
+
+            if (!_started && !float.IsInfinity(_beginReadyUpTime))
+            {
+                if (_clientsReady.Count == NetworkServer.connections.Count)
+                {
+                    SetScreenState(ScreenState.Raised);
+                    ServerPlayVideoAtTime(0, NetworkTime.time + 0.5f);
+                }
+                else if (Time.time - _beginReadyUpTime > 5f)
+                {
+                    _beginReadyUpTime = Mathf.Infinity;
+                    CmdLoadVideo(_contentInfo.ID);
+                }
+            }
+        }
 
         // ping the server with the client current player time
         if (isClient)
@@ -149,10 +181,10 @@ public class AutoBrowserController : NetworkBehaviour
         #region screen height
 
         const float transitionTime = 0.5f;
-        var browserDown = _screenState == ScreenState.Neutral;
+        var browserDown = _screenState == ScreenState.Lower;
         var targetHeight = browserDown ? 0 : 1;
-        
-        // TODO
+
+        // TODO remove this when ready
         browserDown = false;
         targetHeight = 1;
 
@@ -172,6 +204,20 @@ public class AutoBrowserController : NetworkBehaviour
                 togglePause.SetInteractable(true);
 
         #endregion
+    }
+
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+        togglePause.SetInteractable(false);
+    }
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        var browserDown = _screenState == ScreenState.Lower;
+        var targetHeight = browserDown ? 0 : 1;
+        _height = targetHeight;
     }
 
     #endregion unity
@@ -198,18 +244,18 @@ public class AutoBrowserController : NetworkBehaviour
     [Server]
     private void ServerPlayVideoAtTime(double timeStamp, double networkTime)
     {
+        _allGood = true;
+        _started = true;
         _clientLastPingTime.Clear();
         _idealScrub = new ScrubData(timeStamp, networkTime);
-        // TODO
-        //RpcPlayVideoAtTime(timeStamp, networkTime);
-        _allGood = true;
+        RpcPlayVideoAtTime(timeStamp, networkTime);
     }
 
     [ClientRpc]
     private void RpcPlayVideoAtTime(double timeStamp, double networkTime)
     {
-        if (_idealScrubRoutine != null) StopCoroutine(_idealScrubRoutine);
-        _idealScrubRoutine = StartCoroutine(ClientStartAtTime(new ScrubData(timeStamp, networkTime)));
+        if (_clientStartAtTimeCoroutine != null) StopCoroutine(_clientStartAtTimeCoroutine);
+        _clientStartAtTimeCoroutine = StartCoroutine(ClientStartAtTime(new ScrubData(timeStamp, networkTime)));
     }
 
     private IEnumerator ClientStartAtTime(ScrubData data)
@@ -218,7 +264,7 @@ public class AutoBrowserController : NetworkBehaviour
         _autoBrowser.PostMessage(YouTubeMessage.SeekTo(data.Scrub));
         while (NetworkTime.time < data.NetworkTime) yield return null;
         _autoBrowser.PostMessage(YouTubeMessage.Play);
-        _idealScrubRoutine = null;
+        _clientStartAtTimeCoroutine = null;
     }
 
     [Command(ignoreAuthority = true)]
@@ -240,17 +286,57 @@ public class AutoBrowserController : NetworkBehaviour
 
     #region video loading
 
+    [Command(ignoreAuthority = true)]
+    public void CmdLoadVideo(string id)
+    {
+        Debug.Log("[BONSAI] CmdLoadVideo " + id);
+        
+        _started = false;
+        
+        if (_fetchAndReadyCoroutine != null) StopCoroutine(_fetchAndReadyCoroutine);
+        
+        _fetchAndReadyCoroutine = StartCoroutine(
+            FetchYouTubeAspect(id, newAspect =>
+            {
+                print("[BONSAI] FetchYouTubeAspect callback");
+                _contentInfo = new ContentInfo(id, newAspect);
+                _clientsReady.Clear();
+                _beginReadyUpTime = Time.time;
+                RpcReadyUp(_contentInfo);
+                _fetchAndReadyCoroutine = null;
+            })
+        );
+    }
+
+    [ClientRpc]
+    private void RpcReadyUp(ContentInfo info)
+    {
+        var resolution = _autoBrowser.ChangeAspect(info.Aspect);
+
+        Debug.Log("[BONSAI] RpcReadyUp " + info.ID + " resolution: " + resolution);
+
+        //TODO _autoBrowser.PostMessage(YouTubeMessage.GoHome);
+        _autoBrowser.PostMessage(YouTubeMessage.LoadVideo(info.ID, 0));
+    }
+
+    private void CmdReady(uint id)
+    {
+        Debug.Log("[BONSAI] CmdReady");
+        _clientsReady[id] = true;
+    }
+
     private void OnMessageEmitted(object sender, EventArgs<string> eventArgs)
     {
         var jsonNode = JSONNode.Parse(eventArgs.Value) as JSONObject;
 
-        Debug.Log("[BONSAI] JSON recieved " + eventArgs.Value);
 
         if (jsonNode?["type"].Value == "infoCurrentTime")
         {
             _playerCurrentTime = jsonNode["current_time"];
             return;
         }
+
+        Debug.Log("[BONSAI] JSON recieved " + eventArgs.Value);
 
         if (jsonNode?["type"].Value == "stateChange")
             switch ((string) jsonNode["message"])
@@ -265,6 +351,7 @@ public class AutoBrowserController : NetworkBehaviour
 
                 case "READY":
                     _playerState = PlayerState.Ready;
+                    CmdReady(NetworkClient.connection.identity.netId);
                     break;
 
                 case "PAUSED":
@@ -286,8 +373,8 @@ public class AutoBrowserController : NetworkBehaviour
             }
     }
 
-    [Command(ignoreAuthority = true)]
-    private void CmdSetScreenState(ScreenState newState)
+    [Server]
+    private void SetScreenState(ScreenState newState)
     {
         _screenState = newState;
 
@@ -298,44 +385,18 @@ public class AutoBrowserController : NetworkBehaviour
         togglePause.SetInteractable(false);
     }
 
-    private void OnSetScreenState(ScreenState oldState, ScreenState newState)
-    {
-        Debug.Log("[BONSAI] OnSetScreenState " + oldState + " -> " + newState);
-    }
-
-    [Command(ignoreAuthority = true)]
-    public void CmdLoadVideo(string id)
-    {
-        StartCoroutine(
-            FetchYouTubeAspect(id, newAspect =>
-            {
-                print("[BONSAI] FetchYouTubeAspect callback");
-                _contentInfo = new ContentInfo(id, newAspect);
-                _screenState = ScreenState.YouTube;
-            })
-        );
-    }
-
     [Command(ignoreAuthority = true)]
     public void CmdCloseVideo()
     {
+        SetScreenState(ScreenState.Lower);
         RpcGoHome();
-        _screenState = ScreenState.Neutral;
+        throw new NotImplementedException();
     }
 
     [ClientRpc]
     public void RpcGoHome()
     {
         _autoBrowser.PostMessage(YouTubeMessage.GoHome);
-    }
-
-    private void OnSetContentInfo(ContentInfo oldInfo, ContentInfo newInfo)
-    {
-        var resolution = _autoBrowser.ChangeAspect(newInfo.Aspect);
-
-        Debug.Log("[BONSAI] OnSetContentInfo " + oldInfo.ID + "->" + newInfo.ID + " resolution: " + resolution);
-
-        _autoBrowser.PostMessage(YouTubeMessage.LoadVideo(newInfo.ID, 0));
     }
 
     private static IEnumerator FetchYouTubeAspect(string videoId, Action<Vector2> callback)
@@ -371,18 +432,13 @@ public class AutoBrowserController : NetworkBehaviour
 
         switch (_screenState)
         {
-            case ScreenState.Neutral:
-                //CmdSetContentId(vidIds[_vidId]);
+            case ScreenState.Lower:
                 CmdLoadVideo(vidIds[_vidId]);
                 _vidId = _vidId == vidIds.Length - 1 ? 0 : _vidId + 1;
                 break;
 
-            case ScreenState.YouTube:
+            case ScreenState.Raised:
                 CmdCloseVideo();
-                //CmdSetScreenState(ScreenState.Neutral);
-                break;
-
-            case ScreenState.Twitch:
                 break;
 
             default:
@@ -390,19 +446,6 @@ public class AutoBrowserController : NetworkBehaviour
         }
     }
 
-    public override void OnStartServer()
-    {
-        base.OnStartServer();
-        togglePause.SetInteractable(false);
-    }
-
-    public override void OnStartClient()
-    {
-        base.OnStartClient();
-        var browserDown = _screenState == ScreenState.Neutral;
-        var targetHeight = browserDown ? 0 : 1;
-        _height = targetHeight;
-    }
 
     private readonly struct ContentInfo
     {
@@ -418,9 +461,8 @@ public class AutoBrowserController : NetworkBehaviour
 
     private enum ScreenState
     {
-        Neutral,
-        YouTube,
-        Twitch
+        Lower,
+        Raised
     }
 
     private enum PlayerState
