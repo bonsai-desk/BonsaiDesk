@@ -21,17 +21,6 @@ public class YouTubeMessage
                $"\"seekTime\": {time}" +
                "}";
     }
-
-    public static string SetContent(string id, Vector2Int resolution)
-    {
-        return "{" +
-               "\"type\": \"video\", " +
-               "\"command\": \"setContent\", " +
-               $"\"video_id\": \"{id}\", " +
-               $"\"x\": {resolution.x}," +
-               $"\"y\": {resolution.y}" +
-               "}";
-    }
 }
 
 public class PingUtils

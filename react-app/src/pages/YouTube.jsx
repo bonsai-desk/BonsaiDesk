@@ -23,13 +23,21 @@ const PlayerState = {
 
 let Video = (props) => {
 
-    let {id} = props.match.params;
+    let dev_mode = window.location.pathname.split("/")[1] === "youtube_test";
+    let {id, ts} = props.match.params;
     let [ready, setReady] = useState(false);
     let [player, setPlayer] = useState(null);
+
+    ts = ts == null ? 0 : ts;
 
     // setup the event listeners
     useEffect(() => {
         if (player == null) return;
+
+        if (dev_mode) {
+            setInterval(()=>{console.log(player.getCurrentTime())}, 1000)
+            return;
+        };
 
         if (window.vuplex != null) {
             addCSharpListeners(player);
@@ -41,10 +49,9 @@ let Video = (props) => {
     }, [player])
 
     let onReady = (event) => {
-        console.log("onReady", event);
         setPlayer(event.target);
         event.target.mute();
-        event.target.loadVideoById(id);
+        event.target.loadVideoById(id, parseFloat(ts));
     };
 
     let addCSharpListeners = (player) => {
@@ -86,6 +93,9 @@ let Video = (props) => {
     let onStateChange = (event) => {
 
         let postStateChange = (message) => {
+            if (dev_mode) {
+                return;
+            };
             window.vuplex.postMessage({type: "stateChange", message: message, current_time: player.getCurrentTime()});
         }
 
@@ -108,7 +118,7 @@ let Video = (props) => {
                 break;
             case PlayerState.PAUSED:
                 if (!ready) {
-                    player.seekTo(0);
+                    player.seekTo(ts);
                     player.unMute();
                     setReady(true);
                     console.log("bonsai: ready")
