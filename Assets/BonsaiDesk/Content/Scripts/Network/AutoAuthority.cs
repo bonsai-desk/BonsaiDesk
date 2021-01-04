@@ -52,6 +52,11 @@ public class AutoAuthority : NetworkBehaviour
 
     private void Update()
     {
+        if (isServer && transform.position.y < -100f)
+        {
+            NetworkServer.Destroy(gameObject);
+        }
+
         UpdateColor();
         _visualizePinchPull = false;
 
