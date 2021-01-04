@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from "react";
 import YouTube from "react-youtube";
+import {useHistory} from "react-router-dom";
 
 let opts = {
     width: window.innerWidth,
@@ -23,6 +24,8 @@ const PlayerState = {
 
 let Video = (props) => {
 
+    let history = useHistory();
+
     let dev_mode = window.location.pathname.split("/")[1] === "youtube_test";
     let {id, ts} = props.match.params;
     let [ready, setReady] = useState(false);
@@ -35,9 +38,52 @@ let Video = (props) => {
         if (player == null) return;
 
         if (dev_mode) {
-            setInterval(()=>{console.log(player.getCurrentTime())}, 1000)
+            setInterval(() => {
+                console.log(player.getCurrentTime())
+            }, 1000)
             return;
-        };
+        }
+
+        let addCSharpListeners = (player) => {
+
+            // ping back the player time every 1/10th of a second
+            setInterval(() => {
+                window.vuplex.postMessage({
+                    type: "infoCurrentTime",
+                    current_time: player.getCurrentTime() == null ? 0 : player.getCurrentTime()
+                })
+            }, 100)
+
+            window.vuplex.addEventListener('message', event => {
+
+                let json = JSON.parse(event.data);
+
+                if (!(json.type === "video")) return;
+
+                switch (json.command) {
+                    case "play":
+                        console.log("command: play")
+                        player.playVideo();
+                        break;
+                    case "pause":
+                        console.log("command: pause")
+                        player.pauseVideo();
+                        break;
+                    case "seekTo":
+                        console.log("command: seekTo " + json.seekTime)
+                        player.seekTo(json.seekTime);
+                        break;
+                    case "goHome":
+                        history.push("/")
+                        window.location.reload(true)
+                        break;
+
+                    default:
+                        console.log("command: not handled " + JSON.stringify(json))
+                        break;
+                }
+            })
+        }
 
         if (window.vuplex != null) {
             addCSharpListeners(player);
@@ -46,7 +92,7 @@ let Video = (props) => {
                 addCSharpListeners(player)
             })
         }
-    }, [player])
+    }, [player, dev_mode, history])
 
     let onReady = (event) => {
         setPlayer(event.target);
@@ -54,48 +100,13 @@ let Video = (props) => {
         event.target.loadVideoById(id, parseFloat(ts));
     };
 
-    let addCSharpListeners = (player) => {
-
-        // ping back the player time every 1/10th of a second
-        setInterval(() => {
-            window.vuplex.postMessage({
-                type: "infoCurrentTime",
-                current_time: player.getCurrentTime() == null ? 0 : player.getCurrentTime()
-            })
-        }, 100)
-
-        window.vuplex.addEventListener('message', event => {
-
-            let json = JSON.parse(event.data);
-
-            if (!(json.type === "video")) return;
-
-            switch (json.command) {
-                case "play":
-                    console.log("command: play")
-                    player.playVideo();
-                    break;
-                case "pause":
-                    console.log("command: pause")
-                    player.pauseVideo();
-                    break;
-                case "seekTo":
-                    console.log("command: seekTo " + json.seekTime)
-                    player.seekTo(json.seekTime);
-                    break;
-                default:
-                    console.log("command: not handled " + JSON.stringify(json))
-                    break;
-            }
-        })
-    };
-
     let onStateChange = (event) => {
 
         let postStateChange = (message) => {
             if (dev_mode) {
                 return;
-            };
+            }
+
             window.vuplex.postMessage({type: "stateChange", message: message, current_time: player.getCurrentTime()});
         }
 
