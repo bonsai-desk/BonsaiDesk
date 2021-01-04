@@ -21,15 +21,18 @@ const PlayerState = {
     CUED: 5,
 };
 
-let Test = () => {
+let Test = (props) => {
+
+    let { id } = props.match.params;
+    let [ready, setReady] = useState(false);
 
     let [player, setPlayer] = useState(null);
 
     let onReady = (event) => {
         console.log("onReady", event);
         setPlayer(event.target);
-        //event.target.cueVideoById("qEfPBt9dU60")
-        event.target.loadVideoById("qEfPBt9dU60")
+        event.target.mute();
+        event.target.loadVideoById(id);
     };
 
     let onError = (event) => {
@@ -46,19 +49,25 @@ let Test = () => {
                 break
             case PlayerState.PLAYING:
                 console.log("bonsai: playing")
-                player.pauseVideo();
-                break
+                if (!ready) {
+                    player.pauseVideo();
+                    break;
+                }
+                break;
             case PlayerState.PAUSED:
                 console.log("bonsai: paused")
-                player.seekTo(0, true)
+                if (!ready) {
+                    player.seekTo(0, true)
+                    player.unMute();
+                    setReady(true);
+                    break;
+                }
                 break;
             case PlayerState.BUFFERING:
                 console.log("bonsai: buffering")
                 break;
             case PlayerState.CUED:
                 console.log("bonsai: videoCued")
-                //player.playVideo();
-                //player.playVideo();
                 break
             default:
                 break;
