@@ -239,26 +239,30 @@ public class AutoBrowserController : NetworkBehaviour
                 case "UNSTARTED":
                     _playerState = PlayerState.Unstarted;
                     break;
-
-                case "ENDED":
-                    _playerState = PlayerState.Ended;
+                
+                case "VIDEOCUED":
+                    _playerState = PlayerState.VideoCued;
+                    break;
+                
+                case "READY":
+                    _playerState = PlayerState.Ready;
+                    break;
+                
+                case "PAUSED":
+                    _playerState = PlayerState.Paused;
                     break;
 
                 case "PLAYING":
                     _playerState = PlayerState.Playing;
                     break;
 
-                case "PAUSED":
-                    _playerState = PlayerState.Paused;
-                    break;
-
                 case "BUFFERING":
                     _playerState = PlayerState.Buffering;
                     // TODO notify the server
                     break;
-
-                case "VIDEOCUED":
-                    _playerState = PlayerState.VideoCued;
+                
+                case "ENDED":
+                    _playerState = PlayerState.Ended;
                     break;
             }
     }
@@ -388,11 +392,12 @@ public class AutoBrowserController : NetworkBehaviour
     private enum PlayerState
     {
         Unstarted,
-        Ended,
-        Playing,
+        VideoCued,
+        Ready,
         Paused,
+        Playing,
         Buffering,
-        VideoCued
+        Ended
     }
 
     #endregion video loading
