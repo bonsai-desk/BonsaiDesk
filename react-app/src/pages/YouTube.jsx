@@ -81,6 +81,7 @@ let Video = (props) => {
                             setReady(false)
                             player.mute();
                             player.seekTo(json.seekTime, true);
+                            break;
                         default:
                             console.log("command: not handled (video) " + JSON.stringify(json))
                             break;
@@ -164,7 +165,6 @@ let Video = (props) => {
 
     return (
         <div>
-            <div onClick={() => {player.seekTo(300)}}>seek</div>
             <YouTube
                 opts={opts}
                 onReady={onReady}

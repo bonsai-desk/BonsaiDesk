@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Vuplex.WebView;
 
-public class YouTubeMessage
+public static class YouTubeMessage
 {
     public const string Pause = "{\"type\": \"video\", \"command\": \"pause\"}";
 
@@ -46,7 +46,7 @@ public class YouTubeMessage
     }
 }
 
-public class PingUtils
+public static class PingUtils
 {
     private static float GetDelay(double worstPing, (float, float) delayClamp)
     {
@@ -128,6 +128,8 @@ public class AutoBrowserController : NetworkBehaviour
         _screenState = ScreenState.Lower;
         _playerState = PlayerState.Unstarted;
         _autoBrowser = GetComponent<AutoBrowser>();
+        
+        NetworkManagerGame.Singleton.ServerConnect += conn => { _clientsReadyStatus.Add(conn.identity.netId, false); };
 
         NetworkManagerGame.Singleton.ServerDisconnect += conn => { _clientsReadyStatus.Remove(conn.identity.netId); };
 
