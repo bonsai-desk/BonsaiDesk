@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "vuplex-webview-gecko-extension",
-  "version": "1.0",
+  "version": "3.11",
   "description": "Adds support for the Vuplex 3D WebView window.vuplex API.",
   "browser_specific_settings": {
     "gecko": {
