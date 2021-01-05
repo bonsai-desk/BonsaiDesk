@@ -12,6 +12,9 @@ TagManager:
   - Block
   - BeamPinch
   - Bearing
+  - BlockArea
+  - KeepOnDisconnect
+  - FingerTip
   layers:
   - Default
   - TransparentFX

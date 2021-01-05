@@ -1,50 +1,35 @@
-﻿using UnityEngine;
+﻿using Mirror;
+using UnityEngine;
 
-public class TabletControl : MonoBehaviour
+public class TabletControl : NetworkBehaviour
 {
     public PhysicMaterial lowFrictionPhysicMaterial;
     public BoxCollider worldBox;
-
+    public TabletCollider tabletCollider;
+    public Rigidbody tabletBody;
+    
     private PhysicMaterial _defaultPhysicMaterial;
-
-    private bool _touchingHand = false;
-    private bool _lastTouchingHand = false;
-
-    private int _leftHandLayerMask;
-    private int _rightHandLayerMask;
 
     private void Start()
     {
         _defaultPhysicMaterial = worldBox.sharedMaterial;
-
-        _leftHandLayerMask = LayerMask.NameToLayer("LeftHand");
-        _rightHandLayerMask = LayerMask.NameToLayer("RightHand");
     }
-
+    
     private void Update()
     {
-        if (_touchingHand != _lastTouchingHand)
-        {
-            worldBox.sharedMaterial = _touchingHand ? lowFrictionPhysicMaterial : _defaultPhysicMaterial;
-        }
-
-        _lastTouchingHand = _touchingHand;
-        _touchingHand = false;
+        worldBox.sharedMaterial =
+            tabletCollider.NumFingersTouching >= 4 ? lowFrictionPhysicMaterial : _defaultPhysicMaterial;
+        tabletBody.mass = tabletCollider.NumFingersTouching >= 4 ? 0.050f : 0.300f;
     }
 
-    private void OnCollisionEnter(Collision collision)
+    public void TabletPlay()
     {
-        if (collision.gameObject.layer == _leftHandLayerMask || collision.gameObject.layer == _rightHandLayerMask)
-        {
-            _touchingHand = true;
-        }
+        CmdDestroySelf();
     }
 
-    private void OnCollisionStay(Collision collision)
+    [Command]
+    private void CmdDestroySelf()
     {
-        if (collision.gameObject.layer == _leftHandLayerMask || collision.gameObject.layer == _rightHandLayerMask)
-        {
-            _touchingHand = true;
-        }
+        NetworkServer.Destroy(gameObject);
     }
 }
