@@ -61,6 +61,7 @@ public class AutoBrowser : MonoBehaviour
 
         //initial size does not matter because it will be immediately resized by ChangeAspect
         _webViewPrefab = WebViewPrefab.Instantiate(1, 1);
+        Destroy(_webViewPrefab.Collider);
         _webViewPrefab.Visible = false;
         _webViewPrefab.Initialized +=
             (sender, eventArgs) =>
