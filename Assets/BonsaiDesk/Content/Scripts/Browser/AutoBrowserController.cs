@@ -44,7 +44,6 @@ public class YouTubeMessage
                "\"command\": \"readyUp\", " +
                $"\"timeStamp\": {timeStamp}" +
                "}";
-        
     }
 }
 
@@ -83,8 +82,6 @@ public class AutoBrowserController : NetworkBehaviour
 
     private float _beginReadyUpTime = Mathf.Infinity;
 
-    private bool _started;
-
     private bool _allGood;
 
     private readonly Dictionary<uint, double> _clientLastPingTime = new Dictionary<uint, double>();
@@ -106,6 +103,8 @@ public class AutoBrowserController : NetworkBehaviour
     private float _playerCurrentTime;
 
     private Coroutine _clientStartAtTimeCoroutine;
+
+    private bool _contentActive;
 
     #endregion client vars
 
@@ -149,7 +148,7 @@ public class AutoBrowserController : NetworkBehaviour
 
     private void Update()
     {
-        if (isServer)
+        if (isServer && _contentActive)
         {
             // check if any of the clients did not ping recently
             // set _allGood is false if a bad ping exists
@@ -159,42 +158,50 @@ public class AutoBrowserController : NetworkBehaviour
                 foreach (var entry in _clientLastPingTime)
                     if (NetworkTime.time - entry.Value > pingTolerance)
                     {
-                        _started = false;
                         _allGood = false;
                         break;
                     }
             }
-
-            // TODO trip the failsafe and sync the clients
-            if (!_allGood && _started)
+            else
             {
-                Debug.Log("[BONSAI] !_allGood && _started");
-                _beginReadyUpTime = Time.time;
-                _idealScrub = _idealScrub.Paused(NetworkTime.time);
-                ReadyUpAtTime(_idealScrub.CurrentVideoTime(NetworkTime.time));
-            }
-
-            // if the video is not started but clients have begun to ready up
-            if (!_started && !float.IsInfinity(_beginReadyUpTime))
-            {
-                Debug.Log("[BONSAI] ABC !_started && !float.IsInfinity(_beginReadyUpTime)");
-                // if all the clients are ready, start the video
-                if (AllClientsAreReady())
+                // tell the clients to begin readying up
+                if (float.IsInfinity(_beginReadyUpTime))
                 {
-                    Debug.Log("[BONSAI] AllClientsAreReady");
-                    _allGood = true;
-                    _started = true;
-                    _clientLastPingTime.Clear();
-                    SetScreenState(ScreenState.Raised);
-                    _idealScrub = new ScrubData(0, NetworkTime.time + 0.5f);
-                    //ServerPlayVideoAtTime(0, NetworkTime.time + 0.5f);
+                    Debug.Log("[BONSAI] Ready Up Initiated");
+                    _beginReadyUpTime = Time.time;
+
+                    _clientsReady.Clear();
+                    foreach (var conn in NetworkServer.connections.Values)
+                        _clientsReady.Add(conn.identity.netId, false);
+
+                    if (!_idealScrub.IsPaused())
+                    {
+                        _idealScrub = _idealScrub.Paused(NetworkTime.time);
+                        ReadyUpAtTime(_idealScrub.CurrentVideoTime(NetworkTime.time));
+                    }
                 }
-                // if clients are not ready after 5 seconds, load the video again
-                else if (Time.time - _beginReadyUpTime > 5f)
+                // handle clients readying up
+                else
                 {
-                    Debug.Log("[BONSAI] Clients Failed to Ready Up");
-                    _beginReadyUpTime = Mathf.Infinity;
-                    CmdLoadVideo(_contentInfo.ID);
+                    // if all the clients are ready, start the video
+                    if (AllClientsAreReady())
+                    {
+                        Debug.Log("[BONSAI] AllClientsAreReady");
+                        SetScreenState(ScreenState.Raised);
+                        _allGood = true;
+                        _clientLastPingTime.Clear();
+                        _beginReadyUpTime = Mathf.Infinity;
+                        _idealScrub = new ScrubData(
+                            _idealScrub.Scrub
+                            , NetworkTime.time + 0.5f);
+                    }
+                    // if clients are not ready after 5 seconds, load the video again
+                    else if (Time.time - _beginReadyUpTime > 5f)
+                    {
+                        Debug.Log("[BONSAI] Clients Failed to Ready Up");
+                        _beginReadyUpTime = Mathf.Infinity;
+                        _allGood = false;
+                    }
                 }
             }
         }
@@ -203,18 +210,14 @@ public class AutoBrowserController : NetworkBehaviour
         if (isClient)
         {
             if (_playerState == PlayerState.Ready && NetworkTime.time > _idealScrub.NetworkTime)
-            {
                 _autoBrowser.PostMessage(YouTubeMessage.Play);
-            }
-            
+
             const float pingInterval = 0.1f;
             if (Time.time - _lastPingSentTime > pingInterval)
             {
                 _lastPingSentTime = Time.time;
-                if (NetworkClient.connection != null &&  NetworkClient.connection.identity != null)
-                {
+                if (NetworkClient.connection != null && NetworkClient.connection.identity != null)
                     CmdPing(NetworkClient.connection.identity.netId, _playerCurrentTime);
-                }
             }
         }
 
@@ -271,6 +274,7 @@ public class AutoBrowserController : NetworkBehaviour
 
         public double CurrentVideoTime(double currentNetworkTime)
         {
+            if (IsPaused()) return Scrub;
             return Scrub + (currentNetworkTime - NetworkTime);
         }
 
@@ -280,6 +284,12 @@ public class AutoBrowserController : NetworkBehaviour
             NetworkTime = networkTime;
         }
 
+        public ScrubData(double scrub)
+        {
+            Scrub = scrub;
+            NetworkTime = double.PositiveInfinity;
+        }
+
         public ScrubData Paused(double currentNetworkTime)
         {
             return new ScrubData(
@@ -287,27 +297,11 @@ public class AutoBrowserController : NetworkBehaviour
                 double.PositiveInfinity
             );
         }
+
         public bool IsPaused()
         {
             return double.IsPositiveInfinity(NetworkTime);
         }
-    }
-
-    [Server]
-    private void ServerPlayVideoAtTime(double timeStamp, double networkTime)
-    {
-        _allGood = true;
-        _started = true;
-        _clientLastPingTime.Clear();
-        _idealScrub = new ScrubData(timeStamp, networkTime);
-        RpcPlayVideoAtTime(timeStamp, networkTime);
-    }
-
-    [ClientRpc]
-    private void RpcPlayVideoAtTime(double timeStamp, double networkTime)
-    {
-        if (_clientStartAtTimeCoroutine != null) StopCoroutine(_clientStartAtTimeCoroutine);
-        _clientStartAtTimeCoroutine = StartCoroutine(ClientStartAtTime(new ScrubData(timeStamp, networkTime)));
     }
 
     private IEnumerator ClientStartAtTime(ScrubData data)
@@ -336,6 +330,8 @@ public class AutoBrowserController : NetworkBehaviour
 
     private bool AllClientsAreReady()
     {
+        if (_clientsReady.Count == 0) Debug.LogError("No clients in AllClientsAreReady");
+        if (_clientsReady.Count != NetworkServer.connections.Count) Debug.LogError("_clientsReady mismatch NetServer connections");
         return _clientsReady.Values.All(status => status);
     }
 
@@ -344,11 +340,9 @@ public class AutoBrowserController : NetworkBehaviour
     #region video loading
 
     [Command(ignoreAuthority = true)]
-    public void CmdLoadVideo(string id)
+    private void CmdLoadVideo(string id)
     {
         Debug.Log("[BONSAI] CmdLoadVideo " + id);
-
-        _started = false;
 
         if (_fetchAndReadyCoroutine != null) StopCoroutine(_fetchAndReadyCoroutine);
 
@@ -356,26 +350,33 @@ public class AutoBrowserController : NetworkBehaviour
             FetchYouTubeAspect(id, newAspect =>
             {
                 print("[BONSAI] FetchYouTubeAspect callback");
+
+                _idealScrub = new ScrubData(0);
                 _contentInfo = new ContentInfo(id, newAspect);
+                _contentActive = true;
 
                 _clientsReady.Clear();
                 foreach (var conn in NetworkServer.connections.Values) _clientsReady[conn.identity.netId] = false;
 
+                _allGood = false;
                 _beginReadyUpTime = Time.time;
-                RpcReadyUp(_contentInfo);
+
+                RpcLoadVideo(_contentInfo);
+
                 _fetchAndReadyCoroutine = null;
             })
         );
     }
 
     [ClientRpc]
-    private void RpcReadyUp(ContentInfo info)
+    private void RpcLoadVideo(ContentInfo info)
     {
         var resolution = _autoBrowser.ChangeAspect(info.Aspect);
 
-        Debug.Log("[BONSAI] RpcReadyUp " + info.ID + " resolution: " + resolution);
+        Debug.Log("[BONSAI] RpcLoadVideo " + info.ID + " resolution: " + resolution);
 
         //TODO _autoBrowser.PostMessage(YouTubeMessage.GoHome);
+
         _autoBrowser.PostMessage(YouTubeMessage.LoadVideo(info.ID, 0));
     }
 
@@ -391,6 +392,7 @@ public class AutoBrowserController : NetworkBehaviour
         _autoBrowser.PostMessage(YouTubeMessage.ReadyUpAtTime(timeStamp));
     }
 
+    [Command(ignoreAuthority = true)]
     private void CmdReady(uint id)
     {
         Debug.Log("[BONSAI] CmdReady");
@@ -458,14 +460,16 @@ public class AutoBrowserController : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    public void CmdCloseVideo()
+    private void CmdCloseVideo()
     {
+        _contentInfo = new ContentInfo();
+        _contentActive = false;
         SetScreenState(ScreenState.Lower);
         RpcGoHome();
     }
 
     [ClientRpc]
-    public void RpcGoHome()
+    private void RpcGoHome()
     {
         _autoBrowser.PostMessage(YouTubeMessage.GoHome);
     }
