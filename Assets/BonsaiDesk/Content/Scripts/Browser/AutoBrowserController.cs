@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Mirror;
+using Oculus.Platform;
 using OVRSimpleJSON;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -80,13 +81,15 @@ public class AutoBrowserController : NetworkBehaviour
 
     #region server vars
 
-    private float _beginReadyUpTime = Mathf.Infinity;
+    private double _beginReadyUpTime = Mathf.Infinity;
+
+    private const float ReadyUpTimeout = 5;
 
     private bool _allGood;
 
     private readonly Dictionary<uint, double> _clientLastPingTime = new Dictionary<uint, double>();
 
-    private readonly Dictionary<uint, bool> _clientsReady = new Dictionary<uint, bool>();
+    private readonly Dictionary<uint, bool> _clientsReadyStatus = new Dictionary<uint, bool>();
 
     private Coroutine _fetchAndReadyCoroutine;
 
@@ -105,6 +108,8 @@ public class AutoBrowserController : NetworkBehaviour
     private Coroutine _clientStartAtTimeCoroutine;
 
     private bool _contentActive;
+
+    private bool _postedPlayMessage;
 
     #endregion client vars
 
@@ -129,7 +134,7 @@ public class AutoBrowserController : NetworkBehaviour
         NetworkManagerGame.Singleton.ServerDisconnect += conn =>
         {
             //TODO verify that this triggers properly
-            _clientsReady.Remove(conn.identity.netId);
+            _clientsReadyStatus.Remove(conn.identity.netId);
         };
 
         _autoBrowser.BrowserReady += () =>
@@ -158,26 +163,43 @@ public class AutoBrowserController : NetworkBehaviour
                 foreach (var entry in _clientLastPingTime)
                     if (NetworkTime.time - entry.Value > pingTolerance)
                     {
+                        Debug.Log("[BONSAI SERVER] Trigger Not All Good");
                         _allGood = false;
+                        _clientLastPingTime.Clear();
                         break;
                     }
             }
             else
             {
                 // tell the clients to begin readying up
-                if (float.IsInfinity(_beginReadyUpTime))
+                if (double.IsInfinity(_beginReadyUpTime))
                 {
-                    Debug.Log("[BONSAI] Ready Up Initiated");
-                    _beginReadyUpTime = Time.time;
+                    Debug.Log("[BONSAI SERVER] Ready up initiated");
 
-                    _clientsReady.Clear();
+                    _beginReadyUpTime = NetworkTime.time;
+
+                    _clientsReadyStatus.Clear();
                     foreach (var conn in NetworkServer.connections.Values)
-                        _clientsReady.Add(conn.identity.netId, false);
+                        _clientsReadyStatus.Add(conn.identity.netId, false);
 
-                    if (!_idealScrub.IsPaused())
+                    if (!_idealScrub.IsPaused() && NetworkTime.time > _idealScrub.NetworkTime)
                     {
+                        var oldScrub = _idealScrub.Scrub;
+                        var oldStart = _idealScrub.NetworkTime;
+
                         _idealScrub = _idealScrub.Paused(NetworkTime.time);
-                        ReadyUpAtTime(_idealScrub.CurrentVideoTime(NetworkTime.time));
+                        var currentVideoTime = _idealScrub.CurrentVideoTime(NetworkTime.time);
+
+                        RpcReadyUpAtTime(currentVideoTime);
+
+                        Debug.Log("[BONSAI SERVER] Ideal scrub was not paused when beginning ready up process. " +
+                                  $"Timestamp ({oldScrub}) started ({NetworkTime.time - oldStart}) seconds ago, " +
+                                  $"new timestamp: ({_idealScrub.Scrub}=={currentVideoTime})"
+                        );
+                    }
+                    else
+                    {
+                        Debug.Log($"[BONSAI] Server ideal scrub was paused at ({_idealScrub.Scrub}), continuing...");
                     }
                 }
                 // handle clients readying up
@@ -186,21 +208,28 @@ public class AutoBrowserController : NetworkBehaviour
                     // if all the clients are ready, start the video
                     if (AllClientsAreReady())
                     {
-                        Debug.Log("[BONSAI] AllClientsAreReady");
+                        Debug.Log($"[BONSAI SERVER] All ({_clientsReadyStatus.Count}) clients are ready at NetworkTime: {NetworkTime.time} with {ReadyUpTimeout - (NetworkTime.time - _beginReadyUpTime)} seconds to spare");
                         SetScreenState(ScreenState.Raised);
                         _allGood = true;
                         _clientLastPingTime.Clear();
                         _beginReadyUpTime = Mathf.Infinity;
-                        _idealScrub = new ScrubData(
-                            _idealScrub.Scrub
-                            , NetworkTime.time + 0.5f);
+                        _idealScrub = _idealScrub.StartPlayingWhen(NetworkTime.time + 0.5);
                     }
                     // if clients are not ready after 5 seconds, load the video again
-                    else if (Time.time - _beginReadyUpTime > 5f)
+                    else if (NetworkTime.time - _beginReadyUpTime > ReadyUpTimeout)
                     {
-                        Debug.Log("[BONSAI] Clients Failed to Ready Up");
+                        var failedNetIds = new HashSet<string>();
+                        foreach (var info in _clientsReadyStatus.Where(info => !info.Value))
+                        {
+                            failedNetIds.Add(info.Key.ToString());
+                        }
+
+                        var failedNetIdsStr = string.Join(", ", failedNetIds);
+                        
+                        Debug.Log($"[BONSAI SERVER] ({failedNetIds.Count}/{_clientsReadyStatus.Count}) Clients failed to ready up netIds=[{failedNetIdsStr}]");
                         _beginReadyUpTime = Mathf.Infinity;
                         _allGood = false;
+                        _clientLastPingTime.Clear();
                     }
                 }
             }
@@ -209,8 +238,20 @@ public class AutoBrowserController : NetworkBehaviour
         // ping the server with the client current player time
         if (isClient)
         {
-            if (_playerState == PlayerState.Ready && NetworkTime.time > _idealScrub.NetworkTime)
+
+            if (_playerState != PlayerState.Ready && _postedPlayMessage)
+            {
+                _postedPlayMessage = false;
+            }
+            
+            if (_playerState == PlayerState.Ready && !_idealScrub.IsPaused() &&
+                NetworkTime.time > _idealScrub.NetworkTime && !_postedPlayMessage)
+            {
+                Debug.Log($"[BONSAI CLIENT] (netId={NetworkClient.connection.identity.netId}) been ready, " +
+                $"now playing scrub: {_idealScrub.Scrub} at NetworkTime: ({_idealScrub.NetworkTime})~=({NetworkTime.time})");
                 _autoBrowser.PostMessage(YouTubeMessage.Play);
+                _postedPlayMessage = true;
+            } 
 
             const float pingInterval = 0.1f;
             if (Time.time - _lastPingSentTime > pingInterval)
@@ -284,10 +325,9 @@ public class AutoBrowserController : NetworkBehaviour
             NetworkTime = networkTime;
         }
 
-        public ScrubData(double scrub)
+        public static ScrubData PausedAtScrub(double scrub)
         {
-            Scrub = scrub;
-            NetworkTime = double.PositiveInfinity;
+            return new ScrubData(scrub, double.PositiveInfinity);
         }
 
         public ScrubData Paused(double currentNetworkTime)
@@ -298,19 +338,20 @@ public class AutoBrowserController : NetworkBehaviour
             );
         }
 
+        public ScrubData StartPlayingWhen(double networkTime)
+        {
+            if (!IsPaused())
+            {
+                throw new Exception("Scrub should be paused before resuming");
+            }
+            NetworkTime = networkTime;
+            return this;
+        }
+
         public bool IsPaused()
         {
             return double.IsPositiveInfinity(NetworkTime);
         }
-    }
-
-    private IEnumerator ClientStartAtTime(ScrubData data)
-    {
-        _autoBrowser.PostMessage(YouTubeMessage.Pause);
-        _autoBrowser.PostMessage(YouTubeMessage.SeekTo(data.Scrub));
-        while (NetworkTime.time < data.NetworkTime) yield return null;
-        _autoBrowser.PostMessage(YouTubeMessage.Play);
-        _clientStartAtTimeCoroutine = null;
     }
 
     [Command(ignoreAuthority = true)]
@@ -330,9 +371,10 @@ public class AutoBrowserController : NetworkBehaviour
 
     private bool AllClientsAreReady()
     {
-        if (_clientsReady.Count == 0) Debug.LogError("No clients in AllClientsAreReady");
-        if (_clientsReady.Count != NetworkServer.connections.Count) Debug.LogError("_clientsReady mismatch NetServer connections");
-        return _clientsReady.Values.All(status => status);
+        if (_clientsReadyStatus.Count == 0) Debug.LogError("No clients in AllClientsAreReady");
+        if (_clientsReadyStatus.Count != NetworkServer.connections.Count)
+            Debug.LogError("_clientsReady mismatch NetServer connections");
+        return _clientsReadyStatus.Values.All(status => status);
     }
 
     #endregion failsafe
@@ -349,17 +391,15 @@ public class AutoBrowserController : NetworkBehaviour
         _fetchAndReadyCoroutine = StartCoroutine(
             FetchYouTubeAspect(id, newAspect =>
             {
-                print("[BONSAI] FetchYouTubeAspect callback");
-
-                _idealScrub = new ScrubData(0);
-                _contentInfo = new ContentInfo(id, newAspect);
-                _contentActive = true;
-
-                _clientsReady.Clear();
-                foreach (var conn in NetworkServer.connections.Values) _clientsReady[conn.identity.netId] = false;
+                print($"[BONSAI SERVER] Fetched aspect ({newAspect.x},{newAspect.y}) for video ({id})");
 
                 _allGood = false;
-                _beginReadyUpTime = Time.time;
+
+                _contentActive = true;
+
+                _contentInfo = new ContentInfo(id, newAspect);
+
+                _idealScrub = ScrubData.PausedAtScrub(0);
 
                 RpcLoadVideo(_contentInfo);
 
@@ -373,17 +413,11 @@ public class AutoBrowserController : NetworkBehaviour
     {
         var resolution = _autoBrowser.ChangeAspect(info.Aspect);
 
-        Debug.Log("[BONSAI] RpcLoadVideo " + info.ID + " resolution: " + resolution);
+        Debug.Log($"[BONSAI RPC] Load New YouTube Video ({info.ID}) with resolution: {resolution}");
 
         //TODO _autoBrowser.PostMessage(YouTubeMessage.GoHome);
 
         _autoBrowser.PostMessage(YouTubeMessage.LoadVideo(info.ID, 0));
-    }
-
-    [Server]
-    private void ReadyUpAtTime(double timeStamp)
-    {
-        RpcReadyUpAtTime(timeStamp);
     }
 
     [ClientRpc]
@@ -395,8 +429,8 @@ public class AutoBrowserController : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdReady(uint id)
     {
-        Debug.Log("[BONSAI] CmdReady");
-        _clientsReady[id] = true;
+        Debug.Log($"[BONSAI SERVER] Client (netId={id}) is ready at NetworkTime={NetworkTime.time}");
+        _clientsReadyStatus[id] = true;
     }
 
     private void OnMessageEmitted(object sender, EventArgs<string> eventArgs)
@@ -410,7 +444,7 @@ public class AutoBrowserController : NetworkBehaviour
             return;
         }
 
-        Debug.Log("[BONSAI] JSON recieved " + eventArgs.Value);
+        Debug.Log($"[BONSAI] (netId={NetworkClient.connection.identity.netId}) JSON recieved " + eventArgs.Value);
 
         if (jsonNode?["type"].Value == "stateChange")
             switch ((string) jsonNode["message"])
@@ -462,8 +496,8 @@ public class AutoBrowserController : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdCloseVideo()
     {
-        _contentInfo = new ContentInfo();
         _contentActive = false;
+        _contentInfo = new ContentInfo();
         SetScreenState(ScreenState.Lower);
         RpcGoHome();
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using Mirror;
 using UnityEngine;
 using Vuplex.WebView;
 
@@ -150,7 +151,7 @@ public class AutoBrowser : MonoBehaviour
 
     public void PostMessage(string data)
     {
-        Debug.Log("[BONSAI] PostMessage " + data);
+        Debug.Log($"[BONSAI] (netId={NetworkClient.connection.identity.netId}) PostMessage {data} at NetworkTime {NetworkTime.time}");
         _webViewPrefab.WebView.PostMessage(data);
     }
 
