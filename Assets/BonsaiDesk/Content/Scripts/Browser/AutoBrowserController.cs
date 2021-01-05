@@ -79,7 +79,9 @@ public class AutoBrowserController : NetworkBehaviour
 
     #region server vars
 
-    private double _beginReadyUpTime = Mathf.Infinity;
+    private bool _readyingUp;
+
+    private double _beginReadyUpTime;
 
     private const float ReadyUpTimeout = 5;
 
@@ -129,7 +131,7 @@ public class AutoBrowserController : NetworkBehaviour
         _playerState = PlayerState.Unstarted;
         _autoBrowser = GetComponent<AutoBrowser>();
         
-        //NetworkManagerGame.Singleton.ServerConnect += conn => { _clientsReadyStatus.Add(conn.identity.netId, false); };
+        // TODO this breaks everything NetworkManagerGame.Singleton.ServerConnect += conn => { _clientsReadyStatus.Add(conn.identity.netId, false); };
 
         NetworkManagerGame.Singleton.ServerDisconnect += conn => { _clientsReadyStatus.Remove(conn.identity.netId); };
 
@@ -169,10 +171,11 @@ public class AutoBrowserController : NetworkBehaviour
             else
             {
                 // tell the clients to begin readying up since we have not started the process
-                if (double.IsInfinity(_beginReadyUpTime))
+                if (!_readyingUp)
                 {
                     Debug.Log($"[BONSAI SERVER] Ready up initiated at NetworkTime {NetworkTime.time}");
 
+                    _readyingUp = true;
                     _beginReadyUpTime = NetworkTime.time;
 
                     _clientsReadyStatus.Clear();
@@ -210,7 +213,7 @@ public class AutoBrowserController : NetworkBehaviour
                         SetScreenState(ScreenState.Raised);
                         _allGood = true;
                         _clientLastPingTime.Clear();
-                        _beginReadyUpTime = Mathf.Infinity;
+                        _readyingUp = false;
                         _idealScrub = _idealScrub.ActiveAtNetworkTime(NetworkTime.time + 0.5);
                         Debug.Log(
                             $"[BONSAI SERVER] Clients should start playing scrub ({_idealScrub.Scrub}) at NetworkTime ({_idealScrub.NetworkTime})");
@@ -229,7 +232,7 @@ public class AutoBrowserController : NetworkBehaviour
 
                         _allGood = false;
                         _clientLastPingTime.Clear();
-                        _beginReadyUpTime = Mathf.Infinity;
+                        _readyingUp = false;
 
                         RpcLoadVideo(_contentInfo, (float) _idealScrub.CurrentTimeStamp(NetworkTime.time), true);
                     }
