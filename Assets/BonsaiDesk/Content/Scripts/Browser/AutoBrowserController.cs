@@ -179,13 +179,13 @@ public class AutoBrowserController : NetworkBehaviour
                     foreach (var conn in NetworkServer.connections.Values)
                         _clientsReadyStatus.Add(conn.identity.netId, false);
 
-                    if (!_idealScrub.IsPaused() && NetworkTime.time > _idealScrub.NetworkTime)
+                    if (_idealScrub.Active && NetworkTime.time > _idealScrub.NetworkTime)
                     {
                         var oldScrub = _idealScrub.Scrub;
                         var oldStart = _idealScrub.NetworkTime;
 
-                        _idealScrub = _idealScrub.Paused(NetworkTime.time);
-                        var currentVideoTime = _idealScrub.CurrentVideoTime(NetworkTime.time);
+                        _idealScrub = _idealScrub.NonActiveAtNetworkTime(NetworkTime.time);
+                        var currentVideoTime = _idealScrub.CurrentTimeStamp(NetworkTime.time);
 
                         RpcReadyUpAtTime(currentVideoTime);
 
@@ -211,7 +211,7 @@ public class AutoBrowserController : NetworkBehaviour
                         _allGood = true;
                         _clientLastPingTime.Clear();
                         _beginReadyUpTime = Mathf.Infinity;
-                        _idealScrub = _idealScrub.StartPlayingWhen(NetworkTime.time + 0.5);
+                        _idealScrub = _idealScrub.ActiveAtNetworkTime(NetworkTime.time + 0.5);
                         Debug.Log(
                             $"[BONSAI SERVER] Clients should start playing scrub ({_idealScrub.Scrub}) at NetworkTime ({_idealScrub.NetworkTime})");
                     }
@@ -231,7 +231,7 @@ public class AutoBrowserController : NetworkBehaviour
                         _clientLastPingTime.Clear();
                         _beginReadyUpTime = Mathf.Infinity;
 
-                        RpcLoadVideo(_contentInfo, (float) _idealScrub.CurrentVideoTime(NetworkTime.time), true);
+                        RpcLoadVideo(_contentInfo, (float) _idealScrub.CurrentTimeStamp(NetworkTime.time), true);
                     }
                 }
             }
@@ -242,7 +242,7 @@ public class AutoBrowserController : NetworkBehaviour
         {
             if (_playerState != PlayerState.Ready && _postedPlayMessage) _postedPlayMessage = false;
 
-            if (_playerState == PlayerState.Ready && !_idealScrub.IsPaused() &&
+            if (_playerState == PlayerState.Ready && _idealScrub.Active &&
                 NetworkTime.time > _idealScrub.NetworkTime && !_postedPlayMessage)
             {
                 Debug.Log($"[BONSAI CLIENT] (netId={NetworkClient.connection.identity.netId}) been ready, " +
@@ -310,49 +310,46 @@ public class AutoBrowserController : NetworkBehaviour
     {
         public readonly double Scrub;
         public readonly double NetworkTime;
-
-        public double CurrentVideoTime(double currentNetworkTime)
-        {
-            if (IsPaused()) return Scrub;
-            return Scrub + (currentNetworkTime - NetworkTime);
-        }
-
-        private ScrubData(double scrub, double networkTime)
+        public readonly bool Active;
+        
+        private ScrubData(double scrub, double networkTime, bool active)
         {
             Scrub = scrub;
             NetworkTime = networkTime;
+            Active = active;
         }
 
-        public static ScrubData PausedAtScrub(double scrub)
+        public double CurrentTimeStamp(double currentNetworkTime)
         {
-            return new ScrubData(scrub, double.PositiveInfinity);
+            if (!Active) return Scrub;
+            return Scrub + (currentNetworkTime - NetworkTime);
         }
 
-        public ScrubData Paused(double currentNetworkTime)
+        public static ScrubData NonActiveAtScrub(double scrub)
+        {
+            return new ScrubData(scrub, -1, false);
+        }
+
+        public ScrubData NonActiveAtNetworkTime(double currentNetworkTime)
         {
             return new ScrubData(
-                CurrentVideoTime(currentNetworkTime),
-                double.PositiveInfinity
+                CurrentTimeStamp(currentNetworkTime), -1, false
             );
         }
 
-        public ScrubData StartPlayingWhen(double networkTime)
+        public ScrubData ActiveAtNetworkTime(double networkTime)
         {
-            Debug.LogError("Scrub should be paused before resuming");
-            return new ScrubData(Scrub, networkTime);
+            if (Active) Debug.LogError("Scrub should be paused before resuming");
+            return new ScrubData(Scrub, networkTime, true);
         }
 
-        public bool IsPaused()
-        {
-            return double.IsPositiveInfinity(NetworkTime);
-        }
     }
 
     [Command(ignoreAuthority = true)]
     private void CmdPing(uint id, float clientTimeStamp)
     {
         const float threshold = 1f;
-        var whereTheyShouldBe = _idealScrub.CurrentVideoTime(NetworkTime.time);
+        var whereTheyShouldBe = _idealScrub.CurrentTimeStamp(NetworkTime.time);
         if (Math.Abs(clientTimeStamp - whereTheyShouldBe) > threshold)
         {
             _allGood = false;
@@ -393,7 +390,7 @@ public class AutoBrowserController : NetworkBehaviour
 
                 _contentInfo = new ContentInfo(id, newAspect);
 
-                _idealScrub = ScrubData.PausedAtScrub(0);
+                _idealScrub = ScrubData.NonActiveAtScrub(0);
 
                 RpcLoadVideo(_contentInfo, 0, false);
 
