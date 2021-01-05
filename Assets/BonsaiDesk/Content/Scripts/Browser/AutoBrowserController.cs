@@ -131,7 +131,7 @@ public class AutoBrowserController : NetworkBehaviour
         _playerState = PlayerState.Unstarted;
         _autoBrowser = GetComponent<AutoBrowser>();
         
-        // TODO this breaks everything NetworkManagerGame.Singleton.ServerConnect += conn => { _clientsReadyStatus.Add(conn.identity.netId, false); };
+        NetworkManagerGame.Singleton.ServerAddPlayer += conn => { _clientsReadyStatus.Add(conn.identity.netId, false); };
 
         NetworkManagerGame.Singleton.ServerDisconnect += conn => { _clientsReadyStatus.Remove(conn.identity.netId); };
 
