@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Mirror;
-using Oculus.Platform;
 using OVRSimpleJSON;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -18,6 +17,11 @@ public class YouTubeMessage
     public static string GoHome = "{" +
                                   "\"type\": \"nav\", " +
                                   "\"command\": \"goHome\" " +
+                                  "}";
+    
+    public static string Reload = "{" +
+                                  "\"type\": \"nav\", " +
+                                  "\"command\": \"reload\" " +
                                   "}";
 
     public static string SeekTo(double time)
@@ -209,29 +213,39 @@ public class AutoBrowserController : NetworkBehaviour
                     // if all the clients are ready, start the video
                     if (AllClientsAreReady())
                     {
-                        Debug.Log($"[BONSAI SERVER] All ({_clientsReadyStatus.Count}) clients are ready at NetworkTime: {NetworkTime.time} with {ReadyUpTimeout - (NetworkTime.time - _beginReadyUpTime)} seconds to spare");
+                        Debug.Log(
+                            $"[BONSAI SERVER] All ({_clientsReadyStatus.Count}) clients are ready at NetworkTime: {NetworkTime.time} with {ReadyUpTimeout - (NetworkTime.time - _beginReadyUpTime)} seconds to spare");
                         SetScreenState(ScreenState.Raised);
                         _allGood = true;
                         _clientLastPingTime.Clear();
                         _beginReadyUpTime = Mathf.Infinity;
                         _idealScrub = _idealScrub.StartPlayingWhen(NetworkTime.time + 0.5);
-                        Debug.Log($"[BONSAI SERVER] Clients should start playing scrub ({_idealScrub.Scrub}) at NetworkTime ({_idealScrub.NetworkTime})");
+                        Debug.Log(
+                            $"[BONSAI SERVER] Clients should start playing scrub ({_idealScrub.Scrub}) at NetworkTime ({_idealScrub.NetworkTime})");
                     }
                     // if clients are not ready after 5 seconds, load the video again
                     else if (NetworkTime.time - _beginReadyUpTime > ReadyUpTimeout)
                     {
                         var failedNetIds = new HashSet<string>();
                         foreach (var info in _clientsReadyStatus.Where(info => !info.Value))
-                        {
                             failedNetIds.Add(info.Key.ToString());
-                        }
 
                         var failedNetIdsStr = string.Join(", ", failedNetIds);
-                        
-                        Debug.Log($"[BONSAI SERVER] ({failedNetIds.Count}/{_clientsReadyStatus.Count}) Clients failed to ready up netIds=[{failedNetIdsStr}]");
+
+                        Debug.Log(
+                            $"[BONSAI SERVER] ({failedNetIds.Count}/{_clientsReadyStatus.Count}) Clients failed to ready up netIds=[{failedNetIdsStr}]");
                         _beginReadyUpTime = Mathf.Infinity;
+                        // TODO hard reset reload the page here
+
+                        //_contentActive = false;
+                        // TODO SetScreenState(ScreenState.Lower);
+                        
                         _allGood = false;
                         _clientLastPingTime.Clear();
+                        _beginReadyUpTime = Mathf.Infinity;
+
+                        RpcLoadVideo(_contentInfo, (float) _idealScrub.CurrentVideoTime(NetworkTime.time), true);
+                        
                     }
                 }
             }
@@ -240,19 +254,16 @@ public class AutoBrowserController : NetworkBehaviour
         // ping the server with the client current player time
         if (isClient)
         {
-            if (_playerState != PlayerState.Ready && _postedPlayMessage)
-            {
-                _postedPlayMessage = false;
-            }
-            
+            if (_playerState != PlayerState.Ready && _postedPlayMessage) _postedPlayMessage = false;
+
             if (_playerState == PlayerState.Ready && !_idealScrub.IsPaused() &&
                 NetworkTime.time > _idealScrub.NetworkTime && !_postedPlayMessage)
             {
                 Debug.Log($"[BONSAI CLIENT] (netId={NetworkClient.connection.identity.netId}) been ready, " +
-                $"now playing scrub: {_idealScrub.Scrub} at NetworkTime: ({_idealScrub.NetworkTime})~=({NetworkTime.time})");
+                          $"now playing scrub: {_idealScrub.Scrub} at NetworkTime: ({_idealScrub.NetworkTime})~=({NetworkTime.time})");
                 _autoBrowser.PostMessage(YouTubeMessage.Play);
                 _postedPlayMessage = true;
-            } 
+            }
 
             const float pingInterval = 0.1f;
             if (Time.time - _lastPingSentTime > pingInterval)
@@ -341,11 +352,7 @@ public class AutoBrowserController : NetworkBehaviour
 
         public ScrubData StartPlayingWhen(double networkTime)
         {
-            if (!IsPaused())
-            {
-                throw new Exception("Scrub should be paused before resuming");
-            }
-
+            Debug.LogError("Scrub should be paused before resuming");
             return new ScrubData(Scrub, networkTime);
         }
 
@@ -402,7 +409,7 @@ public class AutoBrowserController : NetworkBehaviour
 
                 _idealScrub = ScrubData.PausedAtScrub(0);
 
-                RpcLoadVideo(_contentInfo, 0);
+                RpcLoadVideo(_contentInfo, 0, false);
 
                 _fetchAndReadyCoroutine = null;
             })
@@ -410,7 +417,7 @@ public class AutoBrowserController : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void RpcLoadVideo(ContentInfo info, float ts)
+    private void RpcLoadVideo(ContentInfo info, float ts, bool reload)
     {
         var resolution = _autoBrowser.ChangeAspect(info.Aspect);
 
@@ -418,7 +425,19 @@ public class AutoBrowserController : NetworkBehaviour
 
         //TODO _autoBrowser.PostMessage(YouTubeMessage.GoHome);
 
-        _autoBrowser.PostMessage(YouTubeMessage.LoadVideo(info.ID, ts));
+        if (reload)
+        {
+            _autoBrowser.PostMessages(new List<string>()
+            {
+                YouTubeMessage.LoadVideo(info.ID, ts),
+                YouTubeMessage.Reload
+            });
+        }
+        else
+        {
+            _autoBrowser.PostMessage(YouTubeMessage.LoadVideo(info.ID, ts));
+        }
+
     }
 
     [ClientRpc]
@@ -460,6 +479,7 @@ public class AutoBrowserController : NetworkBehaviour
 
                 case "READY":
                     _playerState = PlayerState.Ready;
+                    // TODO _playerCurrentTime = jsonNode["current_time"];
                     CmdReady(NetworkClient.connection.identity.netId);
                     break;
 
@@ -552,7 +572,8 @@ public class AutoBrowserController : NetworkBehaviour
                 break;
 
             default:
-                throw new ArgumentOutOfRangeException();
+                Debug.LogError("[BONSAI] ToggleVideo ArgumentOutOfRangeException");
+                break;
         }
     }
 

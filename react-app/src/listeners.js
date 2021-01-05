@@ -12,6 +12,10 @@ let cSharpPageListeners = (history, event) => {
             window.location.reload(true)
             console.log("command: goHome post")
             break;
+        case "reload":
+            console.log("command: reload")
+            window.location.reload(true)
+            break;
         default:
             console.log("command: not handled (cSharpPageListeners) " + JSON.stringify(json))
             break;
