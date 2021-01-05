@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Mirror;
+using UnityEngine;
 
 public class TabletControl : MonoBehaviour
 {
@@ -46,5 +47,10 @@ public class TabletControl : MonoBehaviour
         {
             _touchingHand = true;
         }
+    }
+
+    public void TabletPlay()
+    {
+        NetworkServer.Destroy(gameObject);
     }
 }
