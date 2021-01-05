@@ -5,15 +5,23 @@ using UnityEngine;
 
 public class TabletSpot : NetworkBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    public static TabletSpot instance;
+
+    public override void OnStartServer()
     {
-        
+        base.OnStartServer();
+        instance = this;
     }
 
-    // Update is called once per frame
-    void Update()
+    public override void OnStartClient()
     {
-        
+        base.OnStartClient();
+        instance = this;
+    }
+
+    [Command(ignoreAuthority = true)]
+    public void CmdSetNewVideo(NetworkIdentity tabletIdentity)
+    {
+        print(tabletIdentity.netId);
     }
 }

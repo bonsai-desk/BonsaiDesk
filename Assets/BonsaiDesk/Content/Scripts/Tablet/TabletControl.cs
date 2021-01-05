@@ -37,6 +37,7 @@ public class TabletControl : NetworkBehaviour
 
     public void TabletPlay()
     {
+        TabletSpot.instance.CmdSetNewVideo(netIdentity);
     }
 
     private void VideoIdHook(string oldValue, string newValue)
