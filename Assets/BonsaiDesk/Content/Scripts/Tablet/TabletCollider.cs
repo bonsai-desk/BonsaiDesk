@@ -66,15 +66,11 @@ public class TabletCollider : MonoBehaviour
             if (_lastEnter.TryGetValue(objectId, out var value))
             {
                 float pressTime = Time.time - value.time;
-                DebugText.TextString = (pressTime + "\n" + Vector3.Distance(transform.position, value.tabletPosition) +
-                                        "\n" + Vector3.Distance(other.transform.position, value.fingerPosition));
                 if (pressTime > ButtonMinTouchTime && pressTime < ButtonMaxTouchTime &&
                     Vector3.SqrMagnitude(transform.position - value.tabletPosition) < MaxTabletMoveSquared &&
                     Vector3.SqrMagnitude(other.transform.position - value.fingerPosition) < MaxFingerMoveSquared)
                 {
                     action.Invoke();
-                    DebugText.TextString += "\nvalid";
-                    // DebugText.TextString = NumberFingersTouching().ToString();
                 }
 
                 _lastEnter.Remove(other.gameObject.GetInstanceID());
