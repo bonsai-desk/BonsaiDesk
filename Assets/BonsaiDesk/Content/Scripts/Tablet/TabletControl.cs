@@ -2,81 +2,49 @@
 
 public class TabletControl : MonoBehaviour
 {
-    public PhysicMaterial lowFrictionMaterial;
-    private PhysicMaterial defaultMaterial;
+    public PhysicMaterial lowFrictionPhysicMaterial;
     public BoxCollider worldBox;
 
-    private bool touchingHand = false;
-    private bool lastTouchingHand = false;
+    private PhysicMaterial _defaultPhysicMaterial;
 
-    public GameObject mediaParent;
-    public GameObject modelParent;
+    private bool _touchingHand = false;
+    private bool _lastTouchingHand = false;
 
-    public GameObject model;
-    private float lastModelToggleTime = 0;
-
-    public BoxCollider buttonBox;
-
-    public enum TabletType
-    {
-        Media,
-        Model
-    };
-
-    public TabletType tabletType = TabletType.Media;
+    private int _leftHandLayerMask;
+    private int _rightHandLayerMask;
 
     private void Start()
     {
-        defaultMaterial = worldBox.material;
+        _defaultPhysicMaterial = worldBox.sharedMaterial;
 
-        if (tabletType == TabletType.Media)
-        {
-            GetComponent<TabletPhysics>().enabled = true;
-            mediaParent.SetActive(true);
-            modelParent.SetActive(false);
-        }
-        else
-        {
-            GetComponent<TabletPhysics>().enabled = false;
-            mediaParent.SetActive(false);
-            modelParent.SetActive(true);
-        }
-        model.SetActive(false);
+        _leftHandLayerMask = LayerMask.NameToLayer("LeftHand");
+        _rightHandLayerMask = LayerMask.NameToLayer("RightHand");
     }
 
     private void Update()
     {
-        if (touchingHand != lastTouchingHand)
+        if (_touchingHand != _lastTouchingHand)
         {
-            if (touchingHand)
-                worldBox.material = lowFrictionMaterial;
-            else
-                worldBox.material = defaultMaterial;
+            worldBox.sharedMaterial = _touchingHand ? lowFrictionPhysicMaterial : _defaultPhysicMaterial;
         }
 
-        lastTouchingHand = touchingHand;
-        touchingHand = false;
+        _lastTouchingHand = _touchingHand;
+        _touchingHand = false;
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.layer == LayerMask.NameToLayer("LeftHand") || collision.gameObject.layer == LayerMask.NameToLayer("RightHand"))
+        if (collision.gameObject.layer == _leftHandLayerMask || collision.gameObject.layer == _rightHandLayerMask)
         {
-            touchingHand = true;
-
-            if (collision.contacts[0].thisCollider == buttonBox && Time.time - lastModelToggleTime > 1f)
-            {
-                lastModelToggleTime = Time.time;
-                model.SetActive(!model.activeSelf);
-            }
+            _touchingHand = true;
         }
     }
 
     private void OnCollisionStay(Collision collision)
     {
-        if (collision.gameObject.layer == LayerMask.NameToLayer("LeftHand") || collision.gameObject.layer == LayerMask.NameToLayer("RightHand"))
+        if (collision.gameObject.layer == _leftHandLayerMask || collision.gameObject.layer == _rightHandLayerMask)
         {
-            touchingHand = true;
+            _touchingHand = true;
         }
     }
 }

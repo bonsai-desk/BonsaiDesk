@@ -40,10 +40,29 @@ public class PlayerHands : MonoBehaviour
     {
         CalculateFingerTipPositions();
         
-        for (var i = 0; i < _handsTicks.Length; i++)
-        {
-            _handsTicks[i].Tick(left, right);
-        }
+        left.UpdateGestures();
+        right.UpdateGestures();
+        
+        left.RunHandTicks();
+        right.RunHandTicks();
+    }
+
+    public PlayerHand GetHand(OVRSkeleton.SkeletonType skeletonType)
+    {
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+            return left;
+        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
+            return right;
+        return null;
+    }
+    
+    public PlayerHand GetOtherHand(OVRSkeleton.SkeletonType skeletonType)
+    {
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+            return right;
+        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
+            return left;
+        return null;
     }
 
     public void SetHandGesturesReady(OVRSkeleton.SkeletonType skeletonType)
@@ -59,7 +78,7 @@ public class PlayerHands : MonoBehaviour
             {
                 _handsTicks[i].Tick(left, right);
             }
-            
+
             left.UpdateLastGestures();
             right.UpdateLastGestures();
             leftHandGesturesReady = false;

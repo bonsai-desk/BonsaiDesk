@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using Mirror;
 using UnityEngine;
 using Vuplex.WebView;
 
@@ -59,14 +61,24 @@ public class AutoBrowser : MonoBehaviour
 
         //initial size does not matter because it will be immediately resized by ChangeAspect
         _webViewPrefab = WebViewPrefab.Instantiate(1, 1);
+        Destroy(_webViewPrefab.Collider);
         _webViewPrefab.Visible = false;
         _webViewPrefab.Initialized +=
             (sender, eventArgs) =>
             {
+                
+#if UNITY_ANDROID && !UNITY_EDITOR
+    AndroidGeckoWebView.EnsureBuiltInExtension(
+        "resource://android/assets/ublock/",
+        "uBlock0@raymondhill.net"
+    );
+#endif
+                
                 ChangeAspect(startingAspect);
                 BrowserReady?.Invoke();
             };
     }
+
 
     #region interface
 
@@ -99,7 +111,7 @@ public class AutoBrowser : MonoBehaviour
         }
     }
 
-    public void ChangeAspect(Vector2 newAspect)
+    public Vector2Int ChangeAspect(Vector2 newAspect)
     {
         var aspectRatio = newAspect.x / newAspect.y;
         var localScale = new Vector3(_bounds.y * aspectRatio, _bounds.y, 1);
@@ -125,6 +137,8 @@ public class AutoBrowser : MonoBehaviour
 #endif
 
         StartCoroutine(UpdateAndroidSurface());
+        
+        return resolution;
     }
 
     public void LoadUrl(string url)
@@ -139,8 +153,17 @@ public class AutoBrowser : MonoBehaviour
 
     public void PostMessage(string data)
     {
-        Debug.Log("[BONSAI] PostMessage " + data);
+        Debug.Log($"[BONSAI] (netId={NetworkClient.connection.identity.netId}) PostMessage {data} at NetworkTime {NetworkTime.time}");
         _webViewPrefab.WebView.PostMessage(data);
+    }
+
+    public void PostMessages(IEnumerable<string> msgs)
+    {
+        foreach (var data in msgs)
+        {
+            PostMessage(data);
+        }
+        
     }
 
     public void OnMessageEmitted(EventHandler<EventArgs<string>> messageEmitted)

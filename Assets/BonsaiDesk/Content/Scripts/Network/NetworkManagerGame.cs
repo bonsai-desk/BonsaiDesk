@@ -12,6 +12,8 @@ using UnityEngine.Android;
 using UnityEngine.Networking;
 using UnityEngine.XR.Management;
 
+public delegate void NetworkConnectionEvent(NetworkConnection conn);
+
 public class NetworkManagerGame : NobleNetworkManager
 {
     public static NetworkManagerGame Singleton;
@@ -24,6 +26,7 @@ public class NetworkManagerGame : NobleNetworkManager
     private Camera _camera;
 
     public TogglePause togglePause;
+    
 
     #region Player Props
 
@@ -525,7 +528,7 @@ public class NetworkManagerGame : NobleNetworkManager
             }
         }
     }
-    
+
     private IEnumerator DeleteRoom()
     {
         using (var www = UnityWebRequest.Delete(apiBaseUri + "/rooms/" + _assignedRoomTag))
@@ -577,6 +580,9 @@ public class NetworkManagerGame : NobleNetworkManager
 
     #region Overrides
 
+    public event NetworkConnectionEvent ServerConnect;
+    public event NetworkConnectionEvent ServerDisconnect;
+
     public override void Awake()
     {
         base.Awake();
@@ -619,7 +625,7 @@ public class NetworkManagerGame : NobleNetworkManager
             StartCoroutine(StartXR());
         }
     }
-    
+
     private IEnumerator StartXR()
     {
         yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
@@ -647,8 +653,10 @@ public class NetworkManagerGame : NobleNetworkManager
     {
         Debug.Log("[BONSAI] OnServerConnect");
 
-
         base.OnServerConnect(conn);
+        
+        ServerConnect?.Invoke(conn);
+        
         var openSpotId = -1;
         for (var i = 0; i < _spotInUse.Length; i++)
             if (!_spotInUse[i])
@@ -687,6 +695,8 @@ public class NetworkManagerGame : NobleNetworkManager
         Debug.Log("[BONSAI] OnServerDisconnect");
 
         if (!conn.isAuthenticated) return;
+        
+        ServerDisconnect?.Invoke(conn);
 
         var spotId = PlayerInfos[conn].spot;
 
@@ -700,10 +710,15 @@ public class NetworkManagerGame : NobleNetworkManager
         var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
         foreach (var identity in tmp)
         {
-            if (identity.GetComponent<AutoAuthority>() != null)
+            var autoAuthority = identity.GetComponent<AutoAuthority>();
+            if (autoAuthority != null)
+            {
+                if (autoAuthority.InUse)
+                    autoAuthority.SetInUse(false);
                 identity.RemoveClientAuthority();
+            }
         }
-        
+
         if (conn.identity != null && togglePause.AuthorityIdentityId == conn.identity.netId)
         {
             togglePause.RemoveClientAuthority();

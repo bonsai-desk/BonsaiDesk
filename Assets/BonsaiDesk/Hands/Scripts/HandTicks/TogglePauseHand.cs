@@ -6,13 +6,15 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerHand))]
 public class TogglePauseHand : MonoBehaviour, IHandTick
 {
+    public PlayerHand playerHand { get; set; }
+    
     public AngleToObject angleToObject;
     public AngleToObject headAngleToObject;
     public TogglePause togglePause;
 
     private bool _lastPointingAtScreen;
 
-    public void Tick(PlayerHand playerHand)
+    public void Tick()
     {
         if (NetworkClient.connection == null || NetworkClient.connection.identity == null)
             return;
