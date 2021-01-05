@@ -1,17 +1,26 @@
-﻿using TMPro;
+﻿using System;
+using TMPro;
 using UnityEngine;
 
 public class DebugText : MonoBehaviour
 {
-    public TextMeshProUGUI text;
-    public static string textString;
-
-    //   private void Start()
-    //   {
-    //   }
-
-    private void Update()
+    private static DebugText _instance;
+    
+    public GameObject panelObject;
+    public TextMeshProUGUI textMesh;
+    
+    public static string TextString
     {
-        text.text = textString;
+        get => _instance.textMesh.text;
+        set
+        {
+            _instance.textMesh.text = value;
+            _instance.panelObject.SetActive(!string.IsNullOrEmpty(value));
+        }
+    }
+
+    private void Awake()
+    {
+        _instance = this;
     }
 }
