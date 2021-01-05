@@ -63,6 +63,14 @@ public class AutoBrowser : MonoBehaviour
         _webViewPrefab.Initialized +=
             (sender, eventArgs) =>
             {
+                
+#if UNITY_ANDROID && !UNITY_EDITOR
+    AndroidGeckoWebView.EnsureBuiltInExtension(
+        "resource://android/assets/ublock/",
+        "uBlock0@raymondhill.net"
+    );
+#endif
+                
                 ChangeAspect(startingAspect);
                 BrowserReady?.Invoke();
             };

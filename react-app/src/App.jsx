@@ -54,9 +54,9 @@ function App() {
 
                     <Route exact path={"/"} component={Home}/>
 
-                    <Route exact path={"/youtube/:id/:ts"} component={YouTube}/>
+                    <Route exact path={"/youtube/:id/:timeStamp"} component={YouTube}/>
 
-                    <Route exact path={"/youtube_test/:id/:ts"} component={YouTube}/>
+                    <Route exact path={"/youtube_test/:id/:timeStamp"} component={YouTube}/>
 
                 </Switch>
             </div>

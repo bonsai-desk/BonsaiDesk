@@ -28,9 +28,12 @@ let Video = (props) => {
     let history = useHistory();
 
     let dev_mode = window.location.pathname.split("/")[1] === "youtube_test";
-    let {id, ts} = props.match.params;
+    let {id, timeStamp} = props.match.params;
     let [ready, setReady] = useState(false);
     let [player, setPlayer] = useState(null);
+
+    let [ts, setTs] = useState(timeStamp);
+
 
     // setup the event listeners
     useEffect(() => {
@@ -73,6 +76,11 @@ let Video = (props) => {
                             console.log("command: seekTo " + json.seekTime)
                             player.seekTo(json.seekTime, true);
                             break;
+                        case "readyUp":
+                            setTs(json.seekTime)
+                            setReady(false)
+                            player.mute();
+                            player.seekTo(json.seekTime, true);
                         default:
                             console.log("command: not handled (video) " + JSON.stringify(json))
                             break;
@@ -156,6 +164,7 @@ let Video = (props) => {
 
     return (
         <div>
+            <div onClick={() => {player.seekTo(300)}}>seek</div>
             <YouTube
                 opts={opts}
                 onReady={onReady}
