@@ -10,19 +10,13 @@ using Vuplex.WebView;
 
 public class YouTubeMessage
 {
-    public static string Pause = "{\"type\": \"video\", \"command\": \"pause\"}";
+    public const string Pause = "{\"type\": \"video\", \"command\": \"pause\"}";
 
-    public static string Play = "{\"type\": \"video\", \"command\": \"play\"}";
+    public const string Play = "{\"type\": \"video\", \"command\": \"play\"}";
 
-    public static string GoHome = "{" +
-                                  "\"type\": \"nav\", " +
-                                  "\"command\": \"goHome\" " +
-                                  "}";
-    
-    public static string Reload = "{" +
-                                  "\"type\": \"nav\", " +
-                                  "\"command\": \"reload\" " +
-                                  "}";
+    public const string GoHome = "{" + "\"type\": \"nav\", " + "\"command\": \"goHome\" " + "}";
+
+    public const string Reload = "{" + "\"type\": \"nav\", " + "\"command\": \"reload\" " + "}";
 
     public static string SeekTo(double time)
     {
@@ -135,11 +129,7 @@ public class AutoBrowserController : NetworkBehaviour
         _playerState = PlayerState.Unstarted;
         _autoBrowser = GetComponent<AutoBrowser>();
 
-        NetworkManagerGame.Singleton.ServerDisconnect += conn =>
-        {
-            //TODO verify that this triggers properly
-            _clientsReadyStatus.Remove(conn.identity.netId);
-        };
+        NetworkManagerGame.Singleton.ServerDisconnect += conn => { _clientsReadyStatus.Remove(conn.identity.netId); };
 
         _autoBrowser.BrowserReady += () =>
         {
@@ -234,18 +224,12 @@ public class AutoBrowserController : NetworkBehaviour
 
                         Debug.Log(
                             $"[BONSAI SERVER] ({failedNetIds.Count}/{_clientsReadyStatus.Count}) Clients failed to ready up netIds=[{failedNetIdsStr}]");
-                        _beginReadyUpTime = Mathf.Infinity;
-                        // TODO hard reset reload the page here
 
-                        //_contentActive = false;
-                        // TODO SetScreenState(ScreenState.Lower);
-                        
                         _allGood = false;
                         _clientLastPingTime.Clear();
                         _beginReadyUpTime = Mathf.Infinity;
 
                         RpcLoadVideo(_contentInfo, (float) _idealScrub.CurrentVideoTime(NetworkTime.time), true);
-                        
                     }
                 }
             }
@@ -320,10 +304,10 @@ public class AutoBrowserController : NetworkBehaviour
 
     #region failsafe
 
-    public struct ScrubData
+    public readonly struct ScrubData
     {
-        public double Scrub;
-        public double NetworkTime;
+        public readonly double Scrub;
+        public readonly double NetworkTime;
 
         public double CurrentVideoTime(double currentNetworkTime)
         {
@@ -331,7 +315,7 @@ public class AutoBrowserController : NetworkBehaviour
             return Scrub + (currentNetworkTime - NetworkTime);
         }
 
-        public ScrubData(double scrub, double networkTime)
+        private ScrubData(double scrub, double networkTime)
         {
             Scrub = scrub;
             NetworkTime = networkTime;
@@ -423,21 +407,14 @@ public class AutoBrowserController : NetworkBehaviour
 
         Debug.Log($"[BONSAI RPC] Load New YouTube Video ({info.ID}) with resolution: {resolution}");
 
-        //TODO _autoBrowser.PostMessage(YouTubeMessage.GoHome);
-
         if (reload)
-        {
-            _autoBrowser.PostMessages(new List<string>()
+            _autoBrowser.PostMessages(new List<string>
             {
                 YouTubeMessage.LoadVideo(info.ID, ts),
                 YouTubeMessage.Reload
             });
-        }
         else
-        {
             _autoBrowser.PostMessage(YouTubeMessage.LoadVideo(info.ID, ts));
-        }
-
     }
 
     [ClientRpc]
@@ -479,7 +456,7 @@ public class AutoBrowserController : NetworkBehaviour
 
                 case "READY":
                     _playerState = PlayerState.Ready;
-                    // TODO _playerCurrentTime = jsonNode["current_time"];
+                    _playerCurrentTime = jsonNode["current_time"];
                     CmdReady(NetworkClient.connection.identity.netId);
                     break;
 
@@ -507,8 +484,10 @@ public class AutoBrowserController : NetworkBehaviour
     {
         _screenState = newState;
 
-        //TODO probably don't need to set interactable to false if screen was already down,
-        //but then the default interactable state needs to be false
+
+        /* TODO probably don't need to set interactable to false if screen was already down,
+         but then the default interactable state needs to be false
+         */
 
         togglePause.ServerSetPaused(true);
         togglePause.SetInteractable(false);
