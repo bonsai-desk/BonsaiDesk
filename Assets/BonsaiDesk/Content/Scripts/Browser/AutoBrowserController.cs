@@ -169,12 +169,13 @@ public class AutoBrowserController : NetworkBehaviour
                         break;
                     }
             }
+            // things are not all good
             else
             {
-                // tell the clients to begin readying up
+                // tell the clients to begin readying up since we have not started the process
                 if (double.IsInfinity(_beginReadyUpTime))
                 {
-                    Debug.Log("[BONSAI SERVER] Ready up initiated");
+                    Debug.Log($"[BONSAI SERVER] Ready up initiated at NetworkTime {NetworkTime.time}");
 
                     _beginReadyUpTime = NetworkTime.time;
 
@@ -214,6 +215,7 @@ public class AutoBrowserController : NetworkBehaviour
                         _clientLastPingTime.Clear();
                         _beginReadyUpTime = Mathf.Infinity;
                         _idealScrub = _idealScrub.StartPlayingWhen(NetworkTime.time + 0.5);
+                        Debug.Log($"[BONSAI SERVER] Clients should start playing scrub ({_idealScrub.Scrub}) at NetworkTime ({_idealScrub.NetworkTime})");
                     }
                     // if clients are not ready after 5 seconds, load the video again
                     else if (NetworkTime.time - _beginReadyUpTime > ReadyUpTimeout)
@@ -238,7 +240,6 @@ public class AutoBrowserController : NetworkBehaviour
         // ping the server with the client current player time
         if (isClient)
         {
-
             if (_playerState != PlayerState.Ready && _postedPlayMessage)
             {
                 _postedPlayMessage = false;
@@ -344,8 +345,8 @@ public class AutoBrowserController : NetworkBehaviour
             {
                 throw new Exception("Scrub should be paused before resuming");
             }
-            NetworkTime = networkTime;
-            return this;
+
+            return new ScrubData(Scrub, networkTime);
         }
 
         public bool IsPaused()
@@ -401,7 +402,7 @@ public class AutoBrowserController : NetworkBehaviour
 
                 _idealScrub = ScrubData.PausedAtScrub(0);
 
-                RpcLoadVideo(_contentInfo);
+                RpcLoadVideo(_contentInfo, 0);
 
                 _fetchAndReadyCoroutine = null;
             })
@@ -409,7 +410,7 @@ public class AutoBrowserController : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void RpcLoadVideo(ContentInfo info)
+    private void RpcLoadVideo(ContentInfo info, float ts)
     {
         var resolution = _autoBrowser.ChangeAspect(info.Aspect);
 
@@ -417,7 +418,7 @@ public class AutoBrowserController : NetworkBehaviour
 
         //TODO _autoBrowser.PostMessage(YouTubeMessage.GoHome);
 
-        _autoBrowser.PostMessage(YouTubeMessage.LoadVideo(info.ID, 0));
+        _autoBrowser.PostMessage(YouTubeMessage.LoadVideo(info.ID, ts));
     }
 
     [ClientRpc]
