@@ -12,6 +12,8 @@ using UnityEngine.Android;
 using UnityEngine.Networking;
 using UnityEngine.XR.Management;
 
+public delegate void NetworkConnectionEvent(NetworkConnection conn);
+
 public class NetworkManagerGame : NobleNetworkManager
 {
     public static NetworkManagerGame Singleton;
@@ -24,6 +26,7 @@ public class NetworkManagerGame : NobleNetworkManager
     private Camera _camera;
 
     public TogglePause togglePause;
+    
 
     #region Player Props
 
@@ -577,6 +580,9 @@ public class NetworkManagerGame : NobleNetworkManager
 
     #region Overrides
 
+    public event NetworkConnectionEvent ServerConnect;
+    public event NetworkConnectionEvent ServerDisconnect;
+
     public override void Awake()
     {
         base.Awake();
@@ -647,8 +653,10 @@ public class NetworkManagerGame : NobleNetworkManager
     {
         Debug.Log("[BONSAI] OnServerConnect");
 
-
         base.OnServerConnect(conn);
+        
+        ServerConnect?.Invoke(conn);
+        
         var openSpotId = -1;
         for (var i = 0; i < _spotInUse.Length; i++)
             if (!_spotInUse[i])
@@ -687,6 +695,8 @@ public class NetworkManagerGame : NobleNetworkManager
         Debug.Log("[BONSAI] OnServerDisconnect");
 
         if (!conn.isAuthenticated) return;
+        
+        ServerDisconnect?.Invoke(conn);
 
         var spotId = PlayerInfos[conn].spot;
 
