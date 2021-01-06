@@ -246,9 +246,9 @@ public class AutoBrowserController : NetworkBehaviour
             if (_playerState != PlayerState.Ready && _postedPlayMessage) _postedPlayMessage = false;
 
             if (_playerState == PlayerState.Ready && 
+                !_postedPlayMessage &&
                 _idealScrub.Active && 
-                _playerCurrentTime < _idealScrub.CurrentTimeStamp(NetworkTime.time) &&
-                NetworkTime.time > _idealScrub.NetworkTime && !_postedPlayMessage
+                _playerCurrentTime < _idealScrub.CurrentTimeStamp(NetworkTime.time)
                 )
             {
                 Debug.Log($"[BONSAI CLIENT] (netId={NetworkClient.connection.identity.netId}) been ready, " +
