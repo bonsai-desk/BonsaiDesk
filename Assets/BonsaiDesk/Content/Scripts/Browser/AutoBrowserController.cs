@@ -149,7 +149,11 @@ public class AutoBrowserController : NetworkBehaviour
             {
                 if (paused && _contentActive)
                 {
-                    _autoBrowser.PostMessage(YouTubeMessage.Pause);
+                    _autoBrowser.PostMessages(new List<string>()
+                    {
+                        YouTubeMessage.Pause,
+                        YouTubeMessage.SeekTo(_idealScrub.CurrentTimeStamp(NetworkTime.time))
+                    });
                 }
             };
         }
@@ -158,9 +162,17 @@ public class AutoBrowserController : NetworkBehaviour
         {
             togglePause.PauseChangedServer += paused =>
             {
-                if (!paused && _contentActive)
+                if (_contentActive)
                 {
-                    BeginReadyUp();
+                    if (paused)
+                    {
+                        _idealScrub = _idealScrub.NonActiveAtNetworkTime(NetworkTime.time);
+                    }
+                    else
+                    {
+                        _idealScrub = _idealScrub.ActiveAtNetworkTime(NetworkTime.time + 0.5);
+                    }
+                    
                 }
             };
         }
@@ -239,6 +251,7 @@ public class AutoBrowserController : NetworkBehaviour
                         _clientLastPingTime.Clear();
                         _readyingUp = false;
                         _idealScrub = _idealScrub.ActiveAtNetworkTime(NetworkTime.time + 0.5);
+                        
                         Debug.Log(
                             $"[BONSAI SERVER] Clients should start playing scrub ({_idealScrub.Scrub}) at NetworkTime ({_idealScrub.NetworkTime})");
                     }
@@ -275,7 +288,7 @@ public class AutoBrowserController : NetworkBehaviour
             
             if (_playerState != PlayerState.Ready && _postedPlayMessage) _postedPlayMessage = false;
 
-            if (_playerState == PlayerState.Ready &&
+            if ((_playerState == PlayerState.Ready || _playerState == PlayerState.Paused) &&
                 !_postedPlayMessage &&
                 _idealScrub.Active &&
                 _playerCurrentTime < _idealScrub.CurrentTimeStamp(NetworkTime.time)
@@ -459,6 +472,8 @@ public class AutoBrowserController : NetworkBehaviour
                 _contentInfo = new ContentInfo(id, newAspect);
 
                 _idealScrub = ScrubData.NonActiveAtScrub(0);
+                
+                togglePause.ServerSetPaused(false);
 
                 RpcLoadVideo(_contentInfo, 0, false);
 
@@ -605,7 +620,7 @@ public class AutoBrowserController : NetworkBehaviour
          but then the default interactable state needs to be false
          */
 
-        togglePause.ServerSetPaused(true);
+        //togglePause.ServerSetPaused(true);
         togglePause.SetInteractable(false);
     }
 
