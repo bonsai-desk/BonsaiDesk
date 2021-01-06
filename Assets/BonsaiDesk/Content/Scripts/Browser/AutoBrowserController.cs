@@ -245,8 +245,11 @@ public class AutoBrowserController : NetworkBehaviour
         {
             if (_playerState != PlayerState.Ready && _postedPlayMessage) _postedPlayMessage = false;
 
-            if (_playerState == PlayerState.Ready && _idealScrub.Active &&
-                NetworkTime.time > _idealScrub.NetworkTime && !_postedPlayMessage)
+            if (_playerState == PlayerState.Ready && 
+                _idealScrub.Active && 
+                _playerCurrentTime < _idealScrub.CurrentTimeStamp(NetworkTime.time) &&
+                NetworkTime.time > _idealScrub.NetworkTime && !_postedPlayMessage
+                )
             {
                 Debug.Log($"[BONSAI CLIENT] (netId={NetworkClient.connection.identity.netId}) been ready, " +
                           $"now playing scrub: {_idealScrub.Scrub} at NetworkTime: ({_idealScrub.NetworkTime})~=({NetworkTime.time})");
