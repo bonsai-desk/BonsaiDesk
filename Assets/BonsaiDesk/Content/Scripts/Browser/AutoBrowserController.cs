@@ -79,23 +79,33 @@ public class AutoBrowserController : NetworkBehaviour
 
     #region server vars
 
+    private const double ClientPingTolerance = 1;
+
+    private const double VideoSyncTolerance = 1;
+
     private bool _readyingUp;
 
     private double _beginReadyUpTime;
 
     private const float ReadyUpTimeout = 5;
 
+    private const float ClientJoinGracePeriod = 5;
+
     private bool _allGood;
 
-    private readonly Dictionary<uint, double> _clientLastPingTime = new Dictionary<uint, double>();
+    private readonly Dictionary<uint, (double pingTime, float timeStamp)> _clientLastPingTime = new Dictionary<uint, (double, float)>();
 
     private readonly Dictionary<uint, bool> _clientsReadyStatus = new Dictionary<uint, bool>();
+
+    private readonly Dictionary<uint, double> _clientsJoinedNetworkTime = new Dictionary<uint, double>();
 
     private Coroutine _fetchAndReadyCoroutine;
 
     #endregion server vars
 
     #region client vars
+
+    private const float ClientPingInterval = 0.1f;
 
     private float _height;
 
@@ -107,13 +117,13 @@ public class AutoBrowserController : NetworkBehaviour
 
     private Coroutine _clientStartAtTimeCoroutine;
 
-    private bool _contentActive;
-
     private bool _postedPlayMessage;
 
     #endregion client vars
 
     #region syncvars
+
+    [SyncVar] private bool _contentActive;
 
     [SyncVar] private ContentInfo _contentInfo;
 
@@ -130,10 +140,26 @@ public class AutoBrowserController : NetworkBehaviour
         _screenState = ScreenState.Lower;
         _playerState = PlayerState.Unstarted;
         _autoBrowser = GetComponent<AutoBrowser>();
-        
-        NetworkManagerGame.Singleton.ServerAddPlayer += conn => { _clientsReadyStatus.Add(conn.identity.netId, false); };
 
-        NetworkManagerGame.Singleton.ServerDisconnect += conn => { _clientsReadyStatus.Remove(conn.identity.netId); };
+        if (isServer)
+        {
+            NetworkManagerGame.Singleton.ServerAddPlayer += conn =>
+            {
+                var clientNetId = conn.identity.netId;
+                Debug.Log($"[BONSAI SERVER] AutoBrowser add player netId={clientNetId}");
+                _clientsReadyStatus.Add(clientNetId, false);
+                _clientsJoinedNetworkTime.Add(clientNetId, NetworkTime.time);
+            };
+
+            NetworkManagerGame.Singleton.ServerDisconnect += conn =>
+            {
+                var clientNetId = conn.identity.netId;
+                Debug.Log($"[BONSAI SERVER] AutoBrowser remove player netId={clientNetId}");
+                _clientsReadyStatus.Remove(clientNetId);
+                _clientsJoinedNetworkTime.Remove(clientNetId);
+            };
+        }
+
 
         _autoBrowser.BrowserReady += () =>
         {
@@ -157,15 +183,15 @@ public class AutoBrowserController : NetworkBehaviour
             // set _allGood is false if a bad ping exists
             if (_allGood)
             {
-                const float pingTolerance = 1f;
                 foreach (var entry in _clientLastPingTime)
-                    if (NetworkTime.time - entry.Value > pingTolerance)
+                {
+                    var clientNetId = entry.Key;
+
+                    if (!ClientInGracePeriod(clientNetId) && !ClientPingedRecently(entry.Value.pingTime))
                     {
-                        Debug.Log("[BONSAI SERVER] Trigger Not All Good");
-                        _allGood = false;
-                        _clientLastPingTime.Clear();
-                        break;
+                        TriggerNotAllGood($"Client (netId={clientNetId}) did not ping recently");
                     }
+                }
             }
             // things are not all good
             else
@@ -245,11 +271,11 @@ public class AutoBrowserController : NetworkBehaviour
         {
             if (_playerState != PlayerState.Ready && _postedPlayMessage) _postedPlayMessage = false;
 
-            if (_playerState == PlayerState.Ready && 
+            if (_playerState == PlayerState.Ready &&
                 !_postedPlayMessage &&
-                _idealScrub.Active && 
+                _idealScrub.Active &&
                 _playerCurrentTime < _idealScrub.CurrentTimeStamp(NetworkTime.time)
-                )
+            )
             {
                 Debug.Log($"[BONSAI CLIENT] (netId={NetworkClient.connection.identity.netId}) been ready, " +
                           $"now playing scrub: {_idealScrub.Scrub} at NetworkTime: ({_idealScrub.NetworkTime})~=({NetworkTime.time})");
@@ -257,12 +283,13 @@ public class AutoBrowserController : NetworkBehaviour
                 _postedPlayMessage = true;
             }
 
-            const float pingInterval = 0.1f;
-            if (Time.time - _lastPingSentTime > pingInterval)
+            if (_contentActive &&
+                Time.time - _lastPingSentTime > ClientPingInterval &&
+                NetworkClient.connection != null &&
+                NetworkClient.connection.identity != null)
             {
+                CmdPing(NetworkClient.connection.identity.netId, _playerCurrentTime);
                 _lastPingSentTime = Time.time;
-                if (NetworkClient.connection != null && NetworkClient.connection.identity != null)
-                    CmdPing(NetworkClient.connection.identity.netId, _playerCurrentTime);
             }
         }
 
@@ -317,7 +344,7 @@ public class AutoBrowserController : NetworkBehaviour
         public readonly double Scrub;
         public readonly double NetworkTime;
         public readonly bool Active;
-        
+
         private ScrubData(double scrub, double networkTime, bool active)
         {
             Scrub = scrub;
@@ -327,7 +354,7 @@ public class AutoBrowserController : NetworkBehaviour
 
         public double CurrentTimeStamp(double currentNetworkTime)
         {
-            if (!Active) return Scrub;
+            if (!Active || currentNetworkTime - NetworkTime < 0) return Scrub;
             return Scrub + (currentNetworkTime - NetworkTime);
         }
 
@@ -348,22 +375,43 @@ public class AutoBrowserController : NetworkBehaviour
             if (Active) Debug.LogError("Scrub should be paused before resuming");
             return new ScrubData(Scrub, networkTime, true);
         }
+    }
 
+    private bool ClientPingedRecently(double pingTime)
+    {
+        return NetworkTime.time - pingTime < ClientPingTolerance;
+    }
+
+    private bool ClientInGracePeriod(uint clientNetId)
+    {
+        return NetworkTime.time - _clientsJoinedNetworkTime[clientNetId] < ClientJoinGracePeriod;
+    }
+
+    private void TriggerNotAllGood(string reason = "")
+    {
+        Debug.Log($"[BONSAI SERVER] Trigger Not All Good [{reason}]");
+        _allGood = false;
+        _clientLastPingTime.Clear();
+    }
+
+    private bool ClientVideoIsSynced(float clientTimeStamp)
+    {
+        var whereTheyShouldBe = _idealScrub.CurrentTimeStamp(NetworkTime.time);
+        var whereTheyAre = clientTimeStamp;
+        return Math.Abs(whereTheyAre - whereTheyShouldBe) < VideoSyncTolerance;
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdPing(uint id, float clientTimeStamp)
+    private void CmdPing(uint clientNetId, float clientTimeStamp)
     {
-        const float threshold = 1f;
-        var whereTheyShouldBe = _idealScrub.CurrentTimeStamp(NetworkTime.time);
-        if (Math.Abs(clientTimeStamp - whereTheyShouldBe) > threshold)
-        {
-            _allGood = false;
-            _clientLastPingTime.Clear();
-            return;
-        }
+        Debug.Log($"[BONSAI SERVER] Ping from (netId={clientNetId}) with ts=({clientTimeStamp})");
 
-        _clientLastPingTime[id] = NetworkTime.time;
+        _clientLastPingTime[clientNetId] = (NetworkTime.time, clientTimeStamp);
+
+        if (!ClientInGracePeriod(clientNetId) && !ClientVideoIsSynced(clientTimeStamp))
+        {
+            TriggerNotAllGood($"Client ({clientNetId}) timestamp not synced");
+        }
     }
 
     private bool AllClientsAreReady()
@@ -462,6 +510,7 @@ public class AutoBrowserController : NetworkBehaviour
                 case "READY":
                     _playerState = PlayerState.Ready;
                     _playerCurrentTime = jsonNode["current_time"];
+                    Debug.Log($"[BONSAI CLIENT] Ready with player time {_playerCurrentTime}");
                     CmdReady(NetworkClient.connection.identity.netId);
                     break;
 
