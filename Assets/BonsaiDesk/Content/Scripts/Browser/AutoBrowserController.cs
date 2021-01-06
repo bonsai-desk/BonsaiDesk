@@ -143,6 +143,28 @@ public class AutoBrowserController : NetworkBehaviour
         _playerState = PlayerState.Unstarted;
         _autoBrowser = GetComponent<AutoBrowser>();
 
+        if (isClient)
+        {
+            togglePause.PauseChangedClient += paused =>
+            {
+                if (paused && _contentActive)
+                {
+                    _autoBrowser.PostMessage(YouTubeMessage.Pause);
+                }
+            };
+        }
+
+        if (isServer)
+        {
+            togglePause.PauseChangedServer += paused =>
+            {
+                if (!paused && _contentActive)
+                {
+                    BeginReadyUp();
+                }
+            };
+        }
+
         if (isServer)
         {
             NetworkManagerGame.Singleton.ServerAddPlayer += conn =>
@@ -202,34 +224,7 @@ public class AutoBrowserController : NetworkBehaviour
                 // tell the clients to begin readying up since we have not started the process
                 if (!_readyingUp)
                 {
-                    Debug.Log($"[BONSAI SERVER] Ready up initiated at NetworkTime {NetworkTime.time}");
-
-                    _readyingUp = true;
-                    _beginReadyUpTime = NetworkTime.time;
-
-                    _clientsReadyStatus.Clear();
-                    foreach (var conn in NetworkServer.connections.Values)
-                        _clientsReadyStatus.Add(conn.identity.netId, false);
-
-                    if (_idealScrub.Active && NetworkTime.time > _idealScrub.NetworkTime)
-                    {
-                        var oldScrub = _idealScrub.Scrub;
-                        var oldStart = _idealScrub.NetworkTime;
-
-                        _idealScrub = _idealScrub.NonActiveAtNetworkTime(NetworkTime.time);
-                        var currentVideoTime = _idealScrub.CurrentTimeStamp(NetworkTime.time);
-
-                        RpcReadyUpAtTime(currentVideoTime);
-
-                        Debug.Log("[BONSAI SERVER] Ideal scrub was not paused when beginning ready up process. " +
-                                  $"Timestamp ({oldScrub}) started ({NetworkTime.time - oldStart}) seconds ago, " +
-                                  $"new timestamp: ({_idealScrub.Scrub}=={currentVideoTime})"
-                        );
-                    }
-                    else
-                    {
-                        Debug.Log($"[BONSAI] Server ideal scrub was paused at ({_idealScrub.Scrub}), continuing...");
-                    }
+                    BeginReadyUp();
                 }
                 // handle clients readying up
                 else
@@ -324,9 +319,10 @@ public class AutoBrowserController : NetworkBehaviour
 
         _autoBrowser.SetHeight(_height);
 
-        if (isServer)
-            if (Mathf.Approximately(_height, 1) && !togglePause.Interactable)
-                togglePause.SetInteractable(true);
+        if (isServer && Mathf.Approximately(_height, 1) && !togglePause.Interactable)
+        {
+            togglePause.SetInteractable(true);
+        }
 
         #endregion
     }
@@ -446,6 +442,8 @@ public class AutoBrowserController : NetworkBehaviour
     private void CmdLoadVideo(string id)
     {
         Debug.Log("[BONSAI] CmdLoadVideo " + id);
+        
+        togglePause.ServerSetPaused(true);
 
         if (_fetchAndReadyCoroutine != null) StopCoroutine(_fetchAndReadyCoroutine);
 
@@ -493,6 +491,45 @@ public class AutoBrowserController : NetworkBehaviour
             });
         else
             _autoBrowser.PostMessage(YouTubeMessage.LoadVideo(info.ID, ts));
+    }
+
+    [Server]
+    private void BeginReadyUp()
+    {
+        Debug.Log($"[BONSAI SERVER] Ready up initiated at NetworkTime {NetworkTime.time}");
+
+        _readyingUp = true;
+        _beginReadyUpTime = NetworkTime.time;
+
+        _clientsReadyStatus.Clear();
+        foreach (var conn in NetworkServer.connections.Values)
+            _clientsReadyStatus.Add(conn.identity.netId, false);
+
+        if (_idealScrub.Active && NetworkTime.time > _idealScrub.NetworkTime)
+        {
+            DeActivateScrubAndReadyUp();
+        }
+        else
+        {
+            Debug.Log($"[BONSAI] Server ideal scrub was paused at ({_idealScrub.Scrub}), continuing...");
+        }
+    }
+
+    [Server]
+    private void DeActivateScrubAndReadyUp()
+    {
+        var oldScrub = _idealScrub.Scrub;
+        var oldStart = _idealScrub.NetworkTime;
+
+        _idealScrub = _idealScrub.NonActiveAtNetworkTime(NetworkTime.time);
+        var currentVideoTime = _idealScrub.CurrentTimeStamp(NetworkTime.time);
+
+        RpcReadyUpAtTime(currentVideoTime);
+
+        Debug.Log("[BONSAI SERVER] Ideal scrub was not paused when beginning ready up process. " +
+                  $"Timestamp ({oldScrub}) started ({NetworkTime.time - oldStart}) seconds ago, " +
+                  $"new timestamp: ({_idealScrub.Scrub}=={currentVideoTime})"
+        );
     }
 
     [ClientRpc]
@@ -575,6 +612,7 @@ public class AutoBrowserController : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdCloseVideo()
     {
+        togglePause.ServerSetPaused(true);
         _contentActive = false;
         _contentInfo = new ContentInfo();
         SetScreenState(ScreenState.Lower);
