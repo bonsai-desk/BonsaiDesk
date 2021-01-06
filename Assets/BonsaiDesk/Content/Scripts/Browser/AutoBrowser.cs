@@ -79,7 +79,6 @@ public class AutoBrowser : MonoBehaviour
             };
     }
 
-
     #region interface
 
     public void SetHeight(float t)

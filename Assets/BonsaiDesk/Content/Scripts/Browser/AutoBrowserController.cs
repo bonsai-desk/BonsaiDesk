@@ -27,7 +27,7 @@ public static class YouTubeMessage
                "}";
     }
 
-    public static string LoadVideo(string id, float ts)
+    public static string LoadVideo(string id, double ts)
     {
         return "{" +
                "\"type\": \"nav\", " +
@@ -89,7 +89,7 @@ public class AutoBrowserController : NetworkBehaviour
 
     private const float ReadyUpTimeout = 5;
 
-    private const float ClientJoinGracePeriod = 5;
+    private const float ClientJoinGracePeriod = 10f;
 
     private bool _allGood;
 
@@ -104,6 +104,8 @@ public class AutoBrowserController : NetworkBehaviour
     #endregion server vars
 
     #region client vars
+
+    private bool _handleLateJoin;
 
     private const float ClientPingInterval = 0.1f;
 
@@ -157,6 +159,7 @@ public class AutoBrowserController : NetworkBehaviour
                 Debug.Log($"[BONSAI SERVER] AutoBrowser remove player netId={clientNetId}");
                 _clientsReadyStatus.Remove(clientNetId);
                 _clientsJoinedNetworkTime.Remove(clientNetId);
+                _clientLastPingTime.Remove(clientNetId);
             };
         }
 
@@ -269,6 +272,12 @@ public class AutoBrowserController : NetworkBehaviour
         // ping the server with the client current player time
         if (isClient)
         {
+            if (_handleLateJoin)
+            {
+                Debug.Log("[BONSAI CLIENT] Late join while content is active, attempting to sync");
+                LoadVideo(_contentInfo, _idealScrub.CurrentTimeStamp(NetworkTime.time + 5), true);
+            }
+            
             if (_playerState != PlayerState.Ready && _postedPlayMessage) _postedPlayMessage = false;
 
             if (_playerState == PlayerState.Ready &&
@@ -278,7 +287,8 @@ public class AutoBrowserController : NetworkBehaviour
             )
             {
                 Debug.Log($"[BONSAI CLIENT] (netId={NetworkClient.connection.identity.netId}) been ready, " +
-                          $"now playing scrub: {_idealScrub.Scrub} at NetworkTime: ({_idealScrub.NetworkTime})~=({NetworkTime.time})");
+                          $"playing with player timestamp: {_playerCurrentTime} at NetworkTime: ({NetworkTime.time})");
+                
                 _autoBrowser.PostMessage(YouTubeMessage.Play);
                 _postedPlayMessage = true;
             }
@@ -333,6 +343,7 @@ public class AutoBrowserController : NetworkBehaviour
         var browserDown = _screenState == ScreenState.Lower;
         var targetHeight = browserDown ? 0 : 1;
         _height = targetHeight;
+        if (_contentActive) _handleLateJoin = true;
     }
 
     #endregion unity
@@ -389,7 +400,14 @@ public class AutoBrowserController : NetworkBehaviour
 
     private void TriggerNotAllGood(string reason = "")
     {
-        Debug.Log($"[BONSAI SERVER] Trigger Not All Good [{reason}]");
+        if (!_allGood)
+        {
+            Debug.LogError($"[BONSAI SERVER] Triggered not all good for [{reason}] but was already not all good");
+        }
+        else
+        {
+            Debug.Log($"[BONSAI SERVER] Trigger not all good [{reason}]");
+        }
         _allGood = false;
         _clientLastPingTime.Clear();
     }
@@ -404,13 +422,11 @@ public class AutoBrowserController : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdPing(uint clientNetId, float clientTimeStamp)
     {
-        Debug.Log($"[BONSAI SERVER] Ping from (netId={clientNetId}) with ts=({clientTimeStamp})");
-
         _clientLastPingTime[clientNetId] = (NetworkTime.time, clientTimeStamp);
 
-        if (!ClientInGracePeriod(clientNetId) && !ClientVideoIsSynced(clientTimeStamp))
+        if (_allGood && !ClientInGracePeriod(clientNetId) && !ClientVideoIsSynced(clientTimeStamp))
         {
-            TriggerNotAllGood($"Client ({clientNetId}) timestamp not synced");
+            TriggerNotAllGood($"Client ({clientNetId}) timestamp not synced ideal: ({_idealScrub.CurrentTimeStamp(NetworkTime.time)}) vs reported: ({clientTimeStamp})");
         }
     }
 
@@ -454,11 +470,20 @@ public class AutoBrowserController : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void RpcLoadVideo(ContentInfo info, float ts, bool reload)
+    private void RpcLoadVideo(ContentInfo info, double ts, bool reload)
     {
+        Debug.Log($"[BONSAI RPC] LoadVideo");
+        LoadVideo(info, ts, reload);
+    }
+
+    private void LoadVideo(ContentInfo info, double ts, bool reload)
+    {
+        // this is not always true but should always be false at this point
+        _handleLateJoin = false;
+        
         var resolution = _autoBrowser.ChangeAspect(info.Aspect);
 
-        Debug.Log($"[BONSAI RPC] Load New YouTube Video ({info.ID}) with resolution: {resolution}");
+        Debug.Log($"[BONSAI] Load New YouTube Video ({info.ID}) with resolution: {resolution}");
 
         if (reload)
             _autoBrowser.PostMessages(new List<string>
@@ -510,7 +535,7 @@ public class AutoBrowserController : NetworkBehaviour
                 case "READY":
                     _playerState = PlayerState.Ready;
                     _playerCurrentTime = jsonNode["current_time"];
-                    Debug.Log($"[BONSAI CLIENT] Ready with player time {_playerCurrentTime}");
+                    Debug.Log($"[BONSAI CLIENT] Ready with player timestamp {_playerCurrentTime}");
                     CmdReady(NetworkClient.connection.identity.netId);
                     break;
 
