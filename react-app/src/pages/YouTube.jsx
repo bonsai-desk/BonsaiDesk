@@ -57,16 +57,18 @@ let Video = (props) => {
                     player.seekTo(json.seekTime, true);
                     break;
                 case "readyUp":
-                    setTs(json.seekTime)
+                    setTs(json.timeStamp)
                     setReady(false)
                     player.mute();
-                    player.seekTo(json.seekTime, true);
+                    player.seekTo(json.timeStamp, true);
                     break;
                 default:
                     console.log("command: not handled (video) " + JSON.stringify(json))
                     break;
             }
         }
+
+        useEffect(() => {}, [])
 
         console.log("bonsai: add YouTube events+intervals")
 

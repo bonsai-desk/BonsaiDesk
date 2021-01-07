@@ -152,7 +152,7 @@ public class AutoBrowser : MonoBehaviour
 
     public void PostMessage(string data)
     {
-        Debug.Log($"[BONSAI] (netId={NetworkClient.connection.identity.netId}) PostMessage {data} at NetworkTime {NetworkTime.time}");
+        Debug.Log($"[BONSAI {NetworkClient.connection.identity.netId}] PostMessage {data} <{NetworkTime.time}>");
         _webViewPrefab.WebView.PostMessage(data);
     }
 
