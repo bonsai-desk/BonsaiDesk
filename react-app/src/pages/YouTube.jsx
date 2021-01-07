@@ -28,13 +28,15 @@ let Video = (props) => {
 
     let dev_mode = window.location.pathname.split("/")[1] === "youtube_test";
     let {id, timeStamp} = props.match.params;
-    let [ready, setReady] = useState(false);
+    let [init, setInit] = useState(false);
     let [player, setPlayer] = useState(null);
     let [justBuffered, setJustBuffered] = useState(false)
+    let [readying, setReadying] = useState(false)
 
     let [ts, setTs] = useState(timeStamp);
 
     let readyUp = (timeStamp) => {
+        setReadying(true)
         switch (player.getPlayerState()) {
             case PlayerState.PAUSED:
                 player.playVideo();
@@ -114,17 +116,19 @@ let Video = (props) => {
     let onStateChange = (event) => {
 
         let postStateChange = (message) => {
+            console.log("postStateChange: " + message)
             if (dev_mode) {
                 return;
             }
 
             window.vuplex.postMessage({type: "stateChange", message: message, current_time: player.getCurrentTime()});
+
         }
 
         switch (event.data) {
             case PlayerState.UNSTARTED:
-                console.log("bonsai: unstarted")
-                postStateChange("UNSTARTED")
+                console.log("bonsai: unstarted " + player.getCurrentTime())
+                //postStateChange("UNSTARTED")
                 break;
             case PlayerState.ENDED:
                 console.log("bonsai: ended")
@@ -135,25 +139,32 @@ let Video = (props) => {
                     setJustBuffered(false);
                     console.log("bonsai: play after buffer")
                 }
-                if (!ready) {
+                if (!init) {
                     player.pauseVideo()
                 } else {
-                    console.log("bonsai: playing")
-                    postStateChange("PLAYING")
+                    if (!readying) {
+                        console.log("bonsai: playing")
+                        postStateChange("PLAYING")
+                    } else {
+                        console.log("bonsai: playing while readying")
+                    }
                 }
                 break;
             case PlayerState.PAUSED:
-                if (!ready) {
+                if (!init) {
                     player.seekTo(ts);
                     player.unMute();
-                    setReady(true);
-                    console.log("bonsai: ready")
+                    setInit(true);
+                    console.log("bonsai: init ready")
                     postStateChange("READY")
                 } else {
-                    if (!justBuffered) {
+                    if (!justBuffered && !readying) {
                         console.log("bonsai: paused")
                         postStateChange("PAUSED")
-                    } else {
+                    } else if (!justBuffered && readying) {
+                        console.log("bonsai: paused while readying")
+                    }
+                    else {
                         console.log("bonsai: ready (pause after buffer)")
                         postStateChange("READY")
                     }
@@ -162,10 +173,15 @@ let Video = (props) => {
                 break;
             case PlayerState.BUFFERING:
                 setJustBuffered(true)
-                if (ready) {
-                    console.log("bonsai: buffering")
-                    postStateChange("BUFFERING")
+                if (init) {
+                    if (!readying) {
+                        console.log("bonsai: buffering")
+                        postStateChange("BUFFERING")
+                    } else {
+                        console.log("bonsai: buffering while readying")
+                    }
                 } else {
+                    if (!readying)
                     console.log("bonsai: buffering before ready")
                 }
                 break;
