@@ -6,9 +6,11 @@ using UnityEngine.Networking;
 public class TabletControl : NetworkBehaviour
 {
     [SyncVar(hook = nameof(VideoIdHook))] public string videoId;
+    [SyncVar] private bool _serverLerping = false;
 
     public PhysicMaterial lowFrictionPhysicMaterial;
     public BoxCollider worldBox;
+    public BoxCollider fingerBox;
     public TabletCollider tabletCollider;
     public Rigidbody tabletBody;
     public MeshRenderer thumbnailRenderer;
@@ -26,6 +28,7 @@ public class TabletControl : NetworkBehaviour
     {
         base.OnStartClient();
         StartCoroutine(LoadThumbnail(videoId));
+        SetInteractable(!_serverLerping);
     }
 
     private void Update()
@@ -35,14 +38,35 @@ public class TabletControl : NetworkBehaviour
         tabletBody.mass = tabletCollider.NumFingersTouching >= 4 ? 0.050f : 0.300f;
     }
 
+    [Server]
+    public void SetServerLerping(bool serverLerping)
+    {
+        if (serverLerping == _serverLerping)
+            return;
+        
+        _serverLerping = serverLerping;
+        SetInteractable(!serverLerping);
+    }
+
+    private void SetInteractable(bool interactable)
+    {
+        worldBox.enabled = interactable;
+        fingerBox.enabled = interactable;
+    }
+
     public void TabletPlay()
     {
-        TabletSpot.instance.CmdSetNewVideo(netIdentity);
+        TabletSpot.Instance.CmdSetNewVideo(netIdentity);
     }
 
     private void VideoIdHook(string oldValue, string newValue)
     {
         StartCoroutine(LoadThumbnail(newValue));
+    }
+    
+    private void ServerLerpingHook(bool oldValue, bool newValue)
+    {
+        SetInteractable(!newValue);
     }
 
     private IEnumerator LoadThumbnail(string newVideoId, bool maxRes = true)

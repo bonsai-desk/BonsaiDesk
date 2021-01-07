@@ -10,6 +10,8 @@ public class AutoAuthority : NetworkBehaviour
     [SyncVar] private double _lastInteractTime;
     [SyncVar] private uint _ownerIdentityId = uint.MaxValue;
     [SyncVar] private bool _inUse = false;
+    [SyncVar] public bool isKinematic = false;
+    
     public bool InUse => _inUse;
 
     public bool allowPinchPull = true;
@@ -68,7 +70,7 @@ public class AutoAuthority : NetworkBehaviour
         }
 
         //code past this point if you have control over the object
-        _body.isKinematic = false;
+        _body.isKinematic = isKinematic;
     }
 
     //Hello function. I am a client. Do I have authority over this object?
@@ -117,6 +119,12 @@ public class AutoAuthority : NetworkBehaviour
             _colorId = newColorId;
             _cachedMaterial.SetColor(_colorPropertyId, _colors[_colorId]);
         }
+    }
+
+    [Command(ignoreAuthority = true)]
+    public void CmdSetKinematic(bool newIsKinematic)
+    {
+        isKinematic = newIsKinematic;
     }
 
     public void VisualizePinchPull()

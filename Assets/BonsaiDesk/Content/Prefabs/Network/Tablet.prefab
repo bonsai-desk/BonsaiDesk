@@ -425,6 +425,7 @@ MonoBehaviour:
   lowFrictionPhysicMaterial: {fileID: 13400000, guid: 90f1a8f271117864aaa385945e30096b,
     type: 2}
   worldBox: {fileID: 1362949603237956170}
+  fingerBox: {fileID: 8227702852430561669}
   tabletCollider: {fileID: 2242447506356610558}
   tabletBody: {fileID: 6876464847205822901}
   thumbnailRenderer: {fileID: 6876464846658445390}
@@ -442,6 +443,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
+  isKinematic: 0
   allowPinchPull: 1
   meshRenderer: {fileID: 6876464845591919517}
 --- !u!114 &2242447506356610558

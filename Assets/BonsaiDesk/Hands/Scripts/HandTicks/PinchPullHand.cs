@@ -111,6 +111,11 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         _attachedToId = attachToObject.netId;
         attachToObject.CmdSetNewOwner(NetworkClient.connection.identity.netId, NetworkTime.time, true);
         playerHand.networkHand.CmdSetPinchPullInfo(_attachedToId, _localHitPoint, _ropeLength);
+
+        if (attachToObject.isKinematic)
+        {
+            attachToObject.CmdSetKinematic(false);
+        }
     }
 
     private void DetachObject()
