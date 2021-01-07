@@ -14,9 +14,16 @@ public static class YouTubeMessage
 
     public const string Play = "{\"type\": \"video\", \"command\": \"play\"}";
 
-    public const string GoHome = "{" + "\"type\": \"nav\", " + "\"command\": \"goHome\" " + "}";
+    public static readonly string NavHome = PushPath("/home");
 
-    public const string Reload = "{" + "\"type\": \"nav\", " + "\"command\": \"reload\" " + "}";
+    public static string PushPath(string path)
+    {
+        return "{" +
+               "\"type\": \"nav\", " +
+               "\"command\": \"push\", " +
+               $"\"path\": \"{path}\"" +
+               "}";
+    }
 
     public static string SeekTo(double time)
     {
@@ -285,8 +292,12 @@ public class AutoBrowserController : NetworkBehaviour
                 Debug.Log("[BONSAI CLIENT] Late join while content is active, attempting to sync");
                 LoadVideo(_contentInfo, _idealScrub.CurrentTimeStamp(NetworkTime.time + 5), true);
             }
-            
-            if (_playerState != PlayerState.Ready && _postedPlayMessage) _postedPlayMessage = false;
+
+            if (_postedPlayMessage && _playerState == PlayerState.Playing)
+            {
+                Debug.Log("[BONSAI CLIENT] Reset posted play message");
+                _postedPlayMessage = false;
+            }
 
             if ((_playerState == PlayerState.Ready || _playerState == PlayerState.Paused) &&
                 !_postedPlayMessage &&
@@ -501,8 +512,8 @@ public class AutoBrowserController : NetworkBehaviour
         if (reload)
             _autoBrowser.PostMessages(new List<string>
             {
+                YouTubeMessage.NavHome,
                 YouTubeMessage.LoadVideo(info.ID, ts),
-                YouTubeMessage.Reload
             });
         else
             _autoBrowser.PostMessage(YouTubeMessage.LoadVideo(info.ID, ts));
@@ -637,7 +648,7 @@ public class AutoBrowserController : NetworkBehaviour
     [ClientRpc]
     private void RpcGoHome()
     {
-        _autoBrowser.PostMessage(YouTubeMessage.GoHome);
+        _autoBrowser.PostMessage(YouTubeMessage.NavHome);
     }
 
     private static IEnumerator FetchYouTubeAspect(string videoId, Action<Vector2> callback)
