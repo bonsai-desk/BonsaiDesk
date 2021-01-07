@@ -635,7 +635,12 @@ public class AutoBrowserController : NetworkBehaviour
     private void OnMessageEmitted(object sender, EventArgs<string> eventArgs)
     {
         var jsonNode = JSONNode.Parse(eventArgs.Value) as JSONObject;
-
+        
+        if (jsonNode?["type"].Value == "error")
+        {
+            Debug.LogError(BC() + $"Javascript error: {jsonNode?["error"].Value}");
+            return;
+        }
 
         if (jsonNode?["type"].Value == "infoCurrentTime")
         {

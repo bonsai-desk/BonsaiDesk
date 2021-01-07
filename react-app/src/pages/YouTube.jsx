@@ -4,7 +4,7 @@ import {useHistory} from "react-router-dom";
 
 let opts = {
     width: window.innerWidth,
-    height: window.innerHeight,
+    height: window.innerHeight/2,
     playerVars: {
         autoplay: 0,
         controls: 0,
@@ -30,8 +30,30 @@ let Video = (props) => {
     let {id, timeStamp} = props.match.params;
     let [ready, setReady] = useState(false);
     let [player, setPlayer] = useState(null);
+    let [justBuffered, setJustBuffered] = useState(false)
 
     let [ts, setTs] = useState(timeStamp);
+
+    let readyUp = (timeStamp) => {
+        switch (player.getPlayerState()) {
+            case PlayerState.PAUSED:
+                player.playVideo();
+                player.seekTo(timeStamp, true);
+                player.pauseVideo();
+                break;
+            case PlayerState.PLAYING:
+                player.seekTo(timeStamp, true);
+                player.pauseVideo();
+                break;
+            default:
+                let msg = "ERROR READYUP SWITCH NOT HANDLED"
+                window.vuplex.postMessage({type: "error", message: msg, current_time: player.getCurrentTime()});
+                console.log("bonsai: " + msg)
+                break;
+
+
+        }
+    }
 
     // setup the event listeners
     useEffect(() => {
@@ -57,18 +79,13 @@ let Video = (props) => {
                     player.seekTo(json.seekTime, true);
                     break;
                 case "readyUp":
-                    setTs(json.timeStamp)
-                    setReady(false)
-                    player.mute();
-                    player.seekTo(json.timeStamp, true);
+                    readyUp(json.timeStamp)
                     break;
                 default:
                     console.log("command: not handled (video) " + JSON.stringify(json))
                     break;
             }
         }
-
-        useEffect(() => {}, [])
 
         console.log("bonsai: add YouTube events+intervals")
 
@@ -114,6 +131,10 @@ let Video = (props) => {
                 postStateChange("ENDED")
                 break;
             case PlayerState.PLAYING:
+                if (justBuffered) {
+                    setJustBuffered(false);
+                    console.log("bonsai: play after buffer")
+                }
                 if (!ready) {
                     player.pauseVideo()
                 } else {
@@ -129,14 +150,23 @@ let Video = (props) => {
                     console.log("bonsai: ready")
                     postStateChange("READY")
                 } else {
-                    console.log("bonsai: paused")
-                    postStateChange("PAUSED")
+                    if (!justBuffered) {
+                        console.log("bonsai: paused")
+                        postStateChange("PAUSED")
+                    } else {
+                        console.log("bonsai: ready (pause after buffer)")
+                        postStateChange("READY")
+                    }
                 }
+                setJustBuffered(false);
                 break;
             case PlayerState.BUFFERING:
+                setJustBuffered(true)
                 if (ready) {
                     console.log("bonsai: buffering")
                     postStateChange("BUFFERING")
+                } else {
+                    console.log("bonsai: buffering before ready")
                 }
                 break;
             case PlayerState.CUED:
@@ -154,6 +184,8 @@ let Video = (props) => {
 
     return (
         <div>
+            {dev_mode ? <div onClick={()=>{readyUp(30)}}>readyup</div> : ""}
+
             <YouTube
                 opts={opts}
                 onReady={onReady}
