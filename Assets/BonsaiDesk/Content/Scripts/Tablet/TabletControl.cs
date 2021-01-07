@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 public class TabletControl : NetworkBehaviour
 {
     [SyncVar(hook = nameof(VideoIdHook))] public string videoId;
-    [SyncVar] private bool _serverLerping = false;
+    [SyncVar(hook = nameof(ServerLerpingHook))] private bool _serverLerping = false;
 
     public PhysicMaterial lowFrictionPhysicMaterial;
     public BoxCollider worldBox;

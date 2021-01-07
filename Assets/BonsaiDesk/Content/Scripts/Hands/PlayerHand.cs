@@ -92,6 +92,7 @@ public class PlayerHand : MonoBehaviour
 
     private Dictionary<Gesture, bool> _gestures = new Dictionary<Gesture, bool>();
     private Dictionary<Gesture, bool> _lastGestures = new Dictionary<Gesture, bool>();
+    private Dictionary<Gesture, float> _lastGestureActiveTime = new Dictionary<Gesture, float>();
 
     public bool GetGesture(Gesture gesture)
     {
@@ -116,6 +117,16 @@ public class PlayerHand : MonoBehaviour
     public bool GetGestureStart(Gesture gesture)
     {
         return GetGesture(gesture) && !GetLastGesture(gesture);
+    }
+
+    public bool GetGestureActiveWithin(Gesture gesture, float time)
+    {
+        if (_lastGestureActiveTime.TryGetValue(gesture, out float value))
+        {
+            return Time.time - value <= time;
+        }
+
+        return false;
     }
 
     public void UpdateLastGestures()
@@ -184,48 +195,6 @@ public class PlayerHand : MonoBehaviour
         }
     }
 
-    public void AttachObject()
-    {
-        if (!objectAttached)
-        {
-            objectAttached = true;
-            beamHoldControl.SetActive(false);
-
-            beamJoint.connectedAnchor = beamHold.InverseTransformPoint(hitPoint);
-
-            float jointLimit = Vector3.Distance(beamJoint.transform.position, hitPoint);
-            SoftJointLimit softJointLimit = new SoftJointLimit
-            {
-                limit = jointLimit
-            };
-            beamJoint.linearLimit = softJointLimit;
-
-            ropeLength = jointLimit + Vector3.Distance(beamJointBody.transform.position,
-                OtherHand().beamJointBody.transform.position);
-
-            beamJoint.connectedBody = beamHold.GetComponent<Rigidbody>();
-
-            var nid = beamHold.GetComponent<NetworkIdentity>();
-            // if (nid != null)
-            //     NetworkVRPlayer.self.CmdReceiveOwnershipOfObject(nid);
-
-            BackToOriginalColor();
-
-            // lastFingerDistance = -1;
-            // otherHand().lastFingerDistance = -1;
-        }
-    }
-
-    public void DetachObject()
-    {
-        if (objectAttached)
-        {
-            objectAttached = false;
-            StopBeam();
-            beamJoint.connectedBody = null;
-        }
-    }
-
     private void Awake()
     {
         AllButHands = ~LayerMask.GetMask("LeftHand", "RightHand", "LeftHeldObject", "RightHeldObject");
@@ -252,7 +221,7 @@ public class PlayerHand : MonoBehaviour
             _handTicksDictionary.Add(handTick.GetType(), handTick);
             handTick.playerHand = this;
         }
-
+        
         foreach (Gesture gesture in (Gesture[]) Gesture.GetValues(typeof(Gesture)))
         {
             _gestures.Add(gesture, false);
@@ -280,71 +249,25 @@ public class PlayerHand : MonoBehaviour
         return (T) _handTicksDictionary[typeof(T)];
     }
 
-    public void BackToOriginalColor()
-    {
-        beamHoldRenderer.material.SetColor("_Color", beamHoldOriginalColor);
-    }
-
-    private void StopBeam()
-    {
-        beamHold = null;
-        if (beamHoldRenderer != null)
-        {
-            BackToOriginalColor();
-            // beamHoldRenderer.material.SetColor("_Color", Color.white);
-        }
-
-        beamHoldRenderer = null;
-        beamHoldControl.SetActive(false);
-    }
-
-    public float FixedUpdateExternal(float fingerDistance)
-    {
-        float difference = 0;
-        bool indexPinching = IndexPinching();
-        if (indexPinching)
-        {
-            if (OtherHand().beamHold != null)
-            {
-                var limit = OtherHand().beamJoint.linearLimit;
-                // if (Mathf.Approximately(lastFingerDistance, -1))
-                //     lastFingerDistance = fingerDistance;
-
-                // float difference = fingerDistance - lastFingerDistance;
-
-                // limit.limit = Mathf.Clamp(limit.limit - difference, 0, otherHand().ropeLength);
-
-                float previousLimit = limit.limit;
-
-                limit.limit = Mathf.Clamp(OtherHand().ropeLength - fingerDistance, 0, OtherHand().ropeLength);
-
-                difference = Mathf.Abs(previousLimit - limit.limit);
-
-                OtherHand().beamJoint.linearLimit = limit;
-            }
-        }
-        else
-        {
-            OtherHand().DetachObject();
-            DetachObject();
-        }
-
-        // lastFingerDistance = fingerDistance;
-        return difference;
-    }
-
     public void UpdateGestures()
     {
         float fistStrength = FistStrength();
         float flatFistStrength = FlatFistStrength();
 
-        _gestures[Gesture.AnyPinching] = AnyPinching();
-        _gestures[Gesture.IndexPinching] = IndexPinching();
-        _gestures[Gesture.Fist] = fistStrength > 0.7f;
-        _gestures[Gesture.FlatFist] = flatFistStrength > 0.7f;
-        _gestures[Gesture.WeakFist] = fistStrength > 0.5f;
-        _gestures[Gesture.WeakFlatFist] = flatFistStrength > 0.5f;
-        _gestures[Gesture.WeakPalm] = fistStrength < 0.35f;
+        UpdateGesture(Gesture.AnyPinching, AnyPinching());
+        UpdateGesture(Gesture.IndexPinching, IndexPinching());
+        UpdateGesture(Gesture.Fist, fistStrength > 0.7f);
+        UpdateGesture(Gesture.FlatFist, flatFistStrength > 0.7f);
+        UpdateGesture(Gesture.WeakFist, fistStrength > 0.5f);
+        UpdateGesture(Gesture.WeakFlatFist, flatFistStrength > 0.5f);
+        UpdateGesture(Gesture.WeakPalm, fistStrength < 0.35f);
+    }
+
+    void UpdateGesture(Gesture gesture, bool active)
+    {
+        _gestures[gesture] = active;
+        if (active)
+            _lastGestureActiveTime[gesture] = Time.time;
     }
 
     public void RunHandTicks()
@@ -357,7 +280,7 @@ public class PlayerHand : MonoBehaviour
 
     private void Update()
     {
-        if (oVRPhysicsHand.IsDataValid && oVRPhysicsHand.IsDataHighConfidence)
+        if (Tracking())
         {
             mainCamera.cullingMask |= 1 << handLayer;
         }
@@ -377,148 +300,6 @@ public class PlayerHand : MonoBehaviour
         else
         {
             hitDistance = Mathf.Infinity;
-        }
-
-        // bool hitPullBox = false;
-        // if (indexPinching && !lastIndexPinching)
-        // {
-        //     if (oVRPhysicsHand.thumbTipTarget != null)
-        //     {
-        //         var hits = Physics.OverlapSphere(oVRPhysicsHand.thumbTipTarget.position, 0, AllButHands,
-        //             QueryTriggerInteraction.Collide);
-        //         foreach (var hit in hits)
-        //         {
-        //             if (hit.CompareTag("BeamPinch"))
-        //             {
-        //                 OtherHand().AttachObject();
-        //                 hitPullBox = true;
-        //                 break;
-        //             }
-        //         }
-        //     }
-        // }
-        //
-        // bool hitObject = false;
-        // if (!objectAttached && !hitPullBox && !OtherHand().objectAttached && OtherHand().beamHold == null &&
-        //     heldJoint == null)
-        // {
-        //     if (indexPinching)
-        //     {
-        //         float r = 0.15f;
-        //         float length = 1f;
-        //         float loops = 5;
-        //         for (float t = 0; t < 2f * Mathf.PI; t += Mathf.PI * 2f / 15.25744f / loops)
-        //         {
-        //             Vector3 posOnCircle = new Vector3(Mathf.Cos(t * loops) * t / (Mathf.PI * 2f) * r * 2f,
-        //                 Mathf.Sin(t * loops) * t / (Mathf.PI * 2f) * r * 2f, length);
-        //             Vector3 origin = pointerPose.position;
-        //             Vector3 end = pointerPose.TransformPoint(posOnCircle);
-        //             // pointerPose.tran
-        //
-        //             // if (Physics.Raycast(origin, direction, out RaycastHit hit, 1f, AllButHands, QueryTriggerInteraction.Ignore))
-        //             if (Physics.Linecast(origin, end, out RaycastHit hit, AllButHands, QueryTriggerInteraction.Ignore))
-        //             {
-        //                 Transform check = hit.transform;
-        //                 Rigidbody hitBody = check.GetComponent<Rigidbody>();
-        //                 while (hitBody == null && check.parent != null)
-        //                 {
-        //                     check = check.parent;
-        //                     hitBody = check.GetComponent<Rigidbody>();
-        //                 }
-        //
-        //                 if (hitBody != null /* && !hitBody.isKinematic*/)
-        //                 {
-        //                     //found valid object
-        //
-        //                     if (hit.distance < 0.2f)
-        //                         break;
-        //
-        //                     if (check != beamHold)
-        //                     {
-        //                         if (beamHoldRenderer != null)
-        //                             BackToOriginalColor();
-        //
-        //                         MeshRenderer meshRenderer = check.GetComponent<MeshRenderer>();
-        //                         if (meshRenderer == null)
-        //                             meshRenderer = check.GetComponentInChildren<MeshRenderer>();
-        //                         if (meshRenderer != null)
-        //                         {
-        //                             beamHoldRenderer = meshRenderer;
-        //                             beamHoldOriginalColor = meshRenderer.material.GetColor("_Color");
-        //                             meshRenderer.material.SetColor("_Color", Color.yellow);
-        //                         }
-        //
-        //                         beamHoldControl.SetActive(true);
-        //
-        //                         // if (beamHold == null)
-        //                         // {
-        //                         beamHold = check;
-        //                         // }
-        //                     }
-        //
-        //                     hitPoint = hit.point;
-        //
-        //                     hitObject = true;
-        //                     break;
-        //                 }
-        //             }
-        //         }
-        //     }
-        //
-        //     if (!hitObject)
-        //     {
-        //         StopBeam();
-        //     }
-        // }
-
-        if ((GetGesture(Gesture.IndexPinching) || GetGesture(Gesture.Fist)) && !objectAttached)
-        {
-            if (heldJoint == null && !menu.activeInHierarchy)
-            {
-                Collider[] pinchHits = new Collider[0];
-                if (GetGesture(Gesture.IndexPinching) && oVRPhysicsHand.thumbTipTarget != null)
-                    pinchHits = Physics.OverlapSphere(oVRPhysicsHand.thumbTipTarget.position, 0, AllButHands,
-                        QueryTriggerInteraction.Ignore);
-                Collider[] fistHits = new Collider[0];
-                if (GetGesture(Gesture.Fist))
-                    fistHits = Physics.OverlapSphere(holdPosition.position, 0.02f, AllButHands,
-                        QueryTriggerInteraction.Ignore);
-                Collider[] hits = new Collider[pinchHits.Length + fistHits.Length];
-                pinchHits.CopyTo(hits, 0);
-                fistHits.CopyTo(hits, pinchHits.Length);
-                for (int i = 0; i < hits.Length; i++)
-                {
-                    Transform check = hits[i].transform;
-                    Rigidbody hitBody = check.GetComponent<Rigidbody>();
-                    while (hitBody == null && check.parent != null)
-                    {
-                        check = check.parent;
-                        hitBody = check.GetComponent<Rigidbody>();
-                    }
-
-                    if (hitBody != null /* && !hitBody.isKinematic*/)
-                    {
-                        BlockArea ba = hitBody.GetComponent<BlockArea>();
-                        if (ba != null && ba.blocks.Count > 4)
-                            ConnectBody(hitBody, true);
-                        else
-                            ConnectBody(hitBody, false);
-                        break;
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (Tracking() && heldJoint != null)
-            {
-                heldBody.useGravity = heldObjectGravity;
-                heldBody.drag = heldObjectDrag;
-                heldBody.angularDrag = heldObjectAngularDrag;
-                Destroy(heldJoint);
-                heldJoint = null;
-                heldBody = null;
-            }
         }
 
         PlayerHands.hands.SetHandGesturesReady(skeletonType);
@@ -586,6 +367,15 @@ public class PlayerHand : MonoBehaviour
 
         heldJoint.angularXDrive = rotationDrive;
         heldJoint.angularYZDrive = rotationDrive;
+    }
+
+    //TODO fake is tracking for 1-2 seconds while it fades out. this includes locking gesture values
+    private float lastTracking = 0;
+    public bool TrackingRecently()
+    {
+        if (Tracking())
+            lastTracking = Time.time;
+        return Time.time - lastTracking <= 1f;
     }
 
     public bool Tracking()
