@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using Mirror;
+﻿using Mirror;
 using UnityEngine;
 
 public class TabletSpot : NetworkBehaviour
@@ -52,10 +50,10 @@ public class TabletSpot : NetworkBehaviour
         else if (_currentTabletIdentity.transform.position != transform.position)
         {
             _currentTabletIdentity = null;
-            //stop playing video
+            //stop video
         }
     }
-
+    
     [Command(ignoreAuthority = true)]
     public void CmdSetNewVideo(NetworkIdentity tabletIdentity)
     {
@@ -79,11 +77,11 @@ public class TabletSpot : NetworkBehaviour
         _startPosition = tabletIdentity.transform.position;
         _startRotation = tabletIdentity.transform.rotation;
         _lerpTime = 0;
-
+        
         _currentTabletIdentity = tabletIdentity;
         tabletIdentity.GetComponent<TabletControl>().SetServerLerping(true);
 
-        //TODO strip inUse from client
+        //TODO strip inUse from client - give in use to server - setup inuse for grabbed items
         tabletIdentity.GetComponent<AutoAuthority>().Interact(uint.MaxValue);
         tabletIdentity.GetComponent<AutoAuthority>().isKinematic = true;
     }
