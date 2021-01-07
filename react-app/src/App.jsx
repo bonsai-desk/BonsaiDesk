@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import "./assets/main.css";
 import {BrowserRouter as Router, Route, Switch, useHistory} from "react-router-dom";
 import YouTube from "./pages/YouTube";
@@ -11,7 +11,7 @@ let Home = () => {
     let cSharpHomeListeners = (event) => {
         let json = JSON.parse(event.data);
 
-        console.log(json)
+        console.log("cSharpHomeListeners", json)
 
         if (!(json.type === "nav")) return;
 
@@ -31,12 +31,22 @@ let Home = () => {
     }
 
     if (window.vuplex != null) {
+        console.log("bonsai: vuplex is not null -> cSharpHomeListeners")
         addCSharpListeners();
     } else {
+        console.log("bonsai: vuplex is null")
         window.addEventListener('vuplexready', _ => {
+            console.log("bonsai: vuplexready -> cSharpHomeListeners")
             addCSharpListeners()
         })
     }
+
+    useEffect(() => {return () => {
+        console.log('ping')
+        if (window.vuplex != null) {
+            window.vuplex.removeEventListener('message', cSharpHomeListeners)
+        }
+    }})
 
     return (
         <div>

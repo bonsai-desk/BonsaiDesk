@@ -1,7 +1,7 @@
 let cSharpPageListeners = (history, event) => {
     let json = JSON.parse(event.data);
 
-    console.log(json)
+    console.log("cSharpPageListeners", json)
 
     if (!(json.type === "nav")) return;
 
@@ -9,7 +9,7 @@ let cSharpPageListeners = (history, event) => {
         case "goHome":
             console.log("command: goHome pre ")
             history.push("/")
-            window.location.reload(true)
+            //window.location.reload(true)
             console.log("command: goHome post")
             break;
         case "reload":

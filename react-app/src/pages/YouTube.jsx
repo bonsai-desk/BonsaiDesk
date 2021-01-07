@@ -56,6 +56,8 @@ let Video = (props) => {
                 })
             }, 100)
 
+            window.vuplex.removeEventListener('message')
+
             window.vuplex.addEventListener('message', event => {
 
                 cSharpPageListeners(history, event)
@@ -91,9 +93,12 @@ let Video = (props) => {
         }
 
         if (window.vuplex != null) {
+            console.log("bonsai: vuplex is not null -> addCSharpListeners")
             addCSharpListeners(player);
         } else {
+            console.log("bonsai: vuplex is null")
             window.addEventListener('vuplexready', _ => {
+                console.log("bonsai: vuplexready -> addCSharpListeners")
                 addCSharpListeners(player)
             })
         }
