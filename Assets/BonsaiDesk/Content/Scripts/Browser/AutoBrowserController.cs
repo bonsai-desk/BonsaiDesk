@@ -156,6 +156,10 @@ public class AutoBrowserController : NetworkBehaviour
             {
                 if (paused && _contentActive)
                 {
+                    if (_idealScrub.Active)
+                    {
+                        Debug.LogError(BC() + $"Pause and seeking while ideal scrub is active. This will cause de-sync. <{NetworkTime.time}>");
+                    }
                     _autoBrowser.PostMessages(new List<string>()
                     {
                         YouTubeMessage.Pause,
@@ -174,9 +178,11 @@ public class AutoBrowserController : NetworkBehaviour
                     if (paused)
                     {
                         _idealScrub = _idealScrub.NonActiveAtNetworkTime(NetworkTime.time);
+                        Debug.Log($"[BONSAI SERVER] Setting scrub inactive at {_idealScrub.CurrentTimeStamp(NetworkTime.time)} <{NetworkTime.time}>");
                     }
                     else
                     {
+                        Debug.Log($"[BONSAI SERVER] Setting scrub {_idealScrub.Scrub} to activate at NetworkTime {NetworkTime.time + 0.5} <{NetworkTime.time}>");
                         _idealScrub = _idealScrub.ActiveAtNetworkTime(NetworkTime.time + 0.5);
                     }
                     
@@ -289,13 +295,13 @@ public class AutoBrowserController : NetworkBehaviour
         {
             if (_handleLateJoin)
             {
-                Debug.Log("[BONSAI CLIENT] Late join while content is active, attempting to sync");
+                Debug.Log(BC() + "Late join while content is active, attempting to sync");
                 LoadVideo(_contentInfo, _idealScrub.CurrentTimeStamp(NetworkTime.time + 5), true);
             }
 
             if (_postedPlayMessage && _playerState == PlayerState.Playing)
             {
-                Debug.Log("[BONSAI CLIENT] Reset posted play message");
+                Debug.Log(BC() + "Reset 'postedPlayMessage' to false");
                 _postedPlayMessage = false;
             }
 
@@ -305,7 +311,7 @@ public class AutoBrowserController : NetworkBehaviour
                 _playerCurrentTime < _idealScrub.CurrentTimeStamp(NetworkTime.time)
             )
             {
-                Debug.Log($"[BONSAI CLIENT] (netId={NetworkClient.connection.identity.netId}) been ready, " +
+                Debug.Log(BC() + $"Ending wait and initiating play, " +
                           $"playing with player timestamp: {_playerCurrentTime} at NetworkTime: ({NetworkTime.time})");
                 
                 _autoBrowser.PostMessage(YouTubeMessage.Play);
@@ -522,7 +528,7 @@ public class AutoBrowserController : NetworkBehaviour
     [Server]
     private void BeginReadyUp()
     {
-        Debug.Log($"[BONSAI SERVER] Ready up initiated at NetworkTime {NetworkTime.time}");
+        Debug.Log($"[BONSAI SERVER] Ready up initiated <{NetworkTime.time}>");
 
         _readyingUp = true;
         _beginReadyUpTime = NetworkTime.time;
@@ -567,7 +573,7 @@ public class AutoBrowserController : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdReady(uint id)
     {
-        Debug.Log($"[BONSAI SERVER] Client (netId={id}) is ready at NetworkTime={NetworkTime.time}");
+        Debug.Log($"[BONSAI SERVER] Client [{id}] is ready <{NetworkTime.time}>");
         _clientsReadyStatus[id] = true;
     }
 
@@ -582,7 +588,7 @@ public class AutoBrowserController : NetworkBehaviour
             return;
         }
 
-        Debug.Log($"[BONSAI] (netId={NetworkClient.connection.identity.netId}) JSON recieved " + eventArgs.Value);
+        Debug.Log(BC() + $"JSON received {eventArgs.Value}");
 
         if (jsonNode?["type"].Value == "stateChange")
             switch ((string) jsonNode["message"])
@@ -598,7 +604,7 @@ public class AutoBrowserController : NetworkBehaviour
                 case "READY":
                     _playerState = PlayerState.Ready;
                     _playerCurrentTime = jsonNode["current_time"];
-                    Debug.Log($"[BONSAI CLIENT] Ready with player timestamp {_playerCurrentTime}");
+                    Debug.Log(BC() + $"Ready with player timestamp {_playerCurrentTime}");
                     CmdReady(NetworkClient.connection.identity.netId);
                     break;
 
@@ -729,4 +735,18 @@ public class AutoBrowserController : NetworkBehaviour
     }
 
     #endregion video loading
+
+    private string BC ()
+    {
+        if (isClient)
+        {
+            return NetworkClient.connection.isReady ? $"[BONSAI CLIENT {NetworkClient.connection.identity.netId}] " : "[BONSAI CLIENT] ";
+        } 
+        if (isServer)
+        {
+            return "[BONSAI SERVER] ";
+        }
+        Debug.LogWarning("Bonsai: Logging as neither client or server");
+        return "[BONSAI] ";
+    }
 }
