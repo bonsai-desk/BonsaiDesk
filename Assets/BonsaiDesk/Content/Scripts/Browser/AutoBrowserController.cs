@@ -155,9 +155,24 @@ public class AutoBrowserController : NetworkBehaviour
 
     #region unity
 
-    private void HardReset()
+    [Server]
+    public void HardReset()
     {
-        TriggerNotAllGood("Hard Reset");
+        Debug.Log(BC() + $"Trigger hard reset <{NetworkTime.time}>");
+
+        _idealScrub = _idealScrub.NonActiveAtNetworkTime(NetworkTime.time);
+        
+        _clientLastPingTime.Clear();
+        
+        _allGood = false;
+        
+        _syncing = true;
+        _beginSyncingTime = NetworkTime.time;
+        
+        _readyingUp = true;
+        _beginReadyUpTime = NetworkTime.time;
+        
+        _readyUpComplete = false;
 
         RpcLoadVideo(_contentInfo, (float) _idealScrub.CurrentTimeStamp(NetworkTime.time), true);
     }
@@ -167,25 +182,6 @@ public class AutoBrowserController : NetworkBehaviour
         _screenState = ScreenState.Lower;
         _playerState = PlayerState.Unstarted;
         _autoBrowser = GetComponent<AutoBrowser>();
-
-       //if (isClient)
-       //{
-       //    togglePause.PauseChangedClient += paused =>
-       //    {
-       //        if (paused && _contentActive)
-       //        {
-       //            if (_idealScrub.Active)
-       //            {
-       //                Debug.LogError(BC() + $"Pause and seeking while ideal scrub is active. This will cause de-sync. <{NetworkTime.time}>");
-       //            }
-       //            _autoBrowser.PostMessages(new List<string>()
-       //            {
-       //                YouTubeMessage.Pause,
-       //                YouTubeMessage.SeekTo(_idealScrub.CurrentTimeStamp(NetworkTime.time))
-       //            });
-       //        }
-       //    };
-       //}
 
         if (isServer)
         {
