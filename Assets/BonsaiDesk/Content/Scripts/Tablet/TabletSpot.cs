@@ -40,6 +40,7 @@ public class TabletSpot : NetworkBehaviour
             if (_lerpTime >= 1f)
             {
                 _currentTabletIdentity.GetComponent<TabletControl>().SetServerLerping(false);
+                _currentTabletIdentity.GetComponent<AutoAuthority>().SetInUse(false);
                 //start video
             }
 
@@ -53,7 +54,7 @@ public class TabletSpot : NetworkBehaviour
             //stop video
         }
     }
-    
+
     [Command(ignoreAuthority = true)]
     public void CmdSetNewVideo(NetworkIdentity tabletIdentity)
     {
@@ -61,6 +62,7 @@ public class TabletSpot : NetworkBehaviour
         {
             _currentTabletIdentity.GetComponent<TabletControl>().SetServerLerping(false);
             _currentTabletIdentity.GetComponent<AutoAuthority>().isKinematic = false;
+            _currentTabletIdentity.GetComponent<AutoAuthority>().SetInUse(false);
 
             //if it had activated
             if (_lerpTime >= 1f)
@@ -68,7 +70,8 @@ public class TabletSpot : NetworkBehaviour
                 var tabletBody = _currentTabletIdentity.GetComponent<Rigidbody>();
                 tabletBody.isKinematic = false;
                 tabletBody.angularVelocity = new Vector3(-Mathf.PI, Random.value - 0.5f, Random.value - 0.5f);
-                tabletBody.velocity = new Vector3(1f + (Random.value * 0.15f), 2f + (Random.value * 0.15f), Random.value * 0.3f - 0.15f);
+                tabletBody.velocity = new Vector3(1f + (Random.value * 0.15f), 2f + (Random.value * 0.15f),
+                    Random.value * 0.3f - 0.15f);
             }
         }
 
@@ -77,12 +80,13 @@ public class TabletSpot : NetworkBehaviour
         _startPosition = tabletIdentity.transform.position;
         _startRotation = tabletIdentity.transform.rotation;
         _lerpTime = 0;
-        
+
         _currentTabletIdentity = tabletIdentity;
         tabletIdentity.GetComponent<TabletControl>().SetServerLerping(true);
 
-        //TODO strip inUse from client - give in use to server - setup inuse for grabbed items
-        tabletIdentity.GetComponent<AutoAuthority>().Interact(uint.MaxValue);
-        tabletIdentity.GetComponent<AutoAuthority>().isKinematic = true;
+        //strip authority away from client
+        var autoAuthority = tabletIdentity.GetComponent<AutoAuthority>();
+        autoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true);
+        autoAuthority.isKinematic = true;
     }
 }

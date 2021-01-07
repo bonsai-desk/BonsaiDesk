@@ -22,6 +22,17 @@ public class PinchPullHand : MonoBehaviour, IHandTick
     {
         pinchPullJointBody.MovePosition(playerHand.PhysicsPinchPosition());
 
+        //detach if object is inUse by someone else
+        if (pinchPullJoint.connectedBody)
+        {
+            var autoAuthority = pinchPullJoint.connectedBody.GetComponent<AutoAuthority>();
+            if (!autoAuthority.ClientHasAuthority() && autoAuthority.InUse)
+            {
+                DetachObject();
+                return;
+            }
+        }
+
         bool drawLocal = false;
 
         //detach pinch pull object if both hands are not pinching
@@ -120,11 +131,12 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
     private void DetachObject()
     {
-        pinchPullJoint.connectedBody.GetComponent<AutoAuthority>().CmdRemoveInUse();
+        pinchPullJoint.connectedBody.GetComponent<AutoAuthority>()
+            .CmdRemoveInUse(NetworkClient.connection.identity.netId);
         pinchPullJoint.connectedBody = null;
         playerHand.networkHand.CmdStopPinchPull();
     }
-    
+
     private void DrawPinchPullLocal(bool shouldDraw)
     {
         if (!shouldDraw)

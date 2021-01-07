@@ -19,6 +19,17 @@ public class LockObjectHand : MonoBehaviour, IHandTick
             return;
         }
 
+        //detach if object is inUse by someone else
+        if (_joint && _joint.connectedBody)
+        {
+            var autoAuthority = _joint.connectedBody.GetComponent<AutoAuthority>();
+            if (!autoAuthority.ClientHasAuthority() && autoAuthority.InUse)
+            {
+                Destroy(_joint);
+                return;
+            }
+        }
+
         if (_joint && (!playerHand.Tracking() ||
                        !playerHand.GetGesture(PlayerHand.Gesture.IndexPinching) &&
                        !playerHand.GetGesture(PlayerHand.Gesture.Fist)))
@@ -88,7 +99,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
         //OVRHand sometimes says hand index finger is not pinching even when it is and the confidence of hand/finger
         //is high. This causes the DetachObject function to be called.
 
-        _joint.connectedBody.GetComponent<AutoAuthority>().CmdRemoveInUse();
+        _joint.connectedBody.GetComponent<AutoAuthority>().CmdRemoveInUse(NetworkClient.connection.identity.netId);
         Destroy(_joint);
     }
 
