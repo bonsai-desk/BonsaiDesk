@@ -1,11 +1,10 @@
 import React, {useState, useEffect} from "react";
 import YouTube from "react-youtube";
 import {useHistory} from "react-router-dom";
-import {cSharpPageListeners} from "../listeners";
 
 let opts = {
     width: window.innerWidth,
-    height: window.innerHeight,
+    height: window.innerHeight/2,
     playerVars: {
         autoplay: 0,
         controls: 0,
@@ -29,72 +28,82 @@ let Video = (props) => {
 
     let dev_mode = window.location.pathname.split("/")[1] === "youtube_test";
     let {id, timeStamp} = props.match.params;
-    let [ready, setReady] = useState(false);
+    let [init, setInit] = useState(false);
     let [player, setPlayer] = useState(null);
+    let [justBuffered, setJustBuffered] = useState(false)
+    let [readying, setReadying] = useState(false)
 
     let [ts, setTs] = useState(timeStamp);
 
+    let readyUp = (timeStamp) => {
+        setReadying(true)
+        switch (player.getPlayerState()) {
+            case PlayerState.PAUSED:
+                player.playVideo();
+                player.seekTo(timeStamp, true);
+                player.pauseVideo();
+                break;
+            case PlayerState.PLAYING:
+                player.seekTo(timeStamp, true);
+                player.pauseVideo();
+                break;
+            default:
+                let msg = "ERROR READYUP SWITCH NOT HANDLED"
+                window.vuplex.postMessage({type: "error", message: msg, current_time: player.getCurrentTime()});
+                console.log("bonsai: " + msg)
+                break;
+
+
+        }
+    }
 
     // setup the event listeners
     useEffect(() => {
-        if (player == null) return;
+        if (player == null || dev_mode) return;
 
-        if (dev_mode) {
-            setInterval(() => {
-                console.log(player.getCurrentTime())
-            }, 1000)
-            return;
+        let playerListeners = (event) => {
+
+            let json = JSON.parse(event.data);
+
+            if (json.type !== "video") return;
+
+            switch (json.command) {
+                case "play":
+                    console.log("command: play")
+                    player.playVideo();
+                    break;
+                case "pause":
+                    console.log("command: pause")
+                    player.pauseVideo();
+                    break;
+                case "seekTo":
+                    console.log("command: seekTo " + json.seekTime)
+                    player.seekTo(json.seekTime, true);
+                    break;
+                case "readyUp":
+                    readyUp(json.timeStamp)
+                    break;
+                default:
+                    console.log("command: not handled (video) " + JSON.stringify(json))
+                    break;
+            }
         }
 
-        let addCSharpListeners = (player) => {
+        console.log("bonsai: add YouTube events+intervals")
 
-            // ping back the player time every 1/10th of a second
-            setInterval(() => {
-                window.vuplex.postMessage({
-                    type: "infoCurrentTime",
-                    current_time: player.getCurrentTime() == null ? 0 : player.getCurrentTime()
-                })
-            }, 100)
+        window.vuplex.addEventListener('message', playerListeners)
 
-            window.vuplex.addEventListener('message', event => {
-
-                cSharpPageListeners(history, event)
-
-                let json = JSON.parse(event.data);
-
-                if (json.type === "video") {
-                    switch (json.command) {
-                        case "play":
-                            console.log("command: play")
-                            player.playVideo();
-                            break;
-                        case "pause":
-                            console.log("command: pause")
-                            player.pauseVideo();
-                            break;
-                        case "seekTo":
-                            console.log("command: seekTo " + json.seekTime)
-                            player.seekTo(json.seekTime, true);
-                            break;
-                        case "readyUp":
-                            setTs(json.seekTime)
-                            setReady(false)
-                            player.mute();
-                            player.seekTo(json.seekTime, true);
-                        default:
-                            console.log("command: not handled (video) " + JSON.stringify(json))
-                            break;
-                    }
-                }
+        let pingPlayerTime = setInterval(() => {
+            window.vuplex.postMessage({
+                type: "infoCurrentTime",
+                current_time: player.getCurrentTime() == null ? 0 : player.getCurrentTime()
             })
-        }
+        }, 100)
 
-        if (window.vuplex != null) {
-            addCSharpListeners(player);
-        } else {
-            window.addEventListener('vuplexready', _ => {
-                addCSharpListeners(player)
-            })
+        return () => {
+            console.log("bonsai: remove YouTube events+intervals")
+            window.vuplex.removeEventListener('message', playerListeners)
+            clearInterval(pingPlayerTime)
         }
     }, [player, dev_mode, history])
 
@@ -107,46 +116,73 @@ let Video = (props) => {
     let onStateChange = (event) => {
 
         let postStateChange = (message) => {
+            console.log("postStateChange: " + message)
             if (dev_mode) {
                 return;
             }
 
             window.vuplex.postMessage({type: "stateChange", message: message, current_time: player.getCurrentTime()});
+
         }
 
         switch (event.data) {
             case PlayerState.UNSTARTED:
-                console.log("bonsai: unstarted")
-                postStateChange("UNSTARTED")
+                console.log("bonsai: unstarted " + player.getCurrentTime())
+                //postStateChange("UNSTARTED")
                 break;
             case PlayerState.ENDED:
                 console.log("bonsai: ended")
                 postStateChange("ENDED")
                 break;
             case PlayerState.PLAYING:
-                if (!ready) {
+                if (justBuffered) {
+                    setJustBuffered(false);
+                    console.log("bonsai: play after buffer")
+                }
+                if (!init) {
                     player.pauseVideo()
                 } else {
-                    console.log("bonsai: playing")
-                    postStateChange("PLAYING")
+                    if (!readying) {
+                        console.log("bonsai: playing")
+                        postStateChange("PLAYING")
+                    } else {
+                        console.log("bonsai: playing while readying")
+                    }
                 }
                 break;
             case PlayerState.PAUSED:
-                if (!ready) {
+                if (!init) {
                     player.seekTo(ts);
                     player.unMute();
-                    setReady(true);
-                    console.log("bonsai: ready")
+                    setInit(true);
+                    console.log("bonsai: init ready")
                     postStateChange("READY")
                 } else {
-                    console.log("bonsai: paused")
-                    postStateChange("PAUSED")
+                    if (!justBuffered && !readying) {
+                        console.log("bonsai: paused")
+                        postStateChange("PAUSED")
+                    } else if (!justBuffered && readying) {
+                        console.log("bonsai: paused while readying")
+                    }
+                    else {
+                        console.log("bonsai: ready (pause after buffer)")
+                        postStateChange("READY")
+                    }
                 }
+                setJustBuffered(false);
                 break;
             case PlayerState.BUFFERING:
-                if (ready) {
-                    console.log("bonsai: buffering")
-                    postStateChange("BUFFERING")
+                setJustBuffered(true)
+                if (init) {
+                    if (!readying) {
+                        console.log("bonsai: buffering")
+                        postStateChange("BUFFERING")
+                    } else {
+                        console.log("bonsai: buffering while readying")
+                    }
+                } else {
+                    if (!readying)
+                    console.log("bonsai: buffering before ready")
                 }
                 break;
             case PlayerState.CUED:
@@ -164,7 +200,8 @@ let Video = (props) => {
 
     return (
         <div>
-            <div onClick={() => {player.seekTo(300)}}>seek</div>
+            {dev_mode ? <div onClick={()=>{readyUp(30)}}>readyup</div> : ""}
+
             <YouTube
                 opts={opts}
                 onReady={onReady}

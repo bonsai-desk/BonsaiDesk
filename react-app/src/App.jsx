@@ -1,19 +1,19 @@
 import React from "react";
 import "./assets/main.css";
-import {BrowserRouter as Router, Route, Switch, useHistory} from "react-router-dom";
+import {BrowserRouter as Router, Route, Switch, useHistory, Link} from "react-router-dom";
 import YouTube from "./pages/YouTube";
 
-let Home = () => {
-    console.log("home")
+let Boot = () => {
+
+    console.log("Boot")
 
     let history = useHistory();
 
-    let cSharpHomeListeners = (event) => {
+    let navListeners = (event) => {
+
         let json = JSON.parse(event.data);
 
-        console.log(json)
-
-        if (!(json.type === "nav")) return;
+        if (json.type !== "nav") return;
 
         switch (json.command) {
             case "push":
@@ -21,28 +21,36 @@ let Home = () => {
                 history.push(json.path)
                 break;
             default:
-                console.log("command: not handled (cSharpHomeListeners) " + JSON.stringify(json))
+                console.log("command: not handled (navListeners) " + JSON.stringify(json))
                 break;
         }
     }
 
-    let addCSharpListeners = () => {
-        window.vuplex.addEventListener('message', cSharpHomeListeners)
-    }
-
     if (window.vuplex != null) {
-        addCSharpListeners();
+
+        console.log("bonsai: vuplex is not null -> navListeners")
+        window.vuplex.addEventListener('message', navListeners)
+
     } else {
+        console.log("bonsai: vuplex is null")
         window.addEventListener('vuplexready', _ => {
-            addCSharpListeners()
+
+            console.log("bonsai: vuplexready -> navListeners")
+            window.vuplex.addEventListener('message', navListeners)
+
         })
     }
 
     return (
         <div>
-            home
+            Boot
+            <a onClick={()=>{history.push("/youtube_test/qEfPBt9dU60/19.02890180001912")}}>test</a>
         </div>
     )
+}
+
+let Home = () => {
+    return <div>Home</div>
 }
 
 function App() {
@@ -52,11 +60,13 @@ function App() {
             <div className={"bg-gray-800 h-screen text-green-400"}>
                 <Switch>
 
-                    <Route exact path={"/"} component={Home}/>
+                    <Route exact path={"/home"} component={Home}/>
 
                     <Route exact path={"/youtube/:id/:timeStamp"} component={YouTube}/>
 
                     <Route exact path={"/youtube_test/:id/:timeStamp"} component={YouTube}/>
+
+                    <Route exact path={window.location.pathname} component={Boot}/>
 
                 </Switch>
             </div>
