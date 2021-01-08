@@ -333,8 +333,10 @@ public class OVRPhysicsHand : MonoBehaviour
                     var capsuleCollider = capsuleColliderGO.AddComponent<CapsuleCollider>();
                     if (physicMaterial != null)
                         capsuleCollider.material = physicMaterial;
-                    var p0 = capsule.Points[0].FromFlippedXVector3f();
-                    var p1 = capsule.Points[1].FromFlippedXVector3f();
+                    // var p0 = capsule.Points[0].FromFlippedXVector3f();
+                    // var p1 = capsule.Points[1].FromFlippedXVector3f();
+                    var p0 = Vector3.zero;
+                    var p1 = Vector3.zero;
                     var delta = p1 - p0;
                     var mag = delta.magnitude;
                     var rot = Quaternion.FromToRotation(Vector3.right, delta);
