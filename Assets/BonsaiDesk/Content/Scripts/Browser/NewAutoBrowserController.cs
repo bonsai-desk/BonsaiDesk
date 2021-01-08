@@ -25,36 +25,28 @@ public class NewAutoBrowserController : NetworkBehaviour
     private bool _allGood;
     private AutoBrowser _autoBrowser;
     private double _beginReadyUpTime;
+    private double _clientLastSentPing;
     private PlayerState _clientPlayerState;
     private float _clientPlayerTimeStamp;
-    private double _clientLastSentPing;
-    private bool _serverRecievedBadTimestampInPing;
-    
-
 
     [SyncVar] private ContentInfo _contentInfo;
+    private Coroutine _fetchAndReadyUp;
     [SyncVar] private ScrubData _idealScrub;
 
-    // Start is called before the first frame update
     private void Start()
     {
         if (isClient) _autoBrowser.BrowserReady += SetupBrowser;
     }
 
-    // Update is called once per frame
     private void Update()
     {
         if (isClient)
-        {
             HandlePlayerClient();
-            //todo HandleScreenClient();
-        }
+        //todo HandleScreenClient();
 
         if (isServer)
-        {
             HandlePlayerServer();
-            //todo HandleScreenServer();
-        }
+        //todo HandleScreenServer();
     }
 
 
@@ -69,7 +61,7 @@ public class NewAutoBrowserController : NetworkBehaviour
         }
 
         // ping the server with the current timestamp
-        if (_contentInfo.Active && 
+        if (_contentInfo.Active &&
             NetworkTime.time - _clientLastSentPing > ClientPingInterval &&
             NetworkClient.connection != null && NetworkClient.connection.identity != null)
         {
@@ -85,24 +77,26 @@ public class NewAutoBrowserController : NetworkBehaviour
         throw new NotImplementedException();
     }
 
+    private void BeginSync()
+    {
+        TLog("Beginning the sync process");
+        _allGood = false;
+        _clientsLastPing.Clear();
+        _clientsPlayerStatus.Clear();
+        _beginReadyUpTime = NetworkTime.time;
+        _idealScrub = _idealScrub.Pause(NetworkTime.time);
+        
+    }
+
     private void HandlePlayerServer()
     {
         if (_contentInfo.Active == false) return;
 
-        if (_allGood)
-            if (BadPingExists() || _serverRecievedBadTimestampInPing)
-            {
-                _serverRecievedBadTimestampInPing = false;
-                TLog("Beginning the sync process");
-                _allGood = false;
-                _clientsLastPing.Clear();
-                _clientsPlayerStatus.Clear();
-                _beginReadyUpTime = NetworkTime.time;
-                _idealScrub = _idealScrub.Pause(NetworkTime.time);
-
-                var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
-                RpcReadyUp(timeStamp);
-            }
+        if (_allGood && BadPingExists())
+        {
+            BeginSync();
+            RpcReadyUp(_idealScrub.CurrentTimeStamp(NetworkTime.time));
+        }
 
         if (!_allGood)
         {
@@ -160,13 +154,12 @@ public class NewAutoBrowserController : NetworkBehaviour
 
     private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs)
     {
+        TLog($"Received JSON {eventArgs.Value}");
+
         var json = JSONNode.Parse(eventArgs.Value) as JSONObject;
-        
-        if (json?["current_time"] != null)
-        {
-            _clientPlayerTimeStamp = json["current_time"];
-        }
-        
+
+        if (json?["current_time"] != null) _clientPlayerTimeStamp = json["current_time"];
+
         switch (json?["type"].Value)
         {
             case "infoCurrentTime":
@@ -193,6 +186,7 @@ public class NewAutoBrowserController : NetworkBehaviour
                         _clientPlayerState = PlayerState.Ready;
                         break;
                 }
+
                 break;
         }
     }
@@ -225,7 +219,8 @@ public class NewAutoBrowserController : NetworkBehaviour
         if (_allGood && !ClientInGracePeriod(id) && !ClientVideoIsSynced(timeStamp))
         {
             TLog("Client reported a bad timestamp in ping");
-            _serverRecievedBadTimestampInPing = true;
+            BeginSync();
+            RpcReadyUp(_idealScrub.CurrentTimeStamp(NetworkTime.time));
         }
     }
 
@@ -236,9 +231,24 @@ public class NewAutoBrowserController : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdLoadVideo(string videoId, double timeStamp)
+    private void CmdLoadVideo(string id, double timeStamp)
     {
-        throw new NotImplementedException();
+        // todo set toggle pause non interactable
+
+        if (_fetchAndReadyUp != null) StopCoroutine(_fetchAndReadyUp);
+
+        _fetchAndReadyUp = StartCoroutine(FetchYouTubeAspect(id, aspect =>
+        {
+            TLog($"Fetched aspect ({aspect.x},{aspect.y}) for video ({id})");
+
+            _contentInfo = new ContentInfo(true, id, aspect);
+            _idealScrub = ScrubData.PausedAtScrub(timeStamp);
+            
+            BeginSync();
+            RpcReloadYouTube(id, timeStamp);
+
+            _fetchAndReadyUp = null;
+        }));
     }
 
     [Command(ignoreAuthority = true)]
