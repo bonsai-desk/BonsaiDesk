@@ -210,7 +210,7 @@ GameObject:
   - component: {fileID: 6876464846658445377}
   - component: {fileID: 6876464846658445390}
   m_Layer: 0
-  m_Name: Screenshot
+  m_Name: Thumbnail
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -421,11 +421,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
+  videoId: 
   lowFrictionPhysicMaterial: {fileID: 13400000, guid: 90f1a8f271117864aaa385945e30096b,
     type: 2}
   worldBox: {fileID: 1362949603237956170}
+  fingerBox: {fileID: 8227702852430561669}
   tabletCollider: {fileID: 2242447506356610558}
   tabletBody: {fileID: 6876464847205822901}
+  thumbnailRenderer: {fileID: 6876464846658445390}
 --- !u!114 &2316215365825589949
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -440,6 +443,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
+  isKinematic: 0
   allowPinchPull: 1
   meshRenderer: {fileID: 6876464845591919517}
 --- !u!114 &2242447506356610558

@@ -17,8 +17,6 @@ public class PlayerHands : MonoBehaviour
     public Vector3[] physicsFingerPadPositions;
 
     private IHandsTick[] _handsTicks;
-    private bool leftHandGesturesReady;
-    private bool rightHandGesturesReady;
 
     private void Awake()
     {
@@ -35,7 +33,7 @@ public class PlayerHands : MonoBehaviour
         physicsFingerPadPositions = new Vector3[10];
         CalculateFingerTipPositions();
     }
-
+    
     private void Update()
     {
         CalculateFingerTipPositions();
@@ -45,6 +43,14 @@ public class PlayerHands : MonoBehaviour
         
         left.RunHandTicks();
         right.RunHandTicks();
+        
+        for (var i = 0; i < _handsTicks.Length; i++)
+        {
+            _handsTicks[i].Tick(left, right);
+        }
+
+        left.UpdateLastGestures();
+        right.UpdateLastGestures();
     }
 
     public PlayerHand GetHand(OVRSkeleton.SkeletonType skeletonType)
@@ -63,27 +69,6 @@ public class PlayerHands : MonoBehaviour
         if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
             return left;
         return null;
-    }
-
-    public void SetHandGesturesReady(OVRSkeleton.SkeletonType skeletonType)
-    {
-        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
-            leftHandGesturesReady = true;
-        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
-            rightHandGesturesReady = true;
-
-        if (leftHandGesturesReady && rightHandGesturesReady)
-        {
-            for (var i = 0; i < _handsTicks.Length; i++)
-            {
-                _handsTicks[i].Tick(left, right);
-            }
-
-            left.UpdateLastGestures();
-            right.UpdateLastGestures();
-            leftHandGesturesReady = false;
-            rightHandGesturesReady = true;
-        }
     }
 
     public bool Tracking()

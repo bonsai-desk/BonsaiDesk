@@ -99,10 +99,10 @@ public class AutoBrowser : MonoBehaviour
         var holePunchPosition = holePuncher.localPosition;
         holePunchPosition.y = halfHeight * (1f - t);
         holePuncher.localPosition = holePunchPosition;
-
-        //TODO is this laggy? also this runs even if you don't have authority over the screen
+        
         if (Mathf.Approximately(t, 0))
         {
+            //TODO is this laggy? also this runs even if you don't have authority over the screen
             screenRigidBody.velocity = Vector3.zero;
             screenRigidBody.angularVelocity = Vector3.zero;
             transform.GetChild(0).localPosition = Vector3.zero;
