@@ -5,7 +5,6 @@ using System.Linq;
 using Mirror;
 using OVRSimpleJSON;
 using UnityEngine;
-using UnityEngine.Experimental.AI;
 using UnityEngine.Networking;
 using Vuplex.WebView;
 
@@ -16,6 +15,7 @@ public class NewAutoBrowserController : NetworkBehaviour
     private const float ClientPingTolerance = 1f;
     private const float ClientPingInterval = 0.1f;
     private const float MaxReadyUpPeriod = 10f;
+    private const float VideoSyncTolerance = 0.2f;
     public bool useBuiltHtml = true;
     public string hotReloadUrl;
     public TogglePause togglePause;
@@ -28,6 +28,8 @@ public class NewAutoBrowserController : NetworkBehaviour
     private PlayerState _clientPlayerState;
     private float _clientPlayerTimeStamp;
     private double _clientLastSentPing;
+    private bool _serverRecievedBadTimestampInPing;
+    
 
 
     [SyncVar] private ContentInfo _contentInfo;
@@ -88,8 +90,9 @@ public class NewAutoBrowserController : NetworkBehaviour
         if (_contentInfo.Active == false) return;
 
         if (_allGood)
-            if (BadPingExists())
+            if (BadPingExists() || _serverRecievedBadTimestampInPing)
             {
+                _serverRecievedBadTimestampInPing = false;
                 TLog("Beginning the sync process");
                 _allGood = false;
                 _clientsLastPing.Clear();
@@ -157,7 +160,41 @@ public class NewAutoBrowserController : NetworkBehaviour
 
     private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs)
     {
-        throw new NotImplementedException();
+        var json = JSONNode.Parse(eventArgs.Value) as JSONObject;
+        
+        if (json?["current_time"] != null)
+        {
+            _clientPlayerTimeStamp = json["current_time"];
+        }
+        
+        switch (json?["type"].Value)
+        {
+            case "infoCurrentTime":
+                return;
+            case "error":
+                Debug.LogError(Tag() + $"Javascript error {json["error"].Value}");
+                return;
+            case "stateChange":
+                switch ((string) json["message"])
+                {
+                    case "READY":
+                        _clientPlayerState = PlayerState.Ready;
+                        break;
+                    case "PAUSED":
+                        _clientPlayerState = PlayerState.Ready;
+                        break;
+                    case "PLAYING":
+                        _clientPlayerState = PlayerState.Ready;
+                        break;
+                    case "BUFFERING":
+                        _clientPlayerState = PlayerState.Ready;
+                        break;
+                    case "ENDED":
+                        _clientPlayerState = PlayerState.Ready;
+                        break;
+                }
+                break;
+        }
     }
 
     private bool ClientInGracePeriod(uint id)
@@ -170,14 +207,26 @@ public class NewAutoBrowserController : NetworkBehaviour
         return ClientPingTolerance > NetworkTime.time - pingTime;
     }
 
+    private bool ClientVideoIsSynced(double timeStamp)
+    {
+        var whereTheyShouldBe = _idealScrub.CurrentTimeStamp(NetworkTime.time);
+        var whereTheyAre = timeStamp;
+        return Math.Abs(whereTheyAre - whereTheyShouldBe) < VideoSyncTolerance;
+    }
+
 
     [Command(ignoreAuthority = true)]
     private void CmdPingAndCheckTimeStamp(uint id, double networkTime, double timeStamp)
     {
         _clientsLastPing[id] = NetworkTime.time;
 
-        // trigger not all good if the timestamp is off
-        throw new NotImplementedException();
+        // TODO could use networkTime of timeStamp to account for rtt
+        // TODO also this could just populate a dictionary that is checked in the handle
+        if (_allGood && !ClientInGracePeriod(id) && !ClientVideoIsSynced(timeStamp))
+        {
+            TLog("Client reported a bad timestamp in ping");
+            _serverRecievedBadTimestampInPing = true;
+        }
     }
 
     [Command(ignoreAuthority = true)]
@@ -288,7 +337,7 @@ public class NewAutoBrowserController : NetworkBehaviour
         Ended
     }
 
-    public static class YouTubeMessage
+    private static class YouTubeMessage
     {
         public const string Play = "{\"type\": \"video\", \"command\": \"play\"}";
         public const string Pause = "{\"type\": \"video\", \"command\": \"pause\"}";
