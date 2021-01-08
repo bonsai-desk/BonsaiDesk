@@ -28,14 +28,19 @@ public class PhysicsHand : MonoBehaviour
             return;
         }
 
-        var _capsulesGO = new GameObject("Capsules");
+        var _capsulesGO = new GameObject("Hand_Capsules");
         _capsulesGO.transform.SetParent(transform, false);
         _capsulesGO.transform.localPosition = Vector3.zero;
         _capsulesGO.transform.localRotation = Quaternion.identity;
+        _capsulesGO.AddComponent<Rigidbody>().isKinematic = true;
 
         var _capsules = new List<OVRBoneCapsule>(new OVRBoneCapsule[_skeleton.NumBoneCapsules]);
 
         var boneIndexToCapsuleIndex = new Dictionary<short, int>();
+
+        var physicsLayer = oVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft
+            ? LayerMask.NameToLayer("LeftHand")
+            : LayerMask.NameToLayer("RightHand");
 
         for (int i = 0; i < _skeleton.NumBoneCapsules; ++i)
         {
@@ -52,7 +57,8 @@ public class PhysicsHand : MonoBehaviour
             }
             else
             {
-                if (boneIndex == (short) OVRSkeleton.BoneId.Hand_Pinky1 || boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb1)
+                if (boneIndex == (short) OVRSkeleton.BoneId.Hand_Pinky1 ||
+                    boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb1)
                 {
                     var name = (OVRSkeleton.BoneId) parentBoneIndex;
                     var parent = new GameObject(name.ToString()).transform;
@@ -66,31 +72,30 @@ public class PhysicsHand : MonoBehaviour
                     parentBoneTransform = _capsulesGO.transform;
                 }
             }
-
+            
             OVRBoneCapsule capsule = _capsules[i] ?? (_capsules[i] = new OVRBoneCapsule());
             capsule.BoneIndex = boneIndex;
 
-            if (capsule.CapsuleRigidbody == null)
+            var capsuleGO = new GameObject(bone.Id + "_CapsuleRigidBody");
+            capsuleGO.layer = physicsLayer;
+
+            if (boneIndex != 0)
             {
-                capsule.CapsuleRigidbody = new GameObject(bone.Id.ToString())
-                    .AddComponent<Rigidbody>();
+                capsule.CapsuleRigidbody = capsuleGO.AddComponent<Rigidbody>();
                 capsule.CapsuleRigidbody.mass = 1.0f;
                 capsule.CapsuleRigidbody.isKinematic = true;
                 capsule.CapsuleRigidbody.useGravity = false;
                 capsule.CapsuleRigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             }
 
-            GameObject rbGO = capsule.CapsuleRigidbody.gameObject;
-            rbGO.transform.SetParent(parentBoneTransform, false);
-            rbGO.transform.localPosition = bone.Transform.localPosition;
-            rbGO.transform.localRotation = bone.Transform.localRotation;
+            capsuleGO.transform.SetParent(parentBoneTransform, false);
+            capsuleGO.transform.localPosition = bone.Transform.localPosition;
+            capsuleGO.transform.localRotation = bone.Transform.localRotation;
 
-            if (capsule.CapsuleCollider == null)
-            {
-                capsule.CapsuleCollider = new GameObject((bone.Id).ToString() + "_CapsuleCollider")
-                    .AddComponent<CapsuleCollider>();
-                capsule.CapsuleCollider.isTrigger = false;
-            }
+            capsule.CapsuleCollider = new GameObject((bone.Id).ToString() + "_CapsuleCollider")
+                .AddComponent<CapsuleCollider>();
+            capsule.CapsuleCollider.gameObject.layer = physicsLayer;
+            capsule.CapsuleCollider.isTrigger = false;
 
             var p0 = _skeleton.BoneCapsules[i].StartPoint.FromFlippedXVector3f();
             var p1 = _skeleton.BoneCapsules[i].EndPoint.FromFlippedXVector3f();
@@ -103,7 +108,7 @@ public class PhysicsHand : MonoBehaviour
             capsule.CapsuleCollider.center = Vector3.right * mag * 0.5f;
 
             GameObject ccGO = capsule.CapsuleCollider.gameObject;
-            ccGO.transform.SetParent(rbGO.transform, false);
+            ccGO.transform.SetParent(capsuleGO.transform, false);
             ccGO.transform.localPosition = p0;
             ccGO.transform.localRotation = rot;
         }
