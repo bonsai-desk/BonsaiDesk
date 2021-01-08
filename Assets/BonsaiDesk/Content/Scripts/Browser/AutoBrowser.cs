@@ -79,7 +79,6 @@ public class AutoBrowser : MonoBehaviour
             };
     }
 
-
     #region interface
 
     public void SetHeight(float t)
@@ -153,7 +152,7 @@ public class AutoBrowser : MonoBehaviour
 
     public void PostMessage(string data)
     {
-        Debug.Log($"[BONSAI] (netId={NetworkClient.connection.identity.netId}) PostMessage {data} at NetworkTime {NetworkTime.time}");
+        Debug.Log($"[BONSAI {NetworkClient.connection.identity.netId}] PostMessage {data} <{NetworkTime.time}>");
         _webViewPrefab.WebView.PostMessage(data);
     }
 

@@ -254,9 +254,9 @@ public class TogglePause : NetworkBehaviour
     {
         if (!_interactable) return;
         
+        PauseChangedServer?.Invoke(paused);
         _paused = paused;
         updateIcons(paused);
-        PauseChangedServer?.Invoke(paused);
     }
 
     private void OnSetPaused(bool oldPaused, bool newPaused)
@@ -266,7 +266,7 @@ public class TogglePause : NetworkBehaviour
             updateIcons(newPaused);
 
         _probablyPaused = false;
-
+        
         PauseChangedClient?.Invoke(newPaused);
     }
 
