@@ -93,10 +93,10 @@ public class OVRPhysicsHand : MonoBehaviour
         meshRenderer.sharedMaterial = handMaterialCopy;
         follow.material = handMaterialCopy;
 
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
-            PlayerHands.hands.left.material = handMaterialCopy;
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
-            PlayerHands.hands.right.material = handMaterialCopy;
+        // if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        //     PlayerHands.hands.left.material = handMaterialCopy;
+        // if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
+        //     PlayerHands.hands.right.material = handMaterialCopy;
 
         fingerTips = new Transform[5];
         var customBones = GetComponent<OVRHandTransformMapper>().CustomBones;

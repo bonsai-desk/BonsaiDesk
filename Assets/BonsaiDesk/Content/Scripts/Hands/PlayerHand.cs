@@ -13,18 +13,15 @@ public class PlayerHand : MonoBehaviour
     public OVRHand oVRHand;
     public OVRSkeleton oVRSkeleton;
 
-    [HideInInspector] public OVRPhysicsHand oVRPhysicsHand;
+    public SkinnedMeshRenderer renderer;
+    [HideInInspector] public Material material;
 
     [HideInInspector] public Transform[] fingerTips;
 
     public Transform[] physicsFingerTips;
     public Transform[] physicsFingerPads;
 
-    [HideInInspector] public Rigidbody body;
-
     public Transform holdPosition;
-
-    [HideInInspector] public ConfigurableJoint heldJoint;
 
     [HideInInspector] public Rigidbody heldBody;
 
@@ -34,44 +31,11 @@ public class PlayerHand : MonoBehaviour
 
     public static LayerMask AllButHands;
 
-    public PinchSpawn pinchSpawn;
-
-    [HideInInspector] public Material material;
-
-    [HideInInspector] public bool deleteMode = false;
-
-    [HideInInspector] public bool deleteAllMode = false;
-
-    public GameObject menu;
-
-    public Transform head;
-
     public Transform cameraRig;
 
     public Transform pointerPose;
 
-    [HideInInspector] public Transform beamHold;
-
-    private Color beamHoldOriginalColor;
-    private MeshRenderer beamHoldRenderer;
-
-    public GameObject beamHoldControl;
-
-    [HideInInspector] public bool objectAttached = false;
-
-    public ConfigurableJoint beamJoint;
-
-    [HideInInspector] public Rigidbody beamJointBody;
-
-    private Vector3 hitPoint;
-
-    [HideInInspector] public float ropeLength;
-
     public OVRHandTransformMapper mapper;
-
-    [HideInInspector] public float hitDistance = Mathf.Infinity;
-
-    [HideInInspector] public Transform oPointerPose;
 
     public Camera mainCamera;
     private int handLayer;
@@ -137,64 +101,6 @@ public class PlayerHand : MonoBehaviour
         }
     }
 
-    public void ToggleDeleteMode()
-    {
-        deleteMode = !deleteMode;
-        if (deleteMode)
-            deleteAllMode = false;
-        UpdateDeleteMaterial();
-    }
-
-    public void ActivateDeleteMode()
-    {
-        deleteMode = true;
-        deleteAllMode = false;
-        UpdateDeleteMaterial();
-    }
-
-    public void DeactivateDeleteMode()
-    {
-        deleteMode = false;
-        UpdateDeleteMaterial();
-    }
-
-    public void ToggleDeleteAllMode()
-    {
-        deleteAllMode = !deleteAllMode;
-        if (deleteAllMode)
-            deleteMode = false;
-        UpdateDeleteMaterial();
-    }
-
-    public void ActivateDeleteAllMode()
-    {
-        deleteAllMode = true;
-        deleteMode = false;
-        UpdateDeleteMaterial();
-    }
-
-    public void DeactivateDeleteAllMode()
-    {
-        deleteAllMode = false;
-        UpdateDeleteMaterial();
-    }
-
-    private void UpdateDeleteMaterial()
-    {
-        if (deleteMode)
-        {
-            material.SetColor("_EmissionColor", Color.red);
-        }
-        else if (deleteAllMode)
-        {
-            material.SetColor("_EmissionColor", Color.blue);
-        }
-        else
-        {
-            material.SetColor("_EmissionColor", Color.black);
-        }
-    }
-
     private void Awake()
     {
         AllButHands = ~LayerMask.GetMask("LeftHand", "RightHand", "LeftHeldObject", "RightHeldObject");
@@ -202,17 +108,11 @@ public class PlayerHand : MonoBehaviour
 
     private void Start()
     {
-        body = GetComponent<Rigidbody>();
-        oVRPhysicsHand = GetComponent<OVRPhysicsHand>();
+        if (material == null)
+            material = renderer.material;
 
         fingerTips = new Transform[0];
         GetFingerTips();
-
-        UpdateDeleteMaterial();
-
-        menu.SetActive(false);
-        beamHoldControl.SetActive(false);
-        beamJointBody = beamJoint.GetComponent<Rigidbody>();
 
         _handTicks = GetComponentsInChildren<IHandTick>();
         _handTicksDictionary = new Dictionary<Type, IHandTick>();
@@ -221,18 +121,12 @@ public class PlayerHand : MonoBehaviour
             _handTicksDictionary.Add(handTick.GetType(), handTick);
             handTick.playerHand = this;
         }
-        
+
         foreach (Gesture gesture in (Gesture[]) Gesture.GetValues(typeof(Gesture)))
         {
             _gestures.Add(gesture, false);
             _lastGestures.Add(gesture, false);
         }
-
-        GameObject oPointerPoseGO = new GameObject
-        {
-            name = "PointerPoseAdjusted"
-        };
-        oPointerPose = oPointerPoseGO.transform;
 
         if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
         {
@@ -248,7 +142,7 @@ public class PlayerHand : MonoBehaviour
     {
         return (T) _handTicksDictionary[typeof(T)];
     }
-
+    
     public void UpdateGestures()
     {
         float fistStrength = FistStrength();
@@ -277,7 +171,7 @@ public class PlayerHand : MonoBehaviour
             _handTicks[i].Tick();
         }
     }
-
+    
     private void Update()
     {
         if (Tracking())
@@ -288,21 +182,16 @@ public class PlayerHand : MonoBehaviour
         {
             mainCamera.cullingMask &= ~(1 << handLayer);
         }
+    }
 
-        oPointerPose.position = cameraRig.TransformPoint(oVRHand.PointerPose.position);
-        oPointerPose.rotation = cameraRig.rotation * oVRHand.PointerPose.rotation;
+    public Vector3 OPointerPosition()
+    {
+        return cameraRig.TransformPoint(oVRHand.PointerPose.position);
+    }
 
-        if (oVRHand.IsPointerPoseValid && Physics.Raycast(oPointerPose.position, oPointerPose.forward,
-            out RaycastHit uiHit, 10f, LayerMask.GetMask("UI")))
-        {
-            hitDistance = uiHit.distance;
-        }
-        else
-        {
-            hitDistance = Mathf.Infinity;
-        }
-
-        PlayerHands.hands.SetHandGesturesReady(skeletonType);
+    public Quaternion OPointerRotation()
+    {
+        return cameraRig.rotation * oVRHand.PointerPose.rotation;
     }
 
     public PlayerHand OtherHand()
@@ -314,70 +203,7 @@ public class PlayerHand : MonoBehaviour
         return null;
     }
 
-    public void ConnectBody(Rigidbody bodyToConnect, bool changeDrag)
-    {
-        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft && bodyToConnect == PlayerHands.hands.right.heldBody ||
-            skeletonType == OVRSkeleton.SkeletonType.HandRight && bodyToConnect == PlayerHands.hands.left.heldBody)
-            return;
-
-        if (heldJoint != null)
-        {
-            heldBody.useGravity = heldObjectGravity;
-            heldBody.drag = heldObjectDrag;
-            heldBody.angularDrag = heldObjectAngularDrag;
-            Destroy(heldJoint);
-            heldJoint = null;
-            heldBody = null;
-        }
-
-        heldBody = bodyToConnect;
-
-        heldObjectGravity = heldBody.useGravity;
-        heldObjectDrag = heldBody.drag;
-        heldObjectAngularDrag = heldBody.angularDrag;
-
-        heldBody.useGravity = false;
-        if (changeDrag)
-        {
-            heldBody.drag = 10f;
-            heldBody.angularDrag = 10f;
-        }
-
-        heldJoint = bodyToConnect.gameObject.AddComponent<ConfigurableJoint>();
-        heldJoint.connectedBody = body;
-        heldJoint.anchor = Vector3.zero;
-
-        JointDrive positionDrive = new JointDrive
-        {
-            positionSpring = 2500f,
-            positionDamper = 1f,
-            maximumForce = Mathf.Infinity
-        };
-
-        heldJoint.xDrive = positionDrive;
-        heldJoint.yDrive = positionDrive;
-        heldJoint.zDrive = positionDrive;
-
-        JointDrive rotationDrive = new JointDrive
-        {
-            positionSpring = 10f,
-            positionDamper = 1f,
-            maximumForce = Mathf.Infinity
-        };
-
-        heldJoint.angularXDrive = rotationDrive;
-        heldJoint.angularYZDrive = rotationDrive;
-    }
-
     //TODO fake is tracking for 1-2 seconds while it fades out. this includes locking gesture values
-    private float lastTracking = 0;
-    public bool TrackingRecently()
-    {
-        if (Tracking())
-            lastTracking = Time.time;
-        return Time.time - lastTracking <= 1f;
-    }
-
     public bool Tracking()
     {
         if (fingerTips.Length == 0)

@@ -43,13 +43,18 @@ public class NetworkHand : NetworkBehaviour
         mapper = GetComponent<OVRHandTransformMapper>();
         for (int i = 0; i < renderedFingerRotations.Length; i++)
             renderedFingerRotations[i] = 0;
+    }
 
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
         UpdateColor();
     }
 
     public override void OnStartClient()
     {
         base.OnStartClient();
+        UpdateColor();
 
         if (!hasAuthority)
             return;
@@ -163,7 +168,7 @@ public class NetworkHand : NetworkBehaviour
         positions[3] = end;
         lineRenderer.SetPositions(positions);
     }
-
+    
     [Command]
     private void CmdSetColor(int color)
     {

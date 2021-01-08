@@ -215,7 +215,7 @@ public class AutoAuthority : NetworkBehaviour
         _lastInteractTime = fromLastInteractTime;
         _ownerIdentityId = newOwnerIdentityId;
     }
-
+    
     [Server]
     public void ServerForceNewOwner(uint newOwnerIdentityId, double fromLastInteractTime, bool inUse)
     {

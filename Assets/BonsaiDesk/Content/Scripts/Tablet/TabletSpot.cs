@@ -1,5 +1,7 @@
-﻿using Mirror;
+﻿using System;
+using Mirror;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class TabletSpot : NetworkBehaviour
 {
@@ -12,12 +14,15 @@ public class TabletSpot : NetworkBehaviour
     private Quaternion _startRotation;
     private Vector3 _startScale;
 
+    public event Action<string> PlayVideo;
+    public event Action StopVideo;
+
     public override void OnStartServer()
     {
         base.OnStartServer();
         Instance = this;
     }
-
+    
     public override void OnStartClient()
     {
         base.OnStartClient();
@@ -42,16 +47,16 @@ public class TabletSpot : NetworkBehaviour
                 _currentTabletIdentity.GetComponent<TabletControl>().SetServerLerping(false);
                 _currentTabletIdentity.GetComponent<AutoAuthority>().SetInUse(false);
                 //start video
+                var videoId = _currentTabletIdentity.GetComponent<TabletControl>().videoId;
+                if (!string.IsNullOrEmpty(videoId))
+                    PlayVideo?.Invoke(videoId);
             }
-
-            // t = CubicBezier.LateStart.Sample(_lerpTime);
-            // float scale = 1f + (t * 3);
-            // _currentTabletIdentity.transform.localScale = new Vector3(scale, 1, scale);
         }
         else if (_currentTabletIdentity.transform.position != transform.position)
         {
             _currentTabletIdentity = null;
             //stop video
+            StopVideo?.Invoke();
         }
     }
 
