@@ -31,11 +31,17 @@ let Video = (props) => {
     let [init, setInit] = useState(false);
     let [player, setPlayer] = useState(null);
     let [justBuffered, setJustBuffered] = useState(false)
+    let [ready , setReady] = useState(false)
     let [readying, setReadying] = useState(false)
 
     let [ts, setTs] = useState(timeStamp);
 
+
     let readyUp = (timeStamp) => {
+        if (ready) {
+            postStateChange("READY")
+            return;
+        }
         setReadying(true)
         switch (player.getPlayerState()) {
             case PlayerState.PAUSED:
@@ -43,23 +49,34 @@ let Video = (props) => {
                 player.seekTo(timeStamp, true);
                 player.pauseVideo();
                 break;
-            case PlayerState.PLAYING:
+            default:
                 player.seekTo(timeStamp, true);
                 player.pauseVideo();
                 break;
-            default:
-                let msg = "ERROR READYUP SWITCH NOT HANDLED"
-                window.vuplex.postMessage({type: "error", message: msg, current_time: player.getCurrentTime()});
-                console.log("bonsai: " + msg)
-                break;
-
-
         }
+    }
+
+    let postStateChange = (message) => {
+        console.log("postStateChange: " + message)
+
+        if (message == "READY"){
+            setReady(true)
+        } else{
+            setReady(false)
+        }
+
+        if (dev_mode) {
+            return;
+        }
+
+        window.vuplex.postMessage({type: "stateChange", message: message, current_time: player.getCurrentTime()});
+
     }
 
     // setup the event listeners
     useEffect(() => {
         if (player == null || dev_mode) return;
+
 
         let playerListeners = (event) => {
 
@@ -115,15 +132,6 @@ let Video = (props) => {
 
     let onStateChange = (event) => {
 
-        let postStateChange = (message) => {
-            console.log("postStateChange: " + message)
-            if (dev_mode) {
-                return;
-            }
-
-            window.vuplex.postMessage({type: "stateChange", message: message, current_time: player.getCurrentTime()});
-
-        }
 
         switch (event.data) {
             case PlayerState.UNSTARTED:
@@ -152,10 +160,11 @@ let Video = (props) => {
                 break;
             case PlayerState.PAUSED:
                 if (!init) {
-                    player.seekTo(ts);
+                    player.seekTo(ts, true);
                     player.unMute();
                     setInit(true);
                     console.log("bonsai: init ready")
+                    setReadying(false)
                     postStateChange("READY")
                 } else {
                     if (!justBuffered && !readying) {
@@ -166,6 +175,7 @@ let Video = (props) => {
                     }
                     else {
                         console.log("bonsai: ready (pause after buffer)")
+                        setReadying(false)
                         postStateChange("READY")
                     }
                 }
