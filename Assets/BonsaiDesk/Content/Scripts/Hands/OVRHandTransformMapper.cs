@@ -6,16 +6,14 @@ public class OVRHandTransformMapper : MonoBehaviour
     public OVRSkeleton.SkeletonType _skeletonType = OVRSkeleton.SkeletonType.None;
 
     [SerializeField]
-    private List<Transform> _customBones = new List<Transform>(new Transform[(int)OVRSkeleton.BoneId.Max]);
+    private List<Transform> _customBones = new List<Transform>(new Transform[(int) OVRSkeleton.BoneId.Max]);
 
     [SerializeField]
-    private List<Transform> _boneTargets = new List<Transform>(new Transform[(int)OVRSkeleton.BoneId.Max]);
+    private List<Transform> _boneTargets = new List<Transform>(new Transform[(int) OVRSkeleton.BoneId.Max]);
 
-    [HideInInspector]
     public Transform capsulesParent;
 
-    [HideInInspector]
-    public Transform bonesParent;
+    [HideInInspector] public Transform bonesParent;
 
     public bool moveBonesToTargets = true;
 
@@ -75,11 +73,18 @@ public class OVRHandTransformMapper : MonoBehaviour
         "pinky"
     };
 
-    private static readonly string[] _handPrefix = { "l_", "r_" };
+    private static readonly string[] _handPrefix = {"l_", "r_"};
 #endif
 
-    public List<Transform> CustomBones { get { return _customBones; } }
-    public List<Transform> BoneTargets { get { return _boneTargets; } }
+    public List<Transform> CustomBones
+    {
+        get { return _customBones; }
+    }
+
+    public List<Transform> BoneTargets
+    {
+        get { return _boneTargets; }
+    }
 
     public void TryAutoMapBoneTargets()
     {
@@ -87,29 +92,24 @@ public class OVRHandTransformMapper : MonoBehaviour
         OVRSkeleton.BoneId end = OVRSkeleton.BoneId.Hand_End;
         if (start != OVRSkeleton.BoneId.Invalid && end != OVRSkeleton.BoneId.Invalid)
         {
-            for (int bi = (int)start; bi < (int)end; ++bi)
+            for (int bi = (int) start; bi < (int) end; ++bi)
             {
-                if (!((OVRSkeleton.BoneId)bi >= OVRSkeleton.BoneId.Hand_ThumbTip && (OVRSkeleton.BoneId)bi <= OVRSkeleton.BoneId.Hand_PinkyTip))
+                if (!((OVRSkeleton.BoneId) bi >= OVRSkeleton.BoneId.Hand_ThumbTip &&
+                      (OVRSkeleton.BoneId) bi <= OVRSkeleton.BoneId.Hand_PinkyTip))
                 {
-                    string fbxBoneName = _fbxBoneNames[(int)bi];
+                    string fbxBoneName = _fbxBoneNames[(int) bi];
 
                     if (int.TryParse(fbxBoneName.Substring(fbxBoneName.Length - 1), out int index))
                     {
                         if (index > 0)
                         {
-                            string finger = fbxBoneName.Substring(0, fbxBoneName.Length - 1);
                             fbxBoneName = char.ToUpper(fbxBoneName[0]) + fbxBoneName.Substring(1);
                             fbxBoneName = "Hand_" + fbxBoneName + "_CapsuleRigidBody";
 
-                            Transform t;
-                            //if (index == 3 || finger.CompareTo("thumb") == 0)
-                            t = capsulesParent.FindChildRecursive(fbxBoneName);
-                            //else
-                            //t = bonesParent.FindChildRecursive(fbxBoneName);
-
+                            Transform t = capsulesParent.FindChildRecursive(fbxBoneName);
                             if (t != null)
                             {
-                                _boneTargets[(int)bi] = t;
+                                _boneTargets[(int) bi] = t;
                             }
                         }
                     }
@@ -126,14 +126,14 @@ public class OVRHandTransformMapper : MonoBehaviour
         OVRSkeleton.BoneId end = OVRSkeleton.BoneId.Hand_End;
         if (start != OVRSkeleton.BoneId.Invalid && end != OVRSkeleton.BoneId.Invalid)
         {
-            for (int bi = (int)start; bi < (int)end; ++bi)
+            for (int bi = (int) start; bi < (int) end; ++bi)
             {
-                string fbxBoneName = FbxBoneNameFromBoneId(_skeletonType, (OVRSkeleton.BoneId)bi);
+                string fbxBoneName = FbxBoneNameFromBoneId(_skeletonType, (OVRSkeleton.BoneId) bi);
                 Transform t = transform.FindChildRecursive(fbxBoneName);
 
                 if (t != null)
                 {
-                    _customBones[(int)bi] = t;
+                    _customBones[(int) bi] = t;
                 }
             }
         }
@@ -149,11 +149,12 @@ public class OVRHandTransformMapper : MonoBehaviour
     {
         if (bi >= OVRSkeleton.BoneId.Hand_ThumbTip && bi <= OVRSkeleton.BoneId.Hand_PinkyTip)
         {
-            return _handPrefix[(int)skeletonType] + _fbxFingerNames[(int)bi - (int)OVRSkeleton.BoneId.Hand_ThumbTip] + "_finger_tip_marker";
+            return _handPrefix[(int) skeletonType] +
+                   _fbxFingerNames[(int) bi - (int) OVRSkeleton.BoneId.Hand_ThumbTip] + "_finger_tip_marker";
         }
         else
         {
-            return "b_" + _handPrefix[(int)skeletonType] + _fbxBoneNames[(int)bi];
+            return "b_" + _handPrefix[(int) skeletonType] + _fbxBoneNames[(int) bi];
         }
     }
 
