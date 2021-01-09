@@ -133,7 +133,7 @@ public class OVRPhysicsHand : MonoBehaviour
             if (mapper != null)
             {
                 mapper.capsulesParent = _capsulesFollowGO.transform;
-                mapper.bonesParent = _capsulesGO.transform;
+                // mapper.bonesParent = _capsulesGO.transform;
                 mapper.TryAutoMapBoneTargets();
             }
         }

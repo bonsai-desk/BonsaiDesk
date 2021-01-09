@@ -8,6 +8,9 @@ public class GeneratePhysicsHand : MonoBehaviour
 {
     public OVRSkeleton oVRSkeleton;
     public GameObject handMeshPrefab;
+    public PhysicMaterial physicMaterial;
+    public Material targetMaterial;
+    public Material physicsHandMaterial;
 
     private OVRPlugin.Skeleton2 _skeleton;
     private bool initialized = false;
@@ -27,57 +30,44 @@ public class GeneratePhysicsHand : MonoBehaviour
             if (physicsHand != null)
             {
                 var handMeshObject = Instantiate(handMeshPrefab, physicsHand.transform);
+                Destroy(handMeshObject.GetComponent<Animator>());
+                handMeshObject.GetComponentInChildren<SkinnedMeshRenderer>().sharedMaterial = physicsHandMaterial;
                 var mapper = handMeshObject.AddComponent<OVRHandTransformMapper>();
                 mapper._skeletonType = oVRSkeleton.GetSkeletonType();
                 mapper.TryAutoMapBonesByName();
                 mapper.capsulesParent = physicsHand.transform;
                 mapper.TryAutoMapBoneTargets();
 
-                var follow = new GameObject("Follow");
-                follow.transform.SetParent(transform, false);
-                follow.AddComponent<Rigidbody>().isKinematic = true;
-
-                var joint = physicsHand.AddComponent<ConfigurableJoint>();
-                
-                joint.rotationDriveMode = RotationDriveMode.Slerp;
-                joint.slerpDrive = new JointDrive()
-                {
-                    positionSpring = 1000000f,
-                    positionDamper = 10000f,
-                    maximumForce = 15f
-                };
-                
-                var drive = new JointDrive()
-                {
-                    positionSpring = 1000000f,
-                    positionDamper = 1f,
-                    maximumForce = 50f
-                };
-                
-                joint.xDrive = drive;
-                joint.yDrive = drive;
-                joint.zDrive = drive;
-                
-                joint.autoConfigureConnectedAnchor = false;
-                joint.connectedAnchor = Vector3.zero;
-                joint.targetRotation = Quaternion.identity;
-                joint.connectedBody = follow.GetComponent<Rigidbody>();
-
                 while (bodiesToReset.Count > 0)
                 {
                     var rb = bodiesToReset.Dequeue();
                     rb.ResetInertiaTensor();
                     rb.ResetCenterOfMass();
-                    // print(rb.inertiaTensor.ToString("F20"));
                 }
 
-                // var followPhysics = physicsHand.AddComponent<ObjectFollowPhysics>();
-                // followPhysics.lbsTorque = 0;
-                // followPhysics.target = follow.transform;
+                var handTarget = Instantiate(handMeshPrefab, transform);
+                Destroy(handTarget.GetComponent<Animator>());
+                handTarget.name = HandName() + "_Physics_Hand_Target";
+                var targetMapper = handTarget.AddComponent<OVRHandTransformMapper>();
+                targetMapper._skeletonType = oVRSkeleton.GetSkeletonType();
+                targetMapper.TryAutoMapBonesByName();
+                targetMapper.targetObject = oVRSkeleton.transform;
+                targetMapper.TryAutoMapBoneTargetsAPIHand();
+                var toggle = handTarget.AddComponent<RendererToggle>();
+                toggle.renderer = toggle.GetComponentInChildren<SkinnedMeshRenderer>();
+                toggle.playerHand = PlayerHands.hands.GetHand(oVRSkeleton.GetSkeletonType());
+                toggle.renderer.sharedMaterial = targetMaterial;
 
-                // EditorApplication.isPaused = true;
+                var physicsHandController = physicsHand.AddComponent<PhysicsHandController>();
+                physicsHandController.targetMapper = targetMapper;
+                physicsHandController.playerHand = PlayerHands.hands.GetHand(oVRSkeleton.GetSkeletonType());
             }
         }
+    }
+
+    private string HandName()
+    {
+        return oVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft ? "Left" : "Right";
     }
 
     private Rigidbody AddBody(GameObject go)
@@ -134,9 +124,8 @@ public class GeneratePhysicsHand : MonoBehaviour
         var physicsLayer = oVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft
             ? LayerMask.NameToLayer("LeftHand")
             : LayerMask.NameToLayer("RightHand");
-
-        var handName = oVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft ? "Left" : "Right";
-        var _capsulesGO = new GameObject(handName + "_Physics_Hand");
+        
+        var _capsulesGO = new GameObject(HandName() + "_Physics_Hand");
         // _capsulesGO.AddComponent<SphereCollider>().radius = 0.005f;
         _capsulesGO.layer = physicsLayer;
         _capsulesGO.transform.SetParent(transform, false);
@@ -230,6 +219,7 @@ public class GeneratePhysicsHand : MonoBehaviour
 
             capsule.CapsuleCollider = new GameObject((bone.Id).ToString() + "_CapsuleCollider")
                 .AddComponent<CapsuleCollider>();
+            capsule.CapsuleCollider.sharedMaterial = physicMaterial;
             capsule.CapsuleCollider.gameObject.layer = physicsLayer;
             capsule.CapsuleCollider.isTrigger = false;
 

@@ -10,15 +10,22 @@ public class OVRHandTransformMapper : MonoBehaviour
 
     [SerializeField]
     private List<Transform> _boneTargets = new List<Transform>(new Transform[(int) OVRSkeleton.BoneId.Max]);
-
+    
+    public Transform targetObject;
+    public bool moveObjectToTarget = true;
+    
     public Transform capsulesParent;
-
-    [HideInInspector] public Transform bonesParent;
-
     public bool moveBonesToTargets = true;
+
+    private Quaternion _fixRotation = Quaternion.AngleAxis(180f, Vector3.up);
 
     private void Update()
     {
+        if (moveObjectToTarget && targetObject)
+        {
+            transform.position = targetObject.position;
+            transform.rotation = targetObject.rotation * _fixRotation;
+        }
         if (moveBonesToTargets)
         {
             if (CustomBones.Count == BoneTargets.Count)
@@ -88,6 +95,11 @@ public class OVRHandTransformMapper : MonoBehaviour
 
     public void TryAutoMapBoneTargets()
     {
+        TryAutoMapBoneTargets(capsulesParent, "_CapsuleRigidBody");
+    }
+
+    public void TryAutoMapBoneTargets(Transform transformToCheck, string suffix)
+    {
         OVRSkeleton.BoneId start = OVRSkeleton.BoneId.Hand_Start;
         OVRSkeleton.BoneId end = OVRSkeleton.BoneId.Hand_End;
         if (start != OVRSkeleton.BoneId.Invalid && end != OVRSkeleton.BoneId.Invalid)
@@ -104,9 +116,9 @@ public class OVRHandTransformMapper : MonoBehaviour
                         if (index > 0)
                         {
                             fbxBoneName = char.ToUpper(fbxBoneName[0]) + fbxBoneName.Substring(1);
-                            fbxBoneName = "Hand_" + fbxBoneName + "_CapsuleRigidBody";
+                            fbxBoneName = "Hand_" + fbxBoneName + suffix;
 
-                            Transform t = capsulesParent.FindChildRecursive(fbxBoneName);
+                            Transform t = transformToCheck.FindChildRecursive(fbxBoneName);
                             if (t != null)
                             {
                                 _boneTargets[(int) bi] = t;
@@ -116,6 +128,11 @@ public class OVRHandTransformMapper : MonoBehaviour
                 }
             }
         }
+    }
+    
+    public void TryAutoMapBoneTargetsAPIHand()
+    {
+        TryAutoMapBoneTargets(targetObject, "");
     }
 
 #if UNITY_EDITOR

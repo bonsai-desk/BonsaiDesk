@@ -14,29 +14,27 @@ public class ObjectFollowPhysics : MonoBehaviour
 
     private const float lbsToKg = 0.45359237f;
 
-    [HideInInspector]
-    public float distance;
+    [HideInInspector] public float distance;
 
-    [HideInInspector]
-    public OVRSkeleton oVRSkeleton;
+    [HideInInspector] public OVRSkeleton oVRSkeleton;
 
-    [HideInInspector]
-    public GameObject hideObject;
+    [HideInInspector] public GameObject hideObject;
 
-    [HideInInspector]
-    public Material material;
+    [HideInInspector] public Material material;
 
     private Color handColor;
     private bool active = false;
+
+    [HideInInspector] public bool setKinematicOnLowConfidence = true;
 
     private void Start()
     {
         body = GetComponent<Rigidbody>();
         body.maxAngularVelocity = float.MaxValue;
-        
+
         moveForce = lbsForce * lbsToKg * 9.81f;
         rotationTorque = lbsTorque * lbsToKg * 9.81f;
-        
+
         if (hideObject == null && transform.childCount > 0)
         {
             hideObject = transform.GetChild(0).gameObject;
@@ -52,7 +50,8 @@ public class ObjectFollowPhysics : MonoBehaviour
             valid = oVRSkeleton.IsDataValid && oVRSkeleton.IsDataHighConfidence;
         if (valid)
         {
-            body.isKinematic = false;
+            if (setKinematicOnLowConfidence)
+                body.isKinematic = false;
             if (hideObject == null || oVRSkeleton == null || active)
             {
                 distance = Vector3.Distance(transform.position, target.position);
@@ -69,19 +68,22 @@ public class ObjectFollowPhysics : MonoBehaviour
             else
             {
                 active = true;
-                body.isKinematic = false;
+                if (setKinematicOnLowConfidence)
+                    body.isKinematic = false;
                 if (material != null)
                 {
                     material.SetColor("_Color", handColor);
                     // material.SetFloat("_Glossiness", 0.5f);
                 }
-                resetToTarget();
+
+                // resetToTarget();
             }
         }
         else
         {
             active = false;
-            body.isKinematic = true;
+            if (setKinematicOnLowConfidence)
+                body.isKinematic = true;
             if (material != null)
             {
                 material.SetColor("_Color", new Color(handColor.r, handColor.g, handColor.b, 0.25f));
@@ -112,7 +114,8 @@ public class ObjectFollowPhysics : MonoBehaviour
         //float distance = Vector3.Distance(transform.position, target.position);
 
         //if already at target or have enough velocity to overshoot target this update tick, allow unlimited force to decelerate (not realistic)
-        if (Mathf.Approximately(distance, 0) || body.velocity.magnitude * Time.deltaTime > distance || Mathf.Approximately(moveForce, 0))
+        if (Mathf.Approximately(distance, 0) || body.velocity.magnitude * Time.deltaTime > distance ||
+            Mathf.Approximately(moveForce, 0))
             body.AddForce(targetForce, ForceMode.Force);
         else //clamp target force to moveForce
             body.AddForce(Vector3.ClampMagnitude(targetForce, moveForce), ForceMode.Force);
@@ -122,7 +125,8 @@ public class ObjectFollowPhysics : MonoBehaviour
     {
         var delta = target.rotation * Quaternion.Inverse(body.rotation);
 
-        float angle; Vector3 axis;
+        float angle;
+        Vector3 axis;
         delta.ToAngleAxis(out angle, out axis);
 
         // We get an infinite axis in the event that our rotation is already aligned.
@@ -144,10 +148,14 @@ public class ObjectFollowPhysics : MonoBehaviour
             Vector3 angularVelocityDifference = targetAngularVelocity - body.angularVelocity;
 
             Quaternion q = transform.rotation * body.inertiaTensorRotation;
-            Vector3 targetTorque = q * Vector3.Scale(body.inertiaTensor, (Quaternion.Inverse(q) * angularVelocityDifference)) / Time.deltaTime; // / 2f;
+            Vector3 targetTorque =
+                q * Vector3.Scale(body.inertiaTensor, (Quaternion.Inverse(q) * angularVelocityDifference)) /
+                Time.deltaTime; // / 2f;
 
             //if already at target or have enough angular velocity to overshoot target this update tick, allow unlimited torque to decelerate (not realistic)
-            if (Mathf.Approximately(angle, 0) || body.angularVelocity.magnitude * Mathf.Rad2Deg * Time.deltaTime > angle || Mathf.Approximately(rotationTorque, 0))
+            if (Mathf.Approximately(angle, 0) ||
+                body.angularVelocity.magnitude * Mathf.Rad2Deg * Time.deltaTime > angle ||
+                Mathf.Approximately(rotationTorque, 0))
                 body.AddTorque(targetTorque, ForceMode.Force);
             else //clamp target torque to rotationForce
                 body.AddTorque(Vector3.ClampMagnitude(targetTorque, rotationTorque), ForceMode.Force);
