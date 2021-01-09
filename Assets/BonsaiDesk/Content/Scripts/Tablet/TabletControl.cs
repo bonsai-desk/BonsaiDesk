@@ -1,50 +1,110 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using Mirror;
+using UnityEngine;
+using UnityEngine.Networking;
 
-public class TabletControl : MonoBehaviour
+public class TabletControl : NetworkBehaviour
 {
+    [SyncVar(hook = nameof(VideoIdHook))] public string videoId;
+    [SyncVar(hook = nameof(ServerLerpingHook))] private bool _serverLerping = false;
+
     public PhysicMaterial lowFrictionPhysicMaterial;
     public BoxCollider worldBox;
+    public BoxCollider fingerBox;
+    public TabletCollider tabletCollider;
+    public Rigidbody tabletBody;
+    public MeshRenderer thumbnailRenderer;
 
     private PhysicMaterial _defaultPhysicMaterial;
-
-    private bool _touchingHand = false;
-    private bool _lastTouchingHand = false;
-
-    private int _leftHandLayerMask;
-    private int _rightHandLayerMask;
+    private Vector2 _bounds;
 
     private void Start()
     {
         _defaultPhysicMaterial = worldBox.sharedMaterial;
+        _bounds = thumbnailRenderer.transform.localScale.xy();
+    }
 
-        _leftHandLayerMask = LayerMask.NameToLayer("LeftHand");
-        _rightHandLayerMask = LayerMask.NameToLayer("RightHand");
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        StartCoroutine(LoadThumbnail(videoId));
+        SetInteractable(!_serverLerping);
     }
 
     private void Update()
     {
-        if (_touchingHand != _lastTouchingHand)
-        {
-            worldBox.sharedMaterial = _touchingHand ? lowFrictionPhysicMaterial : _defaultPhysicMaterial;
-        }
-
-        _lastTouchingHand = _touchingHand;
-        _touchingHand = false;
+        worldBox.sharedMaterial =
+            tabletCollider.NumFingersTouching >= 3 ? lowFrictionPhysicMaterial : _defaultPhysicMaterial;
+        tabletBody.mass = tabletCollider.NumFingersTouching >= 3 ? 0.050f : 0.300f;
     }
 
-    private void OnCollisionEnter(Collision collision)
+    [Server]
+    public void SetServerLerping(bool serverLerping)
     {
-        if (collision.gameObject.layer == _leftHandLayerMask || collision.gameObject.layer == _rightHandLayerMask)
-        {
-            _touchingHand = true;
-        }
+        if (serverLerping == _serverLerping)
+            return;
+        
+        _serverLerping = serverLerping;
+        SetInteractable(!serverLerping);
     }
 
-    private void OnCollisionStay(Collision collision)
+    private void SetInteractable(bool interactable)
     {
-        if (collision.gameObject.layer == _leftHandLayerMask || collision.gameObject.layer == _rightHandLayerMask)
+        worldBox.enabled = interactable;
+        fingerBox.enabled = interactable;
+    }
+
+    public void TabletPlay()
+    {
+        TabletSpot.Instance.CmdSetNewVideo(netIdentity);
+    }
+
+    private void VideoIdHook(string oldValue, string newValue)
+    {
+        StartCoroutine(LoadThumbnail(newValue));
+    }
+    
+    private void ServerLerpingHook(bool oldValue, bool newValue)
+    {
+        SetInteractable(!newValue);
+    }
+
+    private IEnumerator LoadThumbnail(string newVideoId, bool maxRes = true)
+    {
+        if (string.IsNullOrEmpty(newVideoId))
+            yield break;
+
+        string url = $"https://img.youtube.com/vi/{newVideoId}/";
+        url += maxRes ? "maxresdefault.jpg" : "0.jpg";
+
+        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(url))
         {
-            _touchingHand = true;
+            yield return uwr.SendWebRequest();
+
+            if (uwr.isNetworkError || uwr.isHttpError)
+            {
+                if (maxRes)
+                {
+                    print("Could not get max res thumbnail. Retrying with 0.jpg");
+                    yield return LoadThumbnail(newVideoId, false);
+                }
+                else
+                {
+                    Debug.LogError("Could not get thumbnail: " + uwr.error);
+                }
+            }
+            else
+            {
+                var texture = DownloadHandlerTexture.GetContent(uwr);
+
+                var aspectRatio = (float) texture.width / texture.height;
+                var localScale = new Vector3(_bounds.y * aspectRatio, _bounds.y, 1);
+                if (localScale.x > _bounds.x)
+                    localScale = new Vector3(_bounds.x, _bounds.x * (1f / aspectRatio), 1);
+
+                thumbnailRenderer.transform.localScale = localScale;
+                thumbnailRenderer.material.mainTexture = texture;
+            }
         }
     }
 }

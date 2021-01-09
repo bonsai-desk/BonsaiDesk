@@ -10,29 +10,21 @@ public class OVRPhysicsHand : MonoBehaviour
 
     public PhysicMaterial physicMaterial;
 
-    [SerializeField]
-    private bool createPhysicalBones = true;
+    [SerializeField] private bool createPhysicalBones = true;
 
-    [SerializeField]
-    private bool createPhysicalSkin = true;
+    [SerializeField] private bool createPhysicalSkin = true;
 
-    [SerializeField]
-    private bool renderPhysicalBones = true;
+    [SerializeField] private bool renderPhysicalBones = true;
 
-    [SerializeField]
-    private bool renderPhysicalSkin = true;
+    [SerializeField] private bool renderPhysicalSkin = true;
 
-    [SerializeField]
-    private float mass = 0.46f;
+    [SerializeField] private float mass = 0.46f;
 
-    [SerializeField]
-    private float lbsForce = 70f;
+    [SerializeField] private float lbsForce = 70f;
 
-    [SerializeField]
-    private float lbsTorque = 10f;
+    [SerializeField] private float lbsTorque = 10f;
 
-    [SerializeField]
-    private float snapBackDistance = 0.2f;
+    [SerializeField] private float snapBackDistance = 0.2f;
 
     private float bonesToSkinRatio = 0.5f;
 
@@ -56,20 +48,18 @@ public class OVRPhysicsHand : MonoBehaviour
 
     private Rigidbody body;
 
-    [HideInInspector]
-    public Transform thumbTipTarget;
+    [HideInInspector] public Transform thumbTipTarget;
 
-    [HideInInspector]
-    public Transform[] fingerTips;
+    [HideInInspector] public Transform[] fingerTips;
 
     //finger tips and thumb
-    public static readonly short[] skipBones = { 5, 8, 11, 14, 18, 3, 4 };
+    public static readonly short[] skipBones = {5, 8, 11, 14, 18, 3, 4};
 
     //all fingers (no palm)
     //public static readonly short[] skipBones = { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
 
     //not fingers
-    public static readonly short[] notFingers = { 0, 1, 2, 15 };
+    public static readonly short[] notFingers = {0, 1, 2, 15};
 
     private List<Joint> joints = new List<Joint>();
 
@@ -103,10 +93,10 @@ public class OVRPhysicsHand : MonoBehaviour
         meshRenderer.sharedMaterial = handMaterialCopy;
         follow.material = handMaterialCopy;
 
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
-            PlayerHands.hands.left.material = handMaterialCopy;
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
-            PlayerHands.hands.right.material = handMaterialCopy;
+        // if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        //     PlayerHands.hands.left.material = handMaterialCopy;
+        // if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
+        //     PlayerHands.hands.right.material = handMaterialCopy;
 
         fingerTips = new Transform[5];
         var customBones = GetComponent<OVRHandTransformMapper>().CustomBones;
@@ -133,7 +123,7 @@ public class OVRPhysicsHand : MonoBehaviour
     private void Initialize()
     {
         var skeleton = new OVRPlugin.Skeleton();
-        if (OVRPlugin.GetSkeleton((OVRPlugin.SkeletonType)_skeletonType, out skeleton))
+        if (OVRPlugin.GetSkeleton((OVRPlugin.SkeletonType) _skeletonType, out skeleton))
         {
             InitializeCapsules(skeleton);
 
@@ -196,7 +186,8 @@ public class OVRPhysicsHand : MonoBehaviour
                     Transform bindBone = oVRSkeleton.BindPoses[capsule.BoneIndex].Transform;
                     Transform boneObject = oVRSkeleton.Bones[capsule.BoneIndex].Transform;
 
-                    var capsuleRigidBodyGO = new GameObject((oVRSkeleton.Bones[capsule.BoneIndex].Id).ToString() + "_CapsuleRigidBody");
+                    var capsuleRigidBodyGO =
+                        new GameObject((oVRSkeleton.Bones[capsule.BoneIndex].Id).ToString() + "_CapsuleRigidBody");
                     if (n == 0)
                     {
                         capsuleRigidBodyGO.transform.parent = _capsulesGO.transform;
@@ -215,6 +206,7 @@ public class OVRPhysicsHand : MonoBehaviour
                         lastLocalPosition = oVRSkeleton.BindPoses[capsule.BoneIndex - 1].Transform.localPosition;
                         lastLocalRotation = oVRSkeleton.BindPoses[capsule.BoneIndex - 1].Transform.localRotation;
                     }
+
                     if (capsule.BoneIndex == 6 || capsule.BoneIndex == 9 || capsule.BoneIndex == 12)
                     {
                         lastLocalPosition = Vector3.zero;
@@ -248,7 +240,7 @@ public class OVRPhysicsHand : MonoBehaviour
 
                     if (n == 0)
                     {
-                        if (capsule.BoneIndex == (int)OVRSkeleton.BoneId.Hand_Thumb3)
+                        if (capsule.BoneIndex == (int) OVRSkeleton.BoneId.Hand_Thumb3)
                         {
                             GameObject thumbTip = new GameObject();
                             thumbTip.name = "ThumbTip";
@@ -260,6 +252,7 @@ public class OVRPhysicsHand : MonoBehaviour
                             thumbTipTarget = thumbTip.transform;
                         }
                     }
+
                     if (n == 1)
                     {
                         var capsuleRigidBody = capsuleRigidBodyGO.AddComponent<Rigidbody>();
@@ -270,8 +263,12 @@ public class OVRPhysicsHand : MonoBehaviour
                         capsuleRigidBody.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                         if (capsule.BoneIndex == 8)
                             capsuleRigidBody.gameObject.tag = "PointerTip";
+                        if (capsule.BoneIndex == 5 || capsule.BoneIndex == 11 || capsule.BoneIndex == 14 ||
+                            capsule.BoneIndex == 18)
+                            capsuleRigidBody.gameObject.tag = "FingerTip";
 
-                        if (capsule.BoneIndex == 3 || capsule.BoneIndex == 6 || capsule.BoneIndex == 9 || capsule.BoneIndex == 12 || capsule.BoneIndex == 16)
+                        if (capsule.BoneIndex == 3 || capsule.BoneIndex == 6 || capsule.BoneIndex == 9 ||
+                            capsule.BoneIndex == 12 || capsule.BoneIndex == 16)
                         {
                             lastThumbJoint = body;
                         }
@@ -288,7 +285,8 @@ public class OVRPhysicsHand : MonoBehaviour
 
                             capsuleJoint.autoConfigureConnectedAnchor = false;
                             capsuleJoint.anchor = Vector3.zero;
-                            capsuleJoint.connectedAnchor = lastThumbJoint.transform.InverseTransformPoint(capsuleRigidBody.transform.position);
+                            capsuleJoint.connectedAnchor =
+                                lastThumbJoint.transform.InverseTransformPoint(capsuleRigidBody.transform.position);
 
                             capsuleJoint.xMotion = ConfigurableJointMotion.Locked;
                             capsuleJoint.yMotion = ConfigurableJointMotion.Locked;
@@ -313,19 +311,22 @@ public class OVRPhysicsHand : MonoBehaviour
                         //objectFollow.oVRSkeleton = oVRSkeleton;
                     }
 
-                    var capsuleColliderGO = new GameObject((oVRSkeleton.Bones[capsule.BoneIndex].Id).ToString() + "_CapsuleCollider");
+                    var capsuleColliderGO =
+                        new GameObject((oVRSkeleton.Bones[capsule.BoneIndex].Id).ToString() + "_CapsuleCollider");
                     if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
                     {
                         int layer = LayerMask.NameToLayer("LeftHand");
                         capsuleRigidBodyGO.layer = layer;
                         capsuleColliderGO.layer = layer;
                     }
+
                     if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
                     {
                         int layer = LayerMask.NameToLayer("RightHand");
                         capsuleRigidBodyGO.layer = layer;
                         capsuleColliderGO.layer = layer;
                     }
+
                     capsuleColliderGO.transform.parent = capsuleRigidBodyGO.transform;
                     capsuleColliderGO.transform.localPosition = Vector3.zero;
                     capsuleColliderGO.transform.localRotation = Quaternion.identity;
@@ -347,6 +348,7 @@ public class OVRPhysicsHand : MonoBehaviour
                         capsuleCollider.radius = capsule.Radius;
                         capsuleCollider.height = mag + capsule.Radius * 2.0f;
                     }
+
                     bool skipBone = false;
                     if (n == 0)
                     {
@@ -354,6 +356,7 @@ public class OVRPhysicsHand : MonoBehaviour
                             if (capsule.BoneIndex == skipBones[j])
                                 skipBone = true;
                     }
+
                     if (skipBone)
                         capsuleCollider.isTrigger = true;
                     else
@@ -370,12 +373,14 @@ public class OVRPhysicsHand : MonoBehaviour
                         capsuleRenderer.transform.parent = capsuleColliderGO.transform;
                         capsuleRenderer.transform.localPosition = capsuleCollider.center;
                         capsuleRenderer.transform.localEulerAngles = new Vector3(0, 0, 90);
-                        capsuleRenderer.transform.localScale = new Vector3(capsuleCollider.radius * 2f, capsuleCollider.height / 2f, capsuleCollider.radius * 2f);
+                        capsuleRenderer.transform.localScale = new Vector3(capsuleCollider.radius * 2f,
+                            capsuleCollider.height / 2f, capsuleCollider.radius * 2f);
                         if (n == 0 && bonesMaterial != null)
                             capsuleRenderer.GetComponent<MeshRenderer>().sharedMaterial = bonesMaterial;
                         if (n == 1 && skinMaterial != null)
                             capsuleRenderer.GetComponent<MeshRenderer>().sharedMaterial = skinMaterial;
                     }
+
                     if (n == 0)
                         _capsules[i] = new OVRBoneCapsule(capsule.BoneIndex, null, capsuleCollider);
                 }
@@ -407,6 +412,7 @@ public class OVRPhysicsHand : MonoBehaviour
                 joints[i].connectedAnchor = joints[i].connectedAnchor;
             }
         }
+
         lastHandScale = handScale;
     }
 
@@ -435,10 +441,12 @@ public class OVRPhysicsHand : MonoBehaviour
                 {
                     //capsule.CapsuleCollider.transform.parent.gameObject.SetActive(true);
 
-                    Transform bone = oVRSkeleton.Bones[(int)capsule.BoneIndex].Transform;
+                    Transform bone = oVRSkeleton.Bones[(int) capsule.BoneIndex].Transform;
 
-                    capsule.CapsuleCollider.transform.parent.localRotation = Quaternion.Inverse(target.rotation) * bone.rotation;
-                    capsule.CapsuleCollider.transform.parent.localPosition = target.InverseTransformPoint(bone.position);
+                    capsule.CapsuleCollider.transform.parent.localRotation =
+                        Quaternion.Inverse(target.rotation) * bone.rotation;
+                    capsule.CapsuleCollider.transform.parent.localPosition =
+                        target.InverseTransformPoint(bone.position);
                 }
                 else
                 {

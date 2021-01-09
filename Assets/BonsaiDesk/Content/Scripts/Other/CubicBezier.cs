@@ -10,6 +10,7 @@ public class CubicBezier
     public static readonly CubicBezier EaseInOut = new CubicBezier(0.42f, 0, 0.58f, 1);
     public static readonly CubicBezier EaseIn = new CubicBezier(0.42f, 0, 1, 1);
     public static readonly CubicBezier EaseOut = new CubicBezier(0, 0, 0.58f, 1);
+    public static readonly CubicBezier LateStart = new CubicBezier(0.73f, 0.21f, 0.87f, 0.31f);
 
     private readonly int _numSamples;
     

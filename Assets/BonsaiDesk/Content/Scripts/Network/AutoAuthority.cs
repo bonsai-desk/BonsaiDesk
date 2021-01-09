@@ -10,6 +10,8 @@ public class AutoAuthority : NetworkBehaviour
     [SyncVar] private double _lastInteractTime;
     [SyncVar] private uint _ownerIdentityId = uint.MaxValue;
     [SyncVar] private bool _inUse = false;
+    [SyncVar] public bool isKinematic = false;
+
     public bool InUse => _inUse;
 
     public bool allowPinchPull = true;
@@ -68,11 +70,11 @@ public class AutoAuthority : NetworkBehaviour
         }
 
         //code past this point if you have control over the object
-        _body.isKinematic = false;
+        _body.isKinematic = isKinematic;
     }
 
     //Hello function. I am a client. Do I have authority over this object?
-    private bool ClientHasAuthority()
+    public bool ClientHasAuthority()
     {
         if (!isClient)
             Debug.LogError("ClientHasAuthority is only valid when called from a client.");
@@ -81,7 +83,7 @@ public class AutoAuthority : NetworkBehaviour
     }
 
     //Hello function. I am a server. Do I have authority over this object?
-    private bool ServerHasAuthority()
+    public bool ServerHasAuthority()
     {
         if (!isServer)
             Debug.LogError("ServerHasAuthority is only valid when called from a server.");
@@ -89,7 +91,7 @@ public class AutoAuthority : NetworkBehaviour
     }
 
     //Hello function. I don't know if I'm a client or a server, but whatever I am, do I have authority over this object?
-    private bool HasAuthority()
+    public bool HasAuthority()
     {
         return isServer && ServerHasAuthority() || isClient && ClientHasAuthority();
     }
@@ -119,6 +121,12 @@ public class AutoAuthority : NetworkBehaviour
         }
     }
 
+    [Command(ignoreAuthority = true)]
+    public void CmdSetKinematic(bool newIsKinematic)
+    {
+        isKinematic = newIsKinematic;
+    }
+
     public void VisualizePinchPull()
     {
         _visualizePinchPull = true;
@@ -132,9 +140,10 @@ public class AutoAuthority : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    public void CmdRemoveInUse()
+    public void CmdRemoveInUse(uint identityId)
     {
-        _inUse = false;
+        if (_ownerIdentityId == identityId)
+            _inUse = false;
     }
 
     public void Interact(uint identityId)
@@ -205,6 +214,26 @@ public class AutoAuthority : NetworkBehaviour
 
         _lastInteractTime = fromLastInteractTime;
         _ownerIdentityId = newOwnerIdentityId;
+    }
+    
+    [Server]
+    public void ServerForceNewOwner(uint newOwnerIdentityId, double fromLastInteractTime, bool inUse)
+    {
+        //remove objects owner if it had one
+        if (netIdentity.connectionToClient != null)
+        {
+            netIdentity.RemoveClientAuthority();
+        }
+
+        //if the new owner is not the server, give them authority
+        if (newOwnerIdentityId != uint.MaxValue)
+        {
+            netIdentity.AssignClientAuthority(NetworkIdentity.spawned[newOwnerIdentityId].connectionToClient);
+        }
+
+        _lastInteractTime = fromLastInteractTime;
+        _ownerIdentityId = newOwnerIdentityId;
+        _inUse = inUse;
     }
 
     private void HandleRecursiveAuthority(Collision collision)
