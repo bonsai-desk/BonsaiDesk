@@ -46,14 +46,14 @@ public class GeneratePhysicsHand : MonoBehaviour
                     positionDamper = 10000f,
                     maximumForce = 15f
                 };
-
+                
                 var drive = new JointDrive()
                 {
                     positionSpring = 1000000f,
                     positionDamper = 1f,
                     maximumForce = 50f
                 };
-
+                
                 joint.xDrive = drive;
                 joint.yDrive = drive;
                 joint.zDrive = drive;
@@ -70,8 +70,6 @@ public class GeneratePhysicsHand : MonoBehaviour
                     rb.ResetCenterOfMass();
                     // print(rb.inertiaTensor.ToString("F20"));
                 }
-
-                // print(physicsHand.GetComponent<Rigidbody>().inertiaTensor);
 
                 // var followPhysics = physicsHand.AddComponent<ObjectFollowPhysics>();
                 // followPhysics.lbsTorque = 0;
@@ -119,7 +117,7 @@ public class GeneratePhysicsHand : MonoBehaviour
                 maximumForce = 5f
             };
         }
-        
+
         joint.autoConfigureConnectedAnchor = false;
         joint.connectedAnchor = body.transform.localPosition;
         joint.connectedBody = connectedBody;
@@ -132,14 +130,14 @@ public class GeneratePhysicsHand : MonoBehaviour
             Debug.LogError("Cannot create capsules for skeleton type None");
             return null;
         }
-        
+
         var physicsLayer = oVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft
             ? LayerMask.NameToLayer("LeftHand")
             : LayerMask.NameToLayer("RightHand");
 
         var handName = oVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft ? "Left" : "Right";
         var _capsulesGO = new GameObject(handName + "_Physics_Hand");
-        _capsulesGO.AddComponent<SphereCollider>().radius = 0.005f;
+        // _capsulesGO.AddComponent<SphereCollider>().radius = 0.005f;
         _capsulesGO.layer = physicsLayer;
         _capsulesGO.transform.SetParent(transform, false);
         _capsulesGO.transform.localPosition = Vector3.zero;
@@ -163,6 +161,7 @@ public class GeneratePhysicsHand : MonoBehaviour
             if (boneIndex > 0)
                 boneIndexToCapsuleIndex.Add(boneIndex, i);
 
+            bool pinkyOrThumbStart = false;
             Transform parentBoneTransform;
             short parentBoneIndex = bone.ParentBoneIndex;
             if (parentBoneIndex >= 0 && boneIndexToCapsuleIndex.TryGetValue(parentBoneIndex, out var value))
@@ -181,9 +180,7 @@ public class GeneratePhysicsHand : MonoBehaviour
                     parent.localRotation = oVRSkeleton.BindPoses[parentBoneIndex].Transform.localRotation;
                     parent.SetParent(_capsulesGO.transform, false);
                     parentBoneTransform = parent;
-                    var prb = AddBody(parent.gameObject);
-                    prb.gameObject.AddComponent<SphereCollider>().radius = 0.005f;
-                    bodiesToReset.Enqueue(prb);
+                    pinkyOrThumbStart = true;
                 }
                 else
                 {
@@ -196,23 +193,39 @@ public class GeneratePhysicsHand : MonoBehaviour
 
             var capsuleGO = new GameObject(bone.Id + "_CapsuleRigidBody");
             capsuleGO.layer = physicsLayer;
-            
-            capsuleGO.transform.SetParent(parentBoneTransform, false);
-            capsuleGO.transform.localPosition = bone.Transform.localPosition;
-            capsuleGO.transform.localRotation = bone.Transform.localRotation;
+
+            if (pinkyOrThumbStart)
+            {
+                capsuleGO.transform.SetParent(_capsulesGO.transform, false);
+
+                // capsuleGO.transform.localPosition = parentBoneTransform.TransformPoint(bone.Transform.localPosition);
+                capsuleGO.transform.localPosition = parentBoneTransform.localPosition +
+                                                    parentBoneTransform.localRotation * bone.Transform.localPosition;
+                capsuleGO.transform.localRotation = parentBoneTransform.localRotation * bone.Transform.localRotation;
+            }
+            else
+            {
+                capsuleGO.transform.SetParent(parentBoneTransform, false);
+
+                capsuleGO.transform.localPosition = bone.Transform.localPosition;
+                capsuleGO.transform.localRotation = bone.Transform.localRotation;
+            }
 
             if (boneIndex != 0)
             {
                 capsule.CapsuleRigidbody = AddBody(capsuleGO);
                 bodiesToReset.Enqueue(capsule.CapsuleRigidbody);
 
-                if (boneIndex == (short) OVRSkeleton.BoneId.Hand_Pinky1 ||
-                    boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb1)
+                if (pinkyOrThumbStart)
                 {
-                    AddJoint(parentBoneTransform.GetComponent<Rigidbody>(), _capsulesGO.GetComponent<Rigidbody>(), true);
+                    // AddJoint(parentBoneTransform.GetComponent<Rigidbody>(), _capsulesGO.GetComponent<Rigidbody>(),
+                    //     true, parentBoneTransform);
+                    AddJoint(capsule.CapsuleRigidbody, _capsulesGO.GetComponent<Rigidbody>(), false);
                 }
-
-                AddJoint(capsule.CapsuleRigidbody, parentBoneTransform.GetComponent<Rigidbody>(), true);
+                else
+                {
+                    AddJoint(capsule.CapsuleRigidbody, parentBoneTransform.GetComponent<Rigidbody>(), false);
+                }
             }
 
             capsule.CapsuleCollider = new GameObject((bone.Id).ToString() + "_CapsuleCollider")
