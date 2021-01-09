@@ -63,6 +63,9 @@ public class PhysicsHandController : MonoBehaviour
 
     private void UpdateJoint()
     {
+        if (!_joint)
+            return;
+        
         _joint.connectedAnchor = targetMapper.transform.position;
         _joint.SetTargetRotationLocal(targetMapper.transform.localRotation, _startRotation);
     }

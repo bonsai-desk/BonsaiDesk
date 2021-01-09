@@ -6,7 +6,7 @@ using UnityEngine;
 public class GeneratePhysicsHand : MonoBehaviour
 {
     public bool pauseForSave = false;
-    
+
     public OVRSkeleton oVRSkeleton;
     public GameObject handMeshPrefab;
     public PhysicMaterial physicMaterial;
@@ -101,7 +101,7 @@ public class GeneratePhysicsHand : MonoBehaviour
         return rb;
     }
 
-    private void AddJoint(Rigidbody body, Rigidbody connectedBody, bool lockRotation = false)
+    private void AddJoint(Rigidbody body, Rigidbody connectedBody, bool stiff = false)
     {
         var joint = body.gameObject.AddComponent<ConfigurableJoint>();
 
@@ -109,15 +109,18 @@ public class GeneratePhysicsHand : MonoBehaviour
         joint.yMotion = ConfigurableJointMotion.Locked;
         joint.zMotion = ConfigurableJointMotion.Locked;
 
-        if (lockRotation)
+        joint.rotationDriveMode = RotationDriveMode.Slerp;
+        if (stiff)
         {
-            joint.angularXMotion = ConfigurableJointMotion.Locked;
-            joint.angularYMotion = ConfigurableJointMotion.Locked;
-            joint.angularZMotion = ConfigurableJointMotion.Locked;
+            joint.slerpDrive = new JointDrive()
+            {
+                positionSpring = 500f,
+                positionDamper = 1f,
+                maximumForce = 10f
+            };
         }
         else
         {
-            joint.rotationDriveMode = RotationDriveMode.Slerp;
             joint.slerpDrive = new JointDrive()
             {
                 positionSpring = 500f,
@@ -168,6 +171,10 @@ public class GeneratePhysicsHand : MonoBehaviour
                 boneIndexToCapsuleIndex.Add(boneIndex, i);
 
             bool pinkyOrThumbStart = false;
+            bool thumb = boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb0 ||
+                         boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb1 ||
+                         boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb2 ||
+                         boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb3;
             Transform parentBoneTransform;
             short parentBoneIndex = bone.ParentBoneIndex;
             if (parentBoneIndex >= 0 && boneIndexToCapsuleIndex.TryGetValue(parentBoneIndex, out var value))
@@ -226,11 +233,11 @@ public class GeneratePhysicsHand : MonoBehaviour
                 {
                     // AddJoint(parentBoneTransform.GetComponent<Rigidbody>(), _capsulesGO.GetComponent<Rigidbody>(),
                     //     true, parentBoneTransform);
-                    AddJoint(capsule.CapsuleRigidbody, _capsulesGO.GetComponent<Rigidbody>(), false);
+                    AddJoint(capsule.CapsuleRigidbody, _capsulesGO.GetComponent<Rigidbody>(), thumb);
                 }
                 else
                 {
-                    AddJoint(capsule.CapsuleRigidbody, parentBoneTransform.GetComponent<Rigidbody>(), false);
+                    AddJoint(capsule.CapsuleRigidbody, parentBoneTransform.GetComponent<Rigidbody>(), thumb);
                 }
             }
 
