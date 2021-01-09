@@ -1,9 +1,10 @@
 import YouTube from "react-youtube";
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
+import {useHistory} from "react-router-dom";
 
 let opts = {
     width: window.innerWidth,
-    height: window.innerHeight/2,
+    height: window.innerHeight / 2,
     playerVars: {
         autoplay: 0,
         controls: 0,
@@ -42,12 +43,16 @@ let showState = (state) => {
         case 5:
             name = "cued"
             break;
+        default:
+            name = "BAD SWITCH STATE"
     }
     return name
 
 }
 
 let Video = (props) => {
+
+    let history = useHistory();
 
     let dev_mode = window.location.pathname.split("/")[1] === "youtube_test";
 
@@ -57,17 +62,20 @@ let Video = (props) => {
     let [init, setInit] = useState(false);
 
     // this is the 'I'm ready at a timestamp' 'ready', not the 'player is ready' of 'onReady'
-    let [ready , setReady] = useState(false);
+    let [ready, setReady] = useState(false);
     let [readying, setReadying] = useState(false);
     let [justBuffered, setJustBuffered] = useState(false);
 
     let postStateChange = (message) => {
         if (message !== "READY") setReady(false);
         console.log("POST " + message)
+        if (!dev_mode) {
+            window.vuplex.postMessage({type: "stateChange", message: message, current_time: player.getCurrentTime()});
+        }
     }
 
     let readyUp = (_player, timeStamp) => {
-        if (_player == null){
+        if (_player == null) {
             console.log("bonsai: ignoring attempt to ready up while player is null")
             return;
         }
@@ -114,6 +122,7 @@ let Video = (props) => {
     function handleCued() {
         console.log("bonsai: " + showState(player.getPlayerState()));
     }
+
     function handleUnstarted() {
         console.log(
             "bonsai: " +
@@ -121,6 +130,7 @@ let Video = (props) => {
             player.getCurrentTime()
         )
     }
+
     function handleEnded() {
         console.log("bonsai: " + showState(player.getPlayerState()));
         postStateChange("ENDED")
@@ -145,9 +155,10 @@ let Video = (props) => {
             setJustBuffered(false);
         }
     }
+
     function handlePaused() {
         if (init) {
-            if (justBuffered){
+            if (justBuffered) {
                 if (readying && !ready) {
                     console.log("bonsai: ready (pause after buffer)")
                     setReady(true);
@@ -178,6 +189,7 @@ let Video = (props) => {
             setJustBuffered(false);
         }
     }
+
     function handleBuffering() {
         if (readying) {
             console.log("bonsai: while readying -> buffering")
@@ -187,6 +199,72 @@ let Video = (props) => {
         setJustBuffered(true);
     }
 
+    useEffect(() => {
+        if (player == null || dev_mode) {
+            return;
+        }
+
+        function handlePlay() {
+            player.playVideo()
+        }
+
+        function handlePause() {
+            player.pauseVideo()
+        }
+
+        function handleReadyUp(_timeStamp) {
+            readyUp(_timeStamp)
+        }
+
+        let playerListeners = (event) => {
+            let json = JSON.parse(event.data)
+            if (json.type !== "video") {
+                return;
+            }
+            switch (json.command) {
+                case "play":
+                    console.log("COMMAND: play")
+                    handlePlay();
+                    break;
+                case "pause":
+                    console.log("COMMAND: pause")
+                    handlePause()
+                    break;
+                case "readyUp":
+                    console.log("COMMAND: readyUp")
+                    handleReadyUp(json.timestamp);
+                    break;
+                default:
+                    console.log("command: not handled (video) " + event.data)
+                    break;
+            }
+        }
+        window.vuplex.addEventListener('message', playerListeners)
+        return () => {
+            window.vuplex.removeEventListener('message', playerListeners)
+        }
+    }, [id, player, dev_mode])
+
+    useEffect(() => {
+        console.log("bonsai: add ping interval")
+        let pingPlayerTime = setInterval(() => {
+            let current_time = 0;
+            if (player != null && player.getCurrentTime() != null) {
+                current_time = player.getCurrentTime();
+            }
+            if (dev_mode) {
+                return;
+            }
+            window.vuplex.postMessage({
+                type: "infoCurrentTime",
+                current_time: current_time
+            })
+        }, 100)
+        return () => {
+            console.log("bonsai: remove ping interval")
+            clearInterval(pingPlayerTime)
+        }
+    }, [id, player, dev_mode])
 
     let onStateChange = (event) => {
         switch (event.data) {
@@ -216,7 +294,13 @@ let Video = (props) => {
 
     return (
         <div>
-            <p onClick={() => {readyUp(player, 40)}}>ready up</p>
+            <p onClick={() => {
+                history.push("/home")
+            }}>home</p>
+            {" "}
+            <p onClick={() => {
+                readyUp(player, 40)
+            }}>ready up</p>
             <YouTube
                 opts={opts}
                 onReady={onReady}

@@ -98,17 +98,18 @@ public class NewAutoBrowserController : NetworkBehaviour
             
             if (paused)
             {
+                // todo set the toggle pause inactive now
                 _idealScrub = _idealScrub.Pause(NetworkTime.time);
                 var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
                 TLog($"Paused scrub at {timeStamp}");
-                // todo set the toggle pause inactive now
                 RpcReadyUp(timeStamp);
             }
             else
             {
                 // todo set the togglepause to activate when this starts
-                var startAtNetworkTime = NetworkTime.time + 0.5;
-                _idealScrub = _idealScrub.UnPauseAtNetworkTime(startAtNetworkTime);
+                var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
+                BeginSync("toggled play");
+                RpcReadyUp(timeStamp);
             }
 
         };
@@ -167,7 +168,7 @@ public class NewAutoBrowserController : NetworkBehaviour
         _clientsLastPing.Clear();
         _clientsPlayerStatus.Clear();
         _beginReadyUpTime = NetworkTime.time;
-        _idealScrub = _idealScrub.Pause(NetworkTime.time);
+        if (_idealScrub.Active) _idealScrub = _idealScrub.Pause(NetworkTime.time);
     }
 
     private void HandlePlayerServer()
@@ -176,7 +177,7 @@ public class NewAutoBrowserController : NetworkBehaviour
 
         if (_allGood && BadPingExists())
         {
-            BeginSync();
+            BeginSync("a bad ping");
             RpcReadyUp(_idealScrub.CurrentTimeStamp(NetworkTime.time));
         }
 
@@ -195,7 +196,6 @@ public class NewAutoBrowserController : NetworkBehaviour
             }
         }
     }
-
 
 
     private bool BadPingExists()
@@ -361,7 +361,7 @@ public class NewAutoBrowserController : NetworkBehaviour
             _contentInfo = new ContentInfo(true, id, aspect);
             _idealScrub = ScrubData.PausedAtScrub(timeStamp);
 
-            BeginSync();
+            BeginSync("new video");
             RpcReloadYouTube(id, timeStamp);
 
             _fetchAndReadyUp = null;
