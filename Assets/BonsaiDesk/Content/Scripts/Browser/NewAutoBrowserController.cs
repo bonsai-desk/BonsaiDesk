@@ -563,14 +563,14 @@ public class NewAutoBrowserController : NetworkBehaviour
 
     public readonly struct ScrubData
     {
-        private readonly double _scrub;
-        private readonly double _networkTimeActivated;
+        public readonly double Scrub;
+        public readonly double NetworkTimeActivated;
         public readonly bool Active;
 
         private ScrubData(double scrub, double networkTimeActivated, bool active)
         {
-            _scrub = scrub;
-            _networkTimeActivated = networkTimeActivated;
+            Scrub = scrub;
+            NetworkTimeActivated = networkTimeActivated;
             Active = active;
         }
 
@@ -589,18 +589,18 @@ public class NewAutoBrowserController : NetworkBehaviour
         public ScrubData UnPauseAtNetworkTime(double networkTime)
         {
             if (Active) Debug.LogError("Scrub should be paused before resuming");
-            return new ScrubData(_scrub, networkTime, true);
+            return new ScrubData(Scrub, networkTime, true);
         }
 
         public double CurrentTimeStamp(double networkTime)
         {
-            if (!Active || networkTime - _networkTimeActivated < 0) return _scrub;
-            return _scrub + (networkTime - _networkTimeActivated);
+            if (!Active || networkTime - NetworkTimeActivated < 0) return Scrub;
+            return Scrub + (networkTime - NetworkTimeActivated);
         }
 
         public bool IsStarted(double networkTime)
         {
-            return Active && networkTime > _networkTimeActivated;
+            return Active && networkTime > NetworkTimeActivated;
         }
     }
 }
