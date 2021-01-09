@@ -268,7 +268,6 @@ public class TogglePause : NetworkBehaviour
 
     private void OnSetPaused(bool oldPaused, bool newPaused)
     {
-        Debug.Log("[BONSAI] SetPaused " + newPaused);
         if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None)
             updateIcons(newPaused);
 

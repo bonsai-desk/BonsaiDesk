@@ -42,15 +42,15 @@ public class NewAutoBrowserController : NetworkBehaviour
 
     private void Update()
     {
+        if (isServer)
+            HandlePlayerServer();
+        //todo HandleScreenServer();
+        
         if (isClient)
         {
             HandlePlayerClient();
             HandleScreenClient();
         }
-
-        if (isServer)
-            HandlePlayerServer();
-        //todo HandleScreenServer();
     }
 
     public override void OnStartClient()
@@ -105,7 +105,7 @@ public class NewAutoBrowserController : NetworkBehaviour
                 // todo set the toggle pause inactive now
                 _idealScrub = _idealScrub.Pause(NetworkTime.time);
                 var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
-                TLog($"Paused scrub at {timeStamp}");
+                TLog($"Paused scrub at timestamp {timeStamp}");
                 RpcReadyUp(timeStamp);
             }
             else
@@ -121,7 +121,11 @@ public class NewAutoBrowserController : NetworkBehaviour
     private void HandleStartClient()
     {
         _autoBrowser = GetComponent<AutoBrowser>();
-        _autoBrowser.BrowserReady += SetupBrowser;
+        _autoBrowser.BrowserReady += () => { SetupBrowser();};
+        togglePause.PauseChangedClient += paused =>
+        {
+            TLog($"Pause changed to {paused}");
+        };
     }
 
 
@@ -182,9 +186,20 @@ public class NewAutoBrowserController : NetworkBehaviour
             }
             else if (NetworkTime.time - _beginReadyUpTime > MaxReadyUpPeriod)
             {
-                HardReload("some clients failed to ready up");
+                var (numFailed, failedIdsStr) = FailedToMatchStatus(_clientsPlayerStatus, PlayerState.Ready);
+                HardReload($"[{numFailed}/{NetworkServer.connections.Count}] clients failed to ready up [{failedIdsStr}]");
             }
         }
+    }
+    
+    private static (int, string) FailedToMatchStatus (Dictionary<uint, PlayerState> _clientsPlayerStatus, PlayerState playerState)
+    {
+        var failedNetIds = new HashSet<string>();
+        
+        foreach (var info in _clientsPlayerStatus.Where(info => info.Value != playerState))
+            failedNetIds.Add($"{info.Key} {playerState}");
+
+        return (failedNetIds.Count, string.Join(", ", failedNetIds));
     }
 
     private bool BadPingExists()
@@ -206,7 +221,7 @@ public class NewAutoBrowserController : NetworkBehaviour
         throw new NotImplementedException();
     }
 
-    private void SetupBrowser()
+    private void SetupBrowser(bool restart = false)
     {
 #if !DEVELOPMENT_BUILD
             _autoBrowser.LoadHtml(BonsaiUI.Html);
@@ -216,7 +231,10 @@ public class NewAutoBrowserController : NetworkBehaviour
         else
             _autoBrowser.LoadUrl(hotReloadUrl);
 #endif
-        _autoBrowser.OnMessageEmitted(HandleJavascriptMessage);
+        if (!restart)
+        {
+            _autoBrowser.OnMessageEmitted(HandleJavascriptMessage);
+        }
     }
 
     private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs)
@@ -294,6 +312,11 @@ public class NewAutoBrowserController : NetworkBehaviour
     {
         if (_clientsPlayerStatus.Count != NetworkServer.connections.Count) return false;
         return _clientsPlayerStatus.Values.All(status => status == playerState);
+    }
+
+    public void ButtonReloadBrowser()
+    {
+        SetupBrowser(true);
     }
 
     public void ButtonLoadVideo()
