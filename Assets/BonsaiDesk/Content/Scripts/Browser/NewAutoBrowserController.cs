@@ -132,8 +132,7 @@ public class NewAutoBrowserController : NetworkBehaviour
     private void HandlePlayerClient()
     {
         // post play message if paused/ready and player is behind ideal scrub
-        if (_clientPlayerStatus == PlayerState.Ready && _idealScrub.Active &&
-            _clientPlayerTimeStamp < _idealScrub.CurrentTimeStamp(NetworkTime.time))
+        if (_clientPlayerStatus == PlayerState.Ready && _idealScrub.IsStarted(NetworkTime.time))
             _autoBrowser.PostMessage(YouTubeMessage.Play);
 
         // ping the server with the current timestamp
@@ -179,8 +178,10 @@ public class NewAutoBrowserController : NetworkBehaviour
         {
             if (AllClientsReportPlayerStatus(PlayerState.Ready))
             {
-                TLog("All clients report ready, un-pausing the scrub");
-                _idealScrub = _idealScrub.UnPauseAtNetworkTime(NetworkTime.time + 0.5);
+                var networkTimeToUnpause = NetworkTime.time + 1;
+                TLog($"All clients report ready, un-pausing the scrub at network time {networkTimeToUnpause}");
+                _idealScrub = _idealScrub.UnPauseAtNetworkTime(networkTimeToUnpause);
+                // todo this could become interactable at networkTimeToUnpause
                 togglePause.SetInteractable(true);
                 _allGood = true;
             }
@@ -241,9 +242,12 @@ public class NewAutoBrowserController : NetworkBehaviour
     {
         var json = JSONNode.Parse(eventArgs.Value) as JSONObject;
 
-        if (json?["type"] != "infoCurrentTime") TLog($"Received JSON {eventArgs.Value}");
+        if (json?["type"] != "infoCurrentTime") TLog($"Received JSON {eventArgs.Value} at {NetworkTime.time}");
 
-        if (json?["current_time"] != null) _clientPlayerTimeStamp = json["current_time"];
+        if (json?["current_time"] != null)
+        {
+            _clientPlayerTimeStamp = json["current_time"];
+        }
 
         switch (json?["type"].Value)
         {
@@ -592,6 +596,11 @@ public class NewAutoBrowserController : NetworkBehaviour
         {
             if (!Active || networkTime - _networkTimeActivated < 0) return _scrub;
             return _scrub + (networkTime - _networkTimeActivated);
+        }
+
+        public bool IsStarted(double networkTime)
+        {
+            return Active && networkTime > _networkTimeActivated;
         }
     }
 }
