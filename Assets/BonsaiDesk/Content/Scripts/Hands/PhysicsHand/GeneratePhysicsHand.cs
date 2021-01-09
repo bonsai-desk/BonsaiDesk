@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -16,6 +15,11 @@ public class GeneratePhysicsHand : MonoBehaviour
     private bool initialized = false;
 
     private Queue<Rigidbody> bodiesToReset = new Queue<Rigidbody>();
+
+    private void Start()
+    {
+        transform.name = HandName() + "_Hand";
+    }
 
     private void Update()
     {
@@ -54,14 +58,20 @@ public class GeneratePhysicsHand : MonoBehaviour
                 targetMapper.targetObject = oVRSkeleton.transform;
                 targetMapper.TryAutoMapBoneTargetsAPIHand();
                 var toggle = handTarget.AddComponent<RendererToggle>();
-                toggle.renderer = toggle.GetComponentInChildren<SkinnedMeshRenderer>();
+                var renderer = toggle.GetComponentInChildren<SkinnedMeshRenderer>();
+                renderer.enabled = false;
+                toggle.renderer = renderer;
                 toggle.playerHand = PlayerHands.hands.GetHand(oVRSkeleton.GetSkeletonType());
                 toggle.renderer.sharedMaterial = targetMaterial;
 
                 var physicsHandController = physicsHand.AddComponent<PhysicsHandController>();
+                physicsHandController.physicsMapper = mapper;
                 physicsHandController.targetMapper = targetMapper;
                 physicsHandController.playerHand = PlayerHands.hands.GetHand(oVRSkeleton.GetSkeletonType());
+                physicsHandController.Init();
             }
+
+            Destroy(this);
         }
     }
 
@@ -124,9 +134,8 @@ public class GeneratePhysicsHand : MonoBehaviour
         var physicsLayer = oVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft
             ? LayerMask.NameToLayer("LeftHand")
             : LayerMask.NameToLayer("RightHand");
-        
+
         var _capsulesGO = new GameObject(HandName() + "_Physics_Hand");
-        // _capsulesGO.AddComponent<SphereCollider>().radius = 0.005f;
         _capsulesGO.layer = physicsLayer;
         _capsulesGO.transform.SetParent(transform, false);
         _capsulesGO.transform.localPosition = Vector3.zero;
