@@ -42,17 +42,25 @@ let Video = (props) => {
             postStateChange("READY")
             return;
         }
-        setReadying(true)
-        switch (player.getPlayerState()) {
-            case PlayerState.PAUSED:
-                player.playVideo();
-                player.seekTo(timeStamp, true);
-                player.pauseVideo();
-                break;
-            default:
-                player.seekTo(timeStamp, true);
-                player.pauseVideo();
-                break;
+        let state = player.getPlayerState();
+
+
+        if (state === PlayerState.UNSTARTED) {
+            console.log("bonsai: ignoring attempt to ready-up while unstarted")
+        } else {
+            setReadying(true)
+            switch (state) {
+                case PlayerState.PAUSED:
+                    player.playVideo();
+                    player.seekTo(timeStamp, true);
+                    player.pauseVideo();
+                    break;
+                default:
+                    setReadying(true)
+                    player.seekTo(timeStamp, true);
+                    player.pauseVideo();
+                    break;
+            }
         }
     }
 
