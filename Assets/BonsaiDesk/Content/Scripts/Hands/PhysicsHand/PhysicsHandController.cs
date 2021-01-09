@@ -40,7 +40,7 @@ public class PhysicsHandController : MonoBehaviour
             _rigidbody.WakeUp();
         }
     }
-    
+
     private void UpdateFingerJoints()
     {
         for (int i = 0; i < fingerJoints.Length; i++)

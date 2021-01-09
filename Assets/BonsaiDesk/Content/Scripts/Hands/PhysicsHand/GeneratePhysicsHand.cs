@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class GeneratePhysicsHand : MonoBehaviour
 {
+    public bool pauseForSave = false;
+    
     public OVRSkeleton oVRSkeleton;
     public GameObject handMeshPrefab;
     public PhysicMaterial physicMaterial;
@@ -37,6 +39,7 @@ public class GeneratePhysicsHand : MonoBehaviour
                 Destroy(handMeshObject.GetComponent<Animator>());
                 handMeshObject.GetComponentInChildren<SkinnedMeshRenderer>().sharedMaterial = physicsHandMaterial;
                 var mapper = handMeshObject.AddComponent<OVRHandTransformMapper>();
+                mapper.useLocalRotation = false;
                 mapper._skeletonType = oVRSkeleton.GetSkeletonType();
                 mapper.TryAutoMapBonesByName();
                 mapper.capsulesParent = physicsHand.transform;
@@ -69,6 +72,11 @@ public class GeneratePhysicsHand : MonoBehaviour
                 physicsHandController.targetMapper = targetMapper;
                 physicsHandController.playerHand = PlayerHands.hands.GetHand(oVRSkeleton.GetSkeletonType());
                 physicsHandController.Init();
+            }
+
+            if (pauseForSave && Application.isEditor)
+            {
+                EditorApplication.isPaused = true;
             }
 
             Destroy(this);

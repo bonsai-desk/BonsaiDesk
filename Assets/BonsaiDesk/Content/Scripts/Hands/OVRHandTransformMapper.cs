@@ -10,6 +10,8 @@ public class OVRHandTransformMapper : MonoBehaviour
 
     [SerializeField]
     private List<Transform> _boneTargets = new List<Transform>(new Transform[(int) OVRSkeleton.BoneId.Max]);
+
+    public bool useLocalRotation = true;
     
     public Transform targetObject;
     public bool moveObjectToTarget = true;
@@ -34,8 +36,15 @@ public class OVRHandTransformMapper : MonoBehaviour
                 {
                     if (CustomBones[i] != null && BoneTargets[i] != null)
                     {
-                        CustomBones[i].position = BoneTargets[i].position;
-                        CustomBones[i].rotation = BoneTargets[i].rotation;
+                        if (useLocalRotation)
+                        {
+                            CustomBones[i].localRotation = BoneTargets[i].localRotation;
+                        }
+                        else
+                        {
+                            CustomBones[i].position = BoneTargets[i].position;
+                            CustomBones[i].rotation = BoneTargets[i].rotation;
+                        }
                     }
                 }
             }
@@ -110,13 +119,16 @@ public class OVRHandTransformMapper : MonoBehaviour
                       (OVRSkeleton.BoneId) bi <= OVRSkeleton.BoneId.Hand_PinkyTip))
                 {
                     string fbxBoneName = _fbxBoneNames[(int) bi];
+                    // print(fbxBoneName);
 
                     if (int.TryParse(fbxBoneName.Substring(fbxBoneName.Length - 1), out int index))
                     {
-                        if (index > 0)
+                        if (index >= 0)
                         {
                             fbxBoneName = char.ToUpper(fbxBoneName[0]) + fbxBoneName.Substring(1);
                             fbxBoneName = "Hand_" + fbxBoneName + suffix;
+                            
+                            // print(fbxBoneName);
 
                             Transform t = transformToCheck.FindChildRecursive(fbxBoneName);
                             if (t != null)
