@@ -1,7 +1,7 @@
 import React from "react";
 import "./assets/main.css";
-import {BrowserRouter as Router, Route, Switch, useHistory, Link} from "react-router-dom";
-import YouTube from "./pages/YouTube";
+import {BrowserRouter as Router, Route, Switch, useHistory} from "react-router-dom";
+import YouTube from "./pages/YouTubeNew";
 
 let Boot = () => {
 
@@ -44,7 +44,7 @@ let Boot = () => {
     return (
         <div>
             Boot
-            <a onClick={()=>{history.push("/youtube_test/qEfPBt9dU60/19.02890180001912")}}>test</a>
+            <p onClick={()=>{history.push("/youtube_test/qEfPBt9dU60/19.02890180001912")}}>test</p>
         </div>
     )
 }

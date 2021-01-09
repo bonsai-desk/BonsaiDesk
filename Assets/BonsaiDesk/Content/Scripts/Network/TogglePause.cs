@@ -122,7 +122,7 @@ public class TogglePause : NetworkBehaviour
     public TogglePauseMorph togglePauseMorph;
     public MeshRenderer iconRenderer;
 
-    public event PauseEvent PauseChangedServer;
+    public event PauseEvent CmdSetPausedServer;
     public event PauseEvent PauseChangedClient;
 
     private OVRSkeleton.SkeletonType currentPointSkeleton = OVRSkeleton.SkeletonType.None;
@@ -240,7 +240,10 @@ public class TogglePause : NetworkBehaviour
     [Server]
     public void ServerSetPaused(bool paused)
     {
-        _paused = paused;
+        if (_paused != paused)
+        {
+            _paused = paused;
+        }
         updateIcons(paused);
 
         //throw new NotImplementedException("[Bonsai] ServerSetPaused");
@@ -254,20 +257,26 @@ public class TogglePause : NetworkBehaviour
     {
         if (!_interactable) return;
         
-        PauseChangedServer?.Invoke(paused);
-        _paused = paused;
+        // todo maybe everything should hold for this condtion
+        if (_paused != paused)
+        {
+            CmdSetPausedServer?.Invoke(paused);
+            _paused = paused;
+        }
         updateIcons(paused);
     }
 
     private void OnSetPaused(bool oldPaused, bool newPaused)
     {
-        Debug.Log("[BONSAI] SetPaused " + newPaused);
         if (currentGestureSkeleton == OVRSkeleton.SkeletonType.None)
             updateIcons(newPaused);
 
         _probablyPaused = false;
-        
-        PauseChangedClient?.Invoke(newPaused);
+
+        if (oldPaused != newPaused)
+        {
+            PauseChangedClient?.Invoke(newPaused);
+        }
     }
 
     private void OnSetAuthority(uint oldValue, uint newValue)

@@ -52,7 +52,9 @@ public class AutoBrowser : MonoBehaviour
         // Enable autoplay and remote debugging
         // TODO enable mobile mode
 #if UNITY_ANDROID && !UNITY_EDITOR
+#if DEVELOPMENT_BUILD
         AndroidGeckoWebView.EnableRemoteDebugging();
+#endif
         AndroidGeckoWebView.SetUserPreferences(@"
             user_pref('media.autoplay.default', 0);
             user_pref('media.geckoview.autoplay.request', false);
@@ -152,7 +154,7 @@ public class AutoBrowser : MonoBehaviour
 
     public void PostMessage(string data)
     {
-        Debug.Log($"[BONSAI {NetworkClient.connection.identity.netId}] PostMessage {data} <{NetworkTime.time}>");
+        //Debug.Log($"[BONSAI {NetworkClient.connection.identity.netId}] PostMessage {data}");
         _webViewPrefab.WebView.PostMessage(data);
     }
 
