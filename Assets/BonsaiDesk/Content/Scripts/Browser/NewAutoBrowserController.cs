@@ -28,22 +28,29 @@ public class NewAutoBrowserController : NetworkBehaviour
     private double _clientLastSentPing;
     private PlayerState _clientPlayerStatus;
     private float _clientPlayerTimeStamp;
-    private int _vidId = 0;
 
     [SyncVar] private ContentInfo _contentInfo;
     private Coroutine _fetchAndReadyUp;
     [SyncVar] private ScrubData _idealScrub;
+    private int _vidId;
 
     private void Start()
     {
-        if (isServer)
-        {
-            HandleStartServer();
-        }
+        if (isServer) HandleStartServer();
+        if (isClient) HandleStartClient();
+    }
+
+    private void Update()
+    {
         if (isClient)
         {
-            HandleStartClient();
+            HandlePlayerClient();
+            HandleScreenClient();
         }
+
+        if (isServer)
+            HandlePlayerServer();
+        //todo HandleScreenServer();
     }
 
     public override void OnStartClient()
@@ -56,7 +63,7 @@ public class NewAutoBrowserController : NetworkBehaviour
     private void HandleStartServer()
     {
         _contentInfo = new ContentInfo(false, "", new Vector2(1, 1));
-        
+
         // setup player join/leave handlers
         NetworkManagerGame.Singleton.ServerAddPlayer += newConn =>
         {
@@ -69,14 +76,9 @@ public class NewAutoBrowserController : NetworkBehaviour
                 var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
                 TargetReloadYoutube(newConn, _contentInfo.ID, timeStamp);
                 foreach (var conn in NetworkServer.connections.Values)
-                {
                     if (conn.identity.netId != newId)
-                    {
                         TargetReadyUp(conn, timeStamp);
-                    }
-                }
             }
-
         };
         NetworkManagerGame.Singleton.ServerDisconnect += conn =>
         {
@@ -86,7 +88,7 @@ public class NewAutoBrowserController : NetworkBehaviour
             _clientsLastPing.Remove(id);
             _clientsPlayerStatus.Remove(id);
         };
-        
+
         // setup pause/play handlers
         togglePause.CmdSetPausedServer += paused =>
         {
@@ -94,8 +96,10 @@ public class NewAutoBrowserController : NetworkBehaviour
             {
                 Debug.LogWarning("Ignoring attempt to toggle pause status when content is not active");
                 return;
-            };
-            
+            }
+
+            ;
+
             if (paused)
             {
                 // todo set the toggle pause inactive now
@@ -120,26 +124,13 @@ public class NewAutoBrowserController : NetworkBehaviour
         _autoBrowser.BrowserReady += SetupBrowser;
     }
 
-    private void Update()
-    {
-        if (isClient)
-            HandlePlayerClient();
-            HandleScreenClient();
-
-        if (isServer)
-            HandlePlayerServer();
-        //todo HandleScreenServer();
-    }
-
 
     private void HandlePlayerClient()
     {
         // post play message if paused/ready and player is behind ideal scrub
         if (_clientPlayerStatus == PlayerState.Ready && _idealScrub.Active &&
             _clientPlayerTimeStamp < _idealScrub.CurrentTimeStamp(NetworkTime.time))
-        {
             _autoBrowser.PostMessage(YouTubeMessage.Play);
-        }
 
         // ping the server with the current timestamp
         if (_contentInfo.Active &&
@@ -196,7 +187,6 @@ public class NewAutoBrowserController : NetworkBehaviour
         }
     }
 
-
     private bool BadPingExists()
     {
         var aBadPing = false;
@@ -232,7 +222,7 @@ public class NewAutoBrowserController : NetworkBehaviour
     private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs)
     {
         var json = JSONNode.Parse(eventArgs.Value) as JSONObject;
-        
+
         if (json?["type"] != "infoCurrentTime") TLog($"Received JSON {eventArgs.Value}");
 
         if (json?["current_time"] != null) _clientPlayerTimeStamp = json["current_time"];
@@ -263,6 +253,7 @@ public class NewAutoBrowserController : NetworkBehaviour
                         _clientPlayerStatus = PlayerState.Ended;
                         break;
                 }
+
                 CmdUpdateClientPlayerStatus(NetworkClient.connection.identity.netId, _clientPlayerStatus);
                 break;
         }
@@ -283,10 +274,12 @@ public class NewAutoBrowserController : NetworkBehaviour
         var whereTheyShouldBe = _idealScrub.CurrentTimeStamp(NetworkTime.time);
         var whereTheyAre = timeStamp;
         var synced = Math.Abs(whereTheyAre - whereTheyShouldBe) < VideoSyncTolerance;
-        if (!synced) TLog($"Client reported timestamp {whereTheyAre} which is not within {VideoSyncTolerance} seconds of {whereTheyShouldBe}");
+        if (!synced)
+            TLog(
+                $"Client reported timestamp {whereTheyAre} which is not within {VideoSyncTolerance} seconds of {whereTheyShouldBe}");
         return synced;
     }
-    
+
     private void ReloadYouTube(string id, double timeStamp)
     {
         TLog($"NavHome then load {id} at {timeStamp}");
@@ -296,20 +289,38 @@ public class NewAutoBrowserController : NetworkBehaviour
             YouTubeMessage.LoadYouTube(id, timeStamp)
         });
     }
-    
+
     private bool AllClientsReportPlayerStatus(PlayerState playerState)
     {
         if (_clientsPlayerStatus.Count != NetworkServer.connections.Count) return false;
         return _clientsPlayerStatus.Values.All(status => status == playerState);
     }
-    
-    
+
+    public void ButtonLoadVideo()
+    {
+        var vidIds = new[] {"pP44EPBMb8A", "Cg0QwoHh9w4"};
+
+        switch (_contentInfo.Active)
+        {
+            case true:
+                TLog("Button go home");
+                CmdCloseVideo();
+                break;
+            case false:
+                TLog("Button load video");
+                CmdLoadVideo(vidIds[_vidId], 0);
+                _vidId = _vidId == vidIds.Length - 1 ? 0 : _vidId + 1;
+                break;
+        }
+    }
+
+
     [Server]
     public void ButtonHardReload()
     {
         HardReload("pressed the hard reload button");
     }
-    
+
     [Server]
     private void HardReload(string reason = "no reason provided")
     {
@@ -323,7 +334,7 @@ public class NewAutoBrowserController : NetworkBehaviour
         togglePause.ServerSetPaused(false);
         RpcReloadYouTube(_contentInfo.ID, timeStamp);
     }
-    
+
 
     [Command(ignoreAuthority = true)]
     private void CmdPingAndCheckTimeStamp(uint id, double networkTime, double timeStamp)
@@ -349,7 +360,7 @@ public class NewAutoBrowserController : NetworkBehaviour
     private void CmdLoadVideo(string id, double timeStamp)
     {
         togglePause.ServerSetPaused(false);
-        
+
         TLog($"Fetching info for video {id}");
 
         if (_fetchAndReadyUp != null) StopCoroutine(_fetchAndReadyUp);
@@ -368,25 +379,6 @@ public class NewAutoBrowserController : NetworkBehaviour
         }));
     }
 
-    public void ButtonLoadVideo()
-    {
-        var vidIds = new[] {"pP44EPBMb8A", "Cg0QwoHh9w4"};
-
-        switch (_contentInfo.Active)
-        {
-            case true:
-                TLog("Button go home");
-                CmdCloseVideo();
-                break;
-            case false:
-                TLog("Button load video");
-                CmdLoadVideo(vidIds[_vidId], 0);
-                _vidId = _vidId == vidIds.Length - 1 ? 0 : _vidId + 1;
-                break;
-        }
-    }
-
-
     [Command(ignoreAuthority = true)]
     private void CmdCloseVideo()
     {
@@ -398,21 +390,19 @@ public class NewAutoBrowserController : NetworkBehaviour
     }
 
 
-    [ClientRpc]
-    private void RpcReloadYouTube(string id, double timeStamp)
-    {
-        TLog($"[RPC] ReloadYouTube");
-        ReloadYouTube(id, timeStamp);
-    }
-
     [TargetRpc]
     private void TargetReloadYoutube(NetworkConnection target, string id, double timeStamp)
     {
-        TLog($"[Target RPC] ReloadYouTube");
+        TLog("[Target RPC] ReloadYouTube");
         ReloadYouTube(id, timeStamp);
     }
 
-
+    [ClientRpc]
+    private void RpcReloadYouTube(string id, double timeStamp)
+    {
+        TLog("[RPC] ReloadYouTube");
+        ReloadYouTube(id, timeStamp);
+    }
 
     [ClientRpc]
     private void RpcReadyUp(double timeStamp)
@@ -462,8 +452,6 @@ public class NewAutoBrowserController : NetworkBehaviour
 
         callback(newAspect);
     }
-
-
 
 
     private string Tag()
