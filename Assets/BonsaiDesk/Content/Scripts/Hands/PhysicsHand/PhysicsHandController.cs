@@ -19,6 +19,8 @@ public class PhysicsHandController : MonoBehaviour
     public Quaternion[] fingerJointStartLocalRotations;
     public Transform[] fingerTargets;
 
+    private Vector3 _jointOffset = new Vector3(0.035f, 0, 0);
+
     private void Awake()
     {
         IgnoreCollisions();
@@ -40,7 +42,7 @@ public class PhysicsHandController : MonoBehaviour
             _rigidbody.WakeUp();
         }
     }
-
+    
     private void UpdateFingerJoints()
     {
         for (int i = 0; i < fingerJoints.Length; i++)
@@ -65,8 +67,8 @@ public class PhysicsHandController : MonoBehaviour
     {
         if (!_joint)
             return;
-        
-        _joint.connectedAnchor = targetMapper.transform.position;
+
+        _joint.connectedAnchor = targetMapper.transform.position + targetMapper.transform.rotation * _jointOffset;
         _joint.SetTargetRotationLocal(targetMapper.transform.localRotation, _startRotation);
     }
 
@@ -77,7 +79,7 @@ public class PhysicsHandController : MonoBehaviour
         _initialized = true;
 
         SetupJoint();
-        SetupObjectFollowPhysics();
+        // SetupObjectFollowPhysics();
         GetJointsAndTargets();
         GetJointStartLocalRotations();
     }
@@ -167,7 +169,8 @@ public class PhysicsHandController : MonoBehaviour
         _joint.yDrive = drive;
         _joint.zDrive = drive;
 
-        _joint.anchor = Vector3.zero;
+        _joint.anchor = _jointOffset;
+        // _joint.anchor = Vector3.zero;
         _joint.autoConfigureConnectedAnchor = false;
         _joint.connectedAnchor = transform.position;
         _joint.SetTargetRotationLocal(transform.rotation, _startRotation);
