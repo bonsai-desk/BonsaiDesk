@@ -88,7 +88,7 @@ public class NewAutoBrowserController : NetworkBehaviour
         };
         
         // setup pause/play handlers
-        togglePause.PauseChangedServer += paused =>
+        togglePause.CmdSetPausedServer += paused =>
         {
             if (!_contentInfo.Active)
             {
@@ -111,7 +111,6 @@ public class NewAutoBrowserController : NetworkBehaviour
                 BeginSync("toggled play");
                 RpcReadyUp(timeStamp);
             }
-
         };
     }
 
@@ -321,6 +320,7 @@ public class NewAutoBrowserController : NetworkBehaviour
         _idealScrub = _idealScrub.Pause(NetworkTime.time);
 
         var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
+        togglePause.ServerSetPaused(false);
         RpcReloadYouTube(_contentInfo.ID, timeStamp);
     }
     

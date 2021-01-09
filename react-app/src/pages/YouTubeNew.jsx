@@ -1,5 +1,5 @@
 import YouTube from "react-youtube";
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useCallback} from "react";
 import {useHistory} from "react-router-dom";
 
 let opts = {
@@ -66,40 +66,42 @@ let Video = (props) => {
     let [readying, setReadying] = useState(false);
     let [justBuffered, setJustBuffered] = useState(false);
 
-    let postStateChange = (message) => {
+    let postStateChange = useCallback((message) => {
         if (message !== "READY") setReady(false);
         console.log("POST " + message)
         if (!dev_mode) {
             window.vuplex.postMessage({type: "stateChange", message: message, current_time: player.getCurrentTime()});
         }
-    }
+    }, [player, dev_mode])
 
-    let readyUp = (_player, timeStamp) => {
-        if (_player == null) {
+    let readyUp = useCallback((_timeStamp) => {
+        if (player == null) {
             console.log("bonsai: ignoring attempt to ready up while player is null")
             return;
         }
 
-        if (ready && Math.abs(player.getCurrentTime() - timeStamp) < 0.01) {
+        if (ready && Math.abs(player.getCurrentTime() - _timeStamp) < 0.01) {
             console.log("bonsai: ready-up called while ready")
             postStateChange("READY")
             return;
         }
 
-        let state = _player.getPlayerState();
+        let state = player.getPlayerState();
 
         if (!init) {
             console.log("bonsai: ignoring attempt to ready-up before init")
         } else {
-            console.log("bonsai: readying up from " + showState(state))
-            prepareToReadyUp(_player);
+            console.log("bonsai: readying up from " + showState(state) + " -> " + _timeStamp)
+            prepareToReadyUp(player);
             if (state === PlayerState.PAUSED) {
-                _player.playVideo();
+                player.playVideo();
             }
-            _player.seekTo(timeStamp, true)
-            _player.pauseVideo()
+            player.seekTo(_timeStamp, true)
+            player.pauseVideo()
+            player.unMute();
         }
-    }
+
+    }, [init, player, postStateChange, ready])
 
     let prepareToReadyUp = (_player) => {
         console.log("bonsai: prepare to ready up")
@@ -204,35 +206,24 @@ let Video = (props) => {
             return;
         }
 
-        function handlePlay() {
-            player.playVideo()
-        }
-
-        function handlePause() {
-            player.pauseVideo()
-        }
-
-        function handleReadyUp(_timeStamp) {
-            readyUp(_timeStamp)
-        }
-
         let playerListeners = (event) => {
             let json = JSON.parse(event.data)
             if (json.type !== "video") {
                 return;
             }
+            console.log(event.data)
             switch (json.command) {
                 case "play":
                     console.log("COMMAND: play")
-                    handlePlay();
+                    player.playVideo()
                     break;
                 case "pause":
                     console.log("COMMAND: pause")
-                    handlePause()
+                    player.pauseVideo()
                     break;
                 case "readyUp":
                     console.log("COMMAND: readyUp")
-                    handleReadyUp(json.timestamp);
+                    readyUp(json.timeStamp)
                     break;
                 default:
                     console.log("command: not handled (video) " + event.data)
@@ -243,8 +234,7 @@ let Video = (props) => {
         return () => {
             window.vuplex.removeEventListener('message', playerListeners)
         }
-    }, [id, player, dev_mode])
-
+    }, [id, player, dev_mode, readyUp])
     useEffect(() => {
         console.log("bonsai: add ping interval")
         let pingPlayerTime = setInterval(() => {
@@ -299,7 +289,7 @@ let Video = (props) => {
             }}>home</p>
             {" "}
             <p onClick={() => {
-                readyUp(player, 40)
+                readyUp(40)
             }}>ready up</p>
             <YouTube
                 opts={opts}

@@ -185,7 +185,7 @@ public class AutoBrowserController : NetworkBehaviour
 
         if (isServer)
         {
-            togglePause.PauseChangedServer += paused =>
+            togglePause.CmdSetPausedServer += paused =>
             {
                 if (_contentActive)
                 {
