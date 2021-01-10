@@ -50,13 +50,25 @@ public class PhysicsHandController : MonoBehaviour
 
             UpdateJoint();
             UpdateFingerJoints();
-            UpdateVelocity();
-            _rigidbody.WakeUp();
         }
+        UpdateVelocity();
+        _rigidbody.WakeUp();
     }
 
     private bool CheckHit()
     {
+        for (int i = 0; i < palmCapsuleColliders.Length; i++)
+        {
+            var capsule = palmCapsuleColliders[i];
+
+            var start = targetMapper.transform.TransformPoint(capsule.transform.localPosition);
+            var direction = targetMapper.transform.rotation * capsule.transform.localRotation * Vector3.right;
+            var end = start + direction.normalized * (capsule.height - (capsule.radius * 2f));
+            
+            if (Physics.CheckCapsule(start, end, capsule.radius))
+                return true;
+        }
+        
         for (int i = 0; i < fingerCapsuleColliders.Length; i++)
         {
             var capsule = fingerCapsuleColliders[i];
@@ -65,7 +77,6 @@ public class PhysicsHandController : MonoBehaviour
             var direction = fingerTargets[i].rotation * capsule.transform.localRotation * Vector3.right;
             var end = start + direction.normalized * (capsule.height - (capsule.radius * 2f));
             
-            // DebugExtension.DebugPhysicsCapsule(start, end, Color.blue, capsule.radius);
             if (Physics.CheckCapsule(start, end, capsule.radius))
                 return true;
         }
