@@ -11,14 +11,7 @@ namespace Boxophobic.Constants
         {
             get
             {
-                if (EditorGUIUtility.isProSkin)
-                {
-                    return Resources.Load("Boxophobic - LogoDark") as Texture2D;
-                }
-                else
-                {
-                    return Resources.Load("Boxophobic - LogoLight") as Texture2D;
-                }
+                return Resources.Load("Boxophobic - Logo") as Texture2D;
             }
         }
 
@@ -75,14 +68,6 @@ namespace Boxophobic.Constants
             get
             {
                 return Resources.Load("Boxophobic - IconEdit") as Texture2D;
-            }
-        }
-
-        public static Texture2D IconFile
-        {
-            get
-            {
-                return Resources.Load("Boxophobic - IconFile") as Texture2D;
             }
         }
 

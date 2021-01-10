@@ -5,200 +5,154 @@ using UnityEditor;
 using Boxophobic.StyledGUI;
 using Boxophobic.Utils;
 using System.IO;
-//using System.Collections.Generic;
-//using UnityEngine.SceneManagement;
-//using UnityEditor.SceneManagement;
 
-public class HeightFogHub : EditorWindow
+namespace AtmosphericHeightFog
 {
-    string boxophobicFolder = "Assets/BOXOPHOBIC";
-
-    string[] packagePaths;
-    string[] packageOptions;
-
-    string packagesPath;
-    int packageIndex;
-
-    //string[] shaderPaths;
-    //string[] materialPaths;
-    //string aciveScene = "";        
-    //string shadersPath;
-    //int unityMajorVersion;
-    //int version;
-    //string savedPackageName = "";
-
-    GUIStyle stylePopup;
-
-    Color bannerColor;
-    string bannerText;
-    string helpURL;
-    static HeightFogHub window;
-    Vector2 scrollPosition = Vector2.zero;
-
-    [MenuItem("Window/BOXOPHOBIC/Atmospheric Height Fog/Hub")]
-    public static void ShowWindow()
+    public class HeightFogHub : EditorWindow
     {
-        window = GetWindow<HeightFogHub>(false, "Atmospheric Height Fog", true);
-        window.minSize = new Vector2(389, 220);
-    }
+#if UNITY_2019_3_OR_NEWER
+    const int GUI_HEIGHT = 18;
+#else
+        const int GUI_HEIGHT = 14;
+#endif
 
-    void OnEnable()
-    {
-        bannerColor = new Color(0.474f, 0.709f, 0.901f);
-        bannerText = "Atmospheric Height Fog";
-        helpURL = "https://docs.google.com/document/d/1pIzIHIZ-cSh2ykODSZCbAPtScJ4Jpuu7lS3rNEHCLbc/edit#heading=h.hbq3w8ae720x";
+        string folderAsset = "Assets/BOXOPHOBIC/Atmospheric Height Fog";
 
-        boxophobicFolder = BoxophobicUtils.GetBoxophobicFolder();
+        string[] pipelinePaths;
+        string[] pipelineOptions;
+        string pipelinesPath;
+        int pipelineIndex;
 
-        packagesPath = boxophobicFolder + "/Atmospheric Height Fog/Core/Packages";
-        //shadersPath = boxophobicFolder + "/Polyverse Wind/Core/Shaders";
+        int assetVersion;
+        string bannerVersion;
 
-        GetPackages();
-        //GetShaders();
-        //GetMaterials();
+        GUIStyle stylePopup;
 
-        //unityMajorVersion = int.Parse(Application.unityVersion.Substring(0, 4));
-        //unityMinorVersion = Application.unityVersion.Substring(5, 1);
+        Color bannerColor;
+        string bannerText;
+        string helpURL;
+        static HeightFogHub window;
+        //Vector2 scrollPosition = Vector2.zero;
 
-        //version = SettingsUtils.LoadSettingsData(boxophobicFolder + "/User/The Vegetation Engine/Version.asset", -99);
-    }
-
-    void OnGUI()
-    {
-        SetGUIStyles();
-
-        StyledGUI.DrawWindowBanner(bannerColor, bannerText, helpURL);
-
-        GUILayout.BeginHorizontal();
-        GUILayout.Space(15);
-
-        GUILayout.BeginVertical();
-
-        //scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, GUILayout.Width(this.position.width - 28), GUILayout.Height(this.position.height - 80));
-
-        DrawInstallMessage();
-        DrawRenderPipelineSelection();
-        DrawSetupButton();
-
-        //GUILayout.EndScrollView();
-
-        GUILayout.EndVertical();
-
-        GUILayout.Space(13);
-        GUILayout.EndHorizontal();
-    }
-
-    void SetGUIStyles()
-    {
-        stylePopup = new GUIStyle(EditorStyles.popup)
+        [MenuItem("Window/BOXOPHOBIC/Atmospheric Height Fog/Hub", false, 1000)]
+        public static void ShowWindow()
         {
-            alignment = TextAnchor.MiddleCenter
-        };
-    }
-
-    void DrawInstallMessage()
-    {
-        EditorGUILayout.HelpBox("Click the Install Render Pipeline to switch to another Render Pipeline. For Universal Render Pipeline, Depth Texture and one of the following features need to be enabled for the depth to work properly: Opaque Texure, HDR or Post Processing!", MessageType.Info, true);
-    }
-
-    void DrawRenderPipelineSelection()
-    {
-        GUILayout.Space(10);
-
-        GUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField(new GUIContent("Render Pipeline", ""));
-        packageIndex = EditorGUILayout.Popup(packageIndex, packageOptions, stylePopup);
-        GUILayout.EndHorizontal();
-    }
-
-    void DrawSetupButton()
-    {
-        GUILayout.Space(25);
-
-        GUILayout.BeginHorizontal();
-
-        if (GUILayout.Button("Install Render Pipeline"/*, GUILayout.Width(160)*/))
-        {
-            //SettingsUtils.SaveSettingsData(boxophobicFolder + "/User/The Vegetation Engine/Pipeline.asset", packageOptions[packageIndex]);
-
-            ImportPackage();
-
-            GUIUtility.ExitGUI();
+            window = GetWindow<HeightFogHub>(false, "Atmospheric Height Fog", true);
+            window.minSize = new Vector2(389, 220);
         }
 
-        GUILayout.EndHorizontal();
-    }
-
-    void GetPackages()
-    {
-        packagePaths = Directory.GetFiles(packagesPath, "*.unitypackage", SearchOption.TopDirectoryOnly);
-
-        packageOptions = new string[packagePaths.Length];
-
-        for (int i = 0; i < packageOptions.Length; i++)
+        void OnEnable()
         {
-            packageOptions[i] = Path.GetFileNameWithoutExtension(packagePaths[i].Replace("Built-in Pipeline", "Standard"));
+            bannerColor = new Color(0.55f, 0.7f, 1f);
+            bannerText = "Atmospheric Height Fog";
+            helpURL = "https://docs.google.com/document/d/1pIzIHIZ-cSh2ykODSZCbAPtScJ4Jpuu7lS3rNEHCLbc/edit#heading=h.hbq3w8ae720x";
+
+            //Safer search, there might be many user folders
+            string[] searchFolders;
+
+            searchFolders = AssetDatabase.FindAssets("Atmospheric Height Fog");
+
+            for (int i = 0; i < searchFolders.Length; i++)
+            {
+                if (AssetDatabase.GUIDToAssetPath(searchFolders[i]).EndsWith("Atmospheric Height Fog.pdf"))
+                {
+                    folderAsset = AssetDatabase.GUIDToAssetPath(searchFolders[i]);
+                    folderAsset = folderAsset.Replace("/Atmospheric Height Fog.pdf", "");
+                }
+            }
+
+            pipelinesPath = folderAsset + "/Core/Pipelines";
+
+            GetPackages();
+
+            assetVersion = SettingsUtils.LoadSettingsData(folderAsset + "/Core/Editor/Version.asset", -99);
+            bannerVersion = assetVersion.ToString();
+            bannerVersion = bannerVersion.Insert(1, ".");
+            bannerVersion = bannerVersion.Insert(3, ".");
+
+            bannerColor = new Color(0.55f, 0.7f, 1f);
+            bannerText = "Atmospheric Height Fog " + bannerVersion;
+        }
+
+        void OnGUI()
+        {
+            SetGUIStyles();
+
+            StyledGUI.DrawWindowBanner(bannerColor, bannerText, helpURL);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(20);
+
+            GUILayout.BeginVertical();
+
+            //scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, GUILayout.Width(this.position.width - 28), GUILayout.Height(this.position.height - 80));
+
+            EditorGUILayout.HelpBox("Click the Import Render Pipeline to switch to another render pipeline. For Universal Render Pipeline, follow the instructions below to enable the fog rendering!", MessageType.Info, true);
+
+            if (pipelineOptions[pipelineIndex].Contains("Universal 7.1.8"))
+            {
+                EditorGUILayout.HelpBox("For Universal 7.1.8+ Pipeline, Depth Texture and one of the following features need to be enabled for the depth to work properly: Opaque Texure, HDR or Post Processing!", MessageType.Info, true);
+            }
+
+            if (pipelineOptions[pipelineIndex].Contains("Universal 7.4.1"))
+            {
+                EditorGUILayout.HelpBox("For Universal 7.4.1+ Pipeline, Depth Texture need to be enabled on the render pipeline asset!", MessageType.Info, true);
+            }
+
+            DrawInterface();
+
+            //GUILayout.EndScrollView();
+
+            GUILayout.EndVertical();
+
+            GUILayout.Space(13);
+            GUILayout.EndHorizontal();
+        }
+
+        void SetGUIStyles()
+        {
+            stylePopup = new GUIStyle(EditorStyles.popup)
+            {
+                alignment = TextAnchor.MiddleCenter
+            };
+        }
+
+        void DrawInterface()
+        {
+            GUILayout.Space(10);
+
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(new GUIContent("Render Pipeline", ""), GUILayout.Width(220));
+            pipelineIndex = EditorGUILayout.Popup(pipelineIndex, pipelineOptions, stylePopup);
+            if (GUILayout.Button("Import", GUILayout.Width(80), GUILayout.Height(GUI_HEIGHT)))
+            {
+                ImportPackage();
+
+                GUIUtility.ExitGUI();
+            }
+            GUILayout.EndHorizontal();
+        }
+
+        void GetPackages()
+        {
+            pipelinePaths = Directory.GetFiles(pipelinesPath, "*.unitypackage", SearchOption.TopDirectoryOnly);
+
+            pipelineOptions = new string[pipelinePaths.Length];
+
+            for (int i = 0; i < pipelineOptions.Length; i++)
+            {
+                pipelineOptions[i] = Path.GetFileNameWithoutExtension(pipelinePaths[i].Replace("Built-in Pipeline", "Standard"));
+            }
+        }
+
+        void ImportPackage()
+        {
+            AssetDatabase.ImportPackage(pipelinePaths[pipelineIndex], true);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            Debug.Log("[Atmospheric Height Fog] " + pipelineOptions[pipelineIndex] + " package imported in your project!");
         }
     }
-
-    void ImportPackage()
-    {
-        AssetDatabase.ImportPackage(packagePaths[packageIndex], false);
-        AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
-
-        Debug.Log("[Atmospheric Height Fog] " + packageOptions[packageIndex] + " package imported into your project!");
-    }
-
-    /// <summary>
-    /// UNUSED. KEEPT AROUND FOR LATER USAGE
-    /// </summary>
-
-    //void GetShaders()
-    //{
-    //    shaderPaths = Directory.GetFiles(shadersPath, "*.shader", SearchOption.AllDirectories);
-    //}
-
-    //void GetMaterials()
-    //{
-    //    materialPaths = Directory.GetFiles("Assets/", "*.mat", SearchOption.AllDirectories);
-    //}
-
-    //void GetLastSettings()
-    //{
-    //    //savedPackageName = SettingsUtils.LoadSettingsData(boxophobicFolder + "/User/The Vegetation Engine/Pipeline.asset", "");
-
-    //    for (int i = 0; i < packageOptions.Length; i++)
-    //    {
-    //        if (packageOptions[i] == savedPackageName)
-    //        {
-    //            packageIndex = i;
-    //        }
-    //    }
-    //}
-
-    //void SaveScene()
-    //{
-    //    if (SceneManager.GetActiveScene() != null || SceneManager.GetActiveScene().name != "")
-    //    {
-    //        if (SceneManager.GetActiveScene().isDirty)
-    //        {
-    //            EditorSceneManager.SaveScene(SceneManager.GetActiveScene());
-    //            AssetDatabase.SaveAssets();
-    //            AssetDatabase.Refresh();
-    //        }
-
-    //        aciveScene = SceneManager.GetActiveScene().path;
-    //        EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
-    //    }
-    //}
-
-    //void ReopenScene()
-    //{
-    //    if (aciveScene != "")
-    //    {
-    //        EditorSceneManager.OpenScene(aciveScene);
-    //    }
-    //}
 }
 

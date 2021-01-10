@@ -45,7 +45,7 @@ namespace Boxophobic.StyledGUI
             var bannerBeginRect = new Rect(bannerFullRect.position.x, bannerFullRect.position.y, 20, 40);
             var bannerMiddleRect = new Rect(bannerFullRect.position.x + 20, bannerFullRect.position.y, bannerFullRect.xMax - 54, 40);
             var bannerEndRect = new Rect(bannerFullRect.xMax - 20, bannerFullRect.position.y, 20, 40);
-            var iconRect = new Rect(bannerFullRect.xMax - 36, bannerFullRect.position.y + 5, 30, 30);
+            //var iconRect = new Rect(bannerFullRect.xMax - 36, bannerFullRect.position.y + 5, 30, 30);
 
             Color bannerColor;
             Color guiColor;
@@ -68,25 +68,24 @@ namespace Boxophobic.StyledGUI
             GUI.DrawTexture(bannerEndRect, CONSTANT.BannerImageEnd, ScaleMode.StretchToFill, true);
 
 #if UNITY_2019_3_OR_NEWER
-            GUI.Label(bannerFullRect, "<size=16><color=#" + ColorUtility.ToHtmlStringRGB(guiColor) + ">" + title + subtitle + "</color></size>", CONSTANT.TitleStyle);
+            GUI.Label(bannerFullRect, "<color=#" + ColorUtility.ToHtmlStringRGB(guiColor) + "><size=16>" + title + "</size><size=14>" + " " + subtitle + "</size></color>", CONSTANT.TitleStyle);
 #else
             GUI.Label(bannerFullRect, "<size=14><color=#" + ColorUtility.ToHtmlStringRGB(guiColor) + "><b>" + title + "</b> " + subtitle + "</color></size>", CONSTANT.TitleStyle);
 #endif
 
-            GUI.color = guiColor;
+//            GUI.color = guiColor;
 
-#if AMPLIFY_SHADER_EDITOR
-            if (GUI.Button(iconRect, CONSTANT.IconEdit, new GUIStyle { alignment = TextAnchor.MiddleCenter }))
-            {
-                AmplifyShaderEditor.AmplifyShaderEditorWindow.ConvertShaderToASE(Shader.Find(shader.name));
-            }
-#else
-            if (GUI.Button(iconRect, CONSTANT.IconEdit, new GUIStyle { alignment = TextAnchor.MiddleCenter }))
-            {     
-                AssetDatabase.OpenAsset(Shader.Find(shader.name), 1);
-            }
-#endif
-
+//#if AMPLIFY_SHADER_EDITOR
+//            if (GUI.Button(iconRect, CONSTANT.IconEdit, new GUIStyle { alignment = TextAnchor.MiddleCenter }))
+//            {
+//                AmplifyShaderEditor.AmplifyShaderEditorWindow.ConvertShaderToASE(Shader.Find(shader.name));
+//            }
+//#else
+//            if (GUI.Button(iconRect, CONSTANT.IconEdit, new GUIStyle { alignment = TextAnchor.MiddleCenter }))
+//            {     
+//                AssetDatabase.OpenAsset(Shader.Find(shader.name), 1);
+//            }
+//#endif
 
             GUI.color = Color.white;
 

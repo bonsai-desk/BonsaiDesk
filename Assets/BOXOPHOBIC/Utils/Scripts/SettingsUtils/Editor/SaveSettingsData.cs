@@ -2,6 +2,7 @@
 
 using System.IO;
 using UnityEditor;
+using UnityEngine;
 
 namespace Boxophobic.Utils
 {
@@ -52,7 +53,7 @@ namespace Boxophobic.Utils
                     AssetDatabase.Refresh();
                 }
 
-                AssetDatabase.CreateAsset(new SettingsData(), settingsPath);
+                AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<SettingsData>(), settingsPath);
                 AssetDatabase.Refresh();
             }
         }

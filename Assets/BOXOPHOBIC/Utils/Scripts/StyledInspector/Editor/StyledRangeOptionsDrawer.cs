@@ -12,7 +12,7 @@ namespace Boxophobic.StyledGUI
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            a = (StyledRangeOptions)attribute;
+            a = (StyledRangeOptions)attribute;            
 
             GUIStyle styleMid = new GUIStyle();
             styleMid.alignment = TextAnchor.MiddleCenter;
@@ -21,17 +21,15 @@ namespace Boxophobic.StyledGUI
 
             if (a.displayLabel.Length > 0)
             {
-                GUILayout.Label(a.displayLabel);
+                EditorGUI.PropertyField(position, property, label, true);
+                GUILayout.Space(5);
             }
-
-            //var sliderRect = GUILayoutUtility.GetRect(0, 0, 16, 0);
-            //var offset = sliderRect.width * 0.03f;
-            //int offset2 = Mathf.RoundToInt(sliderRect.width * 1f);
-            //property.floatValue = GUI.HorizontalSlider(new Rect(sliderRect.position.x + offset, sliderRect.position.y, sliderRect.width - offset * 2, 16), property.floatValue, a.min, a.max);
 
             GUILayout.BeginHorizontal();
             GUILayout.Space(8);
             property.floatValue = GUILayout.HorizontalSlider(property.floatValue, a.min, a.max);
+            property.floatValue = Mathf.Clamp(property.floatValue, a.min, a.max);
+            property.floatValue = Mathf.Round(property.floatValue * 1000f) / 1000f;
             GUILayout.Space(8);
             GUILayout.EndHorizontal();
 
@@ -58,7 +56,16 @@ namespace Boxophobic.StyledGUI
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return -2;
+            a = (StyledRangeOptions)attribute;
+
+            if (a.displayLabel.Length > 0)
+            {
+                return 18;
+            }
+            else
+            {
+                return -2;
+            }
         }
     }
 }
