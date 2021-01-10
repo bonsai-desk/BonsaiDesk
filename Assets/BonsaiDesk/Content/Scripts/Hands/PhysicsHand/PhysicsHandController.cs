@@ -25,8 +25,6 @@ public class PhysicsHandController : MonoBehaviour
     public Vector3 jointOffset = new Vector3(0.035f, 0, 0);
 
     private float _snapBackDistanceThresholdSquared = 0.2f * 0.2f;
-    
-    // private readonly Quaternion _fixRotation = Quaternion.AngleAxis(180f, Vector3.up);
 
     private void Awake()
     {
@@ -34,11 +32,6 @@ public class PhysicsHandController : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody>();
         if (!_initialized && targetMapper)
             Init();
-    }
-
-    private void Update()
-    {
-        CheckHit();
     }
 
     private void FixedUpdate()
@@ -50,7 +43,7 @@ public class PhysicsHandController : MonoBehaviour
         if (!notTracking)
         {
             if (Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) >
-                _snapBackDistanceThresholdSquared)
+                _snapBackDistanceThresholdSquared && !CheckHit())
             {
                 ResetFingerJoints();
             }
@@ -62,36 +55,22 @@ public class PhysicsHandController : MonoBehaviour
         }
     }
 
-    private void CheckHit()
+    private bool CheckHit()
     {
-        _toDraw.Clear();
         for (int i = 0; i < fingerCapsuleColliders.Length; i++)
         {
             var capsule = fingerCapsuleColliders[i];
-            var target = fingerTargets[i];
 
-            //if thumb or pinky
-            if (i == 0 || i == 12)
-            {
-                // ResetTransform(fingerJointBodies[i], joint.connectedAnchor,
-                //     target.parent.localRotation * target.localRotation, true);
-            }
-            else
-            {
-                var pos = fingerTargets[i].position;
-                _toDraw.Add((pos, pos, 0.01f));
-            }
+            var start = fingerTargets[i].TransformPoint(capsule.transform.localPosition);
+            var direction = fingerTargets[i].rotation * capsule.transform.localRotation * Vector3.right;
+            var end = start + direction.normalized * (capsule.height - (capsule.radius * 2f));
+            
+            // DebugExtension.DebugPhysicsCapsule(start, end, Color.blue, capsule.radius);
+            if (Physics.CheckCapsule(start, end, capsule.radius))
+                return true;
         }
-    }
 
-    private List<(Vector3, Vector3, float)> _toDraw = new List<(Vector3, Vector3, float)>();
-
-    private void OnDrawGizmos()
-    {
-        foreach (var capsule in _toDraw)
-        {
-            DebugExtension.DrawCapsule(capsule.Item1, capsule.Item2 + new Vector3(0, 1f, 0), Color.blue, capsule.Item3);
-        }
+        return false;
     }
 
     private void UpdateVelocity()
@@ -266,17 +245,12 @@ public class PhysicsHandController : MonoBehaviour
         _joint.xDrive = drive;
         _joint.yDrive = drive;
         _joint.zDrive = drive;
-        
+
         if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft)
         {
             jointOffset = -jointOffset;
-            // _joint.anchor = _jointOffset;
         }
-        // else
-        // {
-        //     _joint.anchor = -_jointOffset;
-        // }
-        
+
         _joint.anchor = jointOffset;
         _joint.autoConfigureConnectedAnchor = false;
         _joint.connectedAnchor = transform.position;
