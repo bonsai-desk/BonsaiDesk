@@ -801,7 +801,7 @@ Transform:
   m_GameObject: {fileID: 89527844}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.5, y: 0.8, z: 1}
   m_Children:
   - {fileID: 1406660824}
   m_Father: {fileID: 878527636}
@@ -18392,7 +18392,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1382784197}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.554, z: 0.784}
+  m_LocalPosition: {x: 0, y: 0.581, z: 0.784}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 878527636}
@@ -18411,7 +18411,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 89ee6c1dd53fac6469d3da4c37d1d340, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startingAspect: {x: 16, y: 9}
+  startingAspect: {x: 21, y: 9}
   boundsTransform: {fileID: 89527845}
   holePuncherMaterial: {fileID: 2100000, guid: 13c0664d10ae3514ea9d893740bf2046, type: 2}
   distanceEstimate: 1

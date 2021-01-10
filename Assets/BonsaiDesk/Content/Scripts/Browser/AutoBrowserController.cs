@@ -147,7 +147,7 @@ public class AutoBrowserController : NetworkBehaviour
     private void HandleScreenClient()
     {
         // todo this
-        _autoBrowser.SetHeight(1);
+        //_autoBrowser.SetHeight(1);
     }
 
     private void BeginSync(string reason = "no reason provided")
@@ -303,10 +303,11 @@ public class AutoBrowserController : NetworkBehaviour
     private void ReloadYouTube(string id, double timeStamp)
     {
         TLog($"NavHome then load {id} at {timeStamp}");
+        var resolution = _autoBrowser.ChangeAspect(_contentInfo.Aspect);
         _autoBrowser.PostMessages(new[]
         {
             YouTubeMessage.NavHome,
-            YouTubeMessage.LoadYouTube(id, timeStamp)
+            YouTubeMessage.LoadYouTube(id, timeStamp, resolution.x, resolution.y)
         });
     }
 
@@ -526,12 +527,17 @@ public class AutoBrowserController : NetworkBehaviour
                    "}";
         }
 
-        public static string LoadYouTube(string id, double ts)
+        public static string LoadYouTube(string id, double ts, int x=0, int y=0)
         {
+            var resQuery = "";
+            if (x != 0 && y != 0)
+            {
+                resQuery = $"?x={x}&y={y}";
+            }
             return "{" +
                    "\"type\": \"nav\", " +
                    "\"command\": \"push\", " +
-                   $"\"path\": \"/youtube/{id}/{ts}\"" +
+                   $"\"path\": \"/youtube/{id}/{ts}{resQuery}\"" +
                    "}";
         }
 
