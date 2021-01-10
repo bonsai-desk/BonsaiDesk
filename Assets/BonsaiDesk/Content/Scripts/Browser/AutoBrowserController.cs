@@ -226,13 +226,9 @@ public class AutoBrowserController : NetworkBehaviour
         Debug.Log($"setup browser {_autoBrowser} {useBuiltHtml}");
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         if (useBuiltHtml)
-        {
             _autoBrowser.LoadHtml(BonsaiUI.Html);
-        }
         else
-        {
             _autoBrowser.LoadUrl(hotReloadUrl);
-        }
 #else
         _autoBrowser.LoadHtml(BonsaiUI.Html);
 #endif
@@ -242,7 +238,7 @@ public class AutoBrowserController : NetworkBehaviour
     private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs)
     {
         var json = JSONNode.Parse(eventArgs.Value) as JSONObject;
-        
+
         if (json?["type"] != "infoCurrentTime") TLog($"Received JSON {eventArgs.Value} at {NetworkTime.time}");
 
         if (json?["current_time"] != null) _clientPlayerTimeStamp = json["current_time"];
@@ -527,13 +523,10 @@ public class AutoBrowserController : NetworkBehaviour
                    "}";
         }
 
-        public static string LoadYouTube(string id, double ts, int x=0, int y=0)
+        public static string LoadYouTube(string id, double ts, int x = 0, int y = 0)
         {
             var resQuery = "";
-            if (x != 0 && y != 0)
-            {
-                resQuery = $"?x={x}&y={y}";
-            }
+            if (x != 0 && y != 0) resQuery = $"?x={x}&y={y}";
             return "{" +
                    "\"type\": \"nav\", " +
                    "\"command\": \"push\", " +
