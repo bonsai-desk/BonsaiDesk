@@ -36,6 +36,8 @@ public class PlayerHands : MonoBehaviour
     
     private void Update()
     {
+        return;
+        
         CalculateFingerTipPositions();
         
         left.UpdateGestures();

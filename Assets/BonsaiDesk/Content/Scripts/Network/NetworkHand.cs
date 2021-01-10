@@ -185,8 +185,9 @@ public class NetworkHand : NetworkBehaviour
         meshRenderer.material.SetTexture("_MainTex", handTextures[colorIndex]);
         if (hasAuthority)
         {
-            PlayerHands.hands.left.material.SetTexture("_MainTex", handTextures[colorIndex]);
-            PlayerHands.hands.right.material.SetTexture("_MainTex", handTextures[colorIndex]);
+            //TODO fix hand materials
+            // PlayerHands.hands.left.material.SetTexture("_MainTex", handTextures[colorIndex]);
+            // PlayerHands.hands.right.material.SetTexture("_MainTex", handTextures[colorIndex]);
         }
     }
 

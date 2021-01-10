@@ -40,6 +40,7 @@ public class PhysicsHandController : MonoBehaviour
             return;
 
         bool notTracking = playerHand && !playerHand.Tracking();
+        notTracking = false;
         if (!notTracking)
         {
             if (Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) >
