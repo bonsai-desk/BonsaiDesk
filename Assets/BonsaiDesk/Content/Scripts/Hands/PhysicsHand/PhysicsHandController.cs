@@ -21,6 +21,8 @@ public class PhysicsHandController : MonoBehaviour
 
     private Vector3 _jointOffset = new Vector3(0.035f, 0, 0);
 
+    private float _snapBackDistanceThresholdSquared = 0.2f * 0.2f;
+
     private void Awake()
     {
         IgnoreCollisions();
@@ -37,20 +39,26 @@ public class PhysicsHandController : MonoBehaviour
         bool notTracking = playerHand && !playerHand.Tracking();
         if (!notTracking)
         {
+            if (Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) > _snapBackDistanceThresholdSquared)
+            {
+                transform.position = targetMapper.transform.position;
+                transform.rotation = targetMapper.transform.rotation;
+            }
+
             UpdateJoint();
             UpdateFingerJoints();
             UpdateVelocity();
             _rigidbody.WakeUp();
         }
     }
-    
+
     private void UpdateVelocity()
     {
         float velocityMagnitude = _rigidbody.velocity.magnitude;
         Vector3 direction = targetMapper.transform.position - transform.position;
         _rigidbody.velocity = direction.normalized * velocityMagnitude;
     }
-    
+
     private void UpdateFingerJoints()
     {
         for (int i = 0; i < fingerJoints.Length; i++)
@@ -168,17 +176,20 @@ public class PhysicsHandController : MonoBehaviour
 
         var drive = new JointDrive()
         {
-            positionSpring = 1000000f,
+            positionSpring = float.MaxValue,
             positionDamper = 10000f,
             maximumForce = 50f
         };
-
         _joint.xDrive = drive;
         _joint.yDrive = drive;
         _joint.zDrive = drive;
 
+        if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        {
+            _jointOffset = -_jointOffset;
+        }
+
         _joint.anchor = _jointOffset;
-        // _joint.anchor = Vector3.zero;
         _joint.autoConfigureConnectedAnchor = false;
         _joint.connectedAnchor = transform.position;
         _joint.SetTargetRotationLocal(transform.rotation, _startRotation);
