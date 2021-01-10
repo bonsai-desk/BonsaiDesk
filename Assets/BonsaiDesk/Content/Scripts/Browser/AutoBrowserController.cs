@@ -28,9 +28,10 @@ public class AutoBrowserController : NetworkBehaviour
     private double _clientLastSentPing;
     private PlayerState _clientPlayerStatus;
     private float _clientPlayerTimeStamp;
-
     [SyncVar] private ContentInfo _contentInfo;
     private Coroutine _fetchAndReadyUp;
+
+    [SyncVar] private float _height;
     [SyncVar] private ScrubData _idealScrub;
     private int _vidId;
 
@@ -43,8 +44,10 @@ public class AutoBrowserController : NetworkBehaviour
     private void Update()
     {
         if (isServer)
+        {
             HandlePlayerServer();
-        //todo HandleScreenServer();
+            HandleScreenServer();
+        }
 
         if (isClient)
         {
@@ -98,8 +101,6 @@ public class AutoBrowserController : NetworkBehaviour
                 return;
             }
 
-            ;
-
             if (paused)
             {
                 // todo set the toggle pause inactive now
@@ -125,7 +126,6 @@ public class AutoBrowserController : NetworkBehaviour
         togglePause.PauseChangedClient += paused => { TLog($"Pause changed to {paused}"); };
     }
 
-
     private void HandlePlayerClient()
     {
         // post play message if paused/ready and player is behind ideal scrub
@@ -146,8 +146,7 @@ public class AutoBrowserController : NetworkBehaviour
 
     private void HandleScreenClient()
     {
-        // todo this
-        //_autoBrowser.SetHeight(1);
+        _autoBrowser.SetHeight(_height);
     }
 
     private void BeginSync(string reason = "no reason provided")
@@ -218,7 +217,18 @@ public class AutoBrowserController : NetworkBehaviour
 
     private void HandleScreenServer()
     {
-        throw new NotImplementedException();
+        const float transitionTime = 0.5f;
+        var browserDown = !_contentInfo.Active;
+        var targetHeight = browserDown ? 0 : 1;
+
+        if (!Mathf.Approximately(_height, targetHeight))
+        {
+            var easeFunction = browserDown ? CubicBezier.EaseOut : CubicBezier.EaseIn;
+            var t = easeFunction.SampleInverse(_height);
+            var step = 1f / transitionTime * Time.deltaTime;
+            t = Mathf.MoveTowards(t, targetHeight, step);
+            _height = easeFunction.Sample(t);
+        }
     }
 
     private void SetupBrowser(bool restart = false)

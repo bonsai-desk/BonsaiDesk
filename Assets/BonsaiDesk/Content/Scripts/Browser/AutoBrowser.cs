@@ -38,22 +38,20 @@ public class AutoBrowser : MonoBehaviour
 
     public void SetHeight(float t)
     {
-        var oldPosition = transform.localPosition;
-
         transform.localPosition = Vector3.Lerp(_belowTableLocalPosition, _defaultLocalPosition, Mathf.Clamp01(t));
 
-        var height = _overlayObject.localScale.y;
-        var halfHeight = height / 2f;
-        t = (transform.localPosition.y + halfHeight) / height;
-        t = Mathf.Clamp01(t);
+        //var height = _overlayObject.localScale.y;
+        //var halfHeight = height / 2f;
+        //t = (transform.localPosition.y + halfHeight) / height;
+        //t = Mathf.Clamp01(t);
 
-        var holePunchScale = _overlayObject.localScale;
-        holePunchScale.y = _overlayObject.localScale.y * t;
-        boundsTransform.localScale = holePunchScale;
+        //var holePunchScale = _overlayObject.localScale;
+        //holePunchScale.y = _overlayObject.localScale.y * t;
+        //boundsTransform.localScale = holePunchScale;
 
-        var holePunchPosition = boundsTransform.localPosition;
-        holePunchPosition.y = halfHeight * (1f - t);
-        boundsTransform.localPosition = holePunchPosition;
+        //var holePunchPosition = boundsTransform.localPosition;
+        //holePunchPosition.y = halfHeight * (1f - t);
+        //boundsTransform.localPosition = holePunchPosition;
 
         if (Mathf.Approximately(t, 0))
         {
