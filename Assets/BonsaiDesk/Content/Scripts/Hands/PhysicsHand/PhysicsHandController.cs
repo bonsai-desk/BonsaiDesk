@@ -39,8 +39,16 @@ public class PhysicsHandController : MonoBehaviour
         {
             UpdateJoint();
             UpdateFingerJoints();
+            UpdateVelocity();
             _rigidbody.WakeUp();
         }
+    }
+    
+    private void UpdateVelocity()
+    {
+        float velocityMagnitude = _rigidbody.velocity.magnitude;
+        Vector3 direction = targetMapper.transform.position - transform.position;
+        _rigidbody.velocity = direction.normalized * velocityMagnitude;
     }
     
     private void UpdateFingerJoints()
