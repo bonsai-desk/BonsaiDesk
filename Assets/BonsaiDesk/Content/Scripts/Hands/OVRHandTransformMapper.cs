@@ -78,8 +78,6 @@ public class OVRHandTransformMapper : MonoBehaviour
         "pinky3"
     };
 
-#if UNITY_EDITOR
-
     private static readonly string[] _fbxFingerNames =
     {
         "thumb",
@@ -90,7 +88,6 @@ public class OVRHandTransformMapper : MonoBehaviour
     };
 
     private static readonly string[] _handPrefix = {"l_", "r_"};
-#endif
 
     public List<Transform> CustomBones
     {
@@ -147,8 +144,6 @@ public class OVRHandTransformMapper : MonoBehaviour
         TryAutoMapBoneTargets(targetObject, "");
     }
 
-#if UNITY_EDITOR
-
     public void TryAutoMapBonesByName()
     {
         OVRSkeleton.BoneId start = OVRSkeleton.BoneId.Hand_Start;
@@ -186,6 +181,4 @@ public class OVRHandTransformMapper : MonoBehaviour
             return "b_" + _handPrefix[(int) skeletonType] + _fbxBoneNames[(int) bi];
         }
     }
-
-#endif
 }

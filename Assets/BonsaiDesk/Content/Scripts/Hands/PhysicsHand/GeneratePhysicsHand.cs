@@ -25,9 +25,6 @@ public class GeneratePhysicsHand : MonoBehaviour
 
     private void Update()
     {
-        if (!Application.isEditor)
-            return;
-
         if (!initialized && oVRSkeleton.BindPoses.Count == 24 &&
             OVRPlugin.GetSkeleton2((OVRPlugin.SkeletonType) oVRSkeleton.GetSkeletonType(), ref _skeleton))
         {
@@ -74,10 +71,12 @@ public class GeneratePhysicsHand : MonoBehaviour
                 physicsHandController.Init();
             }
 
-            if (pauseForSave && Application.isEditor)
+#if UNITY_EDITOR
+            if (pauseForSave)
             {
                 EditorApplication.isPaused = true;
             }
+#endif
 
             Destroy(this);
         }

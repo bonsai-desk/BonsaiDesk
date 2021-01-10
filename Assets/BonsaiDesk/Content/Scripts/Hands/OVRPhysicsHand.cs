@@ -17,7 +17,7 @@ public class OVRPhysicsHand : MonoBehaviour
     [SerializeField] private bool renderPhysicalBones = true;
 
     [SerializeField] private bool renderPhysicalSkin = true;
-
+    
     [SerializeField] private float mass = 0.46f;
 
     [SerializeField] private float lbsForce = 70f;
