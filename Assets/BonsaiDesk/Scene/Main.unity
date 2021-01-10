@@ -1803,7 +1803,7 @@ PrefabInstance:
         type: 3}
       propertyPath: action.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1212259452}
+      objectReference: {fileID: 0}
     - target: {fileID: 2537125333393509692, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
         type: 3}
       propertyPath: action.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
@@ -10755,7 +10755,6 @@ GameObject:
   - component: {fileID: 752779476}
   - component: {fileID: 752779475}
   - component: {fileID: 752779474}
-  - component: {fileID: 752779477}
   m_Layer: 0
   m_Name: Server
   m_TagString: Untagged
@@ -10811,18 +10810,6 @@ Transform:
   m_Father: {fileID: 217350384}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &752779477
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 752779473}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 335fd533295840c4fbbcf4b2723af457, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &752977761
 GameObject:
   m_ObjectHideFlags: 0
@@ -13781,7 +13768,7 @@ PrefabInstance:
         type: 3}
       propertyPath: action.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1212259452}
+      objectReference: {fileID: 0}
     - target: {fileID: 2537125333393509692, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
         type: 3}
       propertyPath: action.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
@@ -14827,7 +14814,6 @@ GameObject:
   - component: {fileID: 1212259449}
   - component: {fileID: 1212259446}
   - component: {fileID: 1212259448}
-  - component: {fileID: 1212259452}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -14907,18 +14893,6 @@ MonoBehaviour:
   rightAnimationHand: {fileID: 2143140840}
   tableEdge: {fileID: 1886693201}
   tableControls: {fileID: 877365330}
---- !u!114 &1212259452
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1212259445}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a20a5d76a098c8d4cb595ca162d705d4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1224930427 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400120, guid: 442d5b4503ed83c4897ef44659446587,
@@ -23695,7 +23669,7 @@ PrefabInstance:
         type: 3}
       propertyPath: action.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1212259452}
+      objectReference: {fileID: 0}
     - target: {fileID: 2537125333393509692, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
         type: 3}
       propertyPath: action.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
