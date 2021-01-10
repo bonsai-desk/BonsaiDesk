@@ -17,12 +17,16 @@ public class PhysicsHandController : MonoBehaviour
 
     public ConfigurableJoint[] fingerJoints;
     public Rigidbody[] fingerJointBodies;
+    public CapsuleCollider[] fingerCapsuleColliders;
+    public CapsuleCollider[] palmCapsuleColliders;
     public Quaternion[] fingerJointStartLocalRotations;
     public Transform[] fingerTargets;
 
-    private Vector3 _jointOffset = new Vector3(0.035f, 0, 0);
+    public Vector3 jointOffset = new Vector3(0.035f, 0, 0);
 
     private float _snapBackDistanceThresholdSquared = 0.2f * 0.2f;
+    
+    // private readonly Quaternion _fixRotation = Quaternion.AngleAxis(180f, Vector3.up);
 
     private void Awake()
     {
@@ -30,6 +34,11 @@ public class PhysicsHandController : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody>();
         if (!_initialized && targetMapper)
             Init();
+    }
+
+    private void Update()
+    {
+        CheckHit();
     }
 
     private void FixedUpdate()
@@ -43,9 +52,6 @@ public class PhysicsHandController : MonoBehaviour
             if (Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) >
                 _snapBackDistanceThresholdSquared)
             {
-                // transform.position = targetMapper.transform.position;
-                // transform.rotation = targetMapper.transform.rotation;
-
                 ResetFingerJoints();
             }
 
@@ -53,6 +59,38 @@ public class PhysicsHandController : MonoBehaviour
             UpdateFingerJoints();
             UpdateVelocity();
             _rigidbody.WakeUp();
+        }
+    }
+
+    private void CheckHit()
+    {
+        _toDraw.Clear();
+        for (int i = 0; i < fingerCapsuleColliders.Length; i++)
+        {
+            var capsule = fingerCapsuleColliders[i];
+            var target = fingerTargets[i];
+
+            //if thumb or pinky
+            if (i == 0 || i == 12)
+            {
+                // ResetTransform(fingerJointBodies[i], joint.connectedAnchor,
+                //     target.parent.localRotation * target.localRotation, true);
+            }
+            else
+            {
+                var pos = fingerTargets[i].position;
+                _toDraw.Add((pos, pos, 0.01f));
+            }
+        }
+    }
+
+    private List<(Vector3, Vector3, float)> _toDraw = new List<(Vector3, Vector3, float)>();
+
+    private void OnDrawGizmos()
+    {
+        foreach (var capsule in _toDraw)
+        {
+            DebugExtension.DrawCapsule(capsule.Item1, capsule.Item2 + new Vector3(0, 1f, 0), Color.blue, capsule.Item3);
         }
     }
 
@@ -128,7 +166,7 @@ public class PhysicsHandController : MonoBehaviour
         if (!_joint)
             return;
 
-        _joint.connectedAnchor = targetMapper.transform.position + targetMapper.transform.rotation * _jointOffset;
+        _joint.connectedAnchor = targetMapper.transform.position + targetMapper.transform.rotation * jointOffset;
         _joint.SetTargetRotationLocal(targetMapper.transform.localRotation, _startRotation);
     }
 
@@ -139,7 +177,6 @@ public class PhysicsHandController : MonoBehaviour
         _initialized = true;
 
         SetupJoint();
-        // SetupObjectFollowPhysics();
         GetJointsAndTargets();
         GetJointStartLocalRotations();
     }
@@ -189,22 +226,18 @@ public class PhysicsHandController : MonoBehaviour
         fingerTargets = fingerTargetsList.ToArray();
 
         fingerJointBodies = new Rigidbody[fingerJoints.Length];
-        for (int i = 0; i < fingerJointBodies.Length; i++)
+        fingerCapsuleColliders = new CapsuleCollider[fingerJoints.Length];
+        for (int i = 0; i < fingerJoints.Length; i++)
         {
             fingerJointBodies[i] = fingerJoints[i].GetComponent<Rigidbody>();
+            fingerCapsuleColliders[i] = fingerJoints[i].transform.GetChild(0).GetComponent<CapsuleCollider>();
         }
-    }
 
-    private void SetupObjectFollowPhysics()
-    {
-        if (GetComponent<ObjectFollowPhysics>())
-            return;
-
-        var objectFollowPhysics = gameObject.AddComponent<ObjectFollowPhysics>();
-        objectFollowPhysics.target = targetMapper.transform;
-        objectFollowPhysics.setKinematicOnLowConfidence = false;
-        if (playerHand)
-            objectFollowPhysics.oVRSkeleton = playerHand.oVRSkeleton;
+        palmCapsuleColliders = new CapsuleCollider[4];
+        for (int i = 0; i < palmCapsuleColliders.Length; i++)
+        {
+            palmCapsuleColliders[i] = transform.GetChild(i).GetChild(0).GetComponent<CapsuleCollider>();
+        }
     }
 
     private void SetupJoint()
@@ -233,13 +266,18 @@ public class PhysicsHandController : MonoBehaviour
         _joint.xDrive = drive;
         _joint.yDrive = drive;
         _joint.zDrive = drive;
-
+        
         if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft)
         {
-            _jointOffset = -_jointOffset;
+            jointOffset = -jointOffset;
+            // _joint.anchor = _jointOffset;
         }
-
-        _joint.anchor = _jointOffset;
+        // else
+        // {
+        //     _joint.anchor = -_jointOffset;
+        // }
+        
+        _joint.anchor = jointOffset;
         _joint.autoConfigureConnectedAnchor = false;
         _joint.connectedAnchor = transform.position;
         _joint.SetTargetRotationLocal(transform.rotation, _startRotation);

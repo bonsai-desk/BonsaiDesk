@@ -12,14 +12,14 @@ public class OVRHandTransformMapper : MonoBehaviour
     private List<Transform> _boneTargets = new List<Transform>(new Transform[(int) OVRSkeleton.BoneId.Max]);
 
     public bool useLocalRotation = true;
-    
+
     public Transform targetObject;
     public bool moveObjectToTarget = true;
-    
+
     public Transform capsulesParent;
     public bool moveBonesToTargets = true;
 
-    private Quaternion _fixRotation = Quaternion.AngleAxis(180f, Vector3.up);
+    private readonly Quaternion _fixRotation = Quaternion.AngleAxis(180f, Vector3.up);
 
     private void Update()
     {
@@ -28,6 +28,7 @@ public class OVRHandTransformMapper : MonoBehaviour
             transform.position = targetObject.position;
             transform.rotation = targetObject.rotation * _fixRotation;
         }
+
         if (moveBonesToTargets)
         {
             if (CustomBones.Count == BoneTargets.Count)
@@ -124,7 +125,7 @@ public class OVRHandTransformMapper : MonoBehaviour
                         {
                             fbxBoneName = char.ToUpper(fbxBoneName[0]) + fbxBoneName.Substring(1);
                             fbxBoneName = "Hand_" + fbxBoneName + suffix;
-                            
+
                             // print(fbxBoneName);
 
                             Transform t = transformToCheck.FindChildRecursive(fbxBoneName);
@@ -138,7 +139,7 @@ public class OVRHandTransformMapper : MonoBehaviour
             }
         }
     }
-    
+
     public void TryAutoMapBoneTargetsAPIHand()
     {
         TryAutoMapBoneTargets(targetObject, "");
