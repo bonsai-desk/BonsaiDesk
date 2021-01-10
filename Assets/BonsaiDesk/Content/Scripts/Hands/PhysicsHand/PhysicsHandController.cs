@@ -16,6 +16,7 @@ public class PhysicsHandController : MonoBehaviour
     private Quaternion _startRotation;
 
     public ConfigurableJoint[] fingerJoints;
+    public Rigidbody[] fingerJointBodies;
     public Quaternion[] fingerJointStartLocalRotations;
     public Transform[] fingerTargets;
 
@@ -39,10 +40,13 @@ public class PhysicsHandController : MonoBehaviour
         bool notTracking = playerHand && !playerHand.Tracking();
         if (!notTracking)
         {
-            if (Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) > _snapBackDistanceThresholdSquared)
+            if (Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) >
+                _snapBackDistanceThresholdSquared)
             {
-                transform.position = targetMapper.transform.position;
-                transform.rotation = targetMapper.transform.rotation;
+                // transform.position = targetMapper.transform.position;
+                // transform.rotation = targetMapper.transform.rotation;
+
+                ResetFingerJoints();
             }
 
             UpdateJoint();
@@ -57,6 +61,46 @@ public class PhysicsHandController : MonoBehaviour
         float velocityMagnitude = _rigidbody.velocity.magnitude;
         Vector3 direction = targetMapper.transform.position - transform.position;
         _rigidbody.velocity = direction.normalized * velocityMagnitude;
+    }
+
+    private void ResetFingerJoints()
+    {
+        ResetTransform(_rigidbody, targetMapper.transform.position, targetMapper.transform.rotation, false);
+        for (int i = 0; i < fingerJoints.Length; i++)
+        {
+            var joint = fingerJoints[i];
+            var target = fingerTargets[i];
+
+            //if thumb or pinky
+            if (i == 0 || i == 12)
+            {
+                ResetTransform(fingerJointBodies[i], joint.connectedAnchor,
+                    target.parent.localRotation * target.localRotation, true);
+            }
+            else
+            {
+                ResetTransform(fingerJointBodies[i], joint.connectedAnchor, target.localRotation, true);
+            }
+        }
+    }
+
+    private void ResetTransform(Rigidbody body, Vector3 position, Quaternion rotation, bool useLocal)
+    {
+        if (useLocal)
+        {
+            body.transform.localPosition = position;
+            body.transform.localRotation = rotation;
+        }
+        else
+        {
+            body.transform.position = position;
+            body.transform.rotation = rotation;
+        }
+
+        body.MovePosition(body.transform.position);
+        body.MoveRotation(body.transform.rotation);
+        body.velocity = Vector3.zero;
+        body.angularVelocity = Vector3.zero;
     }
 
     private void UpdateFingerJoints()
@@ -143,6 +187,12 @@ public class PhysicsHandController : MonoBehaviour
 
         fingerJoints = fingerJointsList.ToArray();
         fingerTargets = fingerTargetsList.ToArray();
+
+        fingerJointBodies = new Rigidbody[fingerJoints.Length];
+        for (int i = 0; i < fingerJointBodies.Length; i++)
+        {
+            fingerJointBodies[i] = fingerJoints[i].GetComponent<Rigidbody>();
+        }
     }
 
     private void SetupObjectFollowPhysics()
