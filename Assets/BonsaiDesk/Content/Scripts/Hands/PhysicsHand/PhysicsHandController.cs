@@ -6,14 +6,9 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class PhysicsHandController : MonoBehaviour
 {
+    public OVRSkeleton.SkeletonType skeletonType = OVRSkeleton.SkeletonType.None;
     public OVRHandTransformMapper physicsMapper;
     public OVRHandTransformMapper targetMapper;
-    public PlayerHand playerHand;
-
-    private bool _initialized = false;
-    private ConfigurableJoint _joint;
-    private Rigidbody _rigidbody;
-    private Quaternion _startRotation;
 
     public ConfigurableJoint[] fingerJoints;
     public Rigidbody[] fingerJointBodies;
@@ -24,7 +19,12 @@ public class PhysicsHandController : MonoBehaviour
 
     public Vector3 jointOffset = new Vector3(0.035f, 0, 0);
 
-    private float _snapBackDistanceThresholdSquared = 0.2f * 0.2f;
+    private bool _initialized = false;
+    private ConfigurableJoint _joint;
+    private Rigidbody _rigidbody;
+    private Quaternion _startRotation;
+
+    private const float SnapBackDistanceThresholdSquared = 0.2f * 0.2f;
 
     private void Awake()
     {
@@ -39,19 +39,14 @@ public class PhysicsHandController : MonoBehaviour
         if (!_initialized)
             return;
 
-        bool notTracking = playerHand && !playerHand.Tracking();
-        notTracking = false;
-        if (!notTracking)
+        if (Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) >
+            SnapBackDistanceThresholdSquared && !CheckHit())
         {
-            if (Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) >
-                _snapBackDistanceThresholdSquared && !CheckHit())
-            {
-                ResetFingerJoints();
-            }
-
-            UpdateJoint();
-            UpdateFingerJoints();
+            ResetFingerJoints();
         }
+
+        UpdateJoint();
+        UpdateFingerJoints();
         UpdateVelocity();
         _rigidbody.WakeUp();
     }
@@ -65,11 +60,11 @@ public class PhysicsHandController : MonoBehaviour
             var start = targetMapper.transform.TransformPoint(capsule.transform.localPosition);
             var direction = targetMapper.transform.rotation * capsule.transform.localRotation * Vector3.right;
             var end = start + direction.normalized * (capsule.height - (capsule.radius * 2f));
-            
+
             if (Physics.CheckCapsule(start, end, capsule.radius))
                 return true;
         }
-        
+
         for (int i = 0; i < fingerCapsuleColliders.Length; i++)
         {
             var capsule = fingerCapsuleColliders[i];
@@ -77,7 +72,7 @@ public class PhysicsHandController : MonoBehaviour
             var start = fingerTargets[i].TransformPoint(capsule.transform.localPosition);
             var direction = fingerTargets[i].rotation * capsule.transform.localRotation * Vector3.right;
             var end = start + direction.normalized * (capsule.height - (capsule.radius * 2f));
-            
+
             if (Physics.CheckCapsule(start, end, capsule.radius))
                 return true;
         }
@@ -258,7 +253,12 @@ public class PhysicsHandController : MonoBehaviour
         _joint.yDrive = drive;
         _joint.zDrive = drive;
 
-        if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        if (skeletonType != OVRSkeleton.SkeletonType.None)
+        {
+            Debug.LogError("Cannot determine joint offset without skeleton type.");
+        }
+
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
         {
             jointOffset = -jointOffset;
         }

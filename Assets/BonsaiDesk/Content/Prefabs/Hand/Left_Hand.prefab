@@ -1627,7 +1627,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3006226329770823533}
   - component: {fileID: 8807241438527230961}
-  - component: {fileID: 1819656905766821362}
   m_Layer: 0
   m_Name: Left_Physics_Hand_Target
   m_TagString: Untagged
@@ -1771,20 +1770,6 @@ MonoBehaviour:
   moveObjectToTarget: 1
   capsulesParent: {fileID: 0}
   moveBonesToTargets: 1
---- !u!114 &1819656905766821362
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1884364395675575032}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d33b3b1fb15174f47af0a9f53841ef33, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  renderer: {fileID: 7739540113543991032}
-  playerHand: {fileID: 0}
 --- !u!1 &1890373771752856359
 GameObject:
   m_ObjectHideFlags: 0
@@ -6687,9 +6672,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30d2757fe0a6a84449a78a18bd2c29c0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  skeletonType: 0
   physicsMapper: {fileID: 2739804907872727307}
   targetMapper: {fileID: 8807241438527230961}
-  playerHand: {fileID: 0}
   fingerJoints:
   - {fileID: 675814769762493602}
   - {fileID: 6223821112354568485}

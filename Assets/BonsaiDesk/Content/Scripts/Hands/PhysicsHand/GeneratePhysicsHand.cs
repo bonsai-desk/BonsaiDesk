@@ -62,17 +62,13 @@ public class GeneratePhysicsHand : MonoBehaviour
                 targetMapper.TryAutoMapBonesByName();
                 targetMapper.targetObject = oVRSkeleton.transform;
                 targetMapper.TryAutoMapBoneTargetsAPIHand();
-                var toggle = handTarget.AddComponent<RendererToggle>();
-                var renderer = toggle.GetComponentInChildren<SkinnedMeshRenderer>();
+                var renderer = handTarget.GetComponentInChildren<SkinnedMeshRenderer>();
                 renderer.enabled = false;
-                toggle.renderer = renderer;
-                toggle.playerHand = PlayerHands.hands.GetHand(oVRSkeleton.GetSkeletonType());
-                toggle.renderer.sharedMaterial = targetMaterial;
 
                 var physicsHandController = physicsHand.AddComponent<PhysicsHandController>();
                 physicsHandController.physicsMapper = mapper;
                 physicsHandController.targetMapper = targetMapper;
-                physicsHandController.playerHand = PlayerHands.hands.GetHand(oVRSkeleton.GetSkeletonType());
+                physicsHandController.skeletonType = oVRSkeleton.GetSkeletonType();
                 physicsHandController.Init();
             }
 
