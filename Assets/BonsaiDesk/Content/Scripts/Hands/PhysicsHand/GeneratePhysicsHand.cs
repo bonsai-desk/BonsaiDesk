@@ -12,6 +12,7 @@ public class GeneratePhysicsHand : MonoBehaviour
     public PhysicMaterial physicMaterial;
     public Material targetMaterial;
     public Material physicsHandMaterial;
+    public RuntimeAnimatorController handAnimator;
 
     private OVRPlugin.Skeleton2 _skeleton;
     private bool initialized = false;
@@ -20,12 +21,22 @@ public class GeneratePhysicsHand : MonoBehaviour
 
     private void Start()
     {
+        if (!Application.isEditor)
+        {
+            return;
+        }
+
         transform.name = HandName() + "_Hand";
     }
 
     private void Update()
     {
-        if (!initialized && oVRSkeleton.BindPoses.Count == 24 &&
+        if (!Application.isEditor)
+        {
+            return;
+        }
+
+        if (!initialized && oVRSkeleton.IsInitialized && oVRSkeleton.BindPoses.Count == 24 &&
             OVRPlugin.GetSkeleton2((OVRPlugin.SkeletonType) oVRSkeleton.GetSkeletonType(), ref _skeleton))
         {
             initialized = true;
@@ -58,11 +69,14 @@ public class GeneratePhysicsHand : MonoBehaviour
                 Destroy(handTarget.GetComponent<Animator>());
                 handTarget.name = HandName() + "_Physics_Hand_Target";
                 var targetMapper = handTarget.AddComponent<OVRHandTransformMapper>();
+                targetMapper.moveObjectToTarget = false;
+                targetMapper.moveBonesToTargets = false;
                 targetMapper._skeletonType = oVRSkeleton.GetSkeletonType();
                 targetMapper.TryAutoMapBonesByName();
                 targetMapper.targetObject = oVRSkeleton.transform;
                 targetMapper.TryAutoMapBoneTargetsAPIHand();
                 var renderer = handTarget.GetComponentInChildren<SkinnedMeshRenderer>();
+                renderer.sharedMaterial = targetMaterial;
                 renderer.enabled = false;
 
                 var physicsHandController = physicsHand.AddComponent<PhysicsHandController>();

@@ -23,36 +23,49 @@ public class OVRHandTransformMapper : MonoBehaviour
 
     private void Update()
     {
-        if (moveObjectToTarget && targetObject)
+        if (moveObjectToTarget)
         {
-            transform.position = targetObject.position;
-            transform.rotation = targetObject.rotation * _fixRotation;
+            UpdateObjectToTarget();
         }
 
         if (moveBonesToTargets)
         {
-            if (CustomBones.Count == BoneTargets.Count)
+            UpdateBonesToTargets();
+        }
+    }
+
+    public void UpdateObjectToTarget()
+    {
+        if (!targetObject)
+            return;
+
+        transform.position = targetObject.position;
+        transform.rotation = targetObject.rotation * _fixRotation;
+    }
+
+    public void UpdateBonesToTargets()
+    {
+        if (CustomBones.Count == BoneTargets.Count)
+        {
+            for (int i = 0; i < CustomBones.Count; i++)
             {
-                for (int i = 0; i < CustomBones.Count; i++)
+                if (CustomBones[i] != null && BoneTargets[i] != null)
                 {
-                    if (CustomBones[i] != null && BoneTargets[i] != null)
+                    if (useLocalRotation)
                     {
-                        if (useLocalRotation)
-                        {
-                            CustomBones[i].localRotation = BoneTargets[i].localRotation;
-                        }
-                        else
-                        {
-                            CustomBones[i].position = BoneTargets[i].position;
-                            CustomBones[i].rotation = BoneTargets[i].rotation;
-                        }
+                        CustomBones[i].localRotation = BoneTargets[i].localRotation;
+                    }
+                    else
+                    {
+                        CustomBones[i].position = BoneTargets[i].position;
+                        CustomBones[i].rotation = BoneTargets[i].rotation;
                     }
                 }
             }
-            else
-            {
-                Debug.LogError("BoneTargets length must equal Bones length");
-            }
+        }
+        else
+        {
+            Debug.LogError("BoneTargets length must equal Bones length");
         }
     }
 

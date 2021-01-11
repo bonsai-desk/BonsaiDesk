@@ -18,7 +18,7 @@ public class PhysicsHandController : MonoBehaviour
     public Transform[] fingerTargets;
 
     public Vector3 jointOffset = new Vector3(0.035f, 0, 0);
-
+    
     private bool _initialized = false;
     private ConfigurableJoint _joint;
     private Rigidbody _rigidbody;
@@ -30,7 +30,7 @@ public class PhysicsHandController : MonoBehaviour
     {
         IgnoreCollisions();
         _rigidbody = GetComponent<Rigidbody>();
-        if (!_initialized && targetMapper)
+        if (!_initialized && targetMapper && skeletonType != OVRSkeleton.SkeletonType.None)
             Init();
     }
     
@@ -253,7 +253,7 @@ public class PhysicsHandController : MonoBehaviour
         _joint.yDrive = drive;
         _joint.zDrive = drive;
 
-        if (skeletonType != OVRSkeleton.SkeletonType.None)
+        if (skeletonType == OVRSkeleton.SkeletonType.None)
         {
             Debug.LogError("Cannot determine joint offset without skeleton type.");
         }
@@ -265,7 +265,7 @@ public class PhysicsHandController : MonoBehaviour
 
         _joint.anchor = jointOffset;
         _joint.autoConfigureConnectedAnchor = false;
-        _joint.connectedAnchor = transform.position;
+        _joint.connectedAnchor = Vector3.zero;
         _joint.SetTargetRotationLocal(transform.rotation, _startRotation);
     }
 

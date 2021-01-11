@@ -29,32 +29,95 @@ public class InputManager : MonoBehaviour
     private static readonly Quaternion LeftControllerRotationOffset =
         FlipRotationX(RightControllerRotationOffset) * Quaternion.AngleAxis(180f, Vector3.up);
 
+    private HandComponents _left;
+    private HandComponents _right;
+
+    private void Start()
+    {
+        if (leftHandAnchor && leftHandObject)
+        {
+            _left = new HandComponents(leftHandAnchor, leftHandObject);
+        }
+
+        if (rightHandAnchor && rightHandObject)
+        {
+            _right = new HandComponents(rightHandAnchor, rightHandObject);
+        }
+    }
+    
+    private void Update()
+    {
+        if (_left != null)
+        {
+            UpdateHandTarget(_left, LeftControllerOffset, LeftControllerRotationOffset);
+            HandComponentsUpdate(_left);
+        }
+        
+        if (_right != null)
+        {
+            UpdateHandTarget(_right, RightControllerOffset, RightControllerRotationOffset);
+            HandComponentsUpdate(_right);
+        }
+    }
+
+    private void HandComponentsUpdate(HandComponents handComponents)
+    {
+        if (!handComponents.MapperTargetsInitialized && handComponents.OVRSkeleton.IsInitialized)
+        {
+            handComponents.MapperTargetsInitialized = true;
+            handComponents.TargetMapper.TryAutoMapBoneTargetsAPIHand();
+        }
+    }
+
+    private void UpdateHandTarget(HandComponents handComponents, Vector3 controllerOffset, Quaternion rotationOffset)
+    {
+        var controller = OVRInput.GetConnectedControllers();
+        if (controller == OVRInput.Controller.Hands)
+        {
+            handComponents.HandTarget.position = handComponents.HandAnchor.position;
+            handComponents.HandTarget.rotation = handComponents.HandAnchor.rotation * HandRotationOffset;
+            if (handComponents.MapperTargetsInitialized)
+            {
+                handComponents.TargetMapper.UpdateBonesToTargets();
+            }
+        }
+        else if (controller == OVRInput.Controller.Touch)
+        {
+            handComponents.HandTarget.position = handComponents.HandAnchor.TransformPoint(controllerOffset);
+            handComponents.HandTarget.rotation = handComponents.HandAnchor.rotation * rotationOffset;
+        }
+    }
+
+    private class HandComponents
+    {
+        public readonly Transform HandAnchor;
+        public readonly Transform HandObject;
+        public readonly Transform PhysicsHand;
+        public readonly Transform HandTarget;
+        public readonly OVRHandTransformMapper TargetMapper;
+        public readonly OVRSkeleton OVRSkeleton;
+
+        public bool MapperTargetsInitialized = false;
+
+        public HandComponents(Transform handAnchor, Transform handObject)
+        {
+            HandAnchor = handAnchor;
+            HandObject = handObject;
+            PhysicsHand = handObject.GetChild(0);
+            HandTarget = handObject.GetChild(1);
+
+            TargetMapper = HandTarget.GetComponent<OVRHandTransformMapper>();
+            TargetMapper.targetObject = handAnchor;
+
+            OVRSkeleton = handAnchor.GetComponentInChildren<OVRSkeleton>();
+        }
+    }
+
     private static Quaternion FlipRotationX(Quaternion rotation)
     {
         rotation.y *= -1f;
         rotation.z *= -1f;
         rotation *= Quaternion.AngleAxis(180f, Vector3.forward);
         return rotation;
-    }
-
-    void Update()
-    {
-        var controller = OVRInput.GetConnectedControllers();
-        if (controller == OVRInput.Controller.Hands)
-        {
-            leftHandObject.GetChild(1).transform.position = leftHandAnchor.position;
-            leftHandObject.GetChild(1).transform.rotation = leftHandAnchor.rotation * HandRotationOffset;
-
-            rightHandObject.GetChild(1).transform.position = rightHandAnchor.position;
-            rightHandObject.GetChild(1).transform.rotation = rightHandAnchor.rotation * HandRotationOffset;
-        }
-        else if (controller == OVRInput.Controller.Touch)
-        {
-            leftHandObject.GetChild(1).transform.position = leftHandAnchor.TransformPoint(LeftControllerOffset);
-            leftHandObject.GetChild(1).transform.rotation = leftHandAnchor.rotation * LeftControllerRotationOffset;
-
-            rightHandObject.GetChild(1).transform.position = rightHandAnchor.TransformPoint(RightControllerOffset);
-            rightHandObject.GetChild(1).transform.rotation = rightHandAnchor.rotation * RightControllerRotationOffset;
-        }
     }
 }
