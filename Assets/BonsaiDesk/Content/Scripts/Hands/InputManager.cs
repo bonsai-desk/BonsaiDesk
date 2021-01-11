@@ -6,6 +6,8 @@ using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
+    public static InputManager Hands;
+
     [Header("Camera Rig Anchors")]
     public Transform leftHandAnchor;
 
@@ -15,6 +17,14 @@ public class InputManager : MonoBehaviour
     public Transform leftHandObject;
 
     public Transform rightHandObject;
+
+    [Header("PlayHand Scripts")]
+    public PlayerHand leftPlayerHand;
+
+    public PlayerHand rightPlayerHand;
+
+    [Header("")]
+    public Transform cameraRig;
 
     private static readonly Quaternion HandRotationOffset = Quaternion.AngleAxis(180f, Vector3.up);
 
@@ -29,35 +39,50 @@ public class InputManager : MonoBehaviour
     private static readonly Quaternion LeftControllerRotationOffset =
         FlipRotationX(RightControllerRotationOffset) * Quaternion.AngleAxis(180f, Vector3.up);
 
-    private HandComponents _left;
-    private HandComponents _right;
+    public HandComponents Left { get; private set; }
+    public HandComponents Right { get; private set; }
+
+    private IHandsTick[] _handsTicks;
+
+    private void Awake()
+    {
+        if (Hands != null)
+        {
+            Debug.LogError("There should only be one input manager.");
+        }
+
+        Hands = this;
+    }
 
     private void Start()
     {
-        if (leftHandAnchor && leftHandObject)
-        {
-            _left = new HandComponents(leftHandAnchor, leftHandObject);
-        }
+        _handsTicks = GetComponentsInChildren<IHandsTick>();
 
-        if (rightHandAnchor && rightHandObject)
-        {
-            _right = new HandComponents(rightHandAnchor, rightHandObject);
-        }
+        Left = new HandComponents(leftPlayerHand, leftHandAnchor, leftHandObject);
+        Right = new HandComponents(rightPlayerHand, rightHandAnchor, rightHandObject);
     }
-    
+
     private void Update()
     {
-        if (_left != null)
+        Left.PlayerHand.UpdateGestures();
+        Right.PlayerHand.UpdateGestures();
+
+        Left.PlayerHand.RunHandTicks();
+        Right.PlayerHand.RunHandTicks();
+
+        for (var i = 0; i < _handsTicks.Length; i++)
         {
-            UpdateHandTarget(_left, LeftControllerOffset, LeftControllerRotationOffset);
-            HandComponentsUpdate(_left);
+            _handsTicks[i].Tick(Left.PlayerHand, Right.PlayerHand);
         }
-        
-        if (_right != null)
-        {
-            UpdateHandTarget(_right, RightControllerOffset, RightControllerRotationOffset);
-            HandComponentsUpdate(_right);
-        }
+
+        Left.PlayerHand.UpdateLastGestures();
+        Right.PlayerHand.UpdateLastGestures();
+
+        UpdateHandTarget(Left, LeftControllerOffset, LeftControllerRotationOffset);
+        HandComponentsUpdate(Left);
+
+        UpdateHandTarget(Right, RightControllerOffset, RightControllerRotationOffset);
+        HandComponentsUpdate(Right);
     }
 
     private void HandComponentsUpdate(HandComponents handComponents)
@@ -74,34 +99,62 @@ public class InputManager : MonoBehaviour
         var controller = OVRInput.GetConnectedControllers();
         if (controller == OVRInput.Controller.Hands)
         {
-            handComponents.HandTarget.position = handComponents.HandAnchor.position;
-            handComponents.HandTarget.rotation = handComponents.HandAnchor.rotation * HandRotationOffset;
-            if (handComponents.MapperTargetsInitialized)
+            handComponents.SetTracking(handComponents.OVRSkeleton.IsInitialized &&
+                                       handComponents.OVRSkeleton.IsDataValid &&
+                                       handComponents.OVRSkeleton.IsDataHighConfidence);
+            if (handComponents.Tracking)
             {
-                handComponents.TargetMapper.UpdateBonesToTargets();
+                handComponents.HandTarget.position = handComponents.HandAnchor.position;
+                handComponents.HandTarget.rotation = handComponents.HandAnchor.rotation * HandRotationOffset;
+                if (handComponents.MapperTargetsInitialized)
+                {
+                    handComponents.TargetMapper.UpdateBonesToTargets();
+                }
             }
         }
         else if (controller == OVRInput.Controller.Touch)
         {
-            handComponents.HandTarget.position = handComponents.HandAnchor.TransformPoint(controllerOffset);
-            handComponents.HandTarget.rotation = handComponents.HandAnchor.rotation * rotationOffset;
-            handComponents.TargetMapper.UpdateBonesToStartPose();
+            handComponents.SetTracking(true);
+            if (handComponents.Tracking)
+            {
+                handComponents.HandTarget.position = handComponents.HandAnchor.TransformPoint(controllerOffset);
+                handComponents.HandTarget.rotation = handComponents.HandAnchor.rotation * rotationOffset;
+                handComponents.TargetMapper.UpdateBonesToStartPose();
+            }
         }
     }
 
-    private class HandComponents
+    public (Vector3 position, Quaternion rotation) PointerPose(HandComponents handComponents)
     {
+        if (OVRInput.GetConnectedControllers() == OVRInput.Controller.Hands)
+        {
+            return (cameraRig.TransformPoint(handComponents.OVRHand.PointerPose.localPosition),
+                cameraRig.rotation * handComponents.OVRHand.PointerPose.rotation);
+        }
+        else
+        {
+            Debug.LogError("PointerPose not implemented for controllers.");
+            return (Vector3.zero, Quaternion.identity);
+        }
+    }
+
+    public class HandComponents
+    {
+        public readonly PlayerHand PlayerHand;
         public readonly Transform HandAnchor;
         public readonly Transform HandObject;
         public readonly Transform PhysicsHand;
         public readonly Transform HandTarget;
         public readonly OVRHandTransformMapper TargetMapper;
         public readonly OVRSkeleton OVRSkeleton;
+        public readonly OVRHand OVRHand;
 
         public bool MapperTargetsInitialized = false;
+        public bool Tracking { get; private set; } = false;
 
-        public HandComponents(Transform handAnchor, Transform handObject)
+        public HandComponents(PlayerHand playerHand, Transform handAnchor, Transform handObject)
         {
+            PlayerHand = playerHand;
             HandAnchor = handAnchor;
             HandObject = handObject;
             PhysicsHand = handObject.GetChild(0);
@@ -111,6 +164,12 @@ public class InputManager : MonoBehaviour
             TargetMapper.targetObject = handAnchor;
 
             OVRSkeleton = handAnchor.GetComponentInChildren<OVRSkeleton>();
+            OVRHand = handAnchor.GetComponentInChildren<OVRHand>();
+        }
+
+        public void SetTracking(bool tracking)
+        {
+            Tracking = tracking;
         }
     }
 
