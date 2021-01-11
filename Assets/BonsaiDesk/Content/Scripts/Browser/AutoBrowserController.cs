@@ -30,8 +30,8 @@ public class AutoBrowserController : NetworkBehaviour
     private PlayerState _clientPlayerStatus;
     private float _clientPlayerTimeStamp;
     private ContentInfo _contentInfo;
-    private Coroutine _fetchAndReadyUp;
     private double _contentInfoAtTime;
+    private Coroutine _fetchAndReadyUp;
 
     [SyncVar] private float _height;
     [SyncVar] private ScrubData _idealScrub;
@@ -87,7 +87,7 @@ public class AutoBrowserController : NetworkBehaviour
         NetworkManagerGame.Singleton.ServerAddPlayer -= HandleServerAddPlayer;
         NetworkManagerGame.Singleton.ServerDisconnect -= HandleServerDisconnect;
         togglePause.CmdSetPausedServer -= HandleCmdSetPausedServer;
-        
+
         if (tabletSpot != null)
         {
             tabletSpot.SetNewVideo -= HandleSetNewVideo;
@@ -105,7 +105,7 @@ public class AutoBrowserController : NetworkBehaviour
     {
         LoadVideo(id, 0);
     }
-    
+
     private void HandleStopVideo()
     {
         if (_contentInfo.Active) CloseVideo();
@@ -113,52 +113,52 @@ public class AutoBrowserController : NetworkBehaviour
 
     private void HandleServerAddPlayer(NetworkConnection newConn)
     {
-            var newId = newConn.identity.netId;
-            TLog($"AutoBrowserController add player [{newId}]");
-            _clientsJoinedNetworkTime.Add(newId, NetworkTime.time);
-            if (_contentInfo.Active)
-            {
-                BeginSync("new player joined");
-                var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
-                TargetReloadYoutube(newConn, _contentInfo.ID, timeStamp, _contentInfo.Aspect);
-                foreach (var conn in NetworkServer.connections.Values)
-                    if (conn.identity.netId != newId)
-                        TargetReadyUp(conn, timeStamp);
-            }
+        var newId = newConn.identity.netId;
+        TLog($"AutoBrowserController add player [{newId}]");
+        _clientsJoinedNetworkTime.Add(newId, NetworkTime.time);
+        if (_contentInfo.Active)
+        {
+            BeginSync("new player joined");
+            var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
+            TargetReloadYoutube(newConn, _contentInfo.ID, timeStamp, _contentInfo.Aspect);
+            foreach (var conn in NetworkServer.connections.Values)
+                if (conn.identity.netId != newId)
+                    TargetReadyUp(conn, timeStamp);
+        }
     }
 
     private void HandleServerDisconnect(NetworkConnection conn)
     {
-            var id = conn.identity.netId;
-            TLog($"AutoBrowserController remove player [{id}]");
-            _clientsJoinedNetworkTime.Remove(id);
-            _clientsLastPing.Remove(id);
-            _clientsPlayerStatus.Remove(id);
+        var id = conn.identity.netId;
+        TLog($"AutoBrowserController remove player [{id}]");
+        _clientsJoinedNetworkTime.Remove(id);
+        _clientsLastPing.Remove(id);
+        _clientsPlayerStatus.Remove(id);
     }
 
     private void HandleCmdSetPausedServer(bool paused)
     {
-            if (!_contentInfo.Active)
-            {
-                Debug.LogWarning("Ignoring attempt to toggle pause status when content is not active");
-                return;
-            }
+        if (!_contentInfo.Active)
+        {
+            Debug.LogWarning("Ignoring attempt to toggle pause status when content is not active");
+            return;
+        }
 
-            if (paused)
-            {
-                // todo set the toggle pause inactive now
-                _idealScrub = _idealScrub.Pause(NetworkTime.time);
-                var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
-                TLog($"Paused scrub at timestamp {timeStamp}");
-                RpcReadyUp(timeStamp);
-            }
-            else
-            {
-                // todo set the togglepause to activate when this starts
-                var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
-                BeginSync("toggled play");
-                RpcReadyUp(timeStamp);
-            }
+        if (paused)
+        {
+            // todo set the toggle pause inactive now
+            _idealScrub = _idealScrub.Pause(NetworkTime.time);
+            var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
+            TLog($"Paused scrub at timestamp {timeStamp}");
+            RpcReadyUp(timeStamp);
+        }
+        else
+        {
+            // todo set the togglepause to activate when this starts
+            var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
+            BeginSync("toggled play");
+            RpcReadyUp(timeStamp);
+        }
     }
 
     private void HandlePlayerClient()
@@ -553,10 +553,10 @@ public class AutoBrowserController : NetworkBehaviour
     {
         public const string Play = "{\"type\": \"video\", \"command\": \"play\"}";
         public const string Pause = "{\"type\": \"video\", \"command\": \"pause\"}";
-        public static readonly string NavHome = PushPath("/home");
 
         public const string MaskOn = "{" + "\"type\": \"video\", " + "\"command\": \"maskOn\" " + "}";
         public const string MaskOff = "{" + "\"type\": \"video\", " + "\"command\": \"maskOff\" " + "}";
+        public static readonly string NavHome = PushPath("/home");
 
         private static string PushPath(string path)
         {
