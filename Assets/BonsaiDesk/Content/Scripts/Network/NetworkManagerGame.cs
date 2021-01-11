@@ -739,7 +739,6 @@ public class NetworkManagerGame : NobleNetworkManager
         base.OnClientConnect(conn);
 
         NetworkClient.RegisterHandler<SpotMessage>(OnSpot);
-        NetworkClient.RegisterHandler<ActionMessage>(OnAction);
         NetworkClient.RegisterHandler<ShouldDisconnectMessage>(OnShouldDisconnect);
 
         // triggers when client connects to remote host
@@ -751,7 +750,6 @@ public class NetworkManagerGame : NobleNetworkManager
         Debug.Log("[BONSAI] OnClientDisconnect");
 
         NetworkClient.UnregisterHandler<SpotMessage>();
-        NetworkClient.UnregisterHandler<ActionMessage>();
         NetworkClient.UnregisterHandler<ShouldDisconnectMessage>();
 
         switch (State)
@@ -848,11 +846,6 @@ public class NetworkManagerGame : NobleNetworkManager
         public int SpotId;
     }
 
-    public struct ActionMessage : NetworkMessage
-    {
-        public int ActionId;
-    }
-
     private static void OnSpot(NetworkConnection conn, SpotMessage msg)
     {
         switch (msg.SpotId)
@@ -868,24 +861,6 @@ public class NetworkManagerGame : NobleNetworkManager
         }
 
         AssignedColorIndex = msg.ColorIndex;
-    }
-
-    private static void OnAction(NetworkConnection conn, ActionMessage msg)
-    {
-        switch (msg.ActionId)
-        {
-            case 0: //play video
-                BrowserManager.instance.StartVideo();
-                break;
-
-            case 1: //resume video
-                BrowserManager.instance.ResumeVideo();
-                break;
-
-            case 2: //pause video
-                BrowserManager.instance.PauseVideo();
-                break;
-        }
     }
 
     #endregion

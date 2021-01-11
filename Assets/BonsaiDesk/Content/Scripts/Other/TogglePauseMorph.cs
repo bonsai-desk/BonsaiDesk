@@ -63,6 +63,10 @@ public class TogglePauseMorph : MonoBehaviour
     /// </summary>
     public void SetPaused(float pauseLerp)
     {
+        
+        if (!material) {
+            material = GetComponent<MeshRenderer>().material;
+        }
         material.SetFloat(pausedId, Mathf.Clamp01(pauseLerp));
     }
 
@@ -71,6 +75,9 @@ public class TogglePauseMorph : MonoBehaviour
     /// </summary>
     public void SetVisibility(float visibility)
     {
+        if (!material) {
+            material = GetComponent<MeshRenderer>().material;
+        }
         material.SetFloat(visibilityId, Mathf.Clamp01(visibility));
     }
 }

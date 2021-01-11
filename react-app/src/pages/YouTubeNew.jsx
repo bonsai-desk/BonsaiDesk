@@ -1,17 +1,8 @@
 import YouTube from "react-youtube";
 import React, {useState, useEffect, useCallback} from "react";
-import {useHistory} from "react-router-dom";
+import {useHistory, useLocation} from "react-router-dom";
 
-let opts = {
-    width: window.innerWidth,
-    height: window.innerHeight / 2,
-    playerVars: {
-        autoplay: 0,
-        controls: 0,
-        disablekb: 1,
-        rel: 0
-    }
-}
+
 
 const PlayerState = {
     UNSTARTED: -1,
@@ -50,7 +41,27 @@ let showState = (state) => {
 
 }
 
+let useQuery = () => {
+    return new URLSearchParams(useLocation().search)
+}
+
 let Video = (props) => {
+
+    let query = useQuery();
+
+    let xRes = parseInt(query.get("x"));
+    let yRes = parseInt(query.get("y"));
+
+    let opts = {
+        width: xRes && yRes ? xRes : window.innerWidth,
+        height: xRes && yRes ? yRes : window.innerHeight,
+        playerVars: {
+            autoplay: 0,
+            controls: 0,
+            disablekb: 1,
+            rel: 0
+        }
+    }
 
     let history = useHistory();
 
@@ -284,13 +295,18 @@ let Video = (props) => {
 
     return (
         <div>
-            <p onClick={() => {
-                history.push("/home")
-            }}>home</p>
-            {" "}
-            <p onClick={() => {
-                readyUp(40)
-            }}>ready up</p>
+            {dev_mode ?
+                <div>
+                    <p onClick={() => {
+                        history.push("/home")
+                    }}>home</p>
+                    {" "}
+                    <p onClick={() => {
+                        readyUp(40)
+                    }}>ready up</p>
+                </div>
+                : ""
+            }
             <YouTube
                 opts={opts}
                 onReady={onReady}
