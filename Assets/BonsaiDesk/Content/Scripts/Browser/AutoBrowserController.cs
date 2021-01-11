@@ -271,11 +271,11 @@ public class AutoBrowserController : NetworkBehaviour
         Debug.Log($"setup browser {_autoBrowser} {useBuiltHtml}");
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         if (useBuiltHtml)
-            _autoBrowser.LoadHtml(BonsaiUI.Html);
+            _autoBrowser.LoadUrl("streaming-assets://BonsaiUI.html");
         else
             _autoBrowser.LoadUrl(hotReloadUrl);
 #else
-        _autoBrowser.LoadHtml(BonsaiUI.Html);
+        _autoBrowser.LoadUrl("streaming-assets://build/index.html");
 #endif
         if (!restart) _autoBrowser.OnMessageEmitted(HandleJavascriptMessage);
     }

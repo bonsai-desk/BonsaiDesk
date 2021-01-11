@@ -1,6 +1,6 @@
 import React from "react";
 import "./assets/main.css";
-import {BrowserRouter as Router, Route, Switch, useHistory} from "react-router-dom";
+import {MemoryRouter as Router, Route, Switch, useHistory} from "react-router-dom";
 import YouTube from "./pages/YouTubeNew";
 
 let Boot = () => {
@@ -44,7 +44,7 @@ let Boot = () => {
     return (
         <div>
             Boot
-            <p onClick={()=>{history.push("/youtube_test/qEfPBt9dU60/19.02890180001912")}}>test</p>
+            <p onClick={()=>{history.push("/youtube_test/qEfPBt9dU60/19.02890180001912?x=480&y=360")}}>test video</p>
         </div>
     )
 }
@@ -66,7 +66,7 @@ function App() {
 
                     <Route exact path={"/youtube_test/:id/:timeStamp"} component={YouTube}/>
 
-                    <Route exact path={window.location.pathname} component={Boot}/>
+                    <Route path={"/"} component={Boot}/>
 
                 </Switch>
             </div>

@@ -1,8 +1,6 @@
 import YouTube from "react-youtube";
 import React, {useState, useEffect, useCallback} from "react";
-import {useHistory, useLocation} from "react-router-dom";
-
-
+import {useHistory} from "react-router-dom";
 
 const PlayerState = {
     UNSTARTED: -1,
@@ -41,13 +39,8 @@ let showState = (state) => {
 
 }
 
-let useQuery = () => {
-    return new URLSearchParams(useLocation().search)
-}
-
 let Video = (props) => {
-
-    let query = useQuery();
+    let query = new URLSearchParams(props.location.search)
 
     let xRes = parseInt(query.get("x"));
     let yRes = parseInt(query.get("y"));
@@ -65,7 +58,7 @@ let Video = (props) => {
 
     let history = useHistory();
 
-    let dev_mode = window.location.pathname.split("/")[1] === "youtube_test";
+    let dev_mode = props.location.pathname.split("/")[1] === "youtube_test";
 
     let {id, timeStamp} = props.match.params;
 
