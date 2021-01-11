@@ -35,13 +35,13 @@ public class AutoBrowserController : NetworkBehaviour
 
     [SyncVar] private float _height;
     [SyncVar] private ScrubData _idealScrub;
-    private int _vidId;
-    private bool devFlip;
 
     private void Start()
     {
-        if (isServer) HandleStartServer();
-        if (isClient) HandleStartClient();
+        // so the server runs a browser but does not sync it yet
+        // it will need to be synced for streamer mode
+        _autoBrowser = GetComponent<AutoBrowser>();
+        _autoBrowser.BrowserReady += () => { SetupBrowser(); };
     }
 
     private void Update()
@@ -65,13 +65,54 @@ public class AutoBrowserController : NetworkBehaviour
         _clientPlayerStatus = PlayerState.Unstarted;
     }
 
-    private void HandleStartServer()
+    public override void OnStartServer()
     {
+        base.OnStartServer();
         _contentInfo = new ContentInfo(false, "", new Vector2(1, 1));
+        NetworkManagerGame.Singleton.ServerAddPlayer += HandleServerAddPlayer;
+        NetworkManagerGame.Singleton.ServerDisconnect += HandleServerDisconnect;
+        togglePause.CmdSetPausedServer += HandleCmdSetPausedServer;
 
-        // setup player join/leave handlers
-        NetworkManagerGame.Singleton.ServerAddPlayer += newConn =>
+        if (tabletSpot != null)
         {
+            tabletSpot.SetNewVideo += HandleSetNewVideo;
+            tabletSpot.PlayVideo += HandlePlayVideo;
+            tabletSpot.StopVideo += HandleStopVideo;
+        }
+    }
+
+    public override void OnStopServer()
+    {
+        base.OnStopServer();
+        NetworkManagerGame.Singleton.ServerAddPlayer -= HandleServerAddPlayer;
+        NetworkManagerGame.Singleton.ServerDisconnect -= HandleServerDisconnect;
+        togglePause.CmdSetPausedServer -= HandleCmdSetPausedServer;
+        
+        if (tabletSpot != null)
+        {
+            tabletSpot.SetNewVideo -= HandleSetNewVideo;
+            tabletSpot.PlayVideo -= HandlePlayVideo;
+            tabletSpot.StopVideo -= HandleStopVideo;
+        }
+    }
+
+    private void HandleSetNewVideo(string id)
+    {
+        if (_contentInfo.Active) CloseVideo();
+    }
+
+    private void HandlePlayVideo(string id)
+    {
+        LoadVideo(id, 0);
+    }
+    
+    private void HandleStopVideo()
+    {
+        if (_contentInfo.Active) CloseVideo();
+    }
+
+    private void HandleServerAddPlayer(NetworkConnection newConn)
+    {
             var newId = newConn.identity.netId;
             TLog($"AutoBrowserController add player [{newId}]");
             _clientsJoinedNetworkTime.Add(newId, NetworkTime.time);
@@ -84,19 +125,19 @@ public class AutoBrowserController : NetworkBehaviour
                     if (conn.identity.netId != newId)
                         TargetReadyUp(conn, timeStamp);
             }
-        };
-        NetworkManagerGame.Singleton.ServerDisconnect += conn =>
-        {
+    }
+
+    private void HandleServerDisconnect(NetworkConnection conn)
+    {
             var id = conn.identity.netId;
             TLog($"AutoBrowserController remove player [{id}]");
             _clientsJoinedNetworkTime.Remove(id);
             _clientsLastPing.Remove(id);
             _clientsPlayerStatus.Remove(id);
-        };
+    }
 
-        // setup pause/play handlers
-        togglePause.CmdSetPausedServer += paused =>
-        {
+    private void HandleCmdSetPausedServer(bool paused)
+    {
             if (!_contentInfo.Active)
             {
                 Debug.LogWarning("Ignoring attempt to toggle pause status when content is not active");
@@ -118,28 +159,6 @@ public class AutoBrowserController : NetworkBehaviour
                 BeginSync("toggled play");
                 RpcReadyUp(timeStamp);
             }
-        };
-
-        // todo handle event subscription cleanup
-        if (tabletSpot != null)
-        {
-            tabletSpot.SetNewVideo += id =>
-            {
-                if (_contentInfo.Active) CloseVideo();
-            };
-            tabletSpot.PlayVideo += id => { LoadVideo(id, 0); };
-            tabletSpot.StopVideo += () =>
-            {
-                if (_contentInfo.Active) CloseVideo();
-            };
-        }
-    }
-
-    private void HandleStartClient()
-    {
-        _autoBrowser = GetComponent<AutoBrowser>();
-        _autoBrowser.BrowserReady += () => { SetupBrowser(); };
-        togglePause.PauseChangedClient += paused => { TLog($"Pause changed to {paused}"); };
     }
 
     private void HandlePlayerClient()
@@ -339,33 +358,9 @@ public class AutoBrowserController : NetworkBehaviour
         return _clientsPlayerStatus.Values.All(status => status == playerState);
     }
 
-    public void ButtonChangeAspect()
-    {
-        _autoBrowser.ChangeAspect(devFlip ? new Vector2(21, 9) : new Vector2(1, 1));
-        devFlip = !devFlip;
-    }
-
     public void ButtonReloadBrowser()
     {
         SetupBrowser(true);
-    }
-
-    public void ButtonLoadVideo()
-    {
-        var vidIds = new[] {"pP44EPBMb8A", "Cg0QwoHh9w4"};
-
-        switch (_contentInfo.Active)
-        {
-            case true:
-                TLog("Button go home");
-                CmdCloseVideo();
-                break;
-            case false:
-                TLog("Button load video");
-                CmdLoadVideo(vidIds[_vidId], 0);
-                _vidId = _vidId == vidIds.Length - 1 ? 0 : _vidId + 1;
-                break;
-        }
     }
 
 
