@@ -116,10 +116,15 @@ public class AutoBrowser : MonoBehaviour
 
         var resolution = AutoResolution(localScale.y, distanceEstimate, pixelPerDegree, newAspect);
 
-        _webViewPrefab.WebView.SetResolution(1);
+        if (!Mathf.Approximately(1, _webViewPrefab.WebView.Resolution))
+        {
+            _webViewPrefab.WebView.SetResolution(1);
+        }
+        
         _webViewPrefab.WebView.Resize(resolution.x, resolution.y);
 
         boundsTransform.localScale = localScale;
+        
 #if UNITY_ANDROID && !UNITY_EDITOR
         RebuildOverlay(resolution);
 #endif
