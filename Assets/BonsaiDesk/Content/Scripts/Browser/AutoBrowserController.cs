@@ -19,6 +19,7 @@ public class AutoBrowserController : NetworkBehaviour
     public bool useBuiltHtml = true;
     public string hotReloadUrl;
     public TogglePause togglePause;
+    public TabletSpot tabletSpot;
     private readonly Dictionary<uint, double> _clientsJoinedNetworkTime = new Dictionary<uint, double>();
     private readonly Dictionary<uint, double> _clientsLastPing = new Dictionary<uint, double>();
     private readonly Dictionary<uint, PlayerState> _clientsPlayerStatus = new Dictionary<uint, PlayerState>();
@@ -117,6 +118,13 @@ public class AutoBrowserController : NetworkBehaviour
                 RpcReadyUp(timeStamp);
             }
         };
+
+        // todo handle event subscription cleanup
+        if (tabletSpot != null)
+        {
+            tabletSpot.PlayVideo += id => { LoadVideo(id, 0); };
+            tabletSpot.StopVideo += CloseVideo;
+        }
     }
 
     private void HandleStartClient()
@@ -367,6 +375,29 @@ public class AutoBrowserController : NetworkBehaviour
         RpcReloadYouTube(_contentInfo.ID, timeStamp);
     }
 
+    [Server]
+    private void LoadVideo(string id, double timeStamp)
+    {
+        togglePause.ServerSetPaused(false);
+
+        TLog($"Fetching info for video {id}");
+
+        if (_fetchAndReadyUp != null) StopCoroutine(_fetchAndReadyUp);
+
+        _fetchAndReadyUp = StartCoroutine(FetchYouTubeAspect(id, aspect =>
+        {
+            TLog($"Fetched aspect ({aspect.x},{aspect.y}) for video ({id})");
+
+            _contentInfo = new ContentInfo(true, id, aspect);
+            _idealScrub = ScrubData.PausedAtScrub(timeStamp);
+
+            BeginSync("new video");
+            RpcReloadYouTube(id, timeStamp);
+
+            _fetchAndReadyUp = null;
+        }));
+    }
+
 
     [Command(ignoreAuthority = true)]
     private void CmdPingAndCheckTimeStamp(uint id, double networkTime, double timeStamp)
@@ -391,28 +422,18 @@ public class AutoBrowserController : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdLoadVideo(string id, double timeStamp)
     {
-        togglePause.ServerSetPaused(false);
-
-        TLog($"Fetching info for video {id}");
-
-        if (_fetchAndReadyUp != null) StopCoroutine(_fetchAndReadyUp);
-
-        _fetchAndReadyUp = StartCoroutine(FetchYouTubeAspect(id, aspect =>
-        {
-            TLog($"Fetched aspect ({aspect.x},{aspect.y}) for video ({id})");
-
-            _contentInfo = new ContentInfo(true, id, aspect);
-            _idealScrub = ScrubData.PausedAtScrub(timeStamp);
-
-            BeginSync("new video");
-            RpcReloadYouTube(id, timeStamp);
-
-            _fetchAndReadyUp = null;
-        }));
+        LoadVideo(id, timeStamp);
     }
+
 
     [Command(ignoreAuthority = true)]
     private void CmdCloseVideo()
+    {
+        CloseVideo();
+    }
+
+    [Server]
+    private void CloseVideo()
     {
         // todo set paused
         // todo lower the screen
