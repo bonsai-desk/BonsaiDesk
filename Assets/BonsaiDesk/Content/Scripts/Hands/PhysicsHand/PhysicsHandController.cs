@@ -33,7 +33,7 @@ public class PhysicsHandController : MonoBehaviour
         if (!_initialized && targetMapper)
             Init();
     }
-
+    
     private void FixedUpdate()
     {
         if (!_initialized)
