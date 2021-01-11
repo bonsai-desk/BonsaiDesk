@@ -69,6 +69,8 @@ let Video = (props) => {
 
     let {id, timeStamp} = props.match.params;
 
+    let [masked, setMasked] = useState(true)
+
     let [player, setPlayer] = useState(null);
     let [init, setInit] = useState(false);
 
@@ -236,6 +238,14 @@ let Video = (props) => {
                     console.log("COMMAND: readyUp")
                     readyUp(json.timeStamp)
                     break;
+                case "maskOn":
+                    console.log("COMMAND: maskOn")
+                    setMasked(true)
+                    break;
+                case "maskOff":
+                    console.log("COMMAND: maskOff")
+                    setMasked(false)
+                    break;
                 default:
                     console.log("command: not handled (video) " + event.data)
                     break;
@@ -266,6 +276,11 @@ let Video = (props) => {
             clearInterval(pingPlayerTime)
         }
     }, [id, player, dev_mode])
+    useEffect (() => {
+        if (ready && masked) {
+            setMasked(false);
+        }
+    }, [ready, masked])
 
     let onStateChange = (event) => {
         switch (event.data) {
@@ -308,6 +323,7 @@ let Video = (props) => {
                 : ""
             }
             <YouTube
+                className={masked ? "opacity-0" : "opacity-100"}
                 opts={opts}
                 onReady={onReady}
                 onError={onError}
