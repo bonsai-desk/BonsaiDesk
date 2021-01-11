@@ -29,8 +29,9 @@ public class AutoBrowserController : NetworkBehaviour
     private double _clientLastSentPing;
     private PlayerState _clientPlayerStatus;
     private float _clientPlayerTimeStamp;
-    [SyncVar] private ContentInfo _contentInfo;
+    private ContentInfo _contentInfo;
     private Coroutine _fetchAndReadyUp;
+    private double _contentInfoAtTime;
 
     [SyncVar] private float _height;
     [SyncVar] private ScrubData _idealScrub;
@@ -62,7 +63,6 @@ public class AutoBrowserController : NetworkBehaviour
     {
         base.OnStartClient();
         _clientPlayerStatus = PlayerState.Unstarted;
-        _autoBrowser.ChangeAspect(_contentInfo.Active ? _contentInfo.Aspect : new Vector2(1, 1));
     }
 
     private void HandleStartServer()
@@ -79,7 +79,7 @@ public class AutoBrowserController : NetworkBehaviour
             {
                 BeginSync("new player joined");
                 var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
-                TargetReloadYoutube(newConn, _contentInfo.ID, timeStamp);
+                TargetReloadYoutube(newConn, _contentInfo.ID, timeStamp, _contentInfo.Aspect);
                 foreach (var conn in NetworkServer.connections.Values)
                     if (conn.identity.netId != newId)
                         TargetReadyUp(conn, timeStamp);
@@ -123,8 +123,15 @@ public class AutoBrowserController : NetworkBehaviour
         // todo handle event subscription cleanup
         if (tabletSpot != null)
         {
+            tabletSpot.SetNewVideo += id =>
+            {
+                if (_contentInfo.Active) CloseVideo();
+            };
             tabletSpot.PlayVideo += id => { LoadVideo(id, 0); };
-            tabletSpot.StopVideo += CloseVideo;
+            tabletSpot.StopVideo += () =>
+            {
+                if (_contentInfo.Active) CloseVideo();
+            };
         }
     }
 
@@ -227,7 +234,7 @@ public class AutoBrowserController : NetworkBehaviour
     private void HandleScreenServer()
     {
         const float transitionTime = 0.5f;
-        var browserDown = !_contentInfo.Active;
+        var browserDown = !_contentInfo.Active || NetworkTime.time - _contentInfoAtTime < 1.5;
         var targetHeight = browserDown ? 0 : 1;
 
         if (!Mathf.Approximately(_height, targetHeight))
@@ -315,10 +322,10 @@ public class AutoBrowserController : NetworkBehaviour
         return synced;
     }
 
-    private void ReloadYouTube(string id, double timeStamp)
+    private void ReloadYouTube(string id, double timeStamp, Vector2 aspect)
     {
         TLog($"NavHome then load {id} at {timeStamp}");
-        var resolution = _autoBrowser.ChangeAspect(_contentInfo.Aspect);
+        var resolution = _autoBrowser.ChangeAspect(aspect);
         _autoBrowser.PostMessages(new[]
         {
             YouTubeMessage.NavHome,
@@ -379,7 +386,7 @@ public class AutoBrowserController : NetworkBehaviour
 
         var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
         togglePause.ServerSetPaused(false);
-        RpcReloadYouTube(_contentInfo.ID, timeStamp);
+        RpcReloadYouTube(_contentInfo.ID, timeStamp, _contentInfo.Aspect);
     }
 
     [Server]
@@ -396,10 +403,11 @@ public class AutoBrowserController : NetworkBehaviour
             TLog($"Fetched aspect ({aspect.x},{aspect.y}) for video ({id})");
 
             _contentInfo = new ContentInfo(true, id, aspect);
+            _contentInfoAtTime = NetworkTime.time;
             _idealScrub = ScrubData.PausedAtScrub(timeStamp);
 
             BeginSync("new video");
-            RpcReloadYouTube(id, timeStamp);
+            RpcReloadYouTube(id, timeStamp, aspect);
 
             _fetchAndReadyUp = null;
         }));
@@ -451,17 +459,17 @@ public class AutoBrowserController : NetworkBehaviour
 
 
     [TargetRpc]
-    private void TargetReloadYoutube(NetworkConnection target, string id, double timeStamp)
+    private void TargetReloadYoutube(NetworkConnection target, string id, double timeStamp, Vector2 aspect)
     {
         TLog("[Target RPC] ReloadYouTube");
-        ReloadYouTube(id, timeStamp);
+        ReloadYouTube(id, timeStamp, aspect);
     }
 
     [ClientRpc]
-    private void RpcReloadYouTube(string id, double timeStamp)
+    private void RpcReloadYouTube(string id, double timeStamp, Vector2 aspect)
     {
         TLog("[RPC] ReloadYouTube");
-        ReloadYouTube(id, timeStamp);
+        ReloadYouTube(id, timeStamp, aspect);
     }
 
     [ClientRpc]

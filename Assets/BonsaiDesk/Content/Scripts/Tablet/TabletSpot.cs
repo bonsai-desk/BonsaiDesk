@@ -13,6 +13,8 @@ public class TabletSpot : NetworkBehaviour
     private Vector3 _startPosition;
     private Quaternion _startRotation;
     private Vector3 _startScale;
+    
+    public event Action<string> SetNewVideo;
 
     public event Action<string> PlayVideo;
     public event Action StopVideo;
@@ -63,6 +65,7 @@ public class TabletSpot : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     public void CmdSetNewVideo(NetworkIdentity tabletIdentity)
     {
+        SetNewVideo?.Invoke(tabletIdentity.GetComponent<TabletControl>().videoId);
         if (_currentTabletIdentity)
         {
             _currentTabletIdentity.GetComponent<TabletControl>().SetServerLerping(false);
