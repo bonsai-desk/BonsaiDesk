@@ -35,6 +35,7 @@ public class AutoBrowserController : NetworkBehaviour
     [SyncVar] private float _height;
     [SyncVar] private ScrubData _idealScrub;
     private int _vidId;
+    private bool devFlip;
 
     private void Start()
     {
@@ -331,6 +332,12 @@ public class AutoBrowserController : NetworkBehaviour
         return _clientsPlayerStatus.Values.All(status => status == playerState);
     }
 
+    public void ButtonChangeAspect()
+    {
+        _autoBrowser.ChangeAspect(devFlip ? new Vector2(21, 9) : new Vector2(1, 1));
+        devFlip = !devFlip;
+    }
+
     public void ButtonReloadBrowser()
     {
         SetupBrowser(true);
@@ -544,6 +551,9 @@ public class AutoBrowserController : NetworkBehaviour
         public const string Play = "{\"type\": \"video\", \"command\": \"play\"}";
         public const string Pause = "{\"type\": \"video\", \"command\": \"pause\"}";
         public static readonly string NavHome = PushPath("/home");
+
+        public const string MaskOn = "{" + "\"type\": \"video\", " + "\"command\": \"maskOn\" " + "}";
+        public const string MaskOff = "{" + "\"type\": \"video\", " + "\"command\": \"maskOff\" " + "}";
 
         private static string PushPath(string path)
         {
