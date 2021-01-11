@@ -85,6 +85,7 @@ public class InputManager : MonoBehaviour
         {
             handComponents.HandTarget.position = handComponents.HandAnchor.TransformPoint(controllerOffset);
             handComponents.HandTarget.rotation = handComponents.HandAnchor.rotation * rotationOffset;
+            handComponents.TargetMapper.UpdateBonesToStartPose();
         }
     }
 

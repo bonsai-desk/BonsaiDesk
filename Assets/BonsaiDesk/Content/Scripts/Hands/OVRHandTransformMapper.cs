@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class OVRHandTransformMapper : MonoBehaviour
@@ -20,6 +21,16 @@ public class OVRHandTransformMapper : MonoBehaviour
     public bool moveBonesToTargets = true;
 
     private readonly Quaternion _fixRotation = Quaternion.AngleAxis(180f, Vector3.up);
+
+    private Quaternion[] _startPose = new Quaternion[24];
+
+    private void Start()
+    {
+        for (int i = 0; i < CustomBones.Count && i < _startPose.Length; i++)
+        {
+            _startPose[i] = CustomBones[i].localRotation;
+        }
+    }
 
     private void Update()
     {
@@ -66,6 +77,22 @@ public class OVRHandTransformMapper : MonoBehaviour
         else
         {
             Debug.LogError("BoneTargets length must equal Bones length");
+        }
+    }
+
+    public void UpdateBonesToStartPose()
+    {
+        UpdateBonesToPose(_startPose);
+    }
+
+    private void UpdateBonesToPose(Quaternion[] pose)
+    {
+        for (int i = 0; i < pose.Length; i++)
+        {
+            if (pose[i] != null && CustomBones[i])
+            {
+                CustomBones[i].localRotation = pose[i];
+            }
         }
     }
 
