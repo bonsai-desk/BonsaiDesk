@@ -18,7 +18,7 @@ public class PhysicsHandController : MonoBehaviour
     public Transform[] fingerTargets;
 
     public Vector3 jointOffset = new Vector3(0.035f, 0, 0);
-    
+
     private bool _initialized = false;
     private ConfigurableJoint _joint;
     private Rigidbody _rigidbody;
@@ -33,14 +33,14 @@ public class PhysicsHandController : MonoBehaviour
         if (!_initialized && targetMapper && skeletonType != OVRSkeleton.SkeletonType.None)
             Init();
     }
-    
+
     private void FixedUpdate()
     {
         if (!_initialized)
             return;
 
-        if (Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) >
-            SnapBackDistanceThresholdSquared && !CheckHit())
+        float distanceSqaured = Vector3.SqrMagnitude(transform.position - targetMapper.transform.position);
+        if (float.IsNaN(distanceSqaured) && !CheckHit() || distanceSqaured > SnapBackDistanceThresholdSquared && !CheckHit())
         {
             ResetFingerJoints();
         }

@@ -103,7 +103,7 @@ public class InputManager : MonoBehaviour
     private void UpdateHandTarget(HandComponents handComponents, Vector3 controllerOffset, Quaternion rotationOffset)
     {
         var controller = OVRInput.GetConnectedControllers();
-        if (controller == OVRInput.Controller.Hands)
+        if (controller == OVRInput.Controller.Hands || true)
         {
             handComponents.SetTracking(handComponents.OVRSkeleton.IsInitialized &&
                                        handComponents.OVRSkeleton.IsDataValid &&
@@ -154,16 +154,18 @@ public class InputManager : MonoBehaviour
 
     public (Vector3 position, Quaternion rotation) PointerPose(HandComponents handComponents)
     {
-        if (OVRInput.GetConnectedControllers() == OVRInput.Controller.Hands)
-        {
-            return (cameraRig.TransformPoint(handComponents.OVRHand.PointerPose.localPosition),
-                cameraRig.rotation * handComponents.OVRHand.PointerPose.rotation);
-        }
-        else
-        {
-            Debug.LogError("PointerPose not implemented for controllers.");
-            return (Vector3.zero, Quaternion.identity);
-        }
+        Debug.LogError("Not implemented.");
+        return (Vector3.zero, Quaternion.identity);
+        // if (OVRInput.GetConnectedControllers() == OVRInput.Controller.Hands)
+        // {
+        //     return (cameraRig.TransformPoint(handComponents.OVRHand.PointerPose.localPosition),
+        //         cameraRig.rotation * handComponents.OVRHand.PointerPose.rotation);
+        // }
+        // else
+        // {
+        //     Debug.LogError("PointerPose not implemented for controllers.");
+        //     return (Vector3.zero, Quaternion.identity);
+        // }
     }
 
     private static Quaternion FlipRotationX(Quaternion rotation)

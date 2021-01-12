@@ -27,6 +27,7 @@ public class HandComponents
 
         PhysicsHand = handObject.GetChild(0);
         TargetHand = handObject.GetChild(1);
+        PlayerHand.transform.SetParent(PhysicsHand, false);
 
         PhysicsMapper = PhysicsHand.GetComponentInChildren<OVRHandTransformMapper>();
 
