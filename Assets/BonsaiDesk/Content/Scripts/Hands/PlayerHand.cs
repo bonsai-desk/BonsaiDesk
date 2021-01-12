@@ -4,9 +4,12 @@ using UnityEngine;
 
 public class PlayerHand : MonoBehaviour
 {
+    [HideInInspector] public OVRHandTransformMapper targetMapper;
+    [HideInInspector] public OVRHandTransformMapper physicsMapper;
+    
     private IHandTick[] _handTicks;
     private Dictionary<Type, IHandTick> _handTicksDictionary;
-
+    
     private readonly Dictionary<Gesture, bool> _gestures = new Dictionary<Gesture, bool>();
     private readonly Dictionary<Gesture, bool> _lastGestures = new Dictionary<Gesture, bool>();
     private readonly Dictionary<Gesture, float> _lastGestureActiveTime = new Dictionary<Gesture, float>();

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
+using System.Collections.ObjectModel;
 using UnityEngine;
 
 public class InputManager : MonoBehaviour
@@ -42,6 +42,10 @@ public class InputManager : MonoBehaviour
     public HandComponents Left { get; private set; }
     public HandComponents Right { get; private set; }
 
+    //0-4 thumb to pinky on left hand, 5-9 thumb to pinky right hand.
+    public Vector3[] physicsFingerTipPositions = new Vector3[10];
+    public Vector3[] targetFingerTipPositions = new Vector3[10];
+
     private IHandsTick[] _handsTicks;
 
     private void Awake()
@@ -64,6 +68,8 @@ public class InputManager : MonoBehaviour
 
     private void Update()
     {
+        CalculateFingerTipPositions();
+
         Left.PlayerHand.UpdateGestures();
         Right.PlayerHand.UpdateGestures();
 
@@ -104,8 +110,8 @@ public class InputManager : MonoBehaviour
                                        handComponents.OVRSkeleton.IsDataHighConfidence);
             if (handComponents.Tracking)
             {
-                handComponents.HandTarget.position = handComponents.HandAnchor.position;
-                handComponents.HandTarget.rotation = handComponents.HandAnchor.rotation * HandRotationOffset;
+                handComponents.TargetHand.position = handComponents.HandAnchor.position;
+                handComponents.TargetHand.rotation = handComponents.HandAnchor.rotation * HandRotationOffset;
                 if (handComponents.MapperTargetsInitialized)
                 {
                     handComponents.TargetMapper.UpdateBonesToTargets();
@@ -117,9 +123,26 @@ public class InputManager : MonoBehaviour
             handComponents.SetTracking(true);
             if (handComponents.Tracking)
             {
-                handComponents.HandTarget.position = handComponents.HandAnchor.TransformPoint(controllerOffset);
-                handComponents.HandTarget.rotation = handComponents.HandAnchor.rotation * rotationOffset;
+                handComponents.TargetHand.position = handComponents.HandAnchor.TransformPoint(controllerOffset);
+                handComponents.TargetHand.rotation = handComponents.HandAnchor.rotation * rotationOffset;
                 handComponents.TargetMapper.UpdateBonesToStartPose();
+            }
+        }
+    }
+
+    private void CalculateFingerTipPositions()
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            if (i < 5)
+            {
+                physicsFingerTipPositions[i] = Left.PhysicsFingerTips[i].position;
+                targetFingerTipPositions[i] = Left.TargetFingerTips[i].position;
+            }
+            else
+            {
+                physicsFingerTipPositions[i] = Right.PhysicsFingerTips[i - 5].position;
+                targetFingerTipPositions[i] = Right.TargetFingerTips[i - 5].position;
             }
         }
     }
@@ -142,12 +165,16 @@ public class InputManager : MonoBehaviour
     {
         public readonly PlayerHand PlayerHand;
         public readonly Transform HandAnchor;
-        public readonly Transform HandObject;
         public readonly Transform PhysicsHand;
-        public readonly Transform HandTarget;
+        public readonly Transform TargetHand;
+        public readonly OVRHandTransformMapper PhysicsMapper;
         public readonly OVRHandTransformMapper TargetMapper;
         public readonly OVRSkeleton OVRSkeleton;
         public readonly OVRHand OVRHand;
+
+        //0 - thumb, 1 - index, 2 - middle, 3 - ring, 4 - pinky
+        public readonly Transform[] PhysicsFingerTips;
+        public readonly Transform[] TargetFingerTips;
 
         public bool MapperTargetsInitialized = false;
         public bool Tracking { get; private set; } = false;
@@ -156,15 +183,31 @@ public class InputManager : MonoBehaviour
         {
             PlayerHand = playerHand;
             HandAnchor = handAnchor;
-            HandObject = handObject;
-            PhysicsHand = handObject.GetChild(0);
-            HandTarget = handObject.GetChild(1);
 
-            TargetMapper = HandTarget.GetComponent<OVRHandTransformMapper>();
+            PhysicsHand = handObject.GetChild(0);
+            TargetHand = handObject.GetChild(1);
+
+            PhysicsMapper = PhysicsHand.GetComponentInChildren<OVRHandTransformMapper>();
+
+            TargetMapper = TargetHand.GetComponent<OVRHandTransformMapper>();
             TargetMapper.targetObject = handAnchor;
 
             OVRSkeleton = handAnchor.GetComponentInChildren<OVRSkeleton>();
             OVRHand = handAnchor.GetComponentInChildren<OVRHand>();
+
+            PhysicsFingerTips = GetFingerTips(PhysicsMapper);
+            TargetFingerTips = GetFingerTips(TargetMapper);
+        }
+
+        private static Transform[] GetFingerTips(OVRHandTransformMapper mapper)
+        {
+            var fingerTips = new Transform[5];
+            fingerTips[0] = mapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_ThumbTip];
+            fingerTips[1] = mapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_IndexTip];
+            fingerTips[2] = mapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_MiddleTip];
+            fingerTips[3] = mapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_RingTip];
+            fingerTips[4] = mapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_PinkyTip];
+            return fingerTips;
         }
 
         public void SetTracking(bool tracking)
