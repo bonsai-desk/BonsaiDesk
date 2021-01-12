@@ -1,7 +1,7 @@
 import React from "react";
 import "./assets/main.css";
 import {MemoryRouter as Router, Route, Switch, useHistory} from "react-router-dom";
-import YouTube from "./pages/YouTubeNew";
+import YouTube from "./pages/YouTube";
 
 let Boot = () => {
 
