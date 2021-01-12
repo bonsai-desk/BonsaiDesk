@@ -63,20 +63,22 @@ public class DrawingMesh : MonoBehaviour
             if (i != 1 && i != 6)
                 continue;
 
-            Vector3 p = PlayerHands.hands.fingerTipPositions[i];
-            Vector3 pp = PlayerHands.hands.physicsFingerTipPositions[i];
-            Vector3 ppp = PlayerHands.hands.physicsFingerPadPositions[i];
+            Vector3 p = InputManager.Hands.targetFingerTipPositions[i];
+            Vector3 pp = InputManager.Hands.physicsFingerTipPositions[i];
+            //TODO physics pad positions?
+            // Vector3 ppp = InputManager.Hands.physicsFingerPadPositions[i];
+            Vector3 ppp = pp;
             if ((Mathf.Abs(p.x) < canvas.transform.localScale.x / 2f && p.z > 0.01f && p.z < canvas.transform.localScale.y + 0.01f) &&
                 (Mathf.Abs(pp.x) < canvas.transform.localScale.x / 2f && pp.z > 0.01f && pp.z < canvas.transform.localScale.y + 0.01f) &&
                 (Mathf.Abs(p.y) < 0.015f && Mathf.Abs(pp.y) < 0.02f || Mathf.Abs(ppp.y) < 0.015f))
             {
                 if (tipDownLastFrame[i])
                 {
-                    if (tipPositionLastFrame[i] != PlayerHands.hands.fingerTipPositions[i])
+                    if (tipPositionLastFrame[i] != InputManager.Hands.targetFingerTipPositions[i])
                         addLineSegment(i);
                 }
                 tipDownLastFrame[i] = true;
-                tipPositionLastFrame[i] = PlayerHands.hands.fingerTipPositions[i];
+                tipPositionLastFrame[i] = InputManager.Hands.targetFingerTipPositions[i];
             }
             else
             {
@@ -111,7 +113,7 @@ public class DrawingMesh : MonoBehaviour
         float bwo2 = backWidth / 2f;
 
         Vector3 start = tipPositionLastFrame[index];
-        Vector3 end = PlayerHands.hands.fingerTipPositions[index];
+        Vector3 end = InputManager.Hands.targetFingerTipPositions[index];
         start.y = 0;
         end.y = 0;
 

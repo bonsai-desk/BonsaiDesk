@@ -62,9 +62,9 @@ public class NetworkHand : NetworkBehaviour
         CmdSetColor(NetworkManagerGame.AssignedColorIndex);
 
         if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
-            PlayerHands.hands.left.networkHand = this;
+            InputManager.Hands.Left.NetworkHand = this;
         if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
-            PlayerHands.hands.right.networkHand = this;
+            InputManager.Hands.Right.NetworkHand = this;
     }
 
     private void Update()
@@ -92,19 +92,17 @@ public class NetworkHand : NetworkBehaviour
             return;
         }
 
-        PlayerHand hand;
-        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
-            hand = PlayerHands.hands.left;
-        else
-            hand = PlayerHands.hands.right;
+        HandComponents hand = _skeletonType == OVRSkeleton.SkeletonType.HandLeft
+            ? InputManager.Hands.Left
+            : InputManager.Hands.Right;
 
-        if (!hand.Tracking())
+        if (!hand.Tracking)
             return;
 
-        if (hand.oVRSkeleton.IsInitialized && Time.time - lastSetTime > updateInterval)
+        if (Time.time - lastSetTime > updateInterval)
         {
             lastSetTime = Time.time;
-            var rotations = GetFingerRotations(hand);
+            var rotations = GetFingerRotations(hand.PhysicsMapper);
             CmdSetFingerRotations(rotations.rotations, rotations.tRotations);
         }
     }
@@ -140,7 +138,7 @@ public class NetworkHand : NetworkBehaviour
 
         float fingerDistance = Vector3.Distance(from, to);
         float fingerToConnectedPosition = Vector3.Distance(to, end);
-        if (fingerDistance > _pinchPullRopeLength - PinchPullHand.MinRopeLength)
+        if (fingerDistance > _pinchPullRopeLength - 0.05f) //PinchPullHand.MinRopeLength TODO add static reference back
         {
             Vector3 direction = Quaternion.LookRotation(from - to) * Vector3.forward;
             Vector3 start = to + (direction * _pinchPullRopeLength);
@@ -168,7 +166,7 @@ public class NetworkHand : NetworkBehaviour
         positions[3] = end;
         lineRenderer.SetPositions(positions);
     }
-    
+
     [Command]
     private void CmdSetColor(int color)
     {
@@ -213,7 +211,7 @@ public class NetworkHand : NetworkBehaviour
         lastRotationsUpdateTime = Time.time;
     }
 
-    private (ulong rotations, ulong tRotations) GetFingerRotations(PlayerHand hand)
+    private (ulong rotations, ulong tRotations) GetFingerRotations(OVRHandTransformMapper mapper)
     {
         ulong rotations = 0;
         ulong tRotations = 0;
@@ -225,7 +223,7 @@ public class NetworkHand : NetworkBehaviour
             if (i == 3)
                 fingerIndex++;
 
-            Vector3 localRight1 = hand.mapper.CustomBones[fingerIndex].localRotation * Vector3.right;
+            Vector3 localRight1 = mapper.CustomBones[fingerIndex].localRotation * Vector3.right;
             localRight1.z = 0;
             float rotation1 = Vector3.Angle(Vector3.right, localRight1);
             rotation1 = Mathf.Clamp(rotation1, 0f, 90f);
@@ -234,7 +232,7 @@ public class NetworkHand : NetworkBehaviour
             rotations <<= 8;
             rotations |= rotation1Byte;
 
-            Vector3 localRight2 = hand.mapper.CustomBones[fingerIndex + 1].localRotation * Vector3.right;
+            Vector3 localRight2 = mapper.CustomBones[fingerIndex + 1].localRotation * Vector3.right;
             localRight2.z = 0;
             float rotation2 = Vector3.Angle(Vector3.right, localRight2);
             rotation2 = Mathf.Clamp(rotation2, 0f, 90f);
@@ -247,7 +245,7 @@ public class NetworkHand : NetworkBehaviour
         //thumb
         int thumbIndex = 3;
 
-        Quaternion localRotation = hand.mapper.CustomBones[thumbIndex].localRotation;
+        Quaternion localRotation = mapper.CustomBones[thumbIndex].localRotation;
         for (int i = 0; i < 4; i++)
         {
             byte qPart = (byte) ((localRotation[i] + 1f) / 2f * 255f);
@@ -255,7 +253,7 @@ public class NetworkHand : NetworkBehaviour
             tRotations |= qPart;
         }
 
-        Vector3 localRightThumb1 = hand.mapper.CustomBones[thumbIndex + 1].localRotation * Vector3.right;
+        Vector3 localRightThumb1 = mapper.CustomBones[thumbIndex + 1].localRotation * Vector3.right;
         localRightThumb1.z = 0;
         float rotationThumb1 = Vector3.Angle(Vector3.right, localRightThumb1);
         rotationThumb1 = Mathf.Clamp(rotationThumb1, 0f, 90f);
@@ -264,7 +262,7 @@ public class NetworkHand : NetworkBehaviour
         tRotations <<= 8;
         tRotations |= rotationThumb1Byte;
 
-        Vector3 localRightThumb2 = hand.mapper.CustomBones[thumbIndex + 2].localRotation * Vector3.right;
+        Vector3 localRightThumb2 = mapper.CustomBones[thumbIndex + 2].localRotation * Vector3.right;
         localRightThumb2.z = 0;
         float rotationThumb2 = Vector3.Angle(Vector3.right, localRightThumb2);
         rotationThumb2 = Mathf.Clamp(rotationThumb2, 0f, 90f);

@@ -8381,12 +8381,6 @@ Transform:
   m_Father: {fileID: 1661381314}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &479774237 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400146, guid: 88e2e1bfe11ec6c438b0ade27eaeded1,
-    type: 3}
-  m_PrefabInstance: {fileID: 1332403738}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &491434206
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9256,12 +9250,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 610150006}
   m_CullTransparentMesh: 0
---- !u!137 &613592304 stripped
-SkinnedMeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 13700000, guid: 442d5b4503ed83c4897ef44659446587,
-    type: 3}
-  m_PrefabInstance: {fileID: 723724764}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &622770588
 GameObject:
   m_ObjectHideFlags: 0
@@ -9306,12 +9294,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.015, y: 0.0074999984, z: 0.00029999993}
   m_Center: {x: 0, y: -0.0037499992, z: -0.00014999996}
---- !u!4 &625342093 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400074, guid: 442d5b4503ed83c4897ef44659446587,
-    type: 3}
-  m_PrefabInstance: {fileID: 723724764}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &630641728
 GameObject:
   m_ObjectHideFlags: 0
@@ -9355,21 +9337,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de16159ece05f454f9faca7f82bee2ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skeletonType: 0
-  networkHand: {fileID: 0}
-  oVRHand: {fileID: 0}
-  oVRSkeleton: {fileID: 0}
-  renderer: {fileID: 0}
-  material: {fileID: 0}
-  fingerTips: []
-  physicsFingerTips: []
-  physicsFingerPads: []
-  holdPosition: {fileID: 0}
-  heldBody: {fileID: 0}
-  cameraRig: {fileID: 0}
-  pointerPose: {fileID: 0}
-  mapper: {fileID: 0}
-  mainCamera: {fileID: 0}
+  targetMapper: {fileID: 0}
+  physicsMapper: {fileID: 0}
 --- !u!1 &633968719
 GameObject:
   m_ObjectHideFlags: 0
@@ -10522,6 +10491,31 @@ MonoBehaviour:
   rightHandAnchor: {fileID: 1892809308}
   leftHandObject: {fileID: 104389904}
   rightHandObject: {fileID: 1414376770}
+  leftPlayerHand: {fileID: 946290005}
+  rightPlayerHand: {fileID: 630641730}
+  cameraRig: {fileID: 1709611393}
+  physicsFingerTipPositions:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  targetFingerTipPositions:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 0}
 --- !u!1 &752779473
 GameObject:
   m_ObjectHideFlags: 0
@@ -11855,21 +11849,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de16159ece05f454f9faca7f82bee2ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skeletonType: 0
-  networkHand: {fileID: 0}
-  oVRHand: {fileID: 0}
-  oVRSkeleton: {fileID: 0}
-  renderer: {fileID: 0}
-  material: {fileID: 0}
-  fingerTips: []
-  physicsFingerTips: []
-  physicsFingerPads: []
-  holdPosition: {fileID: 0}
-  heldBody: {fileID: 0}
-  cameraRig: {fileID: 0}
-  pointerPose: {fileID: 0}
-  mapper: {fileID: 0}
-  mainCamera: {fileID: 0}
+  targetMapper: {fileID: 0}
+  physicsMapper: {fileID: 0}
 --- !u!1 &958619250
 GameObject:
   m_ObjectHideFlags: 0
@@ -12010,12 +11991,6 @@ MonoBehaviour:
 --- !u!4 &991503009 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400022, guid: 88e2e1bfe11ec6c438b0ade27eaeded1,
-    type: 3}
-  m_PrefabInstance: {fileID: 1332403738}
-  m_PrefabAsset: {fileID: 0}
---- !u!137 &997509137 stripped
-SkinnedMeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 13700000, guid: 88e2e1bfe11ec6c438b0ade27eaeded1,
     type: 3}
   m_PrefabInstance: {fileID: 1332403738}
   m_PrefabAsset: {fileID: 0}
@@ -13945,12 +13920,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   browserObject: {fileID: 506092256}
---- !u!4 &1224930427 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400120, guid: 442d5b4503ed83c4897ef44659446587,
-    type: 3}
-  m_PrefabInstance: {fileID: 723724764}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1253298620 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400014, guid: 88e2e1bfe11ec6c438b0ade27eaeded1,
@@ -17494,12 +17463,6 @@ Transform:
   m_Father: {fileID: 874699798}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &1400358825 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400144, guid: 442d5b4503ed83c4897ef44659446587,
-    type: 3}
-  m_PrefabInstance: {fileID: 723724764}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1404446173
 GameObject:
   m_ObjectHideFlags: 0
@@ -17802,18 +17765,6 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 5ba7d209f622bb44e87b47ce27ee27b7, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 835e735ca71bf78459fb2cababd74112, type: 3}
---- !u!114 &1421644869 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 114428879332287356, guid: 835e735ca71bf78459fb2cababd74112,
-    type: 3}
-  m_PrefabInstance: {fileID: 1421644868}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cb7623a8f0b49cf4dbaa40aea4d4be64, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &1422861008
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -18350,18 +18301,6 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 5ba7d209f622bb44e87b47ce27ee27b7, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 835e735ca71bf78459fb2cababd74112, type: 3}
---- !u!114 &1491494477 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 114428879332287356, guid: 835e735ca71bf78459fb2cababd74112,
-    type: 3}
-  m_PrefabInstance: {fileID: 1491494476}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cb7623a8f0b49cf4dbaa40aea4d4be64, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1504047042
 GameObject:
   m_ObjectHideFlags: 0
@@ -19149,12 +19088,6 @@ Transform:
   m_Father: {fileID: 77201081}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 135.03601, z: 0}
---- !u!4 &1633226097 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400052, guid: 442d5b4503ed83c4897ef44659446587,
-    type: 3}
-  m_PrefabInstance: {fileID: 723724764}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1633251534
 GameObject:
   m_ObjectHideFlags: 0
@@ -19378,12 +19311,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
     type: 3}
   m_PrefabInstance: {fileID: 1643991656}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &1646529297 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400122, guid: 88e2e1bfe11ec6c438b0ade27eaeded1,
-    type: 3}
-  m_PrefabInstance: {fileID: 1332403738}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1648800145
 PrefabInstance:
@@ -19639,12 +19566,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1662869287}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!4 &1668280653 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400054, guid: 88e2e1bfe11ec6c438b0ade27eaeded1,
-    type: 3}
-  m_PrefabInstance: {fileID: 1332403738}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1676676879
 GameObject:
   m_ObjectHideFlags: 0
@@ -20277,12 +20198,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &1759269747 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400076, guid: 88e2e1bfe11ec6c438b0ade27eaeded1,
-    type: 3}
-  m_PrefabInstance: {fileID: 1332403738}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1761903702
 GameObject:
   m_ObjectHideFlags: 0
@@ -20594,12 +20509,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1766750183}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!4 &1771975417 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400098, guid: 442d5b4503ed83c4897ef44659446587,
-    type: 3}
-  m_PrefabInstance: {fileID: 723724764}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1789486220
 GameObject:
   m_ObjectHideFlags: 0
@@ -21016,12 +20925,6 @@ Transform:
   m_Father: {fileID: 1160743404620477138}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!4 &1837134761 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 400100, guid: 88e2e1bfe11ec6c438b0ade27eaeded1,
-    type: 3}
-  m_PrefabInstance: {fileID: 1332403738}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1843944214 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 400006, guid: 88e2e1bfe11ec6c438b0ade27eaeded1,
@@ -27207,31 +27110,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de16159ece05f454f9faca7f82bee2ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skeletonType: 1
-  networkHand: {fileID: 0}
-  oVRHand: {fileID: 1421644869}
-  oVRSkeleton: {fileID: 1123713195}
-  renderer: {fileID: 997509137}
-  material: {fileID: 0}
-  fingerTips: []
-  physicsFingerTips:
-  - {fileID: 1362555747}
-  - {fileID: 132133326}
-  - {fileID: 1982704514}
-  - {fileID: 22626361}
-  - {fileID: 1136261700}
-  physicsFingerPads:
-  - {fileID: 479774237}
-  - {fileID: 1668280653}
-  - {fileID: 1759269747}
-  - {fileID: 1646529297}
-  - {fileID: 1837134761}
-  holdPosition: {fileID: 1640790237}
-  heldBody: {fileID: 0}
-  cameraRig: {fileID: 1709611393}
-  pointerPose: {fileID: 1677263090}
-  mapper: {fileID: 3909230157963041743}
-  mainCamera: {fileID: 1365805663}
+  targetMapper: {fileID: 0}
+  physicsMapper: {fileID: 0}
 --- !u!114 &3909230157963041738
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27244,9 +27124,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f523ea0cbeb10e445b12274ad43507a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  <playerHand>k__BackingField: {fileID: 0}
   angleToObject: {fileID: 1702261044}
   headAngleToObject: {fileID: 1129058234}
   togglePause: {fileID: 96659938}
+  _lastPointingAtScreen: 0
 --- !u!114 &3909230157963041739
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27259,6 +27141,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e64e3f17d9066d9448f20e9a5b1d8d40, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  <playerHand>k__BackingField: {fileID: 0}
   moveToDesk: {fileID: 1212259449}
   angleToHead: {fileID: 704926998}
   head: {fileID: 89707680}
@@ -27275,9 +27158,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 723cbe8da7b24054e89318da868efca2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  <playerHand>k__BackingField: {fileID: 0}
   pinchPullJoint: {fileID: 1994331529}
   pinchPullJointBody: {fileID: 1994331530}
   lineRenderer: {fileID: 2018737705}
+  _ropeLength: 0
+  _attachedToId: 0
+  _localHitPoint: {x: 0, y: 0, z: 0}
 --- !u!114 &3909230157963041741
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27290,6 +27177,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31380ff2692e56347afcbda7e7cd3f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  <playerHand>k__BackingField: {fileID: 0}
+  _joint: {fileID: 0}
 --- !u!114 &3909230157963041743
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27505,31 +27394,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de16159ece05f454f9faca7f82bee2ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skeletonType: 0
-  networkHand: {fileID: 0}
-  oVRHand: {fileID: 1491494477}
-  oVRSkeleton: {fileID: 768559157}
-  renderer: {fileID: 613592304}
-  material: {fileID: 0}
-  fingerTips: []
-  physicsFingerTips:
-  - {fileID: 723724769}
-  - {fileID: 723724768}
-  - {fileID: 723724767}
-  - {fileID: 723724766}
-  - {fileID: 723724765}
-  physicsFingerPads:
-  - {fileID: 1400358825}
-  - {fileID: 1633226097}
-  - {fileID: 625342093}
-  - {fileID: 1224930427}
-  - {fileID: 1771975417}
-  holdPosition: {fileID: 576540476}
-  heldBody: {fileID: 0}
-  cameraRig: {fileID: 1709611393}
-  pointerPose: {fileID: 125929266}
-  mapper: {fileID: 1438622275}
-  mainCamera: {fileID: 1365805663}
+  targetMapper: {fileID: 0}
+  physicsMapper: {fileID: 0}
 --- !u!114 &5979537780977920962
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27542,9 +27408,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f523ea0cbeb10e445b12274ad43507a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  <playerHand>k__BackingField: {fileID: 0}
   angleToObject: {fileID: 1805792898}
   headAngleToObject: {fileID: 1129058234}
   togglePause: {fileID: 96659938}
+  _lastPointingAtScreen: 0
 --- !u!114 &5979537780977920963
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27557,6 +27425,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e64e3f17d9066d9448f20e9a5b1d8d40, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  <playerHand>k__BackingField: {fileID: 0}
   moveToDesk: {fileID: 1212259449}
   angleToHead: {fileID: 1875899302}
   head: {fileID: 89707680}
@@ -27573,9 +27442,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 723cbe8da7b24054e89318da868efca2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  <playerHand>k__BackingField: {fileID: 0}
   pinchPullJoint: {fileID: 1293423861}
   pinchPullJointBody: {fileID: 1293423862}
   lineRenderer: {fileID: 1127325678}
+  _ropeLength: 0
+  _attachedToId: 0
+  _localHitPoint: {x: 0, y: 0, z: 0}
 --- !u!114 &5979537780977920965
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27588,6 +27461,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31380ff2692e56347afcbda7e7cd3f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  <playerHand>k__BackingField: {fileID: 0}
+  _joint: {fileID: 0}
 --- !u!4 &6019446922972710339
 Transform:
   m_ObjectHideFlags: 0

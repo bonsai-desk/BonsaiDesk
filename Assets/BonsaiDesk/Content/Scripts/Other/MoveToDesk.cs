@@ -100,7 +100,7 @@ public class MoveToDesk : MonoBehaviour
         if (oriented)
             return;
 
-        if (!PlayerHands.hands.Tracking())
+        if (!InputManager.Hands.Tracking())
         {
             orientatingSelf = false;
             UpdateState(0);
@@ -111,11 +111,12 @@ public class MoveToDesk : MonoBehaviour
             var oVRCameraRigRotation = oVRCameraRig.rotation;
 
             //move player position and rotation to the desk
-            var thumbDifference = PlayerHands.hands.fingerTipPositions[0] - PlayerHands.hands.fingerTipPositions[5];
+            var thumbDifference = InputManager.Hands.targetFingerTipPositions[0] -
+                                  InputManager.Hands.targetFingerTipPositions[5];
             var angle = Mathf.Atan2(thumbDifference.x, thumbDifference.z) * Mathf.Rad2Deg + 90f;
             var angleRotation = Quaternion.AngleAxis(-angle, Vector3.up);
             var averageThumbPosition =
-                (PlayerHands.hands.fingerTipPositions[0] + PlayerHands.hands.fingerTipPositions[5]) / 2f;
+                (InputManager.Hands.targetFingerTipPositions[0] + InputManager.Hands.targetFingerTipPositions[5]) / 2f;
 
             oVRCameraRigPosition += new Vector3(-averageThumbPosition.x, 0, -averageThumbPosition.z);
             oVRCameraRigPosition = angleRotation * oVRCameraRigPosition;
@@ -127,16 +128,16 @@ public class MoveToDesk : MonoBehaviour
             var max = float.MinValue;
             for (var i = 1; i < 5; i++)
             {
-                averageHeight += PlayerHands.hands.left.fingerTips[i].position.y;
-                averageHeight += PlayerHands.hands.right.fingerTips[i].position.y;
-                if (PlayerHands.hands.left.fingerTips[i].position.y < min)
-                    min = PlayerHands.hands.left.fingerTips[i].position.y;
-                if (PlayerHands.hands.left.fingerTips[i].position.y > max)
-                    max = PlayerHands.hands.left.fingerTips[i].position.y;
-                if (PlayerHands.hands.right.fingerTips[i].position.y < min)
-                    min = PlayerHands.hands.right.fingerTips[i].position.y;
-                if (PlayerHands.hands.right.fingerTips[i].position.y > max)
-                    max = PlayerHands.hands.right.fingerTips[i].position.y;
+                averageHeight += InputManager.Hands.Left.TargetFingerTips[i].position.y;
+                averageHeight += InputManager.Hands.Right.TargetFingerTips[i].position.y;
+                if (InputManager.Hands.Left.TargetFingerTips[i].position.y < min)
+                    min = InputManager.Hands.Left.TargetFingerTips[i].position.y;
+                if (InputManager.Hands.Left.TargetFingerTips[i].position.y > max)
+                    max = InputManager.Hands.Left.TargetFingerTips[i].position.y;
+                if (InputManager.Hands.Right.TargetFingerTips[i].position.y < min)
+                    min = InputManager.Hands.Right.TargetFingerTips[i].position.y;
+                if (InputManager.Hands.Right.TargetFingerTips[i].position.y > max)
+                    max = InputManager.Hands.Right.TargetFingerTips[i].position.y;
             }
 
             var diff = max - min;
