@@ -67,6 +67,7 @@ public class AutoBrowserController : NetworkBehaviour
 
     public override void OnStartServer()
     {
+        TLog("On Start Server");
         base.OnStartServer();
         _contentInfo = new ContentInfo(false, "", new Vector2(1, 1));
         NetworkManagerGame.Singleton.ServerAddPlayer += HandleServerAddPlayer;
@@ -83,6 +84,7 @@ public class AutoBrowserController : NetworkBehaviour
 
     public override void OnStopServer()
     {
+        TLog("On Stop Server");
         base.OnStopServer();
         NetworkManagerGame.Singleton.ServerAddPlayer -= HandleServerAddPlayer;
         NetworkManagerGame.Singleton.ServerDisconnect -= HandleServerDisconnect;
@@ -275,7 +277,7 @@ public class AutoBrowserController : NetworkBehaviour
         else
             _autoBrowser.LoadUrl(hotReloadUrl);
 #else
-        _autoBrowser.LoadUrl("streaming-assets://build/index.html");
+        _autoBrowser.LoadUrl("streaming-assets://BonsaiUI.html");
 #endif
         if (!restart) _autoBrowser.OnMessageEmitted(HandleJavascriptMessage);
     }
