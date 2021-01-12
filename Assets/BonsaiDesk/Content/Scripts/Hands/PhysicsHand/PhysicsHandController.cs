@@ -39,8 +39,12 @@ public class PhysicsHandController : MonoBehaviour
         if (!_initialized)
             return;
 
-        float distanceSqaured = Vector3.SqrMagnitude(transform.position - targetMapper.transform.position);
-        if (float.IsNaN(distanceSqaured) && !CheckHit() || distanceSqaured > SnapBackDistanceThresholdSquared && !CheckHit())
+        if ((float.IsNaN(transform.position.x) ||
+             float.IsNaN(transform.position.y) ||
+             float.IsNaN(transform.position.z) ||
+             Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) >
+             SnapBackDistanceThresholdSquared)
+            && !CheckHit())
         {
             ResetFingerJoints();
         }
