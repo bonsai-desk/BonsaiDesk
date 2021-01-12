@@ -48,8 +48,6 @@ public class InputManager : MonoBehaviour
 
     private IHandsTick[] _handsTicks;
 
-    public Transform test;
-
     private void Awake()
     {
         if (Hands != null)
@@ -91,8 +89,6 @@ public class InputManager : MonoBehaviour
 
         Left.PlayerHand.UpdateLastGestures();
         Right.PlayerHand.UpdateLastGestures();
-
-        test.position = Right.TargetFingerTips[1].position;
     }
 
     private void HandComponentsUpdate(HandComponents handComponents)
