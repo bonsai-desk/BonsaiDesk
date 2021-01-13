@@ -1,17 +1,6 @@
-import React, {useState, useEffect} from "react";
 import YouTube from "react-youtube";
+import React, {useState, useEffect, useCallback} from "react";
 import {useHistory} from "react-router-dom";
-
-let opts = {
-    width: window.innerWidth,
-    height: window.innerHeight/2,
-    playerVars: {
-        autoplay: 0,
-        controls: 0,
-        disablekb: 1,
-        rel: 0
-    }
-}
 
 const PlayerState = {
     UNSTARTED: -1,
@@ -22,194 +11,319 @@ const PlayerState = {
     CUED: 5,
 };
 
+let showState = (state) => {
+    let name;
+    switch (state) {
+        case -1:
+            name = "unstarted"
+            break;
+        case 0:
+            name = "ended"
+            break;
+        case 1:
+            name = "playing"
+            break;
+        case 2:
+            name = "paused"
+            break;
+        case 3:
+            name = "buffering"
+            break;
+        case 5:
+            name = "cued"
+            break;
+        default:
+            name = "BAD SWITCH STATE"
+    }
+    return name
+
+}
+
 let Video = (props) => {
+    let query = new URLSearchParams(props.location.search)
+
+    let xRes = parseInt(query.get("x"));
+    let yRes = parseInt(query.get("y"));
+
+    let opts = {
+        width: xRes && yRes ? xRes : window.innerWidth,
+        height: xRes && yRes ? yRes : window.innerHeight,
+        playerVars: {
+            autoplay: 0,
+            controls: 0,
+            disablekb: 1,
+            rel: 0
+        }
+    }
 
     let history = useHistory();
 
-    let dev_mode = window.location.pathname.split("/")[1] === "youtube_test";
+    let dev_mode = props.location.pathname.split("/")[1] === "youtube_test";
+
     let {id, timeStamp} = props.match.params;
-    let [init, setInit] = useState(false);
+
+//    let [masked, setMasked] = useState(true)
+
     let [player, setPlayer] = useState(null);
-    let [justBuffered, setJustBuffered] = useState(false)
-    let [readying, setReadying] = useState(false)
+    let [init, setInit] = useState(false);
 
-    let [ts, setTs] = useState(timeStamp);
+    // this is the 'I'm ready at a timestamp' 'ready', not the 'player is ready' of 'onReady'
+    let [ready, setReady] = useState(false);
+    let [readying, setReadying] = useState(false);
+    let [justBuffered, setJustBuffered] = useState(false);
 
-    let readyUp = (timeStamp) => {
-        setReadying(true)
-        switch (player.getPlayerState()) {
-            case PlayerState.PAUSED:
+    let postStateChange = useCallback((message) => {
+        if (message !== "READY") setReady(false);
+        console.log("POST " + message)
+        if (!dev_mode) {
+            window.vuplex.postMessage({type: "stateChange", message: message, current_time: player.getCurrentTime()});
+        }
+    }, [player, dev_mode])
+
+    let readyUp = useCallback((_timeStamp) => {
+        if (player == null) {
+            console.log("bonsai: ignoring attempt to ready up while player is null")
+            return;
+        }
+
+        if (ready && Math.abs(player.getCurrentTime() - _timeStamp) < 0.01) {
+            console.log("bonsai: ready-up called while ready")
+            postStateChange("READY")
+            return;
+        }
+
+        let state = player.getPlayerState();
+
+        if (!init) {
+            console.log("bonsai: ignoring attempt to ready-up before init")
+        } else {
+            console.log("bonsai: readying up from " + showState(state) + " -> " + _timeStamp)
+            prepareToReadyUp(player);
+            if (state === PlayerState.PAUSED) {
                 player.playVideo();
-                player.seekTo(timeStamp, true);
-                player.pauseVideo();
-                break;
-            case PlayerState.PLAYING:
-                player.seekTo(timeStamp, true);
-                player.pauseVideo();
-                break;
-            default:
-                let msg = "ERROR READYUP SWITCH NOT HANDLED"
-                window.vuplex.postMessage({type: "error", message: msg, current_time: player.getCurrentTime()});
-                console.log("bonsai: " + msg)
-                break;
+            }
+            player.seekTo(_timeStamp, true)
+            player.pauseVideo()
+            player.unMute();
+        }
 
+    }, [init, player, postStateChange, ready])
 
+    let prepareToReadyUp = (_player) => {
+        console.log("bonsai: prepare to ready up")
+        setReady(false)
+        setReadying(true)
+        _player.mute();
+    }
+
+    let onReady = (event) => {
+        // load the player to the url timestamp when ready
+        let _player = event.target;
+        setPlayer(_player);
+        prepareToReadyUp(_player)
+        _player.loadVideoById(id, parseFloat(timeStamp));
+    }
+    let onError = (event) => {
+        console.log("bonsai youtube error: " + event)
+    }
+
+    function handleCued() {
+        console.log("bonsai: " + showState(player.getPlayerState()));
+    }
+
+    function handleUnstarted() {
+        console.log(
+            "bonsai: " +
+            showState(player.getPlayerState()) + " " +
+            player.getCurrentTime()
+        )
+    }
+
+    function handleEnded() {
+        console.log("bonsai: " + showState(player.getPlayerState()));
+        postStateChange("ENDED")
+    }
+
+    function handlePlaying() {
+        if (init) {
+            if (readying) {
+                console.log("bonsai: while readying -> play")
+            } else {
+                if (justBuffered) {
+                    console.log("bonsai: playing after buffer")
+                } else {
+                    console.log("bonsai: playing")
+                }
+                postStateChange("PLAYING")
+            }
+        } else {
+            player.pauseVideo()
+        }
+        if (justBuffered) {
+            setJustBuffered(false);
         }
     }
 
-    // setup the event listeners
+    function handlePaused() {
+        if (init) {
+            if (justBuffered) {
+                if (readying && !ready) {
+                    console.log("bonsai: ready (pause after buffer)")
+                    setReady(true);
+                    setReadying(false);
+                    postStateChange("READY")
+                } else {
+                    console.log("bonsai: paused after buffering")
+                    postStateChange("PAUSED")
+                }
+            } else {
+                if (readying) {
+                    console.log("bonsai: while readying -> paused")
+                } else {
+                    console.log("bonsai: paused");
+                    postStateChange("PAUSED");
+                }
+            }
+        } else {
+            console.log("bonsai: init complete")
+            player.seekTo(timeStamp, true)
+            player.unMute();
+            setInit(true)
+            setReady(true)
+            setReadying(false)
+            postStateChange("READY")
+        }
+        if (justBuffered) {
+            setJustBuffered(false);
+        }
+    }
+
+    function handleBuffering() {
+        if (readying) {
+            console.log("bonsai: while readying -> buffering")
+        } else {
+            console.log("bonsai: buffering")
+        }
+        setJustBuffered(true);
+    }
+
     useEffect(() => {
-        if (player == null || dev_mode) return;
+        if (player == null || dev_mode) {
+            return;
+        }
 
         let playerListeners = (event) => {
-
-            let json = JSON.parse(event.data);
-
-            if (json.type !== "video") return;
-
+            let json = JSON.parse(event.data)
+            if (json.type !== "video") {
+                return;
+            }
+            console.log(event.data)
             switch (json.command) {
                 case "play":
-                    console.log("command: play")
-                    player.playVideo();
+                    console.log("COMMAND: play")
+                    player.playVideo()
                     break;
                 case "pause":
-                    console.log("command: pause")
-                    player.pauseVideo();
-                    break;
-                case "seekTo":
-                    console.log("command: seekTo " + json.seekTime)
-                    player.seekTo(json.seekTime, true);
+                    console.log("COMMAND: pause")
+                    player.pauseVideo()
                     break;
                 case "readyUp":
+                    console.log("COMMAND: readyUp")
                     readyUp(json.timeStamp)
                     break;
+//               case "maskOn":
+//                   console.log("COMMAND: maskOn")
+//                   setMasked(true)
+//                   break;
+//               case "maskOff":
+//                   console.log("COMMAND: maskOff")
+//                   setMasked(false)
+//                   break;
                 default:
-                    console.log("command: not handled (video) " + JSON.stringify(json))
+                    console.log("command: not handled (video) " + event.data)
                     break;
             }
         }
-
-        console.log("bonsai: add YouTube events+intervals")
-
         window.vuplex.addEventListener('message', playerListeners)
-
-        let pingPlayerTime = setInterval(() => {
-            window.vuplex.postMessage({
-                type: "infoCurrentTime",
-                current_time: player.getCurrentTime() == null ? 0 : player.getCurrentTime()
-            })
-        }, 100)
-
         return () => {
-            console.log("bonsai: remove YouTube events+intervals")
             window.vuplex.removeEventListener('message', playerListeners)
-            clearInterval(pingPlayerTime)
         }
-    }, [player, dev_mode, history])
-
-    let onReady = (event) => {
-        setPlayer(event.target);
-        event.target.mute();
-        event.target.loadVideoById(id, parseFloat(ts));
-    };
-
-    let onStateChange = (event) => {
-
-        let postStateChange = (message) => {
-            console.log("postStateChange: " + message)
+    }, [id, player, dev_mode, readyUp])
+    useEffect(() => {
+        console.log("bonsai: add ping interval")
+        let pingPlayerTime = setInterval(() => {
+            let current_time = 0;
+            if (player != null && player.getCurrentTime() != null) {
+                current_time = player.getCurrentTime();
+            }
             if (dev_mode) {
                 return;
             }
-
-            window.vuplex.postMessage({type: "stateChange", message: message, current_time: player.getCurrentTime()});
-
+            window.vuplex.postMessage({
+                type: "infoCurrentTime",
+                current_time: current_time
+            })
+        }, 100)
+        return () => {
+            console.log("bonsai: remove ping interval")
+            clearInterval(pingPlayerTime)
         }
+    }, [id, player, dev_mode])
+//   useEffect (() => {
+//       if (ready && masked) {
+//           setMasked(false);
+//       }
+//   }, [ready, masked])
 
+    let onStateChange = (event) => {
         switch (event.data) {
-            case PlayerState.UNSTARTED:
-                console.log("bonsai: unstarted " + player.getCurrentTime())
-                //postStateChange("UNSTARTED")
+            case PlayerState.CUED:
+                handleCued();
                 break;
-            case PlayerState.ENDED:
-                console.log("bonsai: ended")
-                postStateChange("ENDED")
+            case PlayerState.UNSTARTED:
+                handleUnstarted();
                 break;
             case PlayerState.PLAYING:
-                if (justBuffered) {
-                    setJustBuffered(false);
-                    console.log("bonsai: play after buffer")
-                }
-                if (!init) {
-                    player.pauseVideo()
-                } else {
-                    if (!readying) {
-                        console.log("bonsai: playing")
-                        postStateChange("PLAYING")
-                    } else {
-                        console.log("bonsai: playing while readying")
-                    }
-                }
+                handlePlaying();
                 break;
             case PlayerState.PAUSED:
-                if (!init) {
-                    player.seekTo(ts);
-                    player.unMute();
-                    setInit(true);
-                    console.log("bonsai: init ready")
-                    postStateChange("READY")
-                } else {
-                    if (!justBuffered && !readying) {
-                        console.log("bonsai: paused")
-                        postStateChange("PAUSED")
-                    } else if (!justBuffered && readying) {
-                        console.log("bonsai: paused while readying")
-                    }
-                    else {
-                        console.log("bonsai: ready (pause after buffer)")
-                        postStateChange("READY")
-                    }
-                }
-                setJustBuffered(false);
+                handlePaused();
                 break;
             case PlayerState.BUFFERING:
-                setJustBuffered(true)
-                if (init) {
-                    if (!readying) {
-                        console.log("bonsai: buffering")
-                        postStateChange("BUFFERING")
-                    } else {
-                        console.log("bonsai: buffering while readying")
-                    }
-                } else {
-                    if (!readying)
-                    console.log("bonsai: buffering before ready")
-                }
+                handleBuffering();
                 break;
-            case PlayerState.CUED:
-                console.log("bonsai: videoCued")
-                postStateChange("CUED")
+            case PlayerState.ENDED:
+                handleEnded();
                 break;
             default:
+                console.log("bonsai error: did not handle state change " + event.data)
                 break;
         }
     }
 
-    let onError = (event) => {
-        console.log("onError", event);
-    };
-
     return (
         <div>
-            {dev_mode ? <div onClick={()=>{readyUp(30)}}>readyup</div> : ""}
-
+            {dev_mode ?
+                <div>
+                    <p onClick={() => {
+                        history.push("/home")
+                    }}>home</p>
+                    {" "}
+                    <p onClick={() => {
+                        readyUp(40)
+                    }}>ready up</p>
+                </div>
+                : ""
+            }
             <YouTube
+//`                className={masked ? "opacity-0" : "opacity-100"}
                 opts={opts}
                 onReady={onReady}
                 onError={onError}
                 onStateChange={onStateChange}
             />
         </div>
-    );
-};
+    )
+}
 
 export default Video;

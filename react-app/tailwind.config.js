@@ -1,8 +1,14 @@
 module.exports = {
-  purge: [],
-  theme: {
-    extend: {},
-  },
-  variants: {},
-  plugins: [],
+    purge: {
+        enabled: true,
+        content: [
+            './src/*.jsx',
+            './src/**/*.jsx'
+        ]
+    },
+    theme: {
+        extend: {},
+    },
+    variants: {},
+    plugins: [],
 }

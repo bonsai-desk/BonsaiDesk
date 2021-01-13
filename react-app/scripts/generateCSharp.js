@@ -52,5 +52,6 @@ const cSharpClass = `
   }
 `
 
-fs.writeFileSync('../Assets/BonsaiDesk/Content/Scripts/Browser/BonsaiUI.cs', cSharpClass, 'utf8');
-console.log('Finished generating BonsaiUI.cs');
+fs.writeFileSync('../Assets/StreamingAssets/BonsaiUI.html', inlinedHtml, 'utf8');
+
+console.log('Finished generating BonsaiUI');
