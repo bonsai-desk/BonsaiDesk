@@ -23,6 +23,9 @@ public class GeneratePhysicsHand : MonoBehaviour
     {
         if (!Application.isEditor)
         {
+            Debug.LogError(
+                "This script is intended to be used to generate the hands which should be saved as a prefab.");
+            Destroy(this);
             return;
         }
 
@@ -40,10 +43,6 @@ public class GeneratePhysicsHand : MonoBehaviour
             OVRPlugin.GetSkeleton2((OVRPlugin.SkeletonType) oVRSkeleton.GetSkeletonType(), ref _skeleton))
         {
             initialized = true;
-
-            if (!Application.isEditor)
-                Debug.LogError(
-                    "This script is intended to be used to generate the hands which should be saved as a prefab.");
 
             var physicsHand = CreateCapsules();
             if (physicsHand != null)
