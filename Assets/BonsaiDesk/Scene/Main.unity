@@ -9131,7 +9131,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de16159ece05f454f9faca7f82bee2ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetMapper: {fileID: 0}
   physicsMapper: {fileID: 0}
 --- !u!1 &666319541
 GameObject:
@@ -10911,7 +10910,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de16159ece05f454f9faca7f82bee2ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetMapper: {fileID: 0}
   physicsMapper: {fileID: 0}
 --- !u!1 &958619250
 GameObject:

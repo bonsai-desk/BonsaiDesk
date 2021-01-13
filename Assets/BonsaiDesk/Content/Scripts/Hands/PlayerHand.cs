@@ -4,12 +4,11 @@ using UnityEngine;
 
 public class PlayerHand : MonoBehaviour
 {
-    [HideInInspector] public OVRHandTransformMapper targetMapper;
     [HideInInspector] public OVRHandTransformMapper physicsMapper;
-    
+
     private IHandTick[] _handTicks;
     private Dictionary<Type, IHandTick> _handTicksDictionary;
-    
+
     private readonly Dictionary<Gesture, bool> _gestures = new Dictionary<Gesture, bool>();
     private readonly Dictionary<Gesture, bool> _lastGestures = new Dictionary<Gesture, bool>();
     private readonly Dictionary<Gesture, float> _lastGestureActiveTime = new Dictionary<Gesture, float>();
@@ -24,7 +23,7 @@ public class PlayerHand : MonoBehaviour
         WeakFlatFist,
         WeakPalm
     }
-    
+
     private void Start()
     {
         _handTicks = GetComponentsInChildren<IHandTick>();
@@ -89,7 +88,7 @@ public class PlayerHand : MonoBehaviour
             _lastGestures[gesture] = _gestures[gesture];
         }
     }
-    
+
     public T GetIHandTick<T>()
     {
         return (T) _handTicksDictionary[typeof(T)];
@@ -100,7 +99,6 @@ public class PlayerHand : MonoBehaviour
         float fistStrength = FistStrength();
         float flatFistStrength = FlatFistStrength();
 
-        UpdateGesture(Gesture.AnyPinching, AnyPinching());
         UpdateGesture(Gesture.IndexPinching, IndexPinching());
         UpdateGesture(Gesture.Fist, fistStrength > 0.7f);
         UpdateGesture(Gesture.FlatFist, flatFistStrength > 0.7f);
@@ -126,102 +124,65 @@ public class PlayerHand : MonoBehaviour
 
     public bool IndexPinching()
     {
-        // return Pinching(OVRHand.HandFinger.Index);
-        return false;
-    }
-
-    public float AnyPinchingStrength()
-    {
-        // if (Tracking())
-        //     return oVRHand.GetFingerPinchStrength(OVRHand.HandFinger.Thumb);
-        // else
-        //     return 0;
-        return 0;
-    }
-
-    public bool AnyPinching()
-    {
-        // if (Tracking())
-        //     return oVRHand.GetFingerIsPinching(OVRHand.HandFinger.Thumb);
-        // else
-        //     return false;
-        return false;
+        var indexTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_IndexTip].position;
+        var thumbTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_ThumbTip].position;
+        var distance = Vector3.Distance(indexTip, thumbTip);
+        return distance < 0.015f;
     }
 
     public Vector3 PinchPosition()
     {
-        // if (Tracking())
-        //     return Vector3.Lerp(fingerTips[0].position, fingerTips[1].position, 0.5f);
-        // else
-        //     return Vector3.zero;
-        return Vector3.zero;
-    }
-
-    public Vector3 PhysicsPinchPosition()
-    {
-        // if (Tracking())
-        //     return Vector3.Lerp(physicsFingerTips[0].position, physicsFingerTips[1].position, 0.5f);
-        // else
-        //     return Vector3.zero;
-        return Vector3.zero;
+        var indexTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_IndexTip].position;
+        var thumbTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_ThumbTip].position;
+        return (indexTip + thumbTip) / 2f;
     }
 
     public float FingerCloseStrength(OVRSkeleton.BoneId boneId)
     {
-        // if (!Tracking())
-        //     return 0;
-        //
-        // float r1 = Vector3.Angle(-oVRSkeleton.transform.right, oVRSkeleton.Bones[(int) boneId].Transform.right);
-        // float r2 = Vector3.Angle(oVRSkeleton.Bones[(int) boneId].Transform.right,
-        //     oVRSkeleton.Bones[(int) boneId + 2].Transform.right);
-        //
-        // r1 /= 60f;
-        // r2 /= 175f;
-        //
-        // return Mathf.Clamp01((r1 + r2) / 2f);
-        return 0;
+        float r1 = Vector3.Angle(physicsMapper.transform.right, physicsMapper.CustomBones[(int) boneId].right);
+        float r2 = Vector3.Angle(physicsMapper.CustomBones[(int) boneId].right,
+            physicsMapper.CustomBones[(int) boneId + 2].right);
+
+        r1 /= 60f;
+        r2 /= 175f;
+
+        return Mathf.Clamp01((r1 + r2) / 2f);
     }
 
     public float FlatFingerStrength(OVRSkeleton.BoneId boneId)
     {
-        // if (!Tracking())
-        //     return 0;
-        //
-        // float r1 = Vector3.Angle(-oVRSkeleton.transform.right, oVRSkeleton.Bones[(int) boneId].Transform.right);
-        // r1 /= 60f;
-        // return Mathf.Clamp01(r1);
-        return 0;
+        float r1 = Vector3.Angle(physicsMapper.transform.right, physicsMapper.CustomBones[(int) boneId].right);
+        r1 /= 60f;
+        return Mathf.Clamp01(r1);
     }
 
     public float FlatFistStrength()
     {
-        // float minStrength = FlatFingerStrength(OVRSkeleton.BoneId.Hand_Index1);
-        // float strength = FlatFingerStrength(OVRSkeleton.BoneId.Hand_Middle1);
-        // if (strength < minStrength)
-        //     minStrength = strength;
-        // strength = FlatFingerStrength(OVRSkeleton.BoneId.Hand_Ring1);
-        // if (strength < minStrength)
-        //     minStrength = strength;
-        // strength = FlatFingerStrength(OVRSkeleton.BoneId.Hand_Pinky1);
-        // if (strength < minStrength)
-        //     minStrength = strength;
-        // return minStrength;
-        return 0;
+        float minStrength = FlatFingerStrength(OVRSkeleton.BoneId.Hand_Index1);
+        float strength = FlatFingerStrength(OVRSkeleton.BoneId.Hand_Middle1);
+        if (strength < minStrength)
+            minStrength = strength;
+        strength = FlatFingerStrength(OVRSkeleton.BoneId.Hand_Ring1);
+        if (strength < minStrength)
+            minStrength = strength;
+        strength = FlatFingerStrength(OVRSkeleton.BoneId.Hand_Pinky1);
+        if (strength < minStrength)
+            minStrength = strength;
+        return minStrength;
     }
 
     public float FistStrength()
     {
-        // float minStrength = FingerCloseStrength(OVRSkeleton.BoneId.Hand_Index1);
-        // float strength = FingerCloseStrength(OVRSkeleton.BoneId.Hand_Middle1);
-        // if (strength < minStrength)
-        //     minStrength = strength;
-        // strength = FingerCloseStrength(OVRSkeleton.BoneId.Hand_Ring1);
-        // if (strength < minStrength)
-        //     minStrength = strength;
-        // strength = FingerCloseStrength(OVRSkeleton.BoneId.Hand_Pinky1);
-        // if (strength < minStrength)
-        //     minStrength = strength;
-        // return minStrength;
-        return 0;
+        float minStrength = FingerCloseStrength(OVRSkeleton.BoneId.Hand_Index1);
+        float strength = FingerCloseStrength(OVRSkeleton.BoneId.Hand_Middle1);
+        if (strength < minStrength)
+            minStrength = strength;
+        strength = FingerCloseStrength(OVRSkeleton.BoneId.Hand_Ring1);
+        if (strength < minStrength)
+            minStrength = strength;
+        strength = FingerCloseStrength(OVRSkeleton.BoneId.Hand_Pinky1);
+        if (strength < minStrength)
+            minStrength = strength;
+        return minStrength;
     }
 }
