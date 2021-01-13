@@ -3,13 +3,9 @@ import {MemoryRouter as Router, Route, Switch, useHistory} from "react-router-do
 import YouTube from "./pages/YouTube";
 import Spring from "./pages/Spring";
 
-let Boot = () => {
+function genNavListeners (history) {
 
-    console.log("Boot")
-
-    let history = useHistory();
-
-    let navListeners = (event) => {
+    function _navListeners (event) {
 
         let json = JSON.parse(event.data);
 
@@ -25,6 +21,19 @@ let Boot = () => {
                 break;
         }
     }
+
+    return _navListeners
+}
+
+
+let Boot = () => {
+
+    console.log("Boot")
+
+
+    let history = useHistory();
+
+    let navListeners = genNavListeners(history);
 
     if (window.vuplex != null) {
 
@@ -61,15 +70,16 @@ function App() {
             <div className={"bg-gray-800 h-screen text-green-400"}>
                 <Switch>
 
+
                     <Route path={"/home"} component={Home}/>
 
                     <Route path={"/spring"} component={Spring}/>
 
-                    <Route exact path={"/youtube/:id/:timeStamp"} component={YouTube}/>
+                    <Route path={"/youtube/:id/:timeStamp"} component={YouTube}/>
 
-                    <Route exact path={"/youtube_test/:id/:timeStamp"} component={YouTube}/>
+                    <Route path={"/youtube_test/:id/:timeStamp"} component={YouTube}/>
 
-                    <Route exact path={"/"} component={Boot}/>
+                    <Route path={"/"} component={Boot}/>
 
                 </Switch>
             </div>
