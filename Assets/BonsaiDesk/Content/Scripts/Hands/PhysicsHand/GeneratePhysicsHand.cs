@@ -156,12 +156,7 @@ public class GeneratePhysicsHand : MonoBehaviour
             return null;
         }
 
-        var physicsLayer = oVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft
-            ? LayerMask.NameToLayer("LeftHand")
-            : LayerMask.NameToLayer("RightHand");
-
         var _capsulesGO = new GameObject(HandName() + "_Physics_Hand");
-        _capsulesGO.layer = physicsLayer;
         _capsulesGO.transform.SetParent(transform, false);
         _capsulesGO.transform.localPosition = Vector3.zero;
         _capsulesGO.transform.localRotation = Quaternion.identity;
@@ -202,7 +197,6 @@ public class GeneratePhysicsHand : MonoBehaviour
                 {
                     var name = (OVRSkeleton.BoneId) parentBoneIndex;
                     var parent = new GameObject(name.ToString()).transform;
-                    parent.gameObject.layer = physicsLayer;
                     parent.localPosition = oVRSkeleton.BindPoses[parentBoneIndex].Transform.localPosition;
                     parent.localRotation = oVRSkeleton.BindPoses[parentBoneIndex].Transform.localRotation;
                     parent.SetParent(_capsulesGO.transform, false);
@@ -219,7 +213,6 @@ public class GeneratePhysicsHand : MonoBehaviour
             capsule.BoneIndex = boneIndex;
 
             var capsuleGO = new GameObject(bone.Id + "_CapsuleRigidBody");
-            capsuleGO.layer = physicsLayer;
 
             if (pinkyOrThumbStart)
             {
@@ -257,8 +250,8 @@ public class GeneratePhysicsHand : MonoBehaviour
 
             capsule.CapsuleCollider = new GameObject((bone.Id).ToString() + "_CapsuleCollider")
                 .AddComponent<CapsuleCollider>();
+            capsule.CapsuleCollider.isTrigger = true;
             capsule.CapsuleCollider.sharedMaterial = physicMaterial;
-            capsule.CapsuleCollider.gameObject.layer = physicsLayer;
             capsule.CapsuleCollider.isTrigger = false;
 
             var p0 = _skeleton.BoneCapsules[i].StartPoint.FromFlippedXVector3f();

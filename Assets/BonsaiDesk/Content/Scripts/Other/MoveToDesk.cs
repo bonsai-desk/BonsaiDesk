@@ -265,6 +265,9 @@ public class MoveToDesk : MonoBehaviour
         if (calculatedTablePosition == null || calculatedTableRotation == null ||
             calculatedCenterEyeAnchor == null && !updateCenterEyeAnchor)
             return;
+        
+        InputManager.Hands.Left.PhysicsHandController.SetCapsulesActiveTarget(false);
+        InputManager.Hands.Right.PhysicsHandController.SetCapsulesActiveTarget(false);
 
         oVRCameraRig.position = calculatedTablePosition.Value;
         oVRCameraRig.rotation = calculatedTableRotation.Value;
@@ -283,6 +286,12 @@ public class MoveToDesk : MonoBehaviour
         {
             Debug.LogError("No table edge");
         }
+        
+        InputManager.Hands.Left.PhysicsHandController.ResetFingerJoints();
+        InputManager.Hands.Right.PhysicsHandController.ResetFingerJoints();
+        InputManager.Hands.UpdateHandTargets();
+        InputManager.Hands.Left.PhysicsHandController.SetCapsulesActiveTarget(true);
+        InputManager.Hands.Right.PhysicsHandController.SetCapsulesActiveTarget(true);
     }
 
     private Quaternion AverageQuaternion(Queue<Quaternion> quaternions)

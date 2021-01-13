@@ -26,9 +26,11 @@ public class PhysicsHandController : MonoBehaviour
 
     private const float SnapBackDistanceThresholdSquared = 0.2f * 0.2f;
 
+    private bool _capsulesActive = false;
+    private bool _capsulesActiveTarget = false;
+
     private void Awake()
     {
-        IgnoreCollisions();
         _rigidbody = GetComponent<Rigidbody>();
         if (!_initialized && targetMapper && skeletonType != OVRSkeleton.SkeletonType.None)
             Init();
@@ -38,6 +40,8 @@ public class PhysicsHandController : MonoBehaviour
     {
         if (!_initialized)
             return;
+
+        TrySetCapsulesActiveToTarget();
 
         if ((float.IsNaN(transform.position.x) ||
              float.IsNaN(transform.position.y) ||
@@ -55,6 +59,39 @@ public class PhysicsHandController : MonoBehaviour
         _rigidbody.WakeUp();
     }
 
+    public void SetCapsulesActiveTarget(bool active)
+    {
+        _capsulesActiveTarget = active;
+        TrySetCapsulesActiveToTarget();
+    }
+
+    private void TrySetCapsulesActiveToTarget()
+    {
+        if (_capsulesActive == _capsulesActiveTarget)
+            return;
+
+        if (_capsulesActiveTarget && CheckHit())
+            return;
+
+        SetCapsulesActive(_capsulesActiveTarget);
+    }
+
+    private void SetCapsulesActive(bool active)
+    {
+        _capsulesActive = active;
+        _capsulesActiveTarget = active;
+
+        for (int i = 0; i < palmCapsuleColliders.Length; i++)
+        {
+            palmCapsuleColliders[i].isTrigger = !active;
+        }
+
+        for (int i = 0; i < fingerCapsuleColliders.Length; i++)
+        {
+            fingerCapsuleColliders[i].isTrigger = !active;
+        }
+    }
+
     private bool CheckHit()
     {
         for (int i = 0; i < palmCapsuleColliders.Length; i++)
@@ -65,7 +102,7 @@ public class PhysicsHandController : MonoBehaviour
             var direction = targetMapper.transform.rotation * capsule.transform.localRotation * Vector3.right;
             var end = start + direction.normalized * (capsule.height - (capsule.radius * 2f));
 
-            if (Physics.CheckCapsule(start, end, capsule.radius))
+            if (Physics.CheckCapsule(start, end, capsule.radius, ~0, QueryTriggerInteraction.Ignore))
                 return true;
         }
 
@@ -77,7 +114,7 @@ public class PhysicsHandController : MonoBehaviour
             var direction = fingerTargets[i].rotation * capsule.transform.localRotation * Vector3.right;
             var end = start + direction.normalized * (capsule.height - (capsule.radius * 2f));
 
-            if (Physics.CheckCapsule(start, end, capsule.radius))
+            if (Physics.CheckCapsule(start, end, capsule.radius, ~0, QueryTriggerInteraction.Ignore))
                 return true;
         }
 
@@ -91,7 +128,7 @@ public class PhysicsHandController : MonoBehaviour
         _rigidbody.velocity = direction.normalized * velocityMagnitude;
     }
 
-    private void ResetFingerJoints()
+    public void ResetFingerJoints()
     {
         ResetTransform(_rigidbody, targetMapper.transform.position, targetMapper.transform.rotation, false);
         for (int i = 0; i < fingerJoints.Length; i++)
@@ -143,10 +180,18 @@ public class PhysicsHandController : MonoBehaviour
             if (i == 0 || i == 12)
             {
                 joint.SetTargetRotationLocal(target.parent.localRotation * target.localRotation, jointStartRotation);
+                if (!_capsulesActive)
+                {
+                    fingerJointBodies[i].transform.localRotation = target.parent.localRotation * target.localRotation;
+                }
             }
             else
             {
                 joint.SetTargetRotationLocal(target.localRotation, jointStartRotation);
+                if (!_capsulesActive)
+                {
+                    fingerJointBodies[i].transform.localRotation = target.localRotation;
+                }
             }
         }
     }
@@ -158,6 +203,12 @@ public class PhysicsHandController : MonoBehaviour
 
         _joint.connectedAnchor = targetMapper.transform.position + targetMapper.transform.rotation * jointOffset;
         _joint.SetTargetRotationLocal(targetMapper.transform.localRotation, _startRotation);
+        
+        if (!_capsulesActive)
+        {
+            _joint.transform.position = targetMapper.transform.position;
+            _joint.transform.localRotation = targetMapper.transform.localRotation;
+        }
     }
 
     public void Init()
@@ -166,9 +217,13 @@ public class PhysicsHandController : MonoBehaviour
             return;
         _initialized = true;
 
+        IgnoreCollisions();
         SetupJoint();
         GetJointsAndTargets();
         GetJointStartLocalRotations();
+
+        SetCapsulesActive(false);
+        SetCapsulesActiveTarget(true);
     }
 
     private void GetJointStartLocalRotations()

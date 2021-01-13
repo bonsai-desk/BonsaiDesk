@@ -68,10 +68,9 @@ public class InputManager : MonoBehaviour
 
     private void Update()
     {
-        UpdateHandTarget(Left, LeftControllerOffset, LeftControllerRotationOffset);
-        HandComponentsUpdate(Left);
+        UpdateHandTargets();
 
-        UpdateHandTarget(Right, RightControllerOffset, RightControllerRotationOffset);
+        HandComponentsUpdate(Left);
         HandComponentsUpdate(Right);
 
         CalculateFingerTipPositions();
@@ -89,6 +88,12 @@ public class InputManager : MonoBehaviour
 
         Left.PlayerHand.UpdateLastGestures();
         Right.PlayerHand.UpdateLastGestures();
+    }
+
+    public void UpdateHandTargets()
+    {
+        UpdateHandTarget(Left, LeftControllerOffset, LeftControllerRotationOffset);
+        UpdateHandTarget(Right, RightControllerOffset, RightControllerRotationOffset);
     }
 
     private void HandComponentsUpdate(HandComponents handComponents)
