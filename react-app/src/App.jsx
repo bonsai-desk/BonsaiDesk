@@ -60,7 +60,7 @@ let Boot = () => {
 }
 
 let Home = () => {
-    return <div>Home</div>
+    return <div></div>
 }
 
 function App() {
