@@ -31,6 +31,10 @@ public class HandComponents
         TargetHand = handObject.GetChild(1);
         PlayerHand.transform.SetParent(PhysicsHand, false);
 
+        handObject.name += "_Local";
+        PhysicsHand.name += "_Local";
+        TargetHand.name += "_Local";
+
         PhysicsMapper = PhysicsHand.GetComponentInChildren<OVRHandTransformMapper>();
         PlayerHand.physicsMapper = PhysicsMapper;
 

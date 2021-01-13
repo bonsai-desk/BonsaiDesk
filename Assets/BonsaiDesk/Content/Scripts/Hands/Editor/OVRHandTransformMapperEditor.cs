@@ -63,6 +63,12 @@ public class OVRHandTransformMapperEditor : Editor
 				EditorUtility.SetDirty(skeleton);
 				EditorSceneManager.MarkSceneDirty(skeleton.gameObject.scene);
 			}
+			if (GUILayout.Button("Auto Map Targets To regular hand"))
+			{
+				skeleton.TryAutoMapBonesTargetsByName();
+				EditorUtility.SetDirty(skeleton);
+				EditorSceneManager.MarkSceneDirty(skeleton.gameObject.scene);
+			}
 
 			EditorGUILayout.LabelField("Bones", EditorStyles.boldLabel);
 			BoneId start = OVRSkeleton.BoneId.Hand_Start;

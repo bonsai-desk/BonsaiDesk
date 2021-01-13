@@ -23,9 +23,9 @@ public class NetworkHand : NetworkBehaviour
 
     private float lastRotationsUpdateTime = 0;
 
-    public SkinnedMeshRenderer meshRenderer;
-
-    public Texture[] handTextures;
+    // public SkinnedMeshRenderer meshRenderer;
+    
+    // public Texture[] handTextures;
 
     [SyncVar(hook = nameof(ColorHook))] private byte colorIndex = 0;
 
@@ -37,6 +37,9 @@ public class NetworkHand : NetworkBehaviour
     [SyncVar] private uint _pinchPullAttachedToId = uint.MaxValue;
     [SyncVar] private Vector3 _pinchPullLocalHitPoint = Vector3.zero;
     [SyncVar] private float _pinchPullRopeLength = 0f;
+
+    public GameObject physicsHandPrefab;
+    private GameObject physicsHand;
 
     private void Start()
     {
@@ -57,7 +60,18 @@ public class NetworkHand : NetworkBehaviour
         UpdateColor();
 
         if (!hasAuthority)
+        {
+            var hand = Instantiate(physicsHandPrefab);
+            var physicsMapper = hand.transform.GetChild(1).GetComponent<OVRHandTransformMapper>();
+            physicsMapper.targetObject = transform;
+            physicsMapper.capsulesParent = transform;
+            physicsMapper.TryAutoMapBonesTargetsByName();
+            physicsMapper.moveObjectToTarget = true;
+            physicsMapper.moveBonesToTargets = true;
+            physicsMapper.fixRotation = false;
+            physicsHand = hand;
             return;
+        }
 
         CmdSetColor(NetworkManagerGame.AssignedColorIndex);
 
@@ -65,6 +79,16 @@ public class NetworkHand : NetworkBehaviour
             InputManager.Hands.Left.NetworkHand = this;
         if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
             InputManager.Hands.Right.NetworkHand = this;
+    }
+
+    public override void OnStopClient()
+    {
+        if (physicsHand)
+        {
+            Destroy(physicsHand);
+        }
+
+        base.OnStopClient();
     }
 
     private void Update()
@@ -104,6 +128,9 @@ public class NetworkHand : NetworkBehaviour
             lastSetTime = Time.time;
             var (rotations, tRotations) = GetFingerRotations(hand.PhysicsMapper);
             CmdSetFingerRotations(rotations, tRotations);
+            
+            //uncomment this for the network hand to also update for the player who owns it
+            // SetFingerRotations();
         }
     }
 
@@ -180,7 +207,7 @@ public class NetworkHand : NetworkBehaviour
 
     private void UpdateColor()
     {
-        meshRenderer.material.SetTexture("_MainTex", handTextures[colorIndex]);
+        // meshRenderer.material.SetTexture("_MainTex", handTextures[colorIndex]);
         if (hasAuthority)
         {
             //TODO fix hand materials

@@ -24,6 +24,8 @@ public class OVRHandTransformMapper : MonoBehaviour
 
     private Quaternion[] _startPose = new Quaternion[24];
 
+    public bool fixRotation = true;
+
     private void Start()
     {
         for (int i = 0; i < CustomBones.Count && i < _startPose.Length; i++)
@@ -51,7 +53,14 @@ public class OVRHandTransformMapper : MonoBehaviour
             return;
 
         transform.position = targetObject.position;
-        transform.rotation = targetObject.rotation * _fixRotation;
+        if (fixRotation)
+        {
+            transform.rotation = targetObject.rotation * _fixRotation;
+        }
+        else
+        {
+            transform.rotation = targetObject.rotation;
+        }
     }
 
     public void UpdateBonesToTargets()
@@ -187,6 +196,16 @@ public class OVRHandTransformMapper : MonoBehaviour
 
     public void TryAutoMapBonesByName()
     {
+        TryAutoMapBonesByName(transform, _customBones);
+    }
+
+    public void TryAutoMapBonesTargetsByName()
+    {
+        TryAutoMapBonesByName(capsulesParent, _boneTargets);
+    }
+
+    public void TryAutoMapBonesByName(Transform parent, List<Transform> target)
+    {
         OVRSkeleton.BoneId start = OVRSkeleton.BoneId.Hand_Start;
         OVRSkeleton.BoneId end = OVRSkeleton.BoneId.Hand_End;
         if (start != OVRSkeleton.BoneId.Invalid && end != OVRSkeleton.BoneId.Invalid)
@@ -194,11 +213,11 @@ public class OVRHandTransformMapper : MonoBehaviour
             for (int bi = (int) start; bi < (int) end; ++bi)
             {
                 string fbxBoneName = FbxBoneNameFromBoneId(_skeletonType, (OVRSkeleton.BoneId) bi);
-                Transform t = transform.FindChildRecursive(fbxBoneName);
+                var t = parent.FindChildRecursive(fbxBoneName);
 
                 if (t != null)
                 {
-                    _customBones[(int) bi] = t;
+                    target[(int) bi] = t;
                 }
             }
         }
