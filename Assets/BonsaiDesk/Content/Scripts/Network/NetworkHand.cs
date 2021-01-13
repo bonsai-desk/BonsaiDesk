@@ -102,8 +102,8 @@ public class NetworkHand : NetworkBehaviour
         if (Time.time - lastSetTime > updateInterval)
         {
             lastSetTime = Time.time;
-            var rotations = GetFingerRotations(hand.PhysicsMapper);
-            CmdSetFingerRotations(rotations.rotations, rotations.tRotations);
+            var (rotations, tRotations) = GetFingerRotations(hand.PhysicsMapper);
+            CmdSetFingerRotations(rotations, tRotations);
         }
     }
 
