@@ -2,12 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Vuplex.WebView;
 
 public class AutoBrowser : MonoBehaviour
 {
     public Vector2 startingAspect = new Vector2(16, 9);
-    public Transform boundsTransform;
     public Material holePuncherMaterial;
     public float distanceEstimate = 1;
     public int pixelPerDegree = 16;
@@ -17,41 +17,45 @@ public class AutoBrowser : MonoBehaviour
     private GameObject _boundsObject;
     private Vector3 _defaultLocalPosition;
     private OVROverlay _overlay;
-    private Transform _overlayObject;
+    public Transform boundsTransform;
+    public Transform overlayTransform;
+    public Transform holePuncherTransform;
     private WebViewPrefab _webViewPrefab;
 
     private void Start()
     {
         CacheTransforms();
 
-        var screenTransform = transform.Find("Screen");
+        //SetupOverlayObject();
 
-        SetupOverlayObject(screenTransform);
-
-        SetupWebViewPrefab(screenTransform);
+        SetupWebViewPrefab();
+        
+        SetupHolePuncher();
     }
 
     private void Update()
     {
     }
 
+    private void StretchHolePuncher()
+    {
+        
+    }
+
 
     public void SetHeight(float t)
     {
-        transform.localPosition = Vector3.Lerp(_belowTableLocalPosition, _defaultLocalPosition, Mathf.Clamp01(t));
+        var heightT = t;
+        transform.localPosition = Vector3.Lerp(_belowTableLocalPosition, _defaultLocalPosition, Mathf.Clamp01(heightT));
 
-        //var height = _overlayObject.localScale.y;
-        //var halfHeight = height / 2f;
-        //t = (transform.localPosition.y + halfHeight) / height;
-        //t = Mathf.Clamp01(t);
+        var height = boundsTransform.localScale.y;
+        var halfHeight = height / 2f;
 
-        //var holePunchScale = _overlayObject.localScale;
-        //holePunchScale.y = _overlayObject.localScale.y * t;
-        //boundsTransform.localScale = holePunchScale;
-
-        //var holePunchPosition = boundsTransform.localPosition;
-        //holePunchPosition.y = halfHeight * (1f - t);
-        //boundsTransform.localPosition = holePunchPosition;
+        var scaleT = (transform.localPosition.y + halfHeight) / height;
+        scaleT = Mathf.Clamp01(scaleT);
+        
+        holePuncherTransform.localScale = new Vector3(1, scaleT,1);
+        holePuncherTransform.localPosition = new Vector3(0, (1-scaleT) / 2, 0);
 
         if (Mathf.Approximately(t, 0))
         {
@@ -65,11 +69,19 @@ public class AutoBrowser : MonoBehaviour
 
     public event Action BrowserReady;
 
-    private void SetupOverlayObject(Transform screenTransform)
+    private void SetupHolePuncher()
     {
-        _overlayObject = new GameObject().transform;
-        _overlayObject.name = "OverlayObject";
-        _overlayObject.SetParent(boundsTransform, false);
+#if UNITY_ANDROID && !UNITY_EDITOR
+        holePuncherTransform.GetComponent<Renderer>().sharedMaterial = holePuncherMaterial;
+        _webViewPrefab.Visible = false;
+#else
+        holePuncherTransform.GetComponent<MeshRenderer>().enabled = false;
+#endif
+    }
+
+    private void SetupOverlayObject()
+    {;
+        throw new NotImplementedException();
     }
 
     private void CacheTransforms()
@@ -78,12 +90,13 @@ public class AutoBrowser : MonoBehaviour
         _defaultLocalPosition = transform.localPosition;
         _belowTableLocalPosition = _defaultLocalPosition;
         _belowTableLocalPosition.y = -_bounds.y / 2f;
+        
     }
 
     private void RebuildOverlay(Vector2Int resolution)
     {
         Destroy(_overlay);
-        _overlay = _overlayObject.gameObject.AddComponent<OVROverlay>();
+        _overlay = overlayTransform.gameObject.AddComponent<OVROverlay>();
         _overlay.externalSurfaceWidth = resolution.x;
         _overlay.externalSurfaceHeight = resolution.y;
         _overlay.currentOverlayType = OVROverlay.OverlayType.Underlay;
@@ -132,7 +145,7 @@ public class AutoBrowser : MonoBehaviour
         return resolution;
     }
 
-    private void SetupWebViewPrefab(Transform screenTransform)
+    private void SetupWebViewPrefab()
     {
         PreConfigureWebView();
 
@@ -142,12 +155,6 @@ public class AutoBrowser : MonoBehaviour
         _webViewPrefab.transform.localPosition = new Vector3(0, 0.5f, 0);
         _webViewPrefab.transform.localEulerAngles = new Vector3(0, 180, 0);
 
-#if !UNITY_EDITOR && UNITY_ANDROID
-        boundsTransform.gameObject.GetComponent<Renderer>().sharedMaterial = holePuncherMaterial;
-        _webViewPrefab.Visible = false;
-#else
-        boundsTransform.GetComponent<MeshRenderer>().enabled = false;
-#endif
         _webViewPrefab.Initialized += (sender, eventArgs) =>
         {
             ChangeAspect(startingAspect);
