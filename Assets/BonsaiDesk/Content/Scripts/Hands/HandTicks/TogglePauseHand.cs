@@ -7,7 +7,7 @@ using UnityEngine;
 public class TogglePauseHand : MonoBehaviour, IHandTick
 {
     public PlayerHand playerHand { get; set; }
-    
+
     public AngleToObject angleToObject;
     public AngleToObject headAngleToObject;
     public TogglePause togglePause;
@@ -18,34 +18,33 @@ public class TogglePauseHand : MonoBehaviour, IHandTick
     {
         if (NetworkClient.connection == null || NetworkClient.connection.identity == null)
             return;
-        
+
         bool pointingAtScreen = false;
         if (!_lastPointingAtScreen && playerHand.GetGesture(PlayerHand.Gesture.WeakPalm) &&
             headAngleToObject.AngleBelowThreshold() || _lastPointingAtScreen)
             pointingAtScreen = angleToObject.AngleBelowThreshold();
-        
-        togglePause.Point(playerHand.skeletonType, pointingAtScreen && playerHand.oVRSkeleton.IsDataHighConfidence,
-            playerHand.holdPosition.position);
+
+        togglePause.Point(playerHand.skeletonType, pointingAtScreen, playerHand.palm.position);
 
         if (playerHand.GetGesture(PlayerHand.Gesture.FlatFist))
         {
             if (pointingAtScreen && !playerHand.GetLastGesture(PlayerHand.Gesture.FlatFist))
             {
-                togglePause.StartToggleGesture(playerHand.skeletonType, playerHand.holdPosition.position);
+                togglePause.StartToggleGesture(playerHand.skeletonType, playerHand.palm.position);
             }
 
-            togglePause.UpdateToggleGesturePosition(playerHand.skeletonType, playerHand.holdPosition.position);
+            togglePause.UpdateToggleGesturePosition(playerHand.skeletonType, playerHand.palm.position);
         }
         else
         {
-            togglePause.StopToggleGesture(playerHand.skeletonType, playerHand.holdPosition.position);
+            togglePause.StopToggleGesture(playerHand.skeletonType, playerHand.palm.position);
         }
 
         if (togglePause.currentGestureSkeleton == playerHand.skeletonType)
         {
             pointingAtScreen = false;
         }
-        
+
         _lastPointingAtScreen = pointingAtScreen;
     }
 }

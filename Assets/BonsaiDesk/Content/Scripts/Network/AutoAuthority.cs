@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Mirror;
+using Smooth;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -54,13 +55,15 @@ public class AutoAuthority : NetworkBehaviour
 
     private void Update()
     {
-        if (isServer && transform.position.y < -100f)
-        {
-            NetworkServer.Destroy(gameObject);
-        }
-
         UpdateColor();
         _visualizePinchPull = false;
+
+        if (isServer && transform.position.y < -100f)
+        {
+            ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true);
+            NetworkServer.Destroy(gameObject);
+            return;
+        }
 
         //if you don't have control over the object
         if (!HasAuthority())
@@ -215,7 +218,7 @@ public class AutoAuthority : NetworkBehaviour
         _lastInteractTime = fromLastInteractTime;
         _ownerIdentityId = newOwnerIdentityId;
     }
-    
+
     [Server]
     public void ServerForceNewOwner(uint newOwnerIdentityId, double fromLastInteractTime, bool inUse)
     {

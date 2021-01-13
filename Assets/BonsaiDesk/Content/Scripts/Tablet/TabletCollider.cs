@@ -89,7 +89,7 @@ public class TabletCollider : MonoBehaviour
 
         return num;
     }
-
+    
     private bool MaskIsValid(int layer)
     {
         return _handMask == (_handMask | (1 << layer));
@@ -98,7 +98,7 @@ public class TabletCollider : MonoBehaviour
     private bool CollisionIsValid(Collision other)
     {
         return MaskIsValid(other.gameObject.layer) &&
-               (other.gameObject.CompareTag("FingerTip") || other.gameObject.CompareTag("PointerTip"));
+               (other.gameObject.CompareTag("FingerTip") || other.gameObject.CompareTag("IndexTip"));
     }
 
     private bool TouchPositionIsValid(Vector3 point)

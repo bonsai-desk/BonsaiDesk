@@ -28,7 +28,7 @@ public class DrawingBoard : MonoBehaviour
             updateLine = true;
         }
 
-        Vector3 checkPosition = PlayerHands.hands.physicsFingerTipPositions[6];
+        Vector3 checkPosition = InputManager.Hands.physicsFingerTipPositions[6];
         if (Mathf.Abs(checkPosition.x) < transform.localScale.x / 2f && checkPosition.z > 0.01f && checkPosition.z < transform.localScale.y + 0.01f)
         {
             float difference = checkPosition.y - transform.position.y;

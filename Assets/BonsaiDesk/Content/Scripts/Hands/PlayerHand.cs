@@ -1,51 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using Mirror;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class PlayerHand : MonoBehaviour
 {
-    public OVRSkeleton.SkeletonType skeletonType;
-
-    [HideInInspector] public NetworkHand networkHand;
-
-    public OVRHand oVRHand;
-    public OVRSkeleton oVRSkeleton;
-
-    public SkinnedMeshRenderer renderer;
-    [HideInInspector] public Material material;
-
-    [HideInInspector] public Transform[] fingerTips;
-
-    public Transform[] physicsFingerTips;
-    public Transform[] physicsFingerPads;
-
-    public Transform holdPosition;
-
-    [HideInInspector] public Rigidbody heldBody;
-
-    private bool heldObjectGravity;
-    private float heldObjectDrag;
-    private float heldObjectAngularDrag;
-
-    public static LayerMask AllButHands;
-
-    public Transform cameraRig;
-
-    public Transform pointerPose;
-
-    public OVRHandTransformMapper mapper;
-
-    public Camera mainCamera;
-    private int handLayer;
+    [HideInInspector] public OVRSkeleton.SkeletonType skeletonType;
+    [HideInInspector] public OVRHandTransformMapper physicsMapper;
 
     private IHandTick[] _handTicks;
     private Dictionary<Type, IHandTick> _handTicksDictionary;
 
+    private readonly Dictionary<Gesture, bool> _gestures = new Dictionary<Gesture, bool>();
+    private readonly Dictionary<Gesture, bool> _lastGestures = new Dictionary<Gesture, bool>();
+    private readonly Dictionary<Gesture, float> _lastGestureActiveTime = new Dictionary<Gesture, float>();
+
+    public PlayerHand OtherHand => InputManager.Hands.GetOtherHand(skeletonType).PlayerHand;
+
+    public Transform palm;
+    public Transform palmPointer;
+    public Transform pinchPullPointer;
+
+    public static int AllButHandsMask;
+
     public enum Gesture
     {
-        AnyPinching,
         IndexPinching,
         Fist,
         FlatFist,
@@ -54,9 +32,74 @@ public class PlayerHand : MonoBehaviour
         WeakPalm
     }
 
-    private Dictionary<Gesture, bool> _gestures = new Dictionary<Gesture, bool>();
-    private Dictionary<Gesture, bool> _lastGestures = new Dictionary<Gesture, bool>();
-    private Dictionary<Gesture, float> _lastGestureActiveTime = new Dictionary<Gesture, float>();
+    private void Start()
+    {
+        AllButHandsMask = ~LayerMask.GetMask("LeftHand", "RightHand");
+
+        _handTicks = GetComponentsInChildren<IHandTick>();
+        _handTicksDictionary = new Dictionary<Type, IHandTick>();
+        foreach (var handTick in _handTicks)
+        {
+            _handTicksDictionary.Add(handTick.GetType(), handTick);
+            handTick.playerHand = this;
+        }
+
+        foreach (Gesture gesture in (Gesture[]) Gesture.GetValues(typeof(Gesture)))
+        {
+            _gestures.Add(gesture, false);
+            _lastGestures.Add(gesture, false);
+        }
+
+        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
+        {
+            var otherHandTransform = InputManager.Hands.GetOtherHand(skeletonType).PlayerHand.transform;
+            foreach (Transform child in transform)
+            {
+                if (child.name != "Canvas")
+                {
+                    var otherChild = otherHandTransform.Find(child.name);
+                    if (otherChild)
+                    {
+                        MirrorHandChild(child, otherChild);
+                    }
+                    else
+                    {
+                        Debug.LogError("Left hand does not have matching child object");
+                    }
+                }
+            }
+        }
+    }
+
+    private void MirrorHandChild(Transform source, Transform other)
+    {
+        //all of this is awful and still only results in the forward direction being mirrored correctly
+
+        var handRotationFix = Quaternion.AngleAxis(180f, Vector3.forward);
+
+        var localPosition = source.localPosition;
+        localPosition = handRotationFix * localPosition;
+        localPosition.z *= -1f;
+        other.localPosition = localPosition;
+
+        var localRotation = source.localRotation;
+        localRotation = handRotationFix * localRotation;
+
+        var r1 = localRotation;
+        r1.x *= -1f;
+        r1.y *= -1f;
+        r1 *= Quaternion.AngleAxis(180f, Vector3.right);
+
+        var r2 = localRotation * Quaternion.AngleAxis(90f, Vector3.right);
+        r2.x *= -1f;
+        r2.y *= -1f;
+        r2 *= Quaternion.AngleAxis(180f, Vector3.right);
+
+        localRotation = Quaternion.LookRotation(r1 * Vector3.forward, r2 * Vector3.up);
+        localRotation = localRotation * Quaternion.AngleAxis(180f, Vector3.forward);
+
+        other.localRotation = localRotation;
+    }
 
     public bool GetGesture(Gesture gesture)
     {
@@ -83,6 +126,11 @@ public class PlayerHand : MonoBehaviour
         return GetGesture(gesture) && !GetLastGesture(gesture);
     }
 
+    public bool GetGestureStop(Gesture gesture)
+    {
+        return !GetGesture(gesture) && GetLastGesture(gesture);
+    }
+
     public bool GetGestureActiveWithin(Gesture gesture, float time)
     {
         if (_lastGestureActiveTime.TryGetValue(gesture, out float value))
@@ -101,54 +149,16 @@ public class PlayerHand : MonoBehaviour
         }
     }
 
-    private void Awake()
-    {
-        AllButHands = ~LayerMask.GetMask("LeftHand", "RightHand", "LeftHeldObject", "RightHeldObject");
-    }
-
-    private void Start()
-    {
-        if (material == null)
-            material = renderer.material;
-
-        fingerTips = new Transform[0];
-        GetFingerTips();
-
-        _handTicks = GetComponentsInChildren<IHandTick>();
-        _handTicksDictionary = new Dictionary<Type, IHandTick>();
-        foreach (var handTick in _handTicks)
-        {
-            _handTicksDictionary.Add(handTick.GetType(), handTick);
-            handTick.playerHand = this;
-        }
-
-        foreach (Gesture gesture in (Gesture[]) Gesture.GetValues(typeof(Gesture)))
-        {
-            _gestures.Add(gesture, false);
-            _lastGestures.Add(gesture, false);
-        }
-
-        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
-        {
-            handLayer = LayerMask.NameToLayer("LeftHand");
-        }
-        else
-        {
-            handLayer = LayerMask.NameToLayer("RightHand");
-        }
-    }
-
     public T GetIHandTick<T>()
     {
         return (T) _handTicksDictionary[typeof(T)];
     }
-    
+
     public void UpdateGestures()
     {
         float fistStrength = FistStrength();
         float flatFistStrength = FlatFistStrength();
 
-        UpdateGesture(Gesture.AnyPinching, AnyPinching());
         UpdateGesture(Gesture.IndexPinching, IndexPinching());
         UpdateGesture(Gesture.Fist, fistStrength > 0.7f);
         UpdateGesture(Gesture.FlatFist, flatFistStrength > 0.7f);
@@ -171,126 +181,47 @@ public class PlayerHand : MonoBehaviour
             _handTicks[i].Tick();
         }
     }
-    
-    private void Update()
-    {
-        if (Tracking())
-        {
-            mainCamera.cullingMask |= 1 << handLayer;
-        }
-        else
-        {
-            mainCamera.cullingMask &= ~(1 << handLayer);
-        }
-    }
 
-    public Vector3 OPointerPosition()
+    public Vector3 PinchPosition()
     {
-        return cameraRig.TransformPoint(oVRHand.PointerPose.position);
-    }
-
-    public Quaternion OPointerRotation()
-    {
-        return cameraRig.rotation * oVRHand.PointerPose.rotation;
-    }
-
-    public PlayerHand OtherHand()
-    {
-        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
-            return PlayerHands.hands.right;
-        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
-            return PlayerHands.hands.left;
-        return null;
-    }
-
-    //TODO fake is tracking for 1-2 seconds while it fades out. this includes locking gesture values
-    public bool Tracking()
-    {
-        if (fingerTips.Length == 0)
-            GetFingerTips();
-        return oVRHand.IsTracked && fingerTips.Length > 0 && physicsFingerTips.Length > 0 &&
-               physicsFingerPads.Length > 0 && oVRHand.IsDataHighConfidence;
-    }
-
-    private void GetFingerTips()
-    {
-        if (oVRSkeleton.Bones.Count > 0)
-        {
-            fingerTips = new Transform[5];
-            fingerTips[0] = oVRSkeleton.Bones[(int) OVRSkeleton.BoneId.Hand_ThumbTip].Transform;
-            fingerTips[1] = oVRSkeleton.Bones[(int) OVRSkeleton.BoneId.Hand_IndexTip].Transform;
-            fingerTips[2] = oVRSkeleton.Bones[(int) OVRSkeleton.BoneId.Hand_MiddleTip].Transform;
-            fingerTips[3] = oVRSkeleton.Bones[(int) OVRSkeleton.BoneId.Hand_RingTip].Transform;
-            fingerTips[4] = oVRSkeleton.Bones[(int) OVRSkeleton.BoneId.Hand_PinkyTip].Transform;
-        }
-    }
-
-    public bool Pointing()
-    {
-        if (!Tracking())
-            return false;
-        if (FingerCloseStrength(OVRSkeleton.BoneId.Hand_Index1) > 0.25f ||
-            FingerCloseStrength(OVRSkeleton.BoneId.Hand_Middle1) < 0.8f ||
-            FingerCloseStrength(OVRSkeleton.BoneId.Hand_Ring1) < 0.8f ||
-            FingerCloseStrength(OVRSkeleton.BoneId.Hand_Pinky1) < 0.8f ||
-            transform.InverseTransformPoint(fingerTips[0].position).z > 0.02f)
-            return false;
-        return true;
-    }
-
-    public bool Pinching(OVRHand.HandFinger finger)
-    {
-        if (Tracking())
-            return oVRHand.GetFingerIsPinching(finger);
-        else
-            return false;
+        var indexTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_IndexTip].position;
+        var thumbTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_ThumbTip].position;
+        return (indexTip + thumbTip) / 2f;
     }
 
     public bool IndexPinching()
     {
-        return Pinching(OVRHand.HandFinger.Index);
+        if (OVRInput.GetConnectedControllers() == OVRInput.Controller.Hands)
+        {
+            return InputManager.Hands.GetHand(skeletonType).OVRHand.GetFingerIsPinching(OVRHand.HandFinger.Index);
+        }
+        else
+        {
+            return PinchStrength(OVRSkeleton.BoneId.Hand_IndexTip) > 0.99f;
+        }
     }
 
-    public float AnyPinchingStrength()
+    public float PinchStrength(OVRSkeleton.BoneId tipBoneId)
     {
-        if (Tracking())
-            return oVRHand.GetFingerPinchStrength(OVRHand.HandFinger.Thumb);
-        else
-            return 0;
+        const float min = 0.015f;
+        const float max = 0.1f;
+        var distance = FingerDistanceToThumb(tipBoneId);
+        var s = (distance - min) / (max - min);
+        return 1 - Mathf.Clamp01(s);
     }
 
-    public bool AnyPinching()
+    public float FingerDistanceToThumb(OVRSkeleton.BoneId tipBoneId)
     {
-        if (Tracking())
-            return oVRHand.GetFingerIsPinching(OVRHand.HandFinger.Thumb);
-        else
-            return false;
-    }
-
-    public Vector3 PinchPosition()
-    {
-        if (Tracking())
-            return Vector3.Lerp(fingerTips[0].position, fingerTips[1].position, 0.5f);
-        else
-            return Vector3.zero;
-    }
-
-    public Vector3 PhysicsPinchPosition()
-    {
-        if (Tracking())
-            return Vector3.Lerp(physicsFingerTips[0].position, physicsFingerTips[1].position, 0.5f);
-        else
-            return Vector3.zero;
+        var fingerTip = physicsMapper.CustomBones[(int) tipBoneId].position;
+        var thumbTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_ThumbTip].position;
+        return Vector3.Distance(fingerTip, thumbTip);
     }
 
     public float FingerCloseStrength(OVRSkeleton.BoneId boneId)
     {
-        if (!Tracking())
-            return 0;
-
-        float r1 = Vector3.Angle(-oVRSkeleton.transform.right, oVRSkeleton.Bones[(int) boneId].Transform.right);
-        float r2 = Vector3.Angle(oVRSkeleton.Bones[(int) boneId].Transform.right,
-            oVRSkeleton.Bones[(int) boneId + 2].Transform.right);
+        float r1 = Vector3.Angle(physicsMapper.transform.right, physicsMapper.CustomBones[(int) boneId].right);
+        float r2 = Vector3.Angle(physicsMapper.CustomBones[(int) boneId].right,
+            physicsMapper.CustomBones[(int) boneId + 2].right);
 
         r1 /= 60f;
         r2 /= 175f;
@@ -300,10 +231,7 @@ public class PlayerHand : MonoBehaviour
 
     public float FlatFingerStrength(OVRSkeleton.BoneId boneId)
     {
-        if (!Tracking())
-            return 0;
-
-        float r1 = Vector3.Angle(-oVRSkeleton.transform.right, oVRSkeleton.Bones[(int) boneId].Transform.right);
+        float r1 = Vector3.Angle(physicsMapper.transform.right, physicsMapper.CustomBones[(int) boneId].right);
         r1 /= 60f;
         return Mathf.Clamp01(r1);
     }
