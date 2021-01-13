@@ -1,7 +1,7 @@
 import React from "react";
-import "./assets/main.css";
 import {MemoryRouter as Router, Route, Switch, useHistory} from "react-router-dom";
 import YouTube from "./pages/YouTube";
+import Spring from "./pages/Spring";
 
 let Boot = () => {
 
@@ -45,6 +45,7 @@ let Boot = () => {
         <div>
             Boot
             <p onClick={()=>{history.push("/youtube_test/qEfPBt9dU60/19.02890180001912?x=480&y=360")}}>test video</p>
+            <p onClick={()=>{history.push("/spring")}}>spring</p>
         </div>
     )
 }
@@ -60,13 +61,15 @@ function App() {
             <div className={"bg-gray-800 h-screen text-green-400"}>
                 <Switch>
 
-                    <Route exact path={"/home"} component={Home}/>
+                    <Route path={"/home"} component={Home}/>
+
+                    <Route path={"/spring"} component={Spring}/>
 
                     <Route exact path={"/youtube/:id/:timeStamp"} component={YouTube}/>
 
                     <Route exact path={"/youtube_test/:id/:timeStamp"} component={YouTube}/>
 
-                    <Route path={"/"} component={Boot}/>
+                    <Route exact path={"/"} component={Spring}/>
 
                 </Switch>
             </div>
