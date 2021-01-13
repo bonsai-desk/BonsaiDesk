@@ -17,6 +17,10 @@ public class PlayerHand : MonoBehaviour
     public PlayerHand OtherHand => InputManager.Hands.GetOtherHand(skeletonType).PlayerHand;
 
     public Transform palm;
+    public Transform palmPointer;
+    public Transform pinchPullPointer;
+
+    public static int AllButHandsMask;
 
     public enum Gesture
     {
@@ -30,6 +34,8 @@ public class PlayerHand : MonoBehaviour
 
     private void Start()
     {
+        AllButHandsMask = ~LayerMask.GetMask("LeftHand", "RightHand");
+        
         _handTicks = GetComponentsInChildren<IHandTick>();
         _handTicksDictionary = new Dictionary<Type, IHandTick>();
         foreach (var handTick in _handTicks)
