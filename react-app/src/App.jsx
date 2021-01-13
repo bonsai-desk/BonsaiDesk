@@ -69,7 +69,7 @@ function App() {
 
                     <Route exact path={"/youtube_test/:id/:timeStamp"} component={YouTube}/>
 
-                    <Route exact path={"/"} component={Spring}/>
+                    <Route exact path={"/"} component={Boot}/>
 
                 </Switch>
             </div>
