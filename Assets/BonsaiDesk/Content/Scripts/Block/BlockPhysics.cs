@@ -66,9 +66,11 @@ public class BlockPhysics : MonoBehaviour
         if (!networkIdentity.hasAuthority)
             return;
 
-        if ((PlayerHands.hands.right.heldBody != null && PlayerHands.hands.right.heldBody.gameObject == gameObject) ||
-            (PlayerHands.hands.left.heldBody != null && PlayerHands.hands.left.heldBody.gameObject == gameObject))
-            touchingHand = true;
+        //TODO this was commented out when switched to InputManager
+        touchingHand = false;
+        // if ((PlayerHands.hands.right.heldBody != null && PlayerHands.hands.right.heldBody.gameObject == gameObject) ||
+        //     (PlayerHands.hands.left.heldBody != null && PlayerHands.hands.left.heldBody.gameObject == gameObject))
+        //     touchingHand = true;
 
         BlockArea blockArea = null;
         Transform blockAreaTransform = null;

@@ -21,8 +21,8 @@ public class BlockAreaHit : MonoBehaviour
         //
         // if (collision.contactCount > 0)
         // {
-        //     bool left = (PlayerHands.hands.left.deleteMode || PlayerHands.hands.left.deleteAllMode) && collision.gameObject.CompareTag("PointerTip") && collision.gameObject.layer == LayerMask.NameToLayer("LeftHand");
-        //     bool right = (PlayerHands.hands.right.deleteMode || PlayerHands.hands.right.deleteAllMode) && collision.gameObject.CompareTag("PointerTip") && collision.gameObject.layer == LayerMask.NameToLayer("RightHand");
+        //     bool left = (PlayerHands.hands.left.deleteMode || PlayerHands.hands.left.deleteAllMode) && collision.gameObject.CompareTag("IndexTip") && collision.gameObject.layer == LayerMask.NameToLayer("LeftHand");
+        //     bool right = (PlayerHands.hands.right.deleteMode || PlayerHands.hands.right.deleteAllMode) && collision.gameObject.CompareTag("IndexTip") && collision.gameObject.layer == LayerMask.NameToLayer("RightHand");
         //     if (left || right)
         //     {
         //         ContactPoint contact = collision.GetContact(0);

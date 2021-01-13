@@ -29,8 +29,8 @@ public class LockObjectHand : MonoBehaviour, IHandTick
                 return;
             }
         }
-
-        if (_joint && (!playerHand.Tracking() ||
+        
+        if (_joint && (!InputManager.Hands.GetHand(playerHand.skeletonType).Tracking ||
                        !playerHand.GetGesture(PlayerHand.Gesture.IndexPinching) &&
                        !playerHand.GetGesture(PlayerHand.Gesture.Fist)))
         {
@@ -59,11 +59,11 @@ public class LockObjectHand : MonoBehaviour, IHandTick
         //TODO use overlap sphere non alloc
         Collider[] pinchHits = new Collider[0];
         if (playerHand.GetGestureStart(PlayerHand.Gesture.IndexPinching))
-            pinchHits = Physics.OverlapSphere(playerHand.PhysicsPinchPosition(), 0, PlayerHand.AllButHands,
+            pinchHits = Physics.OverlapSphere(playerHand.PinchPosition(), 0, PlayerHand.AllButHandsMask,
                 QueryTriggerInteraction.Ignore);
         Collider[] fistHits = new Collider[0];
         if (playerHand.GetGestureStart(PlayerHand.Gesture.Fist))
-            fistHits = Physics.OverlapSphere(playerHand.holdPosition.position, 0.02f, PlayerHand.AllButHands,
+            fistHits = Physics.OverlapSphere(playerHand.palm.position, 0.02f, PlayerHand.AllButHandsMask,
                 QueryTriggerInteraction.Ignore);
         Collider[] hits = new Collider[pinchHits.Length + fistHits.Length];
         pinchHits.CopyTo(hits, 0);
@@ -107,7 +107,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
     {
         autoAuthority.CmdSetNewOwner(NetworkClient.connection.identity.netId, NetworkTime.time, true);
         
-        _joint = playerHand.gameObject.AddComponent<ConfigurableJoint>();
+        _joint = InputManager.Hands.GetHand(playerHand.skeletonType).PhysicsHand.gameObject.AddComponent<ConfigurableJoint>();
         _joint.anchor = playerHand.transform.InverseTransformPoint(autoAuthority.transform.position);
         _joint.autoConfigureConnectedAnchor = false;
         _joint.connectedAnchor = Vector3.zero;

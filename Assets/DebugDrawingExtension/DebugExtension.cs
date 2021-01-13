@@ -695,6 +695,12 @@ public static class DebugExtension
 		DebugArrow(position, direction, Color.white, duration, depthTest);
 	}
 	
+	public static void DebugPhysicsCapsule(Vector3 start, Vector3 end, Color color, float radius = 1, float duration = 0, bool depthTest = true)
+	{
+		Vector3 direction = (end - start).normalized;
+		DebugCapsule(start - direction * radius, end + direction * radius, color, radius, duration, depthTest);
+	}
+
 	/// <summary>
 	/// 	- Debugs a capsule.
 	/// </summary>

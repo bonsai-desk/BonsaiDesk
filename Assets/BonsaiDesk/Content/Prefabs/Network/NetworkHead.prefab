@@ -494,6 +494,7 @@ GameObject:
   - component: {fileID: 397433653346894428}
   - component: {fileID: 2482834880378478163}
   - component: {fileID: 5873238580600341142}
+  - component: {fileID: 9215190182876982407}
   m_Layer: 23
   m_Name: NetworkHead
   m_TagString: Untagged
@@ -550,11 +551,6 @@ MonoBehaviour:
   networkHandLeftPrefab: {fileID: 7303093392691314294, guid: 989c75c8561f8ba41a2ad43b4b919ec7,
     type: 3}
   networkHandRightPrefab: {fileID: 278106068519379494, guid: de9f215c24e582e41bf246880e577b57,
-    type: 3}
-  blockAreaPrefab: {fileID: 4318712806008556002, guid: 61623eb8f304be045b6363ec45c2e007,
-    type: 3}
-  beamLine: {fileID: 1629970178986108462}
-  spawnObject: {fileID: 5091729340588248543, guid: fc3dae8c141f5d446a0d64a88cd562d1,
     type: 3}
 --- !u!114 &397433653346894428
 MonoBehaviour:
@@ -643,6 +639,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
+--- !u!135 &9215190182876982407
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8502092791694960064}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.145
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &8511288414153105935
 GameObject:
   m_ObjectHideFlags: 0

@@ -98,7 +98,7 @@ public class ResetPositionFall : MonoBehaviour
                     upperBounds[i] += padding;
                     lowerBounds[i] -= padding;
                 }
-
+                
                 Vector3 targetPosition = new Vector3(0, 0, 0.375f);
                 float additionalHeight = 0;
                 Vector3 boxPosition = targetPosition + new Vector3(0, upperBounds.y + additionalHeight + 0.005f, 0);
