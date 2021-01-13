@@ -29,8 +29,8 @@ public class LockObjectHand : MonoBehaviour, IHandTick
                 return;
             }
         }
-
-        if (_joint && (!InputManager.Hands.Tracking() ||
+        
+        if (_joint && (!InputManager.Hands.GetHand(playerHand.skeletonType).Tracking ||
                        !playerHand.GetGesture(PlayerHand.Gesture.IndexPinching) &&
                        !playerHand.GetGesture(PlayerHand.Gesture.Fist)))
         {

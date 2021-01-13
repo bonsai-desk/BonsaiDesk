@@ -54,7 +54,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
             pinchPullJoint.linearLimit = limit;
         }
 
-        //start pinch pull action. note that the action is started by the hand grabbing the rope
+        //start pinch pull action. note that the action is started by the hand which grabs the rope
         if (InputManager.Hands.Tracking() && playerHand.GetGestureStart(PlayerHand.Gesture.IndexPinching) &&
             playerHand.OtherHand.GetGesture(PlayerHand.Gesture.IndexPinching) &&
             Vector3.Distance(playerHand.PinchPosition(), playerHand.OtherHand.PinchPosition()) <
@@ -79,7 +79,8 @@ public class PinchPullHand : MonoBehaviour, IHandTick
             {
                 hit.hitAutoAuthority.Interact(NetworkClient.connection.identity.netId);
                 hit.hitAutoAuthority.VisualizePinchPull();
-                drawLocal = true;
+                if (InputManager.Hands.Tracking())
+                    drawLocal = true;
             }
         }
 
@@ -121,7 +122,8 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
         _attachedToId = attachToObject.netId;
         attachToObject.CmdSetNewOwner(NetworkClient.connection.identity.netId, NetworkTime.time, true);
-        InputManager.Hands.GetHand(playerHand.skeletonType).NetworkHand.CmdSetPinchPullInfo(_attachedToId, _localHitPoint, _ropeLength);
+        InputManager.Hands.GetHand(playerHand.skeletonType).NetworkHand
+            .CmdSetPinchPullInfo(_attachedToId, _localHitPoint, _ropeLength);
 
         if (attachToObject.isKinematic)
         {
@@ -155,7 +157,8 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
     private (AutoAuthority hitAutoAuthority, Vector3 hitPoint) GetPinchPullCandidate()
     {
-        if (InputManager.Hands.Tracking() && playerHand.GetGesture(PlayerHand.Gesture.IndexPinching))
+        if (InputManager.Hands.GetHand(playerHand.skeletonType).Tracking &&
+            playerHand.GetGesture(PlayerHand.Gesture.IndexPinching))
         {
             //perform raycast in a cone from the hand
             if (RaycastCone(out AutoAuthority hitAutoAuthority, out Vector3 hitPoint))
