@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class PlayerHand : MonoBehaviour
 {
+    [HideInInspector] public OVRSkeleton.SkeletonType skeletonType;
     [HideInInspector] public OVRHandTransformMapper physicsMapper;
 
     private IHandTick[] _handTicks;
@@ -12,10 +13,11 @@ public class PlayerHand : MonoBehaviour
     private readonly Dictionary<Gesture, bool> _gestures = new Dictionary<Gesture, bool>();
     private readonly Dictionary<Gesture, bool> _lastGestures = new Dictionary<Gesture, bool>();
     private readonly Dictionary<Gesture, float> _lastGestureActiveTime = new Dictionary<Gesture, float>();
-    
+
+    public Transform palm;
+
     public enum Gesture
     {
-        AnyPinching,
         IndexPinching,
         Fist,
         FlatFist,
@@ -39,6 +41,56 @@ public class PlayerHand : MonoBehaviour
             _gestures.Add(gesture, false);
             _lastGestures.Add(gesture, false);
         }
+
+        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
+        {
+            var otherHandTransform = InputManager.Hands.GetOtherHand(skeletonType).PlayerHand.transform;
+            foreach (Transform child in transform)
+            {
+                if (child.name != "Canvas")
+                {
+                    var otherChild = otherHandTransform.Find(child.name);
+                    if (otherChild)
+                    {
+                        MirrorHandChild(child, otherChild);
+                    }
+                    else
+                    {
+                        Debug.LogError("Left hand does not have matching child object");
+                    }
+                }
+            }
+        }
+    }
+
+    private void MirrorHandChild(Transform source, Transform other)
+    {
+        //all of this is awful and still only results in the forward direction being mirrored correctly
+        
+        var handRotationFix = Quaternion.AngleAxis(180f, Vector3.forward);
+
+        var localPosition = source.localPosition;
+        localPosition = handRotationFix * localPosition;
+        localPosition.z *= -1f;
+        other.localPosition = localPosition;
+
+        var localRotation = source.localRotation;
+        localRotation = handRotationFix * localRotation;
+
+        var r1 = localRotation;
+        r1.x *= -1f;
+        r1.y *= -1f;
+        r1 *= Quaternion.AngleAxis(180f, Vector3.right);
+
+        var r2 = localRotation * Quaternion.AngleAxis(90f, Vector3.right);
+        r2.x *= -1f;
+        r2.y *= -1f;
+        r2 *= Quaternion.AngleAxis(180f, Vector3.right);
+
+        localRotation = Quaternion.LookRotation(r1 * Vector3.forward, r2 * Vector3.up);
+        localRotation = localRotation * Quaternion.AngleAxis(180f, Vector3.forward);
+
+        other.localRotation = localRotation;
     }
 
     public bool GetGesture(Gesture gesture)

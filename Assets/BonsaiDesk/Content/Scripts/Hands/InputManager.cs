@@ -135,6 +135,24 @@ public class InputManager : MonoBehaviour
         }
     }
 
+    public HandComponents GetHand(OVRSkeleton.SkeletonType skeletonType)
+    {
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+            return Left;
+        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
+            return Right;
+        return null;
+    }
+    
+    public HandComponents GetOtherHand(OVRSkeleton.SkeletonType skeletonType)
+    {
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+            return Right;
+        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
+            return Left;
+        return null;
+    }
+
     public bool Tracking()
     {
         return Left.Tracking && Right.Tracking;

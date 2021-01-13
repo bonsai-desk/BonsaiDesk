@@ -9,14 +9,15 @@ public class ReturnToVoidHand : MonoBehaviour, IHandTick
     public MoveToDesk moveToDesk;
     public AngleToObject angleToHead;
     public Transform head;
-    public float angleToHeadThreshold = 20f;
+    
+    private const float AngleToHeadThreshold = 40f;
 
     public void Tick()
     {
         if (moveToDesk.oriented &&
             playerHand.GetGestureStart(PlayerHand.Gesture.Fist) &&
             angleToHead.AngleBelowThreshold() &&
-            Vector3.Angle(-angleToHead.transform.forward, head.forward) < angleToHeadThreshold)
+            Vector3.Angle(-angleToHead.transform.forward, head.forward) < AngleToHeadThreshold)
         {
             moveToDesk.ResetPosition();
         }

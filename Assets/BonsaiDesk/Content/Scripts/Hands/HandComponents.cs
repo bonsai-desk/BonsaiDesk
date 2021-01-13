@@ -38,6 +38,7 @@ public class HandComponents
         TargetMapper.targetObject = handAnchor;
 
         OVRSkeleton = handAnchor.GetComponentInChildren<OVRSkeleton>();
+        PlayerHand.skeletonType = OVRSkeleton.GetSkeletonType();
         SetLayerRecursive(PhysicsHand,
             OVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft
                 ? LayerMask.NameToLayer("LeftHand")
