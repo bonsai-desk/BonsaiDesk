@@ -35,7 +35,7 @@ public class PlayerHand : MonoBehaviour
     private void Start()
     {
         AllButHandsMask = ~LayerMask.GetMask("LeftHand", "RightHand");
-        
+
         _handTicks = GetComponentsInChildren<IHandTick>();
         _handTicksDictionary = new Dictionary<Type, IHandTick>();
         foreach (var handTick in _handTicks)
@@ -182,19 +182,39 @@ public class PlayerHand : MonoBehaviour
         }
     }
 
-    public bool IndexPinching()
-    {
-        var indexTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_IndexTip].position;
-        var thumbTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_ThumbTip].position;
-        var distance = Vector3.Distance(indexTip, thumbTip);
-        return distance < 0.015f;
-    }
-
     public Vector3 PinchPosition()
     {
         var indexTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_IndexTip].position;
         var thumbTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_ThumbTip].position;
         return (indexTip + thumbTip) / 2f;
+    }
+
+    public bool IndexPinching()
+    {
+        if (OVRInput.GetConnectedControllers() == OVRInput.Controller.Hands)
+        {
+            return InputManager.Hands.GetHand(skeletonType).OVRHand.GetFingerIsPinching(OVRHand.HandFinger.Index);
+        }
+        else
+        {
+            return PinchStrength(OVRSkeleton.BoneId.Hand_IndexTip) > 0.99f;
+        }
+    }
+
+    public float PinchStrength(OVRSkeleton.BoneId tipBoneId)
+    {
+        const float min = 0.015f;
+        const float max = 0.1f;
+        var distance = FingerDistanceToThumb(tipBoneId);
+        var s = (distance - min) / (max - min);
+        return 1 - Mathf.Clamp01(s);
+    }
+
+    public float FingerDistanceToThumb(OVRSkeleton.BoneId tipBoneId)
+    {
+        var fingerTip = physicsMapper.CustomBones[(int) tipBoneId].position;
+        var thumbTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_ThumbTip].position;
+        return Vector3.Distance(fingerTip, thumbTip);
     }
 
     public float FingerCloseStrength(OVRSkeleton.BoneId boneId)

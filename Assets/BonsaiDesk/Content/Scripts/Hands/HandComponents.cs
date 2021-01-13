@@ -53,6 +53,12 @@ public class HandComponents
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Middle3], "FingerTip");
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Ring3], "FingerTip");
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Pinky3], "FingerTip");
+        
+        var bodies = PhysicsHand.GetComponentsInChildren<Rigidbody>();
+        foreach (var body in bodies)
+        {
+            body.gameObject.AddComponent<HandAuthority>();
+        }
     }
 
     private static Transform[] GetFingerTips(OVRHandTransformMapper mapper)

@@ -88,6 +88,14 @@ public class InputManager : MonoBehaviour
 
         Left.PlayerHand.UpdateLastGestures();
         Right.PlayerHand.UpdateLastGestures();
+
+        var p = Right.PlayerHand.IndexPinching();
+        var s = Right.PlayerHand.PinchStrength(OVRSkeleton.BoneId.Hand_IndexTip).ToString("F4");
+
+        if (!p)
+        {
+            DebugText.TextString = s + "\n" + Time.time;
+        }
     }
 
     public void UpdateHandTargets()
@@ -143,7 +151,7 @@ public class InputManager : MonoBehaviour
             return Right;
         return null;
     }
-    
+
     public HandComponents GetOtherHand(OVRSkeleton.SkeletonType skeletonType)
     {
         if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
