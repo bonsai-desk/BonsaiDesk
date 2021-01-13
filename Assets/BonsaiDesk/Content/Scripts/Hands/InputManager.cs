@@ -108,7 +108,7 @@ public class InputManager : MonoBehaviour
     private void UpdateHandTarget(HandComponents handComponents, Vector3 controllerOffset, Quaternion rotationOffset)
     {
         var controller = OVRInput.GetConnectedControllers();
-        if (controller == OVRInput.Controller.Hands || true)
+        if (controller == OVRInput.Controller.Hands)
         {
             handComponents.SetTracking(handComponents.OVRSkeleton.IsInitialized &&
                                        handComponents.OVRSkeleton.IsDataValid &&

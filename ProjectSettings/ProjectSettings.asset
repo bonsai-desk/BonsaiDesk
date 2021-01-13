@@ -682,7 +682,8 @@ PlayerSettings:
   platformArchitecture: {}
   scriptingBackend:
     Android: 1
-  il2cppCompilerConfiguration: {}
+  il2cppCompilerConfiguration:
+    Android: 1
   managedStrippingLevel:
     Android: 1
   incrementalIl2cppBuild: {}
