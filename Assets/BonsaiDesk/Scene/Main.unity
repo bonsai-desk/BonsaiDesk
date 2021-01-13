@@ -8719,7 +8719,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cb156aacd20cd64f840600217106bdc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetObject: {fileID: 0}
+  targetObject: {fileID: 96659936}
   angleThreshold: 37.5
 --- !u!1 &535731576
 GameObject:
@@ -9144,6 +9144,7 @@ GameObject:
   - component: {fileID: 630641729}
   - component: {fileID: 630641730}
   - component: {fileID: 630641731}
+  - component: {fileID: 630641732}
   m_Layer: 0
   m_Name: RightPlayerHand
   m_TagString: Untagged
@@ -9198,6 +9199,21 @@ MonoBehaviour:
   moveToDesk: {fileID: 1212259449}
   angleToHead: {fileID: 1189444693556535356}
   head: {fileID: 89707680}
+--- !u!114 &630641732
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 630641728}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f523ea0cbeb10e445b12274ad43507a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  angleToObject: {fileID: 514427703}
+  headAngleToObject: {fileID: 1129058234}
+  togglePause: {fileID: 96659938}
 --- !u!1 &666319541
 GameObject:
   m_ObjectHideFlags: 0
@@ -10989,6 +11005,7 @@ GameObject:
   - component: {fileID: 946290004}
   - component: {fileID: 946290005}
   - component: {fileID: 946290006}
+  - component: {fileID: 946290007}
   m_Layer: 0
   m_Name: LeftPlayerHand
   m_TagString: Untagged
@@ -11042,6 +11059,21 @@ MonoBehaviour:
   moveToDesk: {fileID: 1212259449}
   angleToHead: {fileID: 834136993}
   head: {fileID: 89707680}
+--- !u!114 &946290007
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 946290003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f523ea0cbeb10e445b12274ad43507a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  angleToObject: {fileID: 2111808243}
+  headAngleToObject: {fileID: 1129058234}
+  togglePause: {fileID: 96659938}
 --- !u!1 &958619250
 GameObject:
   m_ObjectHideFlags: 0
@@ -20825,7 +20857,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9cb156aacd20cd64f840600217106bdc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetObject: {fileID: 0}
+  targetObject: {fileID: 96659936}
   angleThreshold: 37.5
 --- !u!1 &2127272421
 GameObject:
@@ -25920,6 +25952,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f523ea0cbeb10e445b12274ad43507a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  angleToObject: {fileID: 0}
+  headAngleToObject: {fileID: 0}
+  togglePause: {fileID: 0}
 --- !u!114 &2792691057266847457
 MonoBehaviour:
   m_ObjectHideFlags: 0

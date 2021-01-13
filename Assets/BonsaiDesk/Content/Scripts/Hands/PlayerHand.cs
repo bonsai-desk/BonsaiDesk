@@ -14,6 +14,8 @@ public class PlayerHand : MonoBehaviour
     private readonly Dictionary<Gesture, bool> _lastGestures = new Dictionary<Gesture, bool>();
     private readonly Dictionary<Gesture, float> _lastGestureActiveTime = new Dictionary<Gesture, float>();
 
+    public PlayerHand OtherHand => InputManager.Hands.GetOtherHand(skeletonType).PlayerHand;
+
     public Transform palm;
 
     public enum Gesture
@@ -66,7 +68,7 @@ public class PlayerHand : MonoBehaviour
     private void MirrorHandChild(Transform source, Transform other)
     {
         //all of this is awful and still only results in the forward direction being mirrored correctly
-        
+
         var handRotationFix = Quaternion.AngleAxis(180f, Vector3.forward);
 
         var localPosition = source.localPosition;
