@@ -1,7 +1,8 @@
 import React from "react";
-import {MemoryRouter as Router, Route, Switch, useHistory} from "react-router-dom";
+import {MemoryRouter as Router, Route, Switch, useHistory, Link} from "react-router-dom";
 import YouTube from "./pages/YouTube";
 import Spring from "./pages/Spring";
+import Twitch from "./pages/Twitch";
 
 function genNavListeners (history) {
 
@@ -53,8 +54,17 @@ let Boot = () => {
     return (
         <div>
             Boot
-            <p onClick={()=>{history.push("/youtube_test/qEfPBt9dU60/19.02890180001912?x=480&y=360")}}>test video</p>
-            <p onClick={()=>{history.push("/spring")}}>spring</p>
+            <ul>
+                <li>
+                    <Link to={"//youtube_test/qEfPBt9dU60/19.02890180001912?x=480&y=360"}>youtube_test video</Link>
+                </li>
+                <li>
+                    <Link to={"/spring"}>spring</Link>
+                </li>
+                <li>
+                    <Link to={"/twitch"}>twitch</Link>
+                </li>
+            </ul>
         </div>
     )
 }
@@ -74,6 +84,8 @@ function App() {
                     <Route path={"/home"} component={Home}/>
 
                     <Route path={"/spring"} component={Spring}/>
+
+                    <Route path={"/twitch"} component={Twitch}/>
 
                     <Route path={"/youtube/:id/:timeStamp"} component={YouTube}/>
 
