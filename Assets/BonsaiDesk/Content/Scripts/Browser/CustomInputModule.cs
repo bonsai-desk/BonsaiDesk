@@ -11,12 +11,14 @@ public class CustomInputModule : StandaloneInputModule
     public OVRCursor m_Cursor;
     public Transform fingerTip;
     public List<Transform> screens;
-    public float hoverDistance = 0.2f;
+    public float hoverDistance = 0.1f;
+    public float clickDistance = 0.075f/2;
     public Camera mainCamera;
     private readonly MouseState m_MouseState = new MouseState();
     private bool inClickRegion;
     protected Dictionary<int, OVRPointerEventData> m_VRRayPointerData = new Dictionary<int, OVRPointerEventData>();
     private bool prevInClickRegion;
+    public float angleDragThreshold = 1;
 
     // Start is called before the first frame update
     private void Start()
@@ -94,8 +96,9 @@ public class CustomInputModule : StandaloneInputModule
                 leftData.pointerCurrentRaycast = fakeRayCast;
                 m_Cursor.SetCursorStartDest(fingerTip.position, screenHit, Vector3.forward);
 
+                // determine click
                 prevInClickRegion = inClickRegion;
-                if (FingerInBounds(fingerInScreen) && Math.Abs(fingerInScreen.z) < hoverDistance / 2)
+                if (FingerInBounds(fingerInScreen) && Math.Abs(fingerInScreen.z) < clickDistance)
                     inClickRegion = true;
                 else
                     inClickRegion = false;
@@ -201,8 +204,12 @@ public class CustomInputModule : StandaloneInputModule
 #endif
     }
 
+    
     private bool ShouldStartDrag(PointerEventData pointerEvent)
     {
-        return true;
+        Vector3 cameraPos = mainCamera.transform.position;
+        Vector3 pressDir = (pointerEvent.pointerPressRaycast.worldPosition - cameraPos).normalized;
+        Vector3 currentDir = (pointerEvent.pointerCurrentRaycast.worldPosition - cameraPos).normalized;
+        return Vector3.Dot(pressDir, currentDir) < Mathf.Cos(Mathf.Deg2Rad * (angleDragThreshold));
     }
 }

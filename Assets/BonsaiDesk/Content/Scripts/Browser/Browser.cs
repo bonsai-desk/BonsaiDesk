@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Vuplex.WebView;
 
 public class Browser : MonoBehaviour
@@ -96,16 +95,17 @@ public class Browser : MonoBehaviour
         var localScale = new Vector3(_bounds.y * aspectRatio, _bounds.y, 1);
         if (localScale.x > _bounds.x)
             localScale = new Vector3(_bounds.x, _bounds.x * (1f / aspectRatio), 1);
-        
 
-        var resolution = AutoResolution(localScale.y, distanceEstimate, pixelPerDegree, newAspect);
+        var resolution = AutoResolution(localScale, distanceEstimate, pixelPerDegree, newAspect);
 
         if (!Mathf.Approximately(1, _webViewPrefab.WebView.Resolution))
         {
-            _webViewPrefab.WebView.SetResolution(1);
+            _webViewPrefab.WebView.SetResolution(resolution.x > resolution.y ? resolution.x : resolution.y);
         }
         
-        _webViewPrefab.WebView.Resize(resolution.x, resolution.y);
+        _webViewPrefab.WebView.Resize(localScale.x, localScale.y);
+        
+        Debug.Log($"[BONSAI] ChangeAspect resolution {resolution}");
 
         boundsTransform.localScale = localScale;
         
@@ -193,10 +193,28 @@ public class Browser : MonoBehaviour
         );
     }
 
-    private static Vector2Int AutoResolution(float height, float distance, int ppd, Vector2 aspect)
+    private static Vector2Int AutoResolution(Vector2 span, float distance, int ppd, Vector2 aspect)
     {
-        var yRes = ResolvablePixels(height, distance, ppd);
-        return ResolutionFromY(yRes, aspect);
+        
+        Vector2Int resolution;
+        
+        if (span.y > span.x)
+        {
+            var res = ResolvablePixels(span.y, distance, ppd);
+            resolution =  ResolutionFromY(res, aspect);
+        }
+        else
+        {
+            var res = ResolvablePixels(span.x, distance, ppd);
+            resolution =  ResolutionFromX(res, aspect);
+        }
+
+        return resolution;
+    }
+    
+    private static Vector2Int ResolutionFromX(int xResolution, Vector2 aspect)
+    {
+        return new Vector2Int( xResolution, (int) (aspect.y/aspect.x * xResolution));
     }
 
     private static Vector2Int ResolutionFromY(int yResolution, Vector2 aspect)

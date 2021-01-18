@@ -242,7 +242,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &44709197
 Transform:
   m_ObjectHideFlags: 0
@@ -2851,7 +2851,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &320584329
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2864,9 +2864,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0fba29f302483934d8d54731500feecd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startingAspect: {x: 1, y: 1}
+  startingAspect: {x: 2, y: 1}
   holePuncherMaterial: {fileID: 2100000, guid: 13c0664d10ae3514ea9d893740bf2046, type: 2}
-  distanceEstimate: 0.5
+  distanceEstimate: 0.25
   pixelPerDegree: 16
   boundsTransform: {fileID: 497530140}
   overlayTransform: {fileID: 529401737}
@@ -2878,14 +2878,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 320584328}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.147, z: -0.014}
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0.001, z: 0.125}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1520135412}
   m_Father: {fileID: 0}
   m_RootOrder: 16
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!224 &338694552
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8249,7 +8249,7 @@ Transform:
   m_GameObject: {fileID: 497530139}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.5, y: 0.25, z: 1}
   m_Children:
   - {fileID: 884413388}
   - {fileID: 529401737}
@@ -10687,7 +10687,8 @@ MonoBehaviour:
   m_Cursor: {fileID: 1695270410}
   fingerTip: {fileID: 1710282339}
   screens: []
-  hoverDistance: 0.2
+  hoverDistance: 0.1
+  clickDistance: 0.01
   mainCamera: {fileID: 457531536}
 --- !u!114 &866912240
 MonoBehaviour:
@@ -10752,7 +10753,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &877365330
 Transform:
   m_ObjectHideFlags: 0
@@ -16263,7 +16264,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 89ee6c1dd53fac6469d3da4c37d1d340, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startingAspect: {x: 21, y: 9}
+  startingAspect: {x: 2, y: 1}
   holePuncherMaterial: {fileID: 2100000, guid: 13c0664d10ae3514ea9d893740bf2046, type: 2}
   distanceEstimate: 1
   pixelPerDegree: 16
