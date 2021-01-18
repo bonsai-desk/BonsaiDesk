@@ -7,10 +7,11 @@ public class CustomInputModule : StandaloneInputModule
 {
     [Header("Custom Input Module")] public Transform rayTransform;
 
+    public static CustomInputModule Singleton;
     public OVRCursor m_Cursor;
     public Transform fingerTip;
     public List<Transform> screens;
-    public float hoverDistance = 0.1f;
+    public float hoverDistance = 0.2f;
     public Camera mainCamera;
     private readonly MouseState m_MouseState = new MouseState();
     private bool inClickRegion;
@@ -20,6 +21,14 @@ public class CustomInputModule : StandaloneInputModule
     // Start is called before the first frame update
     private void Start()
     {
+    }
+    
+    void Awake()
+    {
+        //base.Awake();
+
+        if (Singleton == null)
+            Singleton = this;
     }
 
     // Update is called once per frame
@@ -31,7 +40,6 @@ public class CustomInputModule : StandaloneInputModule
     {
         base.Process();
 
-
         ProcessMouseEvent(GetGazePointerData());
     }
 
@@ -39,7 +47,6 @@ public class CustomInputModule : StandaloneInputModule
     {
         var leftButtonData = mouseData.GetButtonState(PointerEventData.InputButton.Left).eventData;
 
-        //ProcessMousePress(leftButtonData);
         ProcessMousePress(leftButtonData);
         ProcessMove(leftButtonData.buttonData);
         ProcessDrag(leftButtonData.buttonData);
@@ -73,7 +80,7 @@ public class CustomInputModule : StandaloneInputModule
             var fingerInScreen = screen.InverseTransformPoint(fingerTip.position);
 
             if (FingerInBounds(fingerInScreen) &&
-                -hoverDistance / 5 < -fingerInScreen.z &&
+                -hoverDistance < -fingerInScreen.z &&
                 -fingerInScreen.z < hoverDistance)
             {
                 var screenHit = screen.TransformPoint(
@@ -88,7 +95,7 @@ public class CustomInputModule : StandaloneInputModule
                 m_Cursor.SetCursorStartDest(fingerTip.position, screenHit, Vector3.forward);
 
                 prevInClickRegion = inClickRegion;
-                if (FingerInBounds(fingerInScreen) && Math.Abs(fingerInScreen.z) < hoverDistance / 5)
+                if (FingerInBounds(fingerInScreen) && Math.Abs(fingerInScreen.z) < hoverDistance / 2)
                     inClickRegion = true;
                 else
                     inClickRegion = false;
@@ -121,7 +128,8 @@ public class CustomInputModule : StandaloneInputModule
             return PointerEventData.FramePressState.NotChanged;
         }
 
-        throw new NotImplementedException();
+        return PointerEventData.FramePressState.Released;
+        //throw new NotImplementedException();
     }
 
     private bool FingerInBounds(Vector3 fingerInScreen)
