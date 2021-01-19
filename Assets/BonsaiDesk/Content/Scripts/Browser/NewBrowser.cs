@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Vuplex.WebView;
 
-public class Browser : MonoBehaviour
+public class NewBrowser : MonoBehaviour
 {
     public Vector2 startingAspect = new Vector2(16, 9);
     public Material holePuncherMaterial;
@@ -18,10 +18,13 @@ public class Browser : MonoBehaviour
     public Transform holePuncherTransform;
     public Transform screenTransform;
     protected WebViewPrefab _webViewPrefab;
+    private Transform _resizer;
+    private Transform _webViewView;
 
     protected virtual void Start()
     {
         Debug.Log("browser start");
+        
         CacheTransforms();
 
         //SetupOverlayObject();
@@ -37,7 +40,6 @@ public class Browser : MonoBehaviour
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
         holePuncherTransform.GetComponent<Renderer>().sharedMaterial = holePuncherMaterial;
-        _webViewPrefab.Visible = false;
 #else
         holePuncherTransform.GetComponent<MeshRenderer>().enabled = false;
 #endif
@@ -59,6 +61,7 @@ public class Browser : MonoBehaviour
         _overlay = overlayTransform.gameObject.AddComponent<OVROverlay>();
         _overlay.externalSurfaceWidth = resolution.x;
         _overlay.externalSurfaceHeight = resolution.y;
+        
         _overlay.currentOverlayType = OVROverlay.OverlayType.Underlay;
         _overlay.isExternalSurface = true;
         StartCoroutine(UpdateAndroidSurface());
@@ -89,16 +92,30 @@ public class Browser : MonoBehaviour
     private void SetupWebViewPrefab()
     {
         PreConfigureWebView();
+        
+        _webViewPrefab = WebViewPrefab.Instantiate(_bounds.x, _bounds.y);
+        
+        _webViewPrefab.transform.localPosition = Vector3.zero;
+        
+        _webViewPrefab.transform.SetParent(screenTransform, false);
+        
+        _resizer = _webViewPrefab.transform.Find("WebViewPrefabResizer");
+        _webViewView = _resizer.transform.Find("WebViewPrefabView");
+        
+        holePuncherTransform.SetParent(_webViewView, false);
+        overlayTransform.SetParent(_webViewView, false);
 
-        _webViewPrefab = WebViewPrefab.Instantiate(1, 1);
-        Destroy(_webViewPrefab.Collider);
-        _webViewPrefab.transform.SetParent(boundsTransform, false);
-        _webViewPrefab.transform.localPosition = new Vector3(0, 0.5f, 0);
-        _webViewPrefab.transform.localEulerAngles = new Vector3(0, 180, 0);
+#if UNITY_ANDROID && !UNITY_EDITOR
+        _webViewView.GetComponent<MeshRenderer>().enabled = false;
+#endif
 
         _webViewPrefab.Initialized += (sender, eventArgs) =>
         {
-            ChangeAspect(startingAspect);
+            const int ppuu = 2000;
+            _webViewPrefab.WebView.SetResolution(ppuu);
+            var res = new Vector2Int((int) (ppuu * _bounds.x), (int) (ppuu * _bounds.y));
+            RebuildOverlay(res);
+            //ChangeAspect(startingAspect);
             BrowserReady?.Invoke();
         };
     }

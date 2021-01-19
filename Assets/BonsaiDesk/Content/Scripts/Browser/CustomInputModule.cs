@@ -20,15 +20,8 @@ public class CustomInputModule : StandaloneInputModule
     private bool prevInClickRegion;
     public float angleDragThreshold = 1;
 
-    // Start is called before the first frame update
-    private void Start()
+    protected override void Awake()
     {
-    }
-    
-    void Awake()
-    {
-        //base.Awake();
-
         if (Singleton == null)
             Singleton = this;
     }
@@ -102,6 +95,7 @@ public class CustomInputModule : StandaloneInputModule
                     inClickRegion = true;
                 else
                     inClickRegion = false;
+                
                 break;
             }
         }
@@ -190,18 +184,18 @@ public class CustomInputModule : StandaloneInputModule
     protected Vector2 SwipeAdjustedPosition(Vector2 originalPosition, PointerEventData pointerEvent)
     {
         return originalPosition;
-#if UNITY_ANDROID && !UNITY_EDITOR
-            // On android we use the touchpad position (accessed through Input.mousePosition) to modify
-            // the effective cursor position for events related to dragging. This allows the user to
-            // use the touchpad to drag draggable UI elements
-            if (useSwipeScroll)
-            {
-                Vector2 delta = (Vector2)Input.mousePosition - pointerEvent.GetSwipeStart();
-                if (InvertSwipeXAxis)
-                    delta.x *= -1;
-                return originalPosition + delta * swipeDragScale;
-            }
-#endif
+//   #if UNITY_ANDROID && !UNITY_EDITOR
+//               // On android we use the touchpad position (accessed through Input.mousePosition) to modify
+//               // the effective cursor position for events related to dragging. This allows the user to
+//               // use the touchpad to drag draggable UI elements
+//               if (useSwipeScroll)
+//               {
+//                   Vector2 delta = (Vector2)Input.mousePosition - pointerEvent.GetSwipeStart();
+//                   if (InvertSwipeXAxis)
+//                       delta.x *= -1;
+//                   return originalPosition + delta * swipeDragScale;
+//               }
+//   #endif
     }
 
     
