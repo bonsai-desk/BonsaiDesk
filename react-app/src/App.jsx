@@ -3,6 +3,7 @@ import {MemoryRouter as Router, Route, Switch, useHistory, Link} from "react-rou
 import YouTube from "./pages/YouTube";
 import Spring from "./pages/Spring";
 import Twitch from "./pages/Twitch";
+import Menu from "./pages/Menu";
 
 function genNavListeners (history) {
 
@@ -77,7 +78,7 @@ function App() {
     console.log("App")
     return (
         <Router>
-            <div className={"bg-gray-800 h-screen text-green-400"}>
+            <div className={"bg-gray-900 h-screen text-green-400"}>
                 <Switch>
 
 
@@ -91,7 +92,7 @@ function App() {
 
                     <Route path={"/youtube_test/:id/:timeStamp"} component={YouTube}/>
 
-                    <Route path={"/"} component={Boot}/>
+                    <Route path={"/"} component={Menu}/>
 
                 </Switch>
             </div>
