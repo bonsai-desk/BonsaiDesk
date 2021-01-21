@@ -37,14 +37,13 @@ function Settings(props) {
 
 function JoinDesk() {
     let [code, setCode] = useState("")
-    let [loading, setLoading] = useState(false);
+    //let [loading, setLoading] = useState(false);
 
     let buttonClass = "bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center"
 
     let handleClick = (char) => {
         if (code.length === 4) {
             setCode(char)
-            setLoading(true)
         } else {
             setCode(code + char)
         }
@@ -59,7 +58,7 @@ function JoinDesk() {
     return (
         <MenuPage name={"Join Desk"}>
             <div className={"flex flex-wrap w-full content-center"}>
-                <div className={"w-1/2"}>
+                <div className={"text-9xl w-1/2 flex flex-wrap content-center justify-center"}>
                     {code}
                 </div>
                 <div className={"p-2 rounded space-y-4 text-2xl"}>
@@ -119,19 +118,7 @@ let pages = [
     {name: "Home", component: Home},
     {name: "Join Desk", component: JoinDesk},
     {name: "Contacts", component: Contacts},
-    {name: "Settings", component: Settings},
-    {name: "Quick Actions2", component: Settings},
-    {name: "Quick Actions3", component: Settings},
-    {name: "Quick Actions4", component: Settings},
-    {name: "Quick Actions4", component: Settings},
-    {name: "Quick Actions4", component: Settings},
-    {name: "Quick Actions5", component: Settings},
-    {name: "Quick Actions6", component: Settings},
-    {name: "Quick Actions5", component: Settings},
-    {name: "Quick Actions6", component: Settings},
-    {name: "Quick Actions5", component: Settings},
-    {name: "Quick Actions6", component: Settings},
-    {name: "Quick Actions7", component: Settings}
+    {name: "Settings", component: Settings}
 ]
 
 function Menu() {

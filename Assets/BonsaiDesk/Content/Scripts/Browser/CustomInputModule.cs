@@ -29,7 +29,6 @@ public class CustomInputModule : StandaloneInputModule
     // Update is called once per frame
     private void Update()
     {
-        Debug.Log(fingerTip.position.y);
     }
 
     public override void Process()
@@ -75,9 +74,7 @@ public class CustomInputModule : StandaloneInputModule
         {
             var fingerInScreen = screen.InverseTransformPoint(fingerTip.position);
 
-            if (FingerInBounds(fingerInScreen) &&
-                -hoverDistance < -fingerInScreen.z &&
-                -fingerInScreen.z < hoverDistance)
+            if (FingerInBounds(fingerInScreen) && Math.Abs(fingerInScreen.z) < hoverDistance)
             {
                 var screenHit = screen.TransformPoint(
                     new Vector3(fingerInScreen.x, fingerInScreen.y, 0)
@@ -92,7 +89,7 @@ public class CustomInputModule : StandaloneInputModule
 
                 // determine click
                 prevInClickRegion = inClickRegion;
-                if (FingerInBounds(fingerInScreen) && Math.Abs(fingerInScreen.z) < clickDistance)
+                if (FingerInBounds(fingerInScreen) && -fingerInScreen.z < clickDistance)
                     inClickRegion = true;
                 else
                     inClickRegion = false;

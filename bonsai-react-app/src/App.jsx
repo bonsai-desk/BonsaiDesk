@@ -32,7 +32,6 @@ let Boot = () => {
 
     console.log("Boot")
 
-
     let history = useHistory();
 
     let navListeners = genNavListeners(history);
