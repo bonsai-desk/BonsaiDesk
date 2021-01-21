@@ -16089,13 +16089,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1382784197}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 83f5a922a86cd494ab65b2d1ccb84e5d, type: 3}
+  m_Script: {fileID: 11500000, guid: 7442f4bc421d1534e9173115168ec26d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   syncMode: 0
-  syncInterval: 0.05
+  syncInterval: 0.1
   useBuiltHtml: 1
-  hotReloadUrl: http://192.168.1.122:3000/
+  hotReloadUrl: 
   togglePause: {fileID: 96659938}
   tabletSpot: {fileID: 144652441}
 --- !u!1 &1384374492
