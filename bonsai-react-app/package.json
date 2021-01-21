@@ -17,6 +17,7 @@
     "react-player": "^2.7.2",
     "react-router-dom": "^5.2.0",
     "react-scripts": "^4.0.1",
+    "react-scrollbooster": "^0.1.0",
     "react-spring": "^9.0.0-beta.32",
     "react-use-gesture": "^9.0.0-beta.11",
     "react-youtube": "^7.13.0",

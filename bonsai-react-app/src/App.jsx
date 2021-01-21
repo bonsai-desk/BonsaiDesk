@@ -64,13 +64,19 @@ let Boot = () => {
                 <li>
                     <Link to={"/twitch"}>twitch</Link>
                 </li>
+                <li onClick={() => {
+                    history.push("/menu")
+                }}className={"text-white"}>menu</li>
+                <li>
+                    <Link to={"/menu"}>menu</Link>
+                </li>
             </ul>
         </div>
     )
 }
 
 let Home = () => {
-    return <div></div>
+    return <div>home</div>
 }
 
 function App() {
@@ -87,11 +93,13 @@ function App() {
 
                     <Route path={"/twitch"} component={Twitch}/>
 
+                    <Route path={"/menu"} component={Menu}/>
+
                     <Route path={"/youtube/:id/:timeStamp"} component={YouTube}/>
 
                     <Route path={"/youtube_test/:id/:timeStamp"} component={YouTube}/>
 
-                    <Route path={"/"} component={Menu}/>
+                    <Route path={"/"} component={Boot}/>
 
                 </Switch>
             </div>

@@ -11,14 +11,24 @@ public class TableBrowser : NewBrowser
     {
         base.Start();
         _webViewPrefab.DragMode = DragMode.DragToScroll;
+        _webViewPrefab.InitialUrl = initialUrl;
         BrowserReady += () =>
         {
-            LoadUrl(initialUrl);
+            _webViewPrefab.WebView.LoadProgressChanged += LoadMenu;
             var view = _webViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView");
             CustomInputModule.Singleton.screens.Add(view);
         };
 
     }
+
+    void LoadMenu(object sender, ProgressChangedEventArgs eventArgs)
+    {
+        if (eventArgs.Type == ProgressChangeType.Finished)
+        {
+            PostMessage(BrowserMessage.NavMenu);
+        }
+    }
+
     
     public override Vector2Int ChangeAspect(Vector2 newAspect)
     {
@@ -62,4 +72,21 @@ public class TableBrowser : NewBrowser
     {
         
     }
+    
+    private static class BrowserMessage
+    {
+        public static readonly string NavMenu = PushPath("/menu");
+
+        private static string PushPath(string path)
+        {
+            return "{" +
+                   "\"type\": \"nav\", " +
+                   "\"command\": \"push\", " +
+                   $"\"path\": \"{path}\"" +
+                   "}";
+        }
+
+
+    }
+    
 }
