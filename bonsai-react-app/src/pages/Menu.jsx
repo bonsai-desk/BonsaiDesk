@@ -25,7 +25,6 @@ function SettingsTitle(props) {
     return <div className={"text-white font-bold text-xl px-5 pt-5 pb-2"}>{props.children}</div>
 }
 
-
 function Settings(props) {
     let buttonClass = "bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded w-full p-4 cursor-pointer"
     return (
@@ -38,38 +37,51 @@ function Settings(props) {
 
 function JoinDesk() {
     let [code, setCode] = useState("")
+    let [loading, setLoading] = useState(false);
 
-    let buttonClass = "bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-28 h-28 flex flex-wrap content-center"
+    let buttonClass = "bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center"
 
     let handleClick = (char) => {
         if (code.length === 4) {
             setCode(char)
+            setLoading(true)
         } else {
             setCode(code + char)
         }
     }
 
+    let handleBackspace = () => {
+        if (code.length > 0) {
+            setCode(code.slice(0, code.length - 1))
+        }
+    }
+
     return (
         <MenuPage name={"Join Desk"}>
-            {code}
-            <div className={"p-2 rounded w-full space-y-4 text-2xl"}>
-                <div className={"flex space-x-4"}>
-                    <div onClick={()=>{handleClick("A")}} className={buttonClass}><span className={"w-full text-center"}>A</span></div>
-                    <div onClick={()=>{handleClick("B")}} className={buttonClass}><span className={"w-full text-center"}>B</span></div>
-                    <div onClick={()=>{handleClick("C")}} className={buttonClass}><span className={"w-full text-center"}>C</span></div>
+            <div className={"flex flex-wrap w-full content-center"}>
+                <div className={"w-1/2"}>
+                    {code}
                 </div>
-                <div className={"flex space-x-4"}>
-                    <div onClick={()=>{handleClick("D")}} className={buttonClass}><span className={"w-full text-center"}>D</span></div>
-                    <div onClick={()=>{handleClick("E")}} className={buttonClass}><span className={"w-full text-center"}>E</span></div>
-                    <div onClick={()=>{handleClick("F")}} className={buttonClass}><span className={"w-full text-center"}>F</span></div>
+                <div className={"p-2 rounded space-y-4 text-2xl"}>
+                    <div className={"flex space-x-4"}>
+                        <div onClick={()=>{handleClick("A")}} className={buttonClass}><span className={"w-full text-center"}>A</span></div>
+                        <div onClick={()=>{handleClick("B")}} className={buttonClass}><span className={"w-full text-center"}>B</span></div>
+                        <div onClick={()=>{handleClick("C")}} className={buttonClass}><span className={"w-full text-center"}>C</span></div>
+                    </div>
+                    <div className={"flex space-x-4"}>
+                        <div onClick={()=>{handleClick("D")}} className={buttonClass}><span className={"w-full text-center"}>D</span></div>
+                        <div onClick={()=>{handleClick("E")}} className={buttonClass}><span className={"w-full text-center"}>E</span></div>
+                        <div onClick={()=>{handleClick("F")}} className={buttonClass}><span className={"w-full text-center"}>F</span></div>
+                    </div>
+                    <div className={"flex space-x-4"}>
+                        <div onClick={()=>{handleClick("G")}} className={buttonClass}><span className={"w-full text-center"}>G</span></div>
+                        <div onClick={()=>{handleClick("H")}} className={buttonClass}><span className={"w-full text-center"}>H</span></div>
+                        <div onClick={()=>{handleClick("I")}} className={buttonClass}><span className={"w-full text-center"}>I</span></div>
+                    </div>
+                    <div className={"flex flex-wrap w-full justify-around"}>
+                        <div onClick={handleBackspace} className={buttonClass}><span className={"w-full text-center"}>{"<"}</span></div>
+                    </div>
                 </div>
-                <div className={"flex space-x-4"}>
-                    <div onClick={()=>{handleClick("G")}} className={buttonClass}><span className={"w-full text-center"}>G</span></div>
-                    <div onClick={()=>{handleClick("H")}} className={buttonClass}><span className={"w-full text-center"}>H</span></div>
-                    <div onClick={()=>{handleClick("I")}} className={buttonClass}><span className={"w-full text-center"}>I</span></div>
-                </div>
-
-
             </div>
         </MenuPage>
     )
@@ -89,7 +101,7 @@ function MenuPage(props) {
     let {name} = props;
 
     return (
-        <div className={"text-white p-4"}>
+        <div className={"text-white p-4 h-full"}>
             {name ?
                 <div className={"pb-4 text-xl"}>
                     {name}

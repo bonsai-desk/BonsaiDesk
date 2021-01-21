@@ -29,6 +29,7 @@ public class CustomInputModule : StandaloneInputModule
     // Update is called once per frame
     private void Update()
     {
+        Debug.Log(fingerTip.position.y);
     }
 
     public override void Process()

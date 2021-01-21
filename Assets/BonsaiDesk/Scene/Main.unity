@@ -10721,7 +10721,7 @@ MonoBehaviour:
   fingerTip: {fileID: 1710282339}
   screens: []
   hoverDistance: 0.1
-  clickDistance: 0.02
+  clickDistance: 0.015
   mainCamera: {fileID: 457531536}
   angleDragThreshold: 2
 --- !u!114 &866912240

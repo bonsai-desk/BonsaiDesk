@@ -78,7 +78,7 @@ function App() {
     console.log("App")
     return (
         <Router>
-            <div className={"bg-gray-900 h-screen text-green-400"}>
+            <div className={"bg-gray-900 h-screen text-green-400 select-none"}>
                 <Switch>
 
 
