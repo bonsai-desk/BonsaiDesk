@@ -17,7 +17,7 @@ public class NewBrowser : MonoBehaviour
     public Transform overlayTransform;
     public Transform holePuncherTransform;
     public Transform screenTransform;
-    protected WebViewPrefab _webViewPrefab;
+    protected WebViewPrefabCustom _webViewPrefab;
     private Transform _resizer;
     private Transform _webViewView;
 
@@ -93,7 +93,7 @@ public class NewBrowser : MonoBehaviour
     {
         PreConfigureWebView();
         
-        _webViewPrefab = WebViewPrefab.Instantiate(_bounds.x, _bounds.y);
+        _webViewPrefab = WebViewPrefabCustom.Instantiate(_bounds.x, _bounds.y);
         
         _webViewPrefab.transform.localPosition = Vector3.zero;
         

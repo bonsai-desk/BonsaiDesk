@@ -2904,7 +2904,7 @@ MonoBehaviour:
   overlayTransform: {fileID: 529401737}
   holePuncherTransform: {fileID: 884413388}
   screenTransform: {fileID: 1520135412}
-  initialUrl: http://192.168.0.166:3000
+  initialUrl: https://youtube.com
 --- !u!4 &320584330
 Transform:
   m_ObjectHideFlags: 0

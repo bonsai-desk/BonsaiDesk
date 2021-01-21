@@ -74,8 +74,6 @@ public class CustomInputModule : StandaloneInputModule
         {
             var fingerInScreen = screen.InverseTransformPoint(fingerTip.position);
 
-            if (FingerInBounds(fingerInScreen) && Math.Abs(fingerInScreen.z) < hoverDistance)
-            {
                 var screenHit = screen.TransformPoint(
                     new Vector3(fingerInScreen.x, fingerInScreen.y, 0)
                 );
@@ -95,7 +93,6 @@ public class CustomInputModule : StandaloneInputModule
                     inClickRegion = false;
                 
                 break;
-            }
         }
 
 
