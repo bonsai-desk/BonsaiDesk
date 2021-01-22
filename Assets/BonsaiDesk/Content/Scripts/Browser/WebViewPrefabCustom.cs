@@ -730,17 +730,22 @@ namespace Vuplex.WebView {
         private void Update()
         {
 
-            // stop the scroller if it's too small to matter
-            if (_residualScroll.magnitude < 0.001f)
+            const float tol = 0.0001f;
+
+            if (Math.Abs(_residualScroll.x) < tol)
             {
-                _residualScroll = Vector2.zero;
-            } ;
+                _residualScroll.x = 0;
+            }
+            if (Math.Abs(_residualScroll.y) < tol)
+            {
+                _residualScroll.y = 0;
+            }
             
             // scroll and then decay the scroll rate if it's not zero
             if (!_pointerIsDown && _residualScroll.magnitude != 0)
             {
                 _scrollIfNeeded(_residualScroll, _pointerDownRatioPoint);
-                _residualScroll -= _residualScroll / 15;
+                _residualScroll -= _residualScroll / 75;
                 
             }
         }
