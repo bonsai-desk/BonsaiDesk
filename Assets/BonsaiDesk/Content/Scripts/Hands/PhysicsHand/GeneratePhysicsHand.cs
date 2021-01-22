@@ -5,14 +5,12 @@ using UnityEngine;
 
 public class GeneratePhysicsHand : MonoBehaviour
 {
-    public bool pauseForSave = false;
-
     public OVRSkeleton oVRSkeleton;
     public GameObject handMeshPrefab;
+    public GameObject handPalmPrefab;
     public PhysicMaterial physicMaterial;
     public Material targetMaterial;
     public Material physicsHandMaterial;
-    public RuntimeAnimatorController handAnimator;
 
     private OVRPlugin.Skeleton2 _skeleton;
     private bool initialized = false;
@@ -86,10 +84,7 @@ public class GeneratePhysicsHand : MonoBehaviour
             }
 
 #if UNITY_EDITOR
-            if (pauseForSave)
-            {
-                EditorApplication.isPaused = true;
-            }
+            EditorApplication.isPaused = true;
 #endif
 
             Destroy(this);
@@ -166,6 +161,9 @@ public class GeneratePhysicsHand : MonoBehaviour
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         bodiesToReset.Enqueue(rb);
+
+        var palm = Instantiate(handPalmPrefab);
+        palm.transform.SetParent(_capsulesGO.transform, false);
 
         var _capsules = new List<OVRBoneCapsule>(new OVRBoneCapsule[_skeleton.NumBoneCapsules]);
 
@@ -249,9 +247,7 @@ public class GeneratePhysicsHand : MonoBehaviour
 
             capsule.CapsuleCollider = new GameObject((bone.Id).ToString() + "_CapsuleCollider")
                 .AddComponent<CapsuleCollider>();
-            capsule.CapsuleCollider.isTrigger = true;
             capsule.CapsuleCollider.sharedMaterial = physicMaterial;
-            capsule.CapsuleCollider.isTrigger = false;
 
             var p0 = _skeleton.BoneCapsules[i].StartPoint.FromFlippedXVector3f();
             var p1 = _skeleton.BoneCapsules[i].EndPoint.FromFlippedXVector3f();
