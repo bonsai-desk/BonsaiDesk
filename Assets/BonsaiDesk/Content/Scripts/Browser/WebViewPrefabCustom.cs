@@ -593,13 +593,20 @@ namespace Vuplex.WebView {
             var newDragPoint = _convertRatioPointToUnityUnits(point);
             _previousDragPoint = newDragPoint;
             var totalDragDelta = _convertRatioPointToUnityUnits(_pointerDownRatioPoint) - newDragPoint;
+            var dragThresholdReached = totalDragDelta.magnitude * _webView.Resolution > DragThreshold;
 
             if (DragMode == DragMode.DragWithinPage) {
-                var dragThresholdReached = totalDragDelta.magnitude * _webView.Resolution > DragThreshold;
                 if (dragThresholdReached) {
                     _movePointerIfNeeded(point);
                 }
                 return;
+            }
+
+            // TODO
+            if (dragThresholdReached)
+            {
+                var webViewWithPointerDownAndUp = _webView as IWithPointerDownAndUp;
+                webViewWithPointerDownAndUp?.PointerUp(new Vector2(-1, -1));
             }
 
             // DragMode == DragMode.DragToScroll
@@ -614,7 +621,6 @@ namespace Vuplex.WebView {
             // Check whether to cancel a pending viewport click so that drag-to-scroll
             // doesn't unintentionally trigger a click.
             if (_clickIsPending) {
-                var dragThresholdReached = totalDragDelta.magnitude * _webView.Resolution > DragThreshold;
                 if (dragThresholdReached) {
                     _clickIsPending = false;
                 }
@@ -623,32 +629,24 @@ namespace Vuplex.WebView {
 
         protected virtual void InputDetector_PointerDown(object sender, PointerEventArgs eventArgs)
         {
-
             Debug.Log("[BONSAI] Pointer Down");
+            
+            _pointerIsDown = true;
+            _pointerDownRatioPoint = eventArgs.Point;
 
             if (_residualScroll.magnitude != 0)
             {
                 _residualScroll = Vector2.zero;
                 return;
             }
-            
-            _pointerIsDown = true;
-            _pointerDownRatioPoint = eventArgs.Point;
 
             if (!ClickingEnabled || _webView == null) {
                 return;
             }
-            if (DragMode == DragMode.DragWithinPage) {
-                var webViewWithPointerDown = _webView as IWithPointerDownAndUp;
-                if (webViewWithPointerDown != null) {
-                    webViewWithPointerDown.PointerDown(eventArgs.Point, eventArgs.ToPointerOptions());
-                    return;
-                } else if (!_loggedDragWarning) {
-                    _loggedDragWarning = true;
-                    Debug.LogWarningFormat("The WebViewPrefab's DragMode is set to DragWithinPage, but the webview implementation for this platform ({0}) doesn't support the PointerDown and PointerUp methods needed for dragging within a page. For more info, see https://developer.vuplex.com/webview/IWithPointerDownAndUp .", _webView.PluginType);
-                    // Fallback to setting _clickIsPending so Click() can be called.
-                }
-            }
+            
+            var webViewWithPointerDown = _webView as IWithPointerDownAndUp;
+            webViewWithPointerDown?.PointerDown(eventArgs.Point, eventArgs.ToPointerOptions());
+
             // Defer calling PointerDown() for DragToScroll so that the click can
             // be cancelled if drag exceeds the threshold needed to become a scroll.
             _clickIsPending = true;
@@ -732,18 +730,22 @@ namespace Vuplex.WebView {
         private void Update()
         {
 
-            // stop the scroller if it's too small to matter
-            if (_residualScroll.magnitude < 0.001f)
+            const float tol = 0.0001f;
+
+            if (Math.Abs(_residualScroll.x) < tol)
             {
-                _residualScroll = Vector2.zero;
-            } ;
+                _residualScroll.x = 0;
+            }
+            if (Math.Abs(_residualScroll.y) < tol)
+            {
+                _residualScroll.y = 0;
+            }
             
             // scroll and then decay the scroll rate if it's not zero
             if (!_pointerIsDown && _residualScroll.magnitude != 0)
             {
-                Debug.Log($"{_residualScroll.x} {_residualScroll.y}");
                 _scrollIfNeeded(_residualScroll, _pointerDownRatioPoint);
-                _residualScroll -= _residualScroll / 15;
+                _residualScroll -= _residualScroll / 75;
                 
             }
         }
