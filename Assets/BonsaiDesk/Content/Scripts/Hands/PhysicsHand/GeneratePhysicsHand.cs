@@ -5,8 +5,6 @@ using UnityEngine;
 
 public class GeneratePhysicsHand : MonoBehaviour
 {
-    // public GameObject prefabSaveLocation;
-
     public OVRSkeleton oVRSkeleton;
     public GameObject handMeshPrefab;
     public GameObject handPalmPrefab;

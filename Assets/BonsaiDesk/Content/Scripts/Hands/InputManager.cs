@@ -8,6 +8,8 @@ public class InputManager : MonoBehaviour
 {
     public static InputManager Hands;
 
+    public bool renderTargetHands = false;
+
     [Header("Camera Rig Anchors")]
     public Transform leftHandAnchor;
 
