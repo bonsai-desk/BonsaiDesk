@@ -1,0 +1,43 @@
+{
+    "manifest_version": 2,
+    "applications": {
+        "gecko": {
+            "id": "walkingice@web_extension_remove_iframe"
+        }
+    },
+    "name": "iFrame remover",
+    "version": "0.1",
+    "description": "Remove iFrame in current page",
+    "icons": {
+        "100": "imgs/logo.png"
+    },
+    "background": {
+        "scripts": ["js/background.js"]
+    },
+    "browser_action": {
+        "default_icon": {
+            "32": "imgs/browserAction_32.png"
+        },
+        "default_popup": "popup/popup.html",
+        "default_title": "remove iframes"
+    },
+    "content_scripts": [
+        {
+            "matches": ["*://*/*", "file:///C:/Users/camer/Desktop/plugins/PLUGIN/index.html"],
+            "js": ["js/main.js"],
+            "run_at": "document_start"
+        }
+    ],
+    "commands": {
+        "shortcut_rm_iframes": {
+            "suggested_key": {
+                "default": "Alt+Shift+I"
+            },
+            "description": "Send a 'toggle-feature' event"
+        }
+    },
+    "options_ui": {
+        "page": "options/options.html"
+    },
+    "permissions": ["tabs", "activeTab", "storage"]
+}

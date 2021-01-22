@@ -1,7 +1,9 @@
 import React from "react";
-import {MemoryRouter as Router, Route, Switch, useHistory} from "react-router-dom";
+import {MemoryRouter as Router, Route, Switch, useHistory, Link} from "react-router-dom";
 import YouTube from "./pages/YouTube";
 import Spring from "./pages/Spring";
+import Twitch from "./pages/Twitch";
+import Menu from "./pages/Menu";
 
 function genNavListeners (history) {
 
@@ -30,7 +32,6 @@ let Boot = () => {
 
     console.log("Boot")
 
-
     let history = useHistory();
 
     let navListeners = genNavListeners(history);
@@ -53,27 +54,46 @@ let Boot = () => {
     return (
         <div>
             Boot
-            <p onClick={()=>{history.push("/youtube_test/qEfPBt9dU60/19.02890180001912?x=480&y=360")}}>test video</p>
-            <p onClick={()=>{history.push("/spring")}}>spring</p>
+            <ul>
+                <li>
+                    <Link to={"//youtube_test/qEfPBt9dU60/19.02890180001912?x=480&y=360"}>youtube_test video</Link>
+                </li>
+                <li>
+                    <Link to={"/spring"}>spring</Link>
+                </li>
+                <li>
+                    <Link to={"/twitch"}>twitch</Link>
+                </li>
+                <li onClick={() => {
+                    history.push("/menu")
+                }}className={"text-white"}>menu</li>
+                <li>
+                    <Link to={"/menu"}>menu</Link>
+                </li>
+            </ul>
         </div>
     )
 }
 
 let Home = () => {
-    return <div></div>
+    return <div>home</div>
 }
 
 function App() {
     console.log("App")
     return (
         <Router>
-            <div className={"bg-gray-800 h-screen text-green-400"}>
+            <div className={"bg-gray-900 h-screen text-green-400 select-none"}>
                 <Switch>
 
 
                     <Route path={"/home"} component={Home}/>
 
                     <Route path={"/spring"} component={Spring}/>
+
+                    <Route path={"/twitch"} component={Twitch}/>
+
+                    <Route path={"/menu"} component={Menu}/>
 
                     <Route path={"/youtube/:id/:timeStamp"} component={YouTube}/>
 
