@@ -8,15 +8,12 @@ public class InputManager : MonoBehaviour
 {
     public static InputManager Hands;
 
+    public bool renderTargetHands = false;
+
     [Header("Camera Rig Anchors")]
     public Transform leftHandAnchor;
 
     public Transform rightHandAnchor;
-
-    [Header("Scene Hand Objects")]
-    public Transform leftHandObject;
-
-    public Transform rightHandObject;
 
     [Header("PlayHand Scripts")]
     public PlayerHand leftPlayerHand;
@@ -61,6 +58,11 @@ public class InputManager : MonoBehaviour
     private void Start()
     {
         _handsTicks = GetComponentsInChildren<IHandsTick>();
+
+        Transform leftHandObject = Instantiate(Resources.Load<GameObject>("Left_Hand"), transform).transform;
+        leftHandObject.name = "Left_Hand";
+        Transform rightHandObject = Instantiate(Resources.Load<GameObject>("Right_Hand"), transform).transform;
+        rightHandObject.name = "Right_Hand";
 
         Left = new HandComponents(leftPlayerHand, leftHandAnchor, leftHandObject);
         Right = new HandComponents(rightPlayerHand, rightHandAnchor, rightHandObject);

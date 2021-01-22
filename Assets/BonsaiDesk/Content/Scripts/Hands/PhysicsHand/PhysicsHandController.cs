@@ -14,6 +14,7 @@ public class PhysicsHandController : MonoBehaviour
     public Rigidbody[] fingerJointBodies;
     public CapsuleCollider[] fingerCapsuleColliders;
     public CapsuleCollider[] palmCapsuleColliders;
+    public MeshCollider palmCollider;
     public Quaternion[] fingerJointStartLocalRotations;
     public Transform[] fingerTargets;
 
@@ -81,15 +82,21 @@ public class PhysicsHandController : MonoBehaviour
         _capsulesActive = active;
         _capsulesActiveTarget = active;
 
-        for (int i = 0; i < palmCapsuleColliders.Length; i++)
+        //only turn palm capsule off, never on
+        if (!active)
         {
-            palmCapsuleColliders[i].isTrigger = !active;
+            for (int i = 0; i < palmCapsuleColliders.Length; i++)
+            {
+                palmCapsuleColliders[i].isTrigger = !active;
+            }
         }
 
         for (int i = 0; i < fingerCapsuleColliders.Length; i++)
         {
             fingerCapsuleColliders[i].isTrigger = !active;
         }
+
+        palmCollider.isTrigger = !active;
     }
 
     private bool CheckHit()
@@ -203,7 +210,7 @@ public class PhysicsHandController : MonoBehaviour
 
         _joint.connectedAnchor = targetMapper.transform.position + targetMapper.transform.rotation * jointOffset;
         _joint.SetTargetRotationLocal(targetMapper.transform.localRotation, _startRotation);
-        
+
         if (!_capsulesActive)
         {
             _joint.transform.position = targetMapper.transform.position;
@@ -281,8 +288,11 @@ public class PhysicsHandController : MonoBehaviour
         palmCapsuleColliders = new CapsuleCollider[4];
         for (int i = 0; i < palmCapsuleColliders.Length; i++)
         {
-            palmCapsuleColliders[i] = transform.GetChild(i).GetChild(0).GetComponent<CapsuleCollider>();
+            //                                             +1 to get past the palm collider
+            palmCapsuleColliders[i] = transform.GetChild(i + 1).GetChild(0).GetComponent<CapsuleCollider>();
         }
+
+        palmCollider = GetComponentInChildren<MeshCollider>();
     }
 
     private void SetupJoint()
