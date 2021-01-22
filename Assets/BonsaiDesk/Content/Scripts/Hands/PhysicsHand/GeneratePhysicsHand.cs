@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class GeneratePhysicsHand : MonoBehaviour
 {
+    // public GameObject prefabSaveLocation;
+
     public OVRSkeleton oVRSkeleton;
     public GameObject handMeshPrefab;
     public GameObject handPalmPrefab;
@@ -17,6 +19,8 @@ public class GeneratePhysicsHand : MonoBehaviour
 
     private Queue<Rigidbody> bodiesToReset = new Queue<Rigidbody>();
 
+    private GameObject hand;
+
     private void Start()
     {
         if (!Application.isEditor)
@@ -27,7 +31,8 @@ public class GeneratePhysicsHand : MonoBehaviour
             return;
         }
 
-        transform.name = HandName() + "_Hand";
+        hand = new GameObject(HandName() + "_Hand");
+        hand.transform.SetParent(transform, false);
     }
 
     private void Update()
@@ -46,7 +51,7 @@ public class GeneratePhysicsHand : MonoBehaviour
             if (physicsHand != null)
             {
                 var handMeshObject = Instantiate(handMeshPrefab, physicsHand.transform);
-                Destroy(handMeshObject.GetComponent<Animator>());
+                DestroyImmediate(handMeshObject.GetComponent<Animator>());
                 handMeshObject.GetComponentInChildren<SkinnedMeshRenderer>().sharedMaterial = physicsHandMaterial;
                 var mapper = handMeshObject.AddComponent<OVRHandTransformMapper>();
                 mapper.useLocalRotation = false;
@@ -62,8 +67,8 @@ public class GeneratePhysicsHand : MonoBehaviour
                     rb.ResetCenterOfMass();
                 }
 
-                var handTarget = Instantiate(handMeshPrefab, transform);
-                Destroy(handTarget.GetComponent<Animator>());
+                var handTarget = Instantiate(handMeshPrefab, hand.transform);
+                DestroyImmediate(handTarget.GetComponent<Animator>());
                 handTarget.name = HandName() + "_Physics_Hand_Target";
                 var targetMapper = handTarget.AddComponent<OVRHandTransformMapper>();
                 targetMapper.moveObjectToTarget = false;
@@ -84,10 +89,11 @@ public class GeneratePhysicsHand : MonoBehaviour
             }
 
 #if UNITY_EDITOR
-            EditorApplication.isPaused = true;
+            PrefabUtility.SaveAsPrefabAsset(hand,
+                "Assets/BonsaiDesk/Content/Prefabs/Hand/Resources/" + hand.name + ".prefab");
+            print("Finished generating hands. Exiting play mode.");
+            EditorApplication.isPlaying = false;
 #endif
-
-            Destroy(this);
         }
     }
 
@@ -151,7 +157,7 @@ public class GeneratePhysicsHand : MonoBehaviour
         }
 
         var _capsulesGO = new GameObject(HandName() + "_Physics_Hand");
-        _capsulesGO.transform.SetParent(transform, false);
+        _capsulesGO.transform.SetParent(hand.transform, false);
         _capsulesGO.transform.localPosition = Vector3.zero;
         _capsulesGO.transform.localRotation = Quaternion.identity;
         var rb = _capsulesGO.AddComponent<Rigidbody>();
