@@ -1133,7 +1133,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &144652440
 Transform:
   m_ObjectHideFlags: 0
@@ -8278,7 +8278,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 497530140}
-  - component: {fileID: 497530141}
   m_Layer: 0
   m_Name: Bounds
   m_TagString: Untagged
@@ -8301,19 +8300,6 @@ Transform:
   m_Father: {fileID: 1520135412}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &497530141
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 497530139}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 0
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 0.001}
-  m_Center: {x: 0, y: 0, z: 0.0005}
 --- !u!1 &501204394
 GameObject:
   m_ObjectHideFlags: 0
@@ -16245,13 +16231,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1382784197}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 83f5a922a86cd494ab65b2d1ccb84e5d, type: 3}
+  m_Script: {fileID: 11500000, guid: 7442f4bc421d1534e9173115168ec26d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  useBuiltHtml: 0
-  hotReloadUrl: http://localhost:3000/
+  useBuiltHtml: 1
+  hotReloadUrl: 
   togglePause: {fileID: 96659938}
   tabletSpot: {fileID: 144652441}
 --- !u!1 &1384374492
@@ -23718,7 +23704,7 @@ PrefabInstance:
     - target: {fileID: 6876464847205822898, guid: 58577b8f94ebfd842a65f7340cee4843,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 0.592
       objectReference: {fileID: 0}
     - target: {fileID: 6876464847205822898, guid: 58577b8f94ebfd842a65f7340cee4843,
         type: 3}
@@ -23728,7 +23714,7 @@ PrefabInstance:
     - target: {fileID: 6876464847205822898, guid: 58577b8f94ebfd842a65f7340cee4843,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.354
+      value: 0.38
       objectReference: {fileID: 0}
     - target: {fileID: 6876464847205822898, guid: 58577b8f94ebfd842a65f7340cee4843,
         type: 3}
@@ -23773,7 +23759,7 @@ PrefabInstance:
     - target: {fileID: 6876464847205822899, guid: 58577b8f94ebfd842a65f7340cee4843,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 58577b8f94ebfd842a65f7340cee4843, type: 3}

@@ -24,13 +24,13 @@ public class NewBrowser : MonoBehaviour
     protected virtual void Start()
     {
         Debug.Log("browser start");
-        
+
         CacheTransforms();
 
         //SetupOverlayObject();
 
         SetupWebViewPrefab();
-        
+
         SetupHolePuncher();
     }
 
@@ -46,7 +46,8 @@ public class NewBrowser : MonoBehaviour
     }
 
     private void SetupOverlayObject()
-    {;
+    {
+        ;
         throw new NotImplementedException();
     }
 
@@ -61,7 +62,7 @@ public class NewBrowser : MonoBehaviour
         _overlay = overlayTransform.gameObject.AddComponent<OVROverlay>();
         _overlay.externalSurfaceWidth = resolution.x;
         _overlay.externalSurfaceHeight = resolution.y;
-        
+
         _overlay.currentOverlayType = OVROverlay.OverlayType.Underlay;
         _overlay.isExternalSurface = true;
         StartCoroutine(UpdateAndroidSurface());
@@ -92,16 +93,17 @@ public class NewBrowser : MonoBehaviour
     private void SetupWebViewPrefab()
     {
         PreConfigureWebView();
-        
+
         _webViewPrefab = WebViewPrefabCustom.Instantiate(_bounds.x, _bounds.y);
-        
+        Destroy(_webViewPrefab.Collider);
+
         _webViewPrefab.transform.localPosition = Vector3.zero;
-        
+
         _webViewPrefab.transform.SetParent(screenTransform, false);
-        
+
         _resizer = _webViewPrefab.transform.Find("WebViewPrefabResizer");
         _webViewView = _resizer.transform.Find("WebViewPrefabView");
-        
+
         holePuncherTransform.SetParent(_webViewView, false);
         overlayTransform.SetParent(_webViewView, false);
 
@@ -182,26 +184,25 @@ public class NewBrowser : MonoBehaviour
 
     protected static Vector2Int AutoResolution(Vector2 span, float distance, int ppd, Vector2 aspect)
     {
-        
         Vector2Int resolution;
-        
+
         if (span.y > span.x)
         {
             var res = ResolvablePixels(span.y, distance, ppd);
-            resolution =  ResolutionFromY(res, aspect);
+            resolution = ResolutionFromY(res, aspect);
         }
         else
         {
             var res = ResolvablePixels(span.x, distance, ppd);
-            resolution =  ResolutionFromX(res, aspect);
+            resolution = ResolutionFromX(res, aspect);
         }
 
         return resolution;
     }
-    
+
     private static Vector2Int ResolutionFromX(int xResolution, Vector2 aspect)
     {
-        return new Vector2Int( xResolution, (int) (aspect.y/aspect.x * xResolution));
+        return new Vector2Int(xResolution, (int) (aspect.y / aspect.x * xResolution));
     }
 
     private static Vector2Int ResolutionFromY(int yResolution, Vector2 aspect)
