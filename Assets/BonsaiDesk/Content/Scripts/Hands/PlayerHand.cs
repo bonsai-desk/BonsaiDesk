@@ -21,6 +21,7 @@ public class PlayerHand : MonoBehaviour
     public Transform pinchPullPointer;
 
     public static int AllButHandsMask;
+    public static int HandsMask;
 
     public enum Gesture
     {
@@ -34,7 +35,8 @@ public class PlayerHand : MonoBehaviour
 
     private void Start()
     {
-        AllButHandsMask = ~LayerMask.GetMask("LeftHand", "RightHand");
+        HandsMask = LayerMask.GetMask("Hand", "IndexTip");
+        AllButHandsMask = ~HandsMask;
 
         _handTicks = GetComponentsInChildren<IHandTick>();
         _handTicksDictionary = new Dictionary<Type, IHandTick>();

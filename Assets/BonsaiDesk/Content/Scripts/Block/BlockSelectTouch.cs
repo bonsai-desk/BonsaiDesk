@@ -17,9 +17,7 @@ public class BlockSelectTouch : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        bool left = collision.gameObject.CompareTag("IndexTip") && collision.gameObject.layer == LayerMask.NameToLayer("LeftHand");
-        bool right = collision.gameObject.CompareTag("IndexTip") && collision.gameObject.layer == LayerMask.NameToLayer("RightHand");
-        if (left || right)
+        if (collision.gameObject.layer == LayerMask.NameToLayer("IndexTip"))
         {
             blockSelect.SelectBlock(blockId);
         }

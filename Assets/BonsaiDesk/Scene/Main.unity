@@ -7807,7 +7807,7 @@ GameObject:
   m_Component:
   - component: {fileID: 457183088}
   - component: {fileID: 457183089}
-  m_Layer: 21
+  m_Layer: 10
   m_Name: TableToHand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9520,6 +9520,7 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
+  t: {fileID: 0}
 --- !u!1 &752779473
 GameObject:
   m_ObjectHideFlags: 0
@@ -25479,11 +25480,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64725c82740479e4daa72a23d4493ec4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lastSyncTime: 0
   syncMode: 0
   syncInterval: 0.1
+  netIdentityCache: {fileID: 0}
+  body: {fileID: 0}
   lbsForce: 0.01
   lbsTorque: 0.001
+  moveForce: 0
+  rotationTorque: 0
+  position: {x: 0, y: 0, z: 0}
+  rotation: {x: 0, y: 0, z: 0, w: 0}
+  touchingHand: 0
   tabletSpot: {fileID: 0}
+  canActivate: 1
   videoId: 
   videoIndex: 0
   videoIds: []
@@ -25697,11 +25707,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64725c82740479e4daa72a23d4493ec4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lastSyncTime: 0
   syncMode: 0
   syncInterval: 0.1
+  netIdentityCache: {fileID: 0}
+  body: {fileID: 0}
   lbsForce: 0.01
   lbsTorque: 0.001
+  moveForce: 0
+  rotationTorque: 0
+  position: {x: 0, y: 0, z: 0}
+  rotation: {x: 0, y: 0, z: 0, w: 0}
+  touchingHand: 0
   tabletSpot: {fileID: 0}
+  canActivate: 1
   videoId: 
   videoIndex: 0
   videoIds: []

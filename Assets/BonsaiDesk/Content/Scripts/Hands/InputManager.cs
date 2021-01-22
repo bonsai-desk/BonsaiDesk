@@ -55,6 +55,8 @@ public class InputManager : MonoBehaviour
         Hands = this;
     }
 
+    public BoxCollider t;
+
     private void Start()
     {
         _handsTicks = GetComponentsInChildren<IHandsTick>();
