@@ -2870,7 +2870,7 @@ MonoBehaviour:
   overlayTransform: {fileID: 529401737}
   holePuncherTransform: {fileID: 884413388}
   screenTransform: {fileID: 1520135412}
-  initialUrl: http://192.168.0.166:3000
+  initialUrl: https:/m.youtube.com
 --- !u!4 &320584330
 Transform:
   m_ObjectHideFlags: 0
@@ -16007,12 +16007,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7442f4bc421d1534e9173115168ec26d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  syncMode: 0
-  syncInterval: 0.1
-  useBuiltHtml: 1
-  hotReloadUrl: 
-  togglePause: {fileID: 96659938}
-  tabletSpot: {fileID: 144652441}
 --- !u!1 &1384374492
 GameObject:
   m_ObjectHideFlags: 0
