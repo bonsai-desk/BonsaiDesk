@@ -92,6 +92,8 @@ public class GeneratePhysicsHand : MonoBehaviour
             PrefabUtility.SaveAsPrefabAsset(hand,
                 "Assets/BonsaiDesk/Content/Prefabs/Hand/Resources/" + hand.name + ".prefab");
             print("Finished generating hands. Exiting play mode.");
+            Debug.LogError(
+                $"Generated hand {hand.name}. Stopping application. You can now disable this object in the scene.");
             EditorApplication.isPlaying = false;
 #endif
         }
@@ -261,6 +263,11 @@ public class GeneratePhysicsHand : MonoBehaviour
             var mag = delta.magnitude;
             var rot = Quaternion.FromToRotation(Vector3.right, delta);
             capsule.CapsuleCollider.radius = _skeleton.BoneCapsules[i].Radius;
+            if (boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb1)
+            {
+                capsule.CapsuleCollider.radius *= 0.5f;
+            }
+
             capsule.CapsuleCollider.height = mag + _skeleton.BoneCapsules[i].Radius * 2.0f;
             capsule.CapsuleCollider.direction = 0;
             capsule.CapsuleCollider.center = Vector3.right * mag * 0.5f;
