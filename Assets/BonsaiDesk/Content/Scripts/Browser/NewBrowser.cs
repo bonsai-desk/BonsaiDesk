@@ -215,4 +215,18 @@ public class NewBrowser : MonoBehaviour
     {
         return new Vector2Int((int) (aspect.x / aspect.y * yResolution), yResolution);
     }
+    
+    protected static class BrowserMessage
+    {
+        public static readonly string NavToMenu = PushPath("/menu");
+
+        private static string PushPath(string path)
+        {
+            return "{" +
+                   "\"type\": \"nav\", " +
+                   "\"command\": \"push\", " +
+                   $"\"path\": \"{path}\"" +
+                   "}";
+        }
+    }
 }
