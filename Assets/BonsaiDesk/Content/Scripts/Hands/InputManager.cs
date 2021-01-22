@@ -66,6 +66,9 @@ public class InputManager : MonoBehaviour
 
         Left = new HandComponents(leftPlayerHand, leftHandAnchor, leftHandObject);
         Right = new HandComponents(rightPlayerHand, rightHandAnchor, rightHandObject);
+
+        Left.SetHandColliderActiveForScreen(false);
+        Right.SetHandColliderActiveForScreen(false);
     }
 
     private void Update()

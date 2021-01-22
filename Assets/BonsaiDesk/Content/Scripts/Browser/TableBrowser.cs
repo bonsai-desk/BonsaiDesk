@@ -6,6 +6,7 @@ using Vuplex.WebView;
 public class TableBrowser : NewBrowser
 {
     public string initialUrl;
+
     // Start is called before the first frame update
     protected override void Start()
     {
@@ -18,7 +19,6 @@ public class TableBrowser : NewBrowser
             var view = _webViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView");
             CustomInputModule.Singleton.screens.Add(view);
         };
-
     }
 
     void LoadMenu(object sender, ProgressChangedEventArgs eventArgs)
@@ -29,7 +29,7 @@ public class TableBrowser : NewBrowser
         }
     }
 
-    
+
     public override Vector2Int ChangeAspect(Vector2 newAspect)
     {
         var aspectRatio = newAspect.x / newAspect.y;
@@ -46,20 +46,20 @@ public class TableBrowser : NewBrowser
         var res = resolution.x > resolution.y ? resolution.x : resolution.y;
         var scale = _bounds.x > _bounds.y ? _bounds.x : _bounds.y;
         var resScaled = res / scale;
-       
+
         Debug.Log(res);
         Debug.Log(scale);
         Debug.Log(resScaled);
         Debug.Log(_bounds);
-        
+
         _webViewPrefab.WebView.SetResolution(resScaled);
         _webViewPrefab.Resize(_bounds.x, _bounds.y);
-        
+
         Debug.Log($"[BONSAI] ChangeAspect resolution {resolution}");
 
         boundsTransform.localScale = localScale;
-        
-        
+
+
 #if UNITY_ANDROID && !UNITY_EDITOR
         RebuildOverlay(resolution);
 #endif
@@ -70,9 +70,8 @@ public class TableBrowser : NewBrowser
     // Update is called once per frame
     void Update()
     {
-        
     }
-    
+
     private static class BrowserMessage
     {
         public static readonly string NavMenu = PushPath("/menu");
@@ -85,8 +84,5 @@ public class TableBrowser : NewBrowser
                    $"\"path\": \"{path}\"" +
                    "}";
         }
-
-
     }
-    
 }

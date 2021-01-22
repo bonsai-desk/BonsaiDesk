@@ -35,7 +35,7 @@ public class PlayerHand : MonoBehaviour
 
     private void Start()
     {
-        HandsMask = LayerMask.GetMask("Hand", "IndexTip");
+        HandsMask = LayerMask.GetMask("LeftHand", "RightHand", "IndexTip");
         AllButHandsMask = ~HandsMask;
 
         _handTicks = GetComponentsInChildren<IHandTick>();

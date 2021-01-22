@@ -24,10 +24,10 @@ TagManager:
   - UI
   - 
   - 
-  - Hand
+  - LeftHand
+  - RightHand
   - IndexTip
-  - IndexOnly
-  - 
+  - TouchScreenSurface
   - Browser
   - 
   - 

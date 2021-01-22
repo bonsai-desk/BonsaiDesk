@@ -21,6 +21,9 @@ public class HandComponents
     public bool MapperTargetsInitialized = false;
     public bool Tracking { get; private set; } = false;
 
+    public int physicsLayer;
+    private int _touchScreenSurfaceLayer;
+
     public HandComponents(PlayerHand playerHand, Transform handAnchor, Transform handObject)
     {
         PlayerHand = playerHand;
@@ -44,7 +47,10 @@ public class HandComponents
 
         OVRSkeleton = handAnchor.GetComponentInChildren<OVRSkeleton>();
         PlayerHand.skeletonType = OVRSkeleton.GetSkeletonType();
-        SetLayerRecursive(PhysicsHand, LayerMask.NameToLayer("Hand"));
+        physicsLayer = OVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft
+            ? LayerMask.NameToLayer("LeftHand")
+            : LayerMask.NameToLayer("RightHand");
+        SetLayerRecursive(PhysicsHand, physicsLayer);
         OVRHand = handAnchor.GetComponentInChildren<OVRHand>();
 
         PhysicsFingerTips = GetFingerTips(PhysicsMapper);
@@ -52,16 +58,19 @@ public class HandComponents
 
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Thumb3], "FingerTip");
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Index3], "IndexTip");
-        SetLayerRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Index3], LayerMask.NameToLayer("IndexTip"));
+        SetLayerRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Index3],
+            LayerMask.NameToLayer("IndexTip"));
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Middle3], "FingerTip");
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Ring3], "FingerTip");
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Pinky3], "FingerTip");
-        
+
         var bodies = PhysicsHand.GetComponentsInChildren<Rigidbody>();
         foreach (var body in bodies)
         {
             body.gameObject.AddComponent<HandAuthority>();
         }
+
+        _touchScreenSurfaceLayer = LayerMask.NameToLayer("TouchScreenSurface");
     }
 
     private static Transform[] GetFingerTips(OVRHandTransformMapper mapper)
@@ -78,6 +87,16 @@ public class HandComponents
     public void SetTracking(bool tracking)
     {
         Tracking = tracking;
+    }
+    
+    /// <summary>
+    /// changes the layer collision matrix for TouchScreenSurface to not collide or not collide with this hand
+    /// excluding the index tip collider
+    /// </summary>
+    /// <param name="active"></param>
+    public void SetHandColliderActiveForScreen(bool active)
+    {
+        Physics.IgnoreLayerCollision(_touchScreenSurfaceLayer, physicsLayer, !active);
     }
 
     private static void SetLayerRecursive(Transform go, int layer)

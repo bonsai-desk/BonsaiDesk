@@ -6,41 +6,24 @@ using UnityEngine.EventSystems;
 [RequireComponent(typeof(InputManager))]
 public class CustomInputModule : StandaloneInputModule
 {
-    [Header("Custom Input Module")] 
-
+    [Header("Custom Input Module")]
     public static CustomInputModule Singleton;
+
     public OVRCursor m_Cursor;
     public List<Transform> screens;
     public float hoverDistance = 0.1f;
-    public float clickDistance = 0.075f/2;
+    public float clickDistance = 0.075f / 2;
     public Camera mainCamera;
     private readonly MouseState m_MouseState = new MouseState();
     private bool inClickRegion;
     protected Dictionary<int, OVRPointerEventData> m_VRRayPointerData = new Dictionary<int, OVRPointerEventData>();
     private bool prevInClickRegion;
     public float angleDragThreshold = 1;
-    private InputManager _inputManager;
 
     protected override void Awake()
     {
         if (Singleton == null)
             Singleton = this;
-    }
-
-    protected override void Start()
-    {
-        base.Start();
-        _inputManager = gameObject.GetComponent<InputManager>();
-    }
-
-    Vector3 FingerTipPos()
-    {
-        return _inputManager.targetFingerTipPositions[6];
-    }
-
-    // Update is called once per frame
-    private void Update()
-    {
     }
 
     public override void Process()
@@ -82,9 +65,36 @@ public class CustomInputModule : StandaloneInputModule
         GetPointerData(-1, out leftData, true);
         leftData.Reset();
 
+        prevInClickRegion = inClickRegion;
+        inClickRegion = false;
+
+        var foundScreen = false;
         foreach (var screen in screens)
         {
-            var fingerInScreen = screen.InverseTransformPoint(FingerTipPos());
+            var leftFingerInScreen = screen.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[1]);
+            var rightFingerInScreen = screen.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[6]);
+
+            var leftValid = leftFingerInScreen.z <= 0 && FingerInBounds(leftFingerInScreen);
+            var rightValid = rightFingerInScreen.z <= 0 && FingerInBounds(rightFingerInScreen);
+
+            var fingerInScreen = leftFingerInScreen;
+            if (!leftValid || rightValid && rightFingerInScreen.z > leftFingerInScreen.z)
+            {
+                fingerInScreen = rightFingerInScreen;
+            }
+
+            // determine click
+            var inBounds = FingerInBounds(fingerInScreen);
+
+            if (inBounds && -fingerInScreen.z < hoverDistance)
+            {
+                foundScreen = true;
+                inClickRegion = inBounds && -fingerInScreen.z < clickDistance;
+
+                var fingerInScreen0Z = fingerInScreen;
+                fingerInScreen0Z.z = 0;
+                m_Cursor.SetCursorStartDest(screen.TransformPoint(fingerInScreen),
+                    screen.TransformPoint(fingerInScreen0Z), -Vector3.forward);
 
                 var screenHit = screen.TransformPoint(
                     new Vector3(fingerInScreen.x, fingerInScreen.y, 0)
@@ -95,22 +105,29 @@ public class CustomInputModule : StandaloneInputModule
                     gameObject = screen.gameObject, worldPosition = screenHit, screenPosition = screenPos
                 };
                 leftData.pointerCurrentRaycast = fakeRayCast;
-                m_Cursor.SetCursorStartDest(FingerTipPos(), screenHit, Vector3.forward);
 
-                // determine click
-                prevInClickRegion = inClickRegion;
-                if (FingerInBounds(fingerInScreen) && -fingerInScreen.z < clickDistance)
-                    inClickRegion = true;
-                else
-                    inClickRegion = false;
-                
+                InputManager.Hands.Left.SetHandColliderActiveForScreen(!leftValid);
+                InputManager.Hands.Right.SetHandColliderActiveForScreen(!rightValid);
+
                 break;
+            }
+            else
+            {
+                m_Cursor.SetCursorStartDest(Vector3.zero, Vector3.zero, Vector3.zero);
+            }
         }
 
+        if (!foundScreen)
+        {
+            var fakeRayCast = new RaycastResult();
+            leftData.pointerCurrentRaycast = fakeRayCast;
+            
+            InputManager.Hands.Left.SetHandColliderActiveForScreen(true);
+            InputManager.Hands.Right.SetHandColliderActiveForScreen(true);
+        }
 
         //Populate some default values
         leftData.button = PointerEventData.InputButton.Left;
-
 
         var fps = GetGazeButtonState();
         m_MouseState.SetButtonState(PointerEventData.InputButton.Left, fps, leftData);
@@ -205,7 +222,7 @@ public class CustomInputModule : StandaloneInputModule
 //   #endif
     }
 
-    
+
     private bool ShouldStartDrag(PointerEventData pointerEvent)
     {
         Vector3 cameraPos = mainCamera.transform.position;
