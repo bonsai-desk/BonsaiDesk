@@ -8,7 +8,6 @@ public class TabletCollider : MonoBehaviour
     public UnityEvent action;
 
     private readonly Dictionary<int, EnterInfo> _lastEnter = new Dictionary<int, EnterInfo>();
-    private int _handMask;
     private const float ButtonMinTouchTime = 0f;
     private const float ButtonMaxTouchTime = 1f;
     private const float MaxTabletMoveSquared = 0.01f * 0.01f;
@@ -19,11 +18,6 @@ public class TabletCollider : MonoBehaviour
 
     private int _numFingersTouching;
     public int NumFingersTouching => _numFingersTouching;
-
-    private void Start()
-    {
-        _handMask = LayerMask.GetMask("LeftHand", "RightHand");
-    }
 
     private void Update()
     {
@@ -92,7 +86,7 @@ public class TabletCollider : MonoBehaviour
     
     private bool MaskIsValid(int layer)
     {
-        return _handMask == (_handMask | (1 << layer));
+        return PlayerHand.HandsMask == (PlayerHand.HandsMask | (1 << layer));
     }
 
     private bool CollisionIsValid(Collision other)

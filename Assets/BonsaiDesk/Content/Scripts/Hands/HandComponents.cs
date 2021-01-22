@@ -44,10 +44,7 @@ public class HandComponents
 
         OVRSkeleton = handAnchor.GetComponentInChildren<OVRSkeleton>();
         PlayerHand.skeletonType = OVRSkeleton.GetSkeletonType();
-        SetLayerRecursive(PhysicsHand,
-            OVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft
-                ? LayerMask.NameToLayer("LeftHand")
-                : LayerMask.NameToLayer("RightHand"));
+        SetLayerRecursive(PhysicsHand, LayerMask.NameToLayer("Hand"));
         OVRHand = handAnchor.GetComponentInChildren<OVRHand>();
 
         PhysicsFingerTips = GetFingerTips(PhysicsMapper);
@@ -55,6 +52,7 @@ public class HandComponents
 
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Thumb3], "FingerTip");
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Index3], "IndexTip");
+        SetLayerRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Index3], LayerMask.NameToLayer("IndexTip"));
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Middle3], "FingerTip");
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Ring3], "FingerTip");
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Pinky3], "FingerTip");

@@ -24,13 +24,13 @@ TagManager:
   - UI
   - 
   - 
-  - LeftHand
-  - RightHand
-  - LeftHeldObject
-  - RightHeldObject
+  - Hand
+  - IndexTip
+  - IndexOnly
+  - 
   - Browser
-  - LeftInteract
-  - RightInteract
+  - 
+  - 
   - block
   - blockArea
   - sphere
