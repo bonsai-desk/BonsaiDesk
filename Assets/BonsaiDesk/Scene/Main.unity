@@ -7841,6 +7841,85 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.015, y: 0.0074999984, z: 0.00029999993}
   m_Center: {x: 0, y: -0.0037499992, z: -0.00014999996}
+--- !u!1 &467460306
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 467460309}
+  - component: {fileID: 467460308}
+  - component: {fileID: 467460307}
+  m_Layer: 0
+  m_Name: Cube
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!23 &467460307
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 467460306}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 8940f74d5921148489d63c58c23c6999, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+--- !u!33 &467460308
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 467460306}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &467460309
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 467460306}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.0107, y: 0, z: 0}
+  m_LocalScale: {x: 0.005, y: 0.2, z: 0.005}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 17
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &476871714
 GameObject:
   m_ObjectHideFlags: 0
@@ -9492,7 +9571,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7347201073b7c1f4381aaeaf7c8b0150, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  renderTargetHands: 1
+  renderTargetHands: 0
   leftHandAnchor: {fileID: 1892809309}
   rightHandAnchor: {fileID: 1892809308}
   leftPlayerHand: {fileID: 946290005}
@@ -9520,7 +9599,8 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
-  t: {fileID: 0}
+  t: {fileID: 467460309}
+  tt: {fileID: 2072348502}
 --- !u!1 &752779473
 GameObject:
   m_ObjectHideFlags: 0
@@ -20791,6 +20871,85 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e0f93d00955c3ba46b6d0551842c2c71, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &2072348499
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2072348502}
+  - component: {fileID: 2072348501}
+  - component: {fileID: 2072348500}
+  m_Layer: 0
+  m_Name: Cube (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!23 &2072348500
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2072348499}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: a3ca58f02478a0e45b3901539a52ae6d, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+--- !u!33 &2072348501
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2072348499}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &2072348502
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2072348499}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.005, y: 0.2, z: 0.005}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 18
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2111808241
 GameObject:
   m_ObjectHideFlags: 0
@@ -25480,25 +25639,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64725c82740479e4daa72a23d4493ec4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lastSyncTime: 0
-  syncMode: 0
-  syncInterval: 0.1
-  netIdentityCache: {fileID: 0}
-  body: {fileID: 0}
-  lbsForce: 0.01
-  lbsTorque: 0.001
-  moveForce: 0
-  rotationTorque: 0
-  position: {x: 0, y: 0, z: 0}
-  rotation: {x: 0, y: 0, z: 0, w: 0}
-  touchingHand: 0
-  tabletSpot: {fileID: 0}
-  canActivate: 1
-  videoId: 
-  videoIndex: 0
-  videoIds: []
-  materials: []
-  meshRenderer: {fileID: 0}
 --- !u!33 &6876464846519579009
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -25707,25 +25847,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64725c82740479e4daa72a23d4493ec4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lastSyncTime: 0
-  syncMode: 0
-  syncInterval: 0.1
-  netIdentityCache: {fileID: 0}
-  body: {fileID: 0}
-  lbsForce: 0.01
-  lbsTorque: 0.001
-  moveForce: 0
-  rotationTorque: 0
-  position: {x: 0, y: 0, z: 0}
-  rotation: {x: 0, y: 0, z: 0, w: 0}
-  touchingHand: 0
-  tabletSpot: {fileID: 0}
-  canActivate: 1
-  videoId: 
-  videoIndex: 0
-  videoIds: []
-  materials: []
-  meshRenderer: {fileID: 0}
 --- !u!54 &6876464847352160373
 Rigidbody:
   m_ObjectHideFlags: 0

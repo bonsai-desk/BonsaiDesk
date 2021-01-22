@@ -55,8 +55,6 @@ public class InputManager : MonoBehaviour
         Hands = this;
     }
 
-    public BoxCollider t;
-
     private void Start()
     {
         _handsTicks = GetComponentsInChildren<IHandsTick>();
@@ -92,7 +90,18 @@ public class InputManager : MonoBehaviour
 
         Left.PlayerHand.UpdateLastGestures();
         Right.PlayerHand.UpdateLastGestures();
+
+        var p = physicsFingerTipPositions[6];
+        p.y = 0;
+        t.position = p;
+        
+        var p2 = targetFingerTipPositions[6];
+        p2.y = 0;
+        tt.position = p2;
     }
+
+    public Transform t;
+    public Transform tt;
 
     public void UpdateHandTargets()
     {
