@@ -7797,6 +7797,50 @@ Transform:
   m_Father: {fileID: 877365330}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &457183087
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 457183088}
+  - component: {fileID: 457183089}
+  m_Layer: 21
+  m_Name: TableToHand
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 1
+  m_IsActive: 1
+--- !u!4 &457183088
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 457183087}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: -0, w: 0.7071067}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 100, y: 100, z: 100}
+  m_Children: []
+  m_Father: {fileID: 255299881}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &457183089
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 457183087}
+  m_Material: {fileID: 13400000, guid: 2ce95ee1c6692e24b93fd320d0345b99, type: 2}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.015, y: 0.0074999984, z: 0.00029999993}
+  m_Center: {x: 0, y: -0.0037499992, z: -0.00014999996}
 --- !u!1 &476871714
 GameObject:
   m_ObjectHideFlags: 0
@@ -8753,8 +8797,8 @@ GameObject:
   m_Component:
   - component: {fileID: 622770589}
   - component: {fileID: 622770590}
-  m_Layer: 0
-  m_Name: TableHitBox
+  m_Layer: 22
+  m_Name: TableToWorld
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9448,6 +9492,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7347201073b7c1f4381aaeaf7c8b0150, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  renderTargetHands: 1
   leftHandAnchor: {fileID: 1892809309}
   rightHandAnchor: {fileID: 1892809308}
   leftPlayerHand: {fileID: 946290005}

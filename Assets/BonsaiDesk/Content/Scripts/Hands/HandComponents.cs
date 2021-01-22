@@ -30,6 +30,7 @@ public class HandComponents
         PhysicsHandController = PhysicsHand.GetComponent<PhysicsHandController>();
         TargetHand = handObject.GetChild(1);
         PlayerHand.transform.SetParent(PhysicsHand, false);
+        TargetHand.GetComponentInChildren<SkinnedMeshRenderer>().enabled = InputManager.Hands.renderTargetHands;
 
         handObject.name += "_Local";
         PhysicsHand.name += "_Local";
