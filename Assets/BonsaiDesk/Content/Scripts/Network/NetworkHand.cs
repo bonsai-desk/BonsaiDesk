@@ -37,8 +37,7 @@ public class NetworkHand : NetworkBehaviour
     [SyncVar] private uint _pinchPullAttachedToId = uint.MaxValue;
     [SyncVar] private Vector3 _pinchPullLocalHitPoint = Vector3.zero;
     [SyncVar] private float _pinchPullRopeLength = 0f;
-
-    public GameObject physicsHandPrefab;
+    
     private GameObject physicsHand;
 
     private void Start()
@@ -61,6 +60,11 @@ public class NetworkHand : NetworkBehaviour
 
         if (!hasAuthority)
         {
+            GameObject physicsHandPrefab;
+            if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+                physicsHandPrefab = Resources.Load<GameObject>("Left_Hand");
+            else
+                physicsHandPrefab = Resources.Load<GameObject>("Right_Hand");
             var hand = Instantiate(physicsHandPrefab);
             var physicsMapper = hand.transform.GetChild(1).GetComponent<OVRHandTransformMapper>();
             physicsMapper.targetObject = transform;

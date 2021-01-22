@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+[RequireComponent(typeof(InputManager))]
 public class CustomInputModule : StandaloneInputModule
 {
-    [Header("Custom Input Module")] public Transform rayTransform;
+    [Header("Custom Input Module")] 
 
     public static CustomInputModule Singleton;
     public OVRCursor m_Cursor;
-    public Transform fingerTip;
     public List<Transform> screens;
     public float hoverDistance = 0.1f;
     public float clickDistance = 0.075f/2;
@@ -19,11 +19,23 @@ public class CustomInputModule : StandaloneInputModule
     protected Dictionary<int, OVRPointerEventData> m_VRRayPointerData = new Dictionary<int, OVRPointerEventData>();
     private bool prevInClickRegion;
     public float angleDragThreshold = 1;
+    private InputManager _inputManager;
 
     protected override void Awake()
     {
         if (Singleton == null)
             Singleton = this;
+    }
+
+    protected override void Start()
+    {
+        base.Start();
+        _inputManager = gameObject.GetComponent<InputManager>();
+    }
+
+    Vector3 FingerTipPos()
+    {
+        return _inputManager.targetFingerTipPositions[6];
     }
 
     // Update is called once per frame
@@ -72,7 +84,7 @@ public class CustomInputModule : StandaloneInputModule
 
         foreach (var screen in screens)
         {
-            var fingerInScreen = screen.InverseTransformPoint(fingerTip.position);
+            var fingerInScreen = screen.InverseTransformPoint(FingerTipPos());
 
                 var screenHit = screen.TransformPoint(
                     new Vector3(fingerInScreen.x, fingerInScreen.y, 0)
@@ -83,7 +95,7 @@ public class CustomInputModule : StandaloneInputModule
                     gameObject = screen.gameObject, worldPosition = screenHit, screenPosition = screenPos
                 };
                 leftData.pointerCurrentRaycast = fakeRayCast;
-                m_Cursor.SetCursorStartDest(fingerTip.position, screenHit, Vector3.forward);
+                m_Cursor.SetCursorStartDest(FingerTipPos(), screenHit, Vector3.forward);
 
                 // determine click
                 prevInClickRegion = inClickRegion;
