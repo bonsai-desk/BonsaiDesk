@@ -60,6 +60,15 @@ public class PhysicsHandController : MonoBehaviour
         _rigidbody.WakeUp();
     }
 
+    // public void SetCapsulesOffThenTryOn()
+    // {
+    //     if (!CheckHit())
+    //         return;
+    //
+    //     SetCapsulesActiveTarget(false);
+    //     SetCapsulesActiveTarget(true);
+    // }
+
     public void SetCapsulesActiveTarget(bool active)
     {
         _capsulesActiveTarget = active;

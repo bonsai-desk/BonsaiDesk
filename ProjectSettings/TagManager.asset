@@ -26,11 +26,11 @@ TagManager:
   - 
   - LeftHand
   - RightHand
-  - LeftHeldObject
-  - RightHeldObject
+  - IndexTip
+  - TouchScreenSurface
   - Browser
-  - LeftInteract
-  - RightInteract
+  - 
+  - 
   - block
   - blockArea
   - sphere

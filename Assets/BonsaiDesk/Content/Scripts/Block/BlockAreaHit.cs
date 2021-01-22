@@ -20,7 +20,7 @@ public class BlockAreaHit : MonoBehaviour
         //     return;
         //
         // if (collision.contactCount > 0)
-        // {
+        // {TODO update layers/tags
         //     bool left = (PlayerHands.hands.left.deleteMode || PlayerHands.hands.left.deleteAllMode) && collision.gameObject.CompareTag("IndexTip") && collision.gameObject.layer == LayerMask.NameToLayer("LeftHand");
         //     bool right = (PlayerHands.hands.right.deleteMode || PlayerHands.hands.right.deleteAllMode) && collision.gameObject.CompareTag("IndexTip") && collision.gameObject.layer == LayerMask.NameToLayer("RightHand");
         //     if (left || right)

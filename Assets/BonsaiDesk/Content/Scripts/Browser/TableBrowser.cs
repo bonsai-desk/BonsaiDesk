@@ -16,7 +16,6 @@ public class TableBrowser : NewBrowser
             var view = _webViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView");
             CustomInputModule.Singleton.screens.Add(view);
         };
-
     }
 
     private void NavToMenu(object sender, ProgressChangedEventArgs eventArgs)
@@ -44,7 +43,7 @@ public class TableBrowser : NewBrowser
         
         _webViewPrefab.WebView.SetResolution(resScaled);
         _webViewPrefab.Resize(_bounds.x, _bounds.y);
-        
+
         Debug.Log($"[BONSAI] ChangeAspect resolution {resolution}");
 
         boundsTransform.localScale = localScale;
