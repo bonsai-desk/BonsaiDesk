@@ -20,14 +20,13 @@ public class NewBrowser : MonoBehaviour
     protected WebViewPrefabCustom _webViewPrefab;
     private Transform _resizer;
     private Transform _webViewView;
+    private bool _renderEnabled = true;
 
     protected virtual void Start()
     {
         Debug.Log("browser start");
         
         CacheTransforms();
-
-        //SetupOverlayObject();
 
         SetupWebViewPrefab();
         
@@ -43,11 +42,6 @@ public class NewBrowser : MonoBehaviour
 #else
         holePuncherTransform.GetComponent<MeshRenderer>().enabled = false;
 #endif
-    }
-
-    private void SetupOverlayObject()
-    {;
-        throw new NotImplementedException();
     }
 
     private void CacheTransforms()
@@ -88,7 +82,6 @@ public class NewBrowser : MonoBehaviour
         throw new NotImplementedException();
     }
 
-
     private void SetupWebViewPrefab()
     {
         PreConfigureWebView();
@@ -116,6 +109,7 @@ public class NewBrowser : MonoBehaviour
             var res = new Vector2Int((int) (ppuu * _bounds.x), (int) (ppuu * _bounds.y));
             RebuildOverlay(res);
             //ChangeAspect(startingAspect);
+            ToggleHidden();
             BrowserReady?.Invoke();
         };
     }
@@ -140,6 +134,20 @@ public class NewBrowser : MonoBehaviour
 #endif
     }
 
+    public void ToggleHidden()
+    {
+        _renderEnabled = !_renderEnabled;
+        
+        _webViewPrefab.ClickingEnabled = _renderEnabled;
+        _webViewPrefab.ScrollingEnabled = _renderEnabled;
+        _webViewPrefab.HoveringEnabled = _renderEnabled;
+        
+#if UNITY_ANDROID && !UNITY_EDITOR
+        holePuncherTransform.GetComponent<MeshRenderer>().enabled = _renderEnabled;
+#else
+        _webViewView.GetComponent<MeshRenderer>().enabled = _renderEnabled;
+#endif
+    }
 
     public void LoadUrl(string url)
     {
@@ -167,7 +175,6 @@ public class NewBrowser : MonoBehaviour
     {
         _webViewPrefab.WebView.MessageEmitted += messageEmitted;
     }
-
 
     public static int ResolvablePixels(float height, float distanceEstimate, int pixelPerDegree)
     {

@@ -28,7 +28,6 @@ public class TableBrowser : NewBrowser
             PostMessage(BrowserMessage.NavMenu);
         }
     }
-
     
     public override Vector2Int ChangeAspect(Vector2 newAspect)
     {
@@ -46,11 +45,6 @@ public class TableBrowser : NewBrowser
         var res = resolution.x > resolution.y ? resolution.x : resolution.y;
         var scale = _bounds.x > _bounds.y ? _bounds.x : _bounds.y;
         var resScaled = res / scale;
-       
-        Debug.Log(res);
-        Debug.Log(scale);
-        Debug.Log(resScaled);
-        Debug.Log(_bounds);
         
         _webViewPrefab.WebView.SetResolution(resScaled);
         _webViewPrefab.Resize(_bounds.x, _bounds.y);
@@ -58,7 +52,6 @@ public class TableBrowser : NewBrowser
         Debug.Log($"[BONSAI] ChangeAspect resolution {resolution}");
 
         boundsTransform.localScale = localScale;
-        
         
 #if UNITY_ANDROID && !UNITY_EDITOR
         RebuildOverlay(resolution);
