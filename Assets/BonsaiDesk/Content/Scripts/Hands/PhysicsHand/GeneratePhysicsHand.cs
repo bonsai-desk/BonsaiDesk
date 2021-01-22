@@ -5,19 +5,21 @@ using UnityEngine;
 
 public class GeneratePhysicsHand : MonoBehaviour
 {
-    public bool pauseForSave = false;
+    // public GameObject prefabSaveLocation;
 
     public OVRSkeleton oVRSkeleton;
     public GameObject handMeshPrefab;
+    public GameObject handPalmPrefab;
     public PhysicMaterial physicMaterial;
     public Material targetMaterial;
     public Material physicsHandMaterial;
-    public RuntimeAnimatorController handAnimator;
 
     private OVRPlugin.Skeleton2 _skeleton;
     private bool initialized = false;
 
     private Queue<Rigidbody> bodiesToReset = new Queue<Rigidbody>();
+
+    private GameObject hand;
 
     private void Start()
     {
@@ -29,7 +31,8 @@ public class GeneratePhysicsHand : MonoBehaviour
             return;
         }
 
-        transform.name = HandName() + "_Hand";
+        hand = new GameObject(HandName() + "_Hand");
+        hand.transform.SetParent(transform, false);
     }
 
     private void Update()
@@ -48,7 +51,7 @@ public class GeneratePhysicsHand : MonoBehaviour
             if (physicsHand != null)
             {
                 var handMeshObject = Instantiate(handMeshPrefab, physicsHand.transform);
-                Destroy(handMeshObject.GetComponent<Animator>());
+                DestroyImmediate(handMeshObject.GetComponent<Animator>());
                 handMeshObject.GetComponentInChildren<SkinnedMeshRenderer>().sharedMaterial = physicsHandMaterial;
                 var mapper = handMeshObject.AddComponent<OVRHandTransformMapper>();
                 mapper.useLocalRotation = false;
@@ -64,8 +67,8 @@ public class GeneratePhysicsHand : MonoBehaviour
                     rb.ResetCenterOfMass();
                 }
 
-                var handTarget = Instantiate(handMeshPrefab, transform);
-                Destroy(handTarget.GetComponent<Animator>());
+                var handTarget = Instantiate(handMeshPrefab, hand.transform);
+                DestroyImmediate(handTarget.GetComponent<Animator>());
                 handTarget.name = HandName() + "_Physics_Hand_Target";
                 var targetMapper = handTarget.AddComponent<OVRHandTransformMapper>();
                 targetMapper.moveObjectToTarget = false;
@@ -86,13 +89,13 @@ public class GeneratePhysicsHand : MonoBehaviour
             }
 
 #if UNITY_EDITOR
-            if (pauseForSave)
-            {
-                EditorApplication.isPaused = true;
-            }
+            PrefabUtility.SaveAsPrefabAsset(hand,
+                "Assets/BonsaiDesk/Content/Prefabs/Hand/Resources/" + hand.name + ".prefab");
+            print("Finished generating hands. Exiting play mode.");
+            Debug.LogError(
+                $"Generated hand {hand.name}. Stopping application. You can now disable this object in the scene.");
+            EditorApplication.isPlaying = false;
 #endif
-
-            Destroy(this);
         }
     }
 
@@ -156,7 +159,7 @@ public class GeneratePhysicsHand : MonoBehaviour
         }
 
         var _capsulesGO = new GameObject(HandName() + "_Physics_Hand");
-        _capsulesGO.transform.SetParent(transform, false);
+        _capsulesGO.transform.SetParent(hand.transform, false);
         _capsulesGO.transform.localPosition = Vector3.zero;
         _capsulesGO.transform.localRotation = Quaternion.identity;
         var rb = _capsulesGO.AddComponent<Rigidbody>();
@@ -166,6 +169,9 @@ public class GeneratePhysicsHand : MonoBehaviour
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         bodiesToReset.Enqueue(rb);
+
+        var palm = Instantiate(handPalmPrefab);
+        palm.transform.SetParent(_capsulesGO.transform, false);
 
         var _capsules = new List<OVRBoneCapsule>(new OVRBoneCapsule[_skeleton.NumBoneCapsules]);
 
@@ -249,9 +255,7 @@ public class GeneratePhysicsHand : MonoBehaviour
 
             capsule.CapsuleCollider = new GameObject((bone.Id).ToString() + "_CapsuleCollider")
                 .AddComponent<CapsuleCollider>();
-            capsule.CapsuleCollider.isTrigger = true;
             capsule.CapsuleCollider.sharedMaterial = physicMaterial;
-            capsule.CapsuleCollider.isTrigger = false;
 
             var p0 = _skeleton.BoneCapsules[i].StartPoint.FromFlippedXVector3f();
             var p1 = _skeleton.BoneCapsules[i].EndPoint.FromFlippedXVector3f();
@@ -259,6 +263,11 @@ public class GeneratePhysicsHand : MonoBehaviour
             var mag = delta.magnitude;
             var rot = Quaternion.FromToRotation(Vector3.right, delta);
             capsule.CapsuleCollider.radius = _skeleton.BoneCapsules[i].Radius;
+            if (boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb1)
+            {
+                capsule.CapsuleCollider.radius *= 0.5f;
+            }
+
             capsule.CapsuleCollider.height = mag + _skeleton.BoneCapsules[i].Radius * 2.0f;
             capsule.CapsuleCollider.direction = 0;
             capsule.CapsuleCollider.center = Vector3.right * mag * 0.5f;
