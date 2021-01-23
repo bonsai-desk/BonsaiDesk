@@ -121,7 +121,7 @@ public class CustomInputModule : StandaloneInputModule
         {
             var fakeRayCast = new RaycastResult();
             leftData.pointerCurrentRaycast = fakeRayCast;
-            
+
             InputManager.Hands.Left.SetHandColliderActiveForScreen(true);
             InputManager.Hands.Right.SetHandColliderActiveForScreen(true);
         }
