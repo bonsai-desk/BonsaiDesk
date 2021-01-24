@@ -1,6 +1,5 @@
 import React, {useState} from 'react'
 import "./Menu.css"
-import {useScrollBoost} from "react-scrollbooster";
 
 function ListItem(props) {
     let {selected, handleClick} = props;
@@ -97,35 +96,6 @@ function Contacts() {
     </MenuPage>
 }
 
-function ScrollBooster() {
-    const [viewport, scrollBooster] = useScrollBoost({
-        direction: 'vertical',
-        friction: 0.2,
-        scrollMode: "transform"
-    })
-    return <MenuPage name={"Contacts"}>
-        <div ref={viewport} className={"text-6xl h-64 overflow-hidden"}>
-            <div className={"text-6xl"}>
-                <div>head</div>
-                <div>asdf</div>
-                <div>asdf</div>
-                <div>asdf</div>
-                <div>asdf</div>
-                <div>asdf</div>
-                <div>asdf</div>
-                <div>asdf</div>
-                <div>asdf</div>
-                <div>asdf</div>
-                <div>asdf</div>
-                <div>asdf</div>
-                <div>asdf</div>
-                <div>asdf</div>
-                <div>asdf</div>
-
-            </div>
-        </div>
-    </MenuPage>
-}
 
 function MenuPage(props) {
     let {name} = props;
@@ -149,7 +119,35 @@ let pages = [
     {name: "Home", component: Home},
     {name: "Join Desk", component: JoinDesk},
     {name: "Contacts", component: Contacts},
-    {name: "Scroll Booster", component: ScrollBooster},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
+    {name: "Settings", component: Settings},
     {name: "Settings", component: Settings}
 ]
 
