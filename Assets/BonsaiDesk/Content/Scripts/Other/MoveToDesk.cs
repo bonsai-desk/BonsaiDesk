@@ -86,7 +86,7 @@ public class MoveToDesk : MonoBehaviour
         var rwf = InputManager.Hands.Right.PlayerHand.wrist.forward;
         lwf.y = 0;
 
-        return Vector3.Angle(headForward, lwf) < 30f && Vector3.Angle(headForward, rwf) < 30f;
+        return Vector3.Angle(headForward, lwf) < 45f && Vector3.Angle(headForward, rwf) < 45f;
     }
 
     private bool HandsPointedTowards()
@@ -142,7 +142,7 @@ public class MoveToDesk : MonoBehaviour
         if (handsValid && handsValidTime >= validTimeThreshold)
         {
             tableGhostText.text = "<--- swipe apart --->";
-            
+
             var leftThumb = InputManager.Hands.physicsFingerTipPositions[0];
             var rightThumb = InputManager.Hands.physicsFingerTipPositions[5];
             rightThumb.y = leftThumb.y;
@@ -160,7 +160,7 @@ public class MoveToDesk : MonoBehaviour
         else
         {
             tableGhostText.text = "Place your thumbs on\nthe edge of your desk";
-            
+
             var eyeForward = centerEyeAnchor.forward;
             eyeForward.y = 0;
 
@@ -275,7 +275,7 @@ public class MoveToDesk : MonoBehaviour
                     UpdateState(1);
             }
 
-            if (speed > 0.75f && diff < 0.0375f)
+            if (speed > 0.5f && diff < 0.0375f)
             {
                 if (!orientatingSelf)
                 {

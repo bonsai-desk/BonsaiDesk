@@ -2978,7 +2978,7 @@ MonoBehaviour:
   overlayTransform: {fileID: 529401737}
   holePuncherTransform: {fileID: 884413388}
   screenTransform: {fileID: 1520135412}
-  initialUrl: https:/m.youtube.com
+  initialUrl: https://m.youtube.com/
 --- !u!4 &320584330
 Transform:
   m_ObjectHideFlags: 0
@@ -2992,7 +2992,7 @@ Transform:
   m_Children:
   - {fileID: 1520135412}
   m_Father: {fileID: 1757354512}
-  m_RootOrder: 8
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: -90, y: 180, z: 0}
 --- !u!1 &329180640
 GameObject:
@@ -16407,6 +16407,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7442f4bc421d1534e9173115168ec26d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
+  useBuiltHtml: 1
+  hotReloadUrl: http://localhost:3000
+  togglePause: {fileID: 96659938}
+  tabletSpot: {fileID: 144652441}
 --- !u!1 &1384374492
 GameObject:
   m_ObjectHideFlags: 0
@@ -19379,10 +19385,10 @@ Transform:
   - {fileID: 165813270}
   - {fileID: 1699593685}
   - {fileID: 752977762}
-  - {fileID: 255299881}
-  - {fileID: 2146071976}
   - {fileID: 320584330}
+  - {fileID: 255299881}
   - {fileID: 836979148}
+  - {fileID: 2146071976}
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
