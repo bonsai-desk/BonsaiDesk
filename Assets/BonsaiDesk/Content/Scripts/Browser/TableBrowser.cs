@@ -1,5 +1,6 @@
 ﻿using System;
 using Newtonsoft.Json;
+using OVR;
 using UnityEngine;
 using Vuplex.WebView;
 
@@ -8,9 +9,11 @@ public class TableBrowser : NewBrowser
     public string initialUrl;
     public CustomInputModule customInputModule;
 
-    public OVR.SoundFXRef hoverSound;
-    public OVR.SoundFXRef mouseDownSound;
-    public OVR.SoundFXRef mouseUpSound;
+    public SoundFXRef hoverSound;
+    public SoundFXRef mouseDownSound;
+    public SoundFXRef mouseUpSound;
+
+    public event Action<RoomData> JoinRoom;
 
     protected override void Start()
     {
@@ -60,13 +63,23 @@ public class TableBrowser : NewBrowser
     private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs)
     {
         var message = JsonConvert.DeserializeObject<JSMessage>(eventArgs.Value);
-        
-        Debug.Log($"[BONSAI] JS Message: {message.Type} {message.Message}" );
+
+        Debug.Log($"[BONSAI] JS Message: {message.Type} {message.Message}");
 
         switch (message.Type)
         {
             case "command":
-                throw new NotImplementedException();
+                switch (message.Message)
+                {
+                    case "joinRoom":
+                        var roomData = JsonConvert.DeserializeObject<RoomData>(message.Data);
+                        Debug.Log($"[BONSAI] Join Room {message.Data}");
+                        JoinRoom?.Invoke(roomData);
+                        break;
+                }
+
+                break;
+
             case "event":
                 switch (message.Message)
                 {
@@ -87,7 +100,16 @@ public class TableBrowser : NewBrowser
 
     private class JSMessage
     {
-        public string Type;
+        public string Data;
         public string Message;
+        public string Type;
+    }
+
+    public class RoomData
+    {
+        public string id;
+        public string ip_address;
+        public int pinged;
+        public int port;
     }
 }

@@ -1,16 +1,24 @@
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import "./Menu.css"
 import {postJson} from "../utilities";
+import axios from "axios"
 
-function postMouseDown () {
+
+let API_BASE = "https://api.desk.link"
+
+function postJoinRoom(data) {
+    postJson({Type: "command", Message: "joinRoom", data: JSON.stringify(data)})
+}
+
+function postMouseDown() {
     postJson({Type: "event", Message: "mouseDown"})
 }
 
-function postMouseUp () {
+function postMouseUp() {
     postJson({Type: "event", Message: "mouseUp"})
 }
 
-function postHover () {
+function postHover() {
     postJson({Type: "event", Message: "hover"})
 }
 
@@ -54,7 +62,7 @@ function Settings() {
     )
 }
 
-function JoinDeskButton (props) {
+function JoinDeskButton(props) {
     let {handleClick, char} = props
     let buttonClass = "bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center"
 
@@ -73,18 +81,44 @@ function JoinDeskButton (props) {
 
 function JoinDesk() {
     let [code, setCode] = useState("")
-    //let [loading, setLoading] = useState(false);
+    let [loading, setLoading] = useState(false);
+    let [message, setMessage] = useState("")
 
+    useEffect (()=>{
+        if (loading) return;
 
-    function handleClick (char) {
         if (code.length === 4) {
-            setCode(char)
-        } else {
-            setCode(code + char)
+            let url = API_BASE + `/rooms/${code}`
+            console.log(url)
+            axios({
+                method: "get",
+                url: url
+            }).then(response => {
+                postJoinRoom(response.data)
+                setCode("")
+                setLoading(false)
+                setMessage("Connecting!")
+            }).catch(err => {
+                setCode("")
+                setLoading(false)
+                setMessage("Could not find room, try again")
+            })
+        }
+    },[loading, code])
+
+    function handleClick(char) {
+        setMessage("")
+        switch (code.length) {
+            case 4:
+                setCode(char)
+                break;
+            default:
+                setCode(code + char)
+                break;
         }
     }
 
-    function handleBackspace () {
+    function handleBackspace() {
         if (code.length > 0) {
             setCode(code.slice(0, code.length - 1))
         }
@@ -93,13 +127,18 @@ function JoinDesk() {
     return (
         <MenuPage name={"Join Desk"}>
             <div className={"flex flex-wrap w-full content-center"}>
-                <div className={"text-9xl w-1/2 flex flex-wrap content-center justify-center"}>
-                    {code}
+                <div className={" w-1/2"}>
+                    <div className={"text-xl"}>
+                        {message}
+                    </div>
+                    <div className={"text-9xl h-full flex flex-wrap content-center justify-center"}>
+                        {code}
+                    </div>
                 </div>
                 <div className={"p-2 rounded space-y-4 text-2xl"}>
                     <div className={"flex space-x-4"}>
-                        <JoinDeskButton handleClick={handleClick} char={"A"}/>
-                        <JoinDeskButton handleClick={handleClick} char={"B"}/>
+                        <JoinDeskButton handleClick={handleClick} char={"L"}/>
+                        <JoinDeskButton handleClick={handleClick} char={"R"}/>
                         <JoinDeskButton handleClick={handleClick} char={"C"}/>
                     </div>
                     <div className={"flex space-x-4"}>
