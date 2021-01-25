@@ -1,5 +1,18 @@
 import React, {useState} from 'react'
 import "./Menu.css"
+import {postJson} from "../utilities";
+
+function postClick () {
+    postJson({Type: "event", Message: "click"})
+}
+
+function postHover () {
+    postJson({Type: "event", Message: "hover"})
+}
+
+function Button(props) {
+    return <div onClick={postClick} onMouseEnter={postHover}>{props.children}</div>
+}
 
 function ListItem(props) {
     let {selected, handleClick} = props;
@@ -7,15 +20,17 @@ function ListItem(props) {
         "rounded bg-blue-700 text-white px-3 py-2 cursor-pointer" :
         "rounded hover:bg-gray-800 active:bg-gray-900 hover:text-white px-3 py-2 cursor-pointer"
     return (
-        <div className={className} onClick={handleClick}>
-            {props.children}
-        </div>
+        <Button>
+            <div className={className} onClick={handleClick}>
+                {props.children}
+            </div>
+        </Button>
     )
 }
 
 function SettingsList(props) {
     return (
-        <div className={"space-y-1 px-2 scrollhost h-full overflow-auto"}>
+        <div className={"space-y-1 px-2 h-full overflow-auto"}>
             {props.children}
         </div>)
 
@@ -25,7 +40,7 @@ function SettingsTitle(props) {
     return <div className={"text-white font-bold text-xl px-5 pt-5 pb-2"}>{props.children}</div>
 }
 
-function Settings(props) {
+function Settings() {
     let buttonClass = "bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded w-full p-4 cursor-pointer"
     return (
         <MenuPage name={"Settings"}>
@@ -35,13 +50,29 @@ function Settings(props) {
     )
 }
 
+function JoinDeskButton (props) {
+    let {handleClick, char} = props
+    let buttonClass = "bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center"
+
+    return (
+        <Button>
+            <div onClick={() => {
+                handleClick(char)
+            }} className={buttonClass}>
+            <span className={"w-full text-center"}>
+                {char}
+            </span>
+            </div>
+        </Button>
+    )
+}
+
 function JoinDesk() {
     let [code, setCode] = useState("")
     //let [loading, setLoading] = useState(false);
 
-    let buttonClass = "bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center"
 
-    let handleClick = (char) => {
+    function handleClick (char) {
         if (code.length === 4) {
             setCode(char)
         } else {
@@ -49,7 +80,7 @@ function JoinDesk() {
         }
     }
 
-    let handleBackspace = () => {
+    function handleBackspace () {
         if (code.length > 0) {
             setCode(code.slice(0, code.length - 1))
         }
@@ -63,22 +94,22 @@ function JoinDesk() {
                 </div>
                 <div className={"p-2 rounded space-y-4 text-2xl"}>
                     <div className={"flex space-x-4"}>
-                        <div onClick={()=>{handleClick("A")}} className={buttonClass}><span className={"w-full text-center"}>A</span></div>
-                        <div onClick={()=>{handleClick("B")}} className={buttonClass}><span className={"w-full text-center"}>B</span></div>
-                        <div onClick={()=>{handleClick("C")}} className={buttonClass}><span className={"w-full text-center"}>C</span></div>
+                        <JoinDeskButton handleClick={handleClick} char={"A"}/>
+                        <JoinDeskButton handleClick={handleClick} char={"B"}/>
+                        <JoinDeskButton handleClick={handleClick} char={"C"}/>
                     </div>
                     <div className={"flex space-x-4"}>
-                        <div onClick={()=>{handleClick("D")}} className={buttonClass}><span className={"w-full text-center"}>D</span></div>
-                        <div onClick={()=>{handleClick("E")}} className={buttonClass}><span className={"w-full text-center"}>E</span></div>
-                        <div onClick={()=>{handleClick("F")}} className={buttonClass}><span className={"w-full text-center"}>F</span></div>
+                        <JoinDeskButton handleClick={handleClick} char={"D"}/>
+                        <JoinDeskButton handleClick={handleClick} char={"E"}/>
+                        <JoinDeskButton handleClick={handleClick} char={"F"}/>
                     </div>
                     <div className={"flex space-x-4"}>
-                        <div onClick={()=>{handleClick("G")}} className={buttonClass}><span className={"w-full text-center"}>G</span></div>
-                        <div onClick={()=>{handleClick("H")}} className={buttonClass}><span className={"w-full text-center"}>H</span></div>
-                        <div onClick={()=>{handleClick("I")}} className={buttonClass}><span className={"w-full text-center"}>I</span></div>
+                        <JoinDeskButton handleClick={handleClick} char={"G"}/>
+                        <JoinDeskButton handleClick={handleClick} char={"H"}/>
+                        <JoinDeskButton handleClick={handleClick} char={"I"}/>
                     </div>
                     <div className={"flex flex-wrap w-full justify-around"}>
-                        <div onClick={handleBackspace} className={buttonClass}><span className={"w-full text-center"}>{"<"}</span></div>
+                        <JoinDeskButton handleClick={handleBackspace} char={"<"}/>
                     </div>
                 </div>
             </div>
@@ -95,7 +126,6 @@ function Contacts() {
     return <MenuPage name={"Contacts"}>
     </MenuPage>
 }
-
 
 function MenuPage(props) {
     let {name} = props;
@@ -115,40 +145,11 @@ function MenuPage(props) {
 
 }
 
-let pages = [
+const pages = [
     {name: "Home", component: Home},
     {name: "Join Desk", component: JoinDesk},
     {name: "Contacts", component: Contacts},
     {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings},
-    {name: "Settings", component: Settings}
 ]
 
 function Menu() {
@@ -172,7 +173,7 @@ function Menu() {
                 </SettingsList>
             </div>
             <div className={"w-full"}>
-                <SelectedPage />
+                <SelectedPage/>
             </div>
         </div>
     )

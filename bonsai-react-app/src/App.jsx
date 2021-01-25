@@ -27,8 +27,7 @@ function genNavListeners (history) {
     return _navListeners
 }
 
-
-let Boot = () => {
+function Boot () {
 
     console.log("Boot")
 
@@ -56,7 +55,7 @@ let Boot = () => {
             Boot
             <ul>
                 <li>
-                    <Link to={"//youtube_test/qEfPBt9dU60/19.02890180001912?x=480&y=360"}>youtube_test video</Link>
+                    <Link to={"/youtube_test/qEfPBt9dU60/19.02890180001912?x=480&y=360"}>youtube_test video</Link>
                 </li>
                 <li>
                     <Link to={"/spring"}>spring</Link>
@@ -75,7 +74,7 @@ let Boot = () => {
     )
 }
 
-let Home = () => {
+function Home () {
     return <div>home</div>
 }
 
@@ -85,7 +84,6 @@ function App() {
         <Router>
             <div className={"bg-gray-900 h-screen text-green-400 select-none"}>
                 <Switch>
-
 
                     <Route path={"/home"} component={Home}/>
 
