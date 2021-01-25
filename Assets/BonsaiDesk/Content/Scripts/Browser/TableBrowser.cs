@@ -6,6 +6,10 @@ using Vuplex.WebView;
 public class TableBrowser : NewBrowser
 {
     public string initialUrl;
+    public CustomInputModule customInputModule;
+
+    public OVR.SoundFXRef hoverSound;
+    public OVR.SoundFXRef clickSound;
 
     protected override void Start()
     {
@@ -14,6 +18,7 @@ public class TableBrowser : NewBrowser
         _webViewPrefab.InitialUrl = initialUrl;
         BrowserReady += () =>
         {
+            OnMessageEmitted(HandleJavascriptMessage);
             _webViewPrefab.WebView.LoadProgressChanged += NavToMenu;
             var view = _webViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView");
             CustomInputModule.Singleton.screens.Add(view);
@@ -65,8 +70,10 @@ public class TableBrowser : NewBrowser
                 switch (message.Message)
                 {
                     case "hover":
+                        hoverSound.PlaySoundAt(customInputModule.cursorRoot);
                         throw new NotImplementedException();
                     case "click":
+                        clickSound.PlaySoundAt(customInputModule.cursorRoot);
                         throw new NotImplementedException();
                 }
 
