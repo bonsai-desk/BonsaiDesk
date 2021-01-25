@@ -2,8 +2,12 @@ import React, {useState} from 'react'
 import "./Menu.css"
 import {postJson} from "../utilities";
 
-function postClick () {
-    postJson({Type: "event", Message: "click"})
+function postMouseDown () {
+    postJson({Type: "event", Message: "mouseDown"})
+}
+
+function postMouseUp () {
+    postJson({Type: "event", Message: "mouseUp"})
 }
 
 function postHover () {
@@ -11,7 +15,7 @@ function postHover () {
 }
 
 function Button(props) {
-    return <div onClick={postClick} onMouseEnter={postHover}>{props.children}</div>
+    return <div onMouseDown={postMouseDown} onMouseUp={postMouseUp} onMouseEnter={postHover}>{props.children}</div>
 }
 
 function ListItem(props) {

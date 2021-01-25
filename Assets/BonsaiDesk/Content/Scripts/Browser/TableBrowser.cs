@@ -9,7 +9,8 @@ public class TableBrowser : NewBrowser
     public CustomInputModule customInputModule;
 
     public OVR.SoundFXRef hoverSound;
-    public OVR.SoundFXRef clickSound;
+    public OVR.SoundFXRef mouseDownSound;
+    public OVR.SoundFXRef mouseUpSound;
 
     protected override void Start()
     {
@@ -71,10 +72,13 @@ public class TableBrowser : NewBrowser
                 {
                     case "hover":
                         hoverSound.PlaySoundAt(customInputModule.cursorRoot);
-                        throw new NotImplementedException();
-                    case "click":
-                        clickSound.PlaySoundAt(customInputModule.cursorRoot);
-                        throw new NotImplementedException();
+                        break;
+                    case "mouseDown":
+                        mouseDownSound.PlaySoundAt(customInputModule.cursorRoot);
+                        break;
+                    case "mouseUp":
+                        mouseUpSound.PlaySoundAt(customInputModule.cursorRoot);
+                        break;
                 }
 
                 break;
