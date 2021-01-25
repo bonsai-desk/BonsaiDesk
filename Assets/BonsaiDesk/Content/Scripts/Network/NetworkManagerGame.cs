@@ -5,6 +5,7 @@ using System.Linq;
 using Dissonance;
 using Mirror;
 using NobleConnect.Mirror;
+using Oculus.Platform.Models;
 using OVRSimpleJSON;
 using TMPro;
 using UnityEngine;
@@ -15,6 +16,7 @@ using UnityEngine.XR.Management;
 public class NetworkManagerGame : NobleNetworkManager
 {
     public static NetworkManagerGame Singleton;
+    public TableBrowser tableBrowser;
 
     public bool serverOnlyIfEditor;
     public bool visualizeAuthority;
@@ -480,6 +482,14 @@ public class NetworkManagerGame : NobleNetworkManager
         }
     }
 
+    private void HandleJoinRoom(TableBrowser.RoomData roomData)
+    {
+        Debug.Log($"[Bonsai] NetworkManager Join Room {roomData.ip_address} {roomData.port}");
+        networkAddress = roomData.ip_address;
+        networkPort = roomData.port;
+        StartCoroutine(SmoothStartClient());
+    }
+
     private IEnumerator PostCreateRoom(string ipAddress, ushort port)
     {
         Debug.Log("[BONSAI] PostCreateRoom:" + ipAddress + ":" + port);
@@ -593,6 +603,8 @@ public class NetworkManagerGame : NobleNetworkManager
     public override void Start()
     {
         base.Start();
+
+        tableBrowser.JoinRoom += HandleJoinRoom;
 
         _camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
 
