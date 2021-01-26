@@ -17,6 +17,8 @@ public class NetworkManagerGame : NobleNetworkManager
 {
     public static NetworkManagerGame Singleton;
     public TableBrowser tableBrowser;
+    private float postRoomInfoEvery = 1f;
+    private float postRoomInfoLast;
 
     public bool serverOnlyIfEditor;
     public bool visualizeAuthority;
@@ -28,7 +30,6 @@ public class NetworkManagerGame : NobleNetworkManager
     public TogglePause togglePause;
     
 
-    #region Player Props
 
     public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos =
         new Dictionary<NetworkConnection, PlayerInfo>();
@@ -37,14 +38,10 @@ public class NetworkManagerGame : NobleNetworkManager
     public class PlayerInfo
     {
         public int spot;
-        public int youtubePlayerState;
-        public float youtubePlayerCurrentTime;
 
         public PlayerInfo(int spot)
         {
             this.spot = spot;
-            youtubePlayerState = -1;
-            youtubePlayerCurrentTime = 0;
         }
     }
 
@@ -52,9 +49,7 @@ public class NetworkManagerGame : NobleNetworkManager
 
     public static int AssignedColorIndex;
 
-    #endregion
 
-    #region Video Props
 
     public enum VideoState
     {
@@ -65,9 +60,7 @@ public class NetworkManagerGame : NobleNetworkManager
 
     public VideoState videoState = VideoState.None;
 
-    #endregion
 
-    #region Control props
 
     public TextMeshProUGUI textMesh;
     public BonsaiScreenFade fader;
@@ -130,9 +123,7 @@ public class NetworkManagerGame : NobleNetworkManager
         Cleanup
     }
 
-    #endregion
 
-    #region Utilities
 
     private IEnumerator StopHostFadeReturnToLoading()
     {
@@ -427,9 +418,7 @@ public class NetworkManagerGame : NobleNetworkManager
         SetCommsActive(_comms, oriented);
     }
 
-    #endregion Utilities
 
-    #region Requests
 
     private IEnumerator JoinRoom(string baseUri, string roomID)
     {
@@ -584,9 +573,7 @@ public class NetworkManagerGame : NobleNetworkManager
         State = ConnectionState.Neutral;
     }
 
-    #endregion Requests
 
-    #region Overrides
 
     
     public event Action<NetworkConnection> ServerAddPlayer;
@@ -598,6 +585,16 @@ public class NetworkManagerGame : NobleNetworkManager
 
         if (Singleton == null)
             Singleton = this;
+    }
+
+    public override void Update()
+    {
+        base.Update();
+        if (HostEndPoint != null && Time.time - postRoomInfoLast > postRoomInfoEvery)
+        {
+            tableBrowser.PostRoomInfo(HostEndPoint.Address.ToString(), (ushort) HostEndPoint.Port);
+            postRoomInfoLast = Time.time;
+        }
     }
 
     public override void Start()
@@ -796,9 +793,7 @@ public class NetworkManagerGame : NobleNetworkManager
         moveToDesk.ResetPosition();
     }
 
-    #endregion
 
-    #region Buttons
 
     public void ClickRelayFailed()
     {
@@ -844,9 +839,7 @@ public class NetworkManagerGame : NobleNetworkManager
         StartCoroutine(FadeThenReturnToLoading());
     }
 
-    #endregion Buttons
 
-    #region Messages
 
     private struct ShouldDisconnectMessage : NetworkMessage
     {
@@ -875,5 +868,4 @@ public class NetworkManagerGame : NobleNetworkManager
         AssignedColorIndex = msg.ColorIndex;
     }
 
-    #endregion
 }

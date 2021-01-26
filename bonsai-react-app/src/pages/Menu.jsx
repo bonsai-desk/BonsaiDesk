@@ -53,12 +53,15 @@ function SettingsTitle(props) {
     return <div className={"text-white font-bold text-xl px-5 pt-5 pb-2"}>{props.children}</div>
 }
 
-function Settings() {
-    let buttonClass = "bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded w-full p-4 cursor-pointer"
+function Settings(props) {
+    let {store} = props;
     return (
         <MenuPage name={"Settings"}>
-            <div className={buttonClass}>thing</div>
-            <div className={buttonClass}>thing</div>
+            <ul>
+                {Object.entries(store).map(info => {
+                    return <li>{info[0]}{": "}{info[1]}</li>
+                })}
+            </ul>
         </MenuPage>
     )
 }
@@ -181,22 +184,6 @@ function InfoItem(props) {
     )
 }
 
-function Home(props) {
-    let {store} = props;
-    return (
-        <MenuPage name={"Home"}>
-            <InfoItem title={"Desk Code"} slug={"People who have this can join you"} imgSrc={DoorOpen}>
-                {store.roomCode ?
-                    <div className={"text-4xl flex flex-wrap content-center"}>
-                        {store.roomCode}
-                    </div>
-                    : ""
-                }
-            </InfoItem>
-        </MenuPage>
-    )
-}
-
 function Contacts() {
     return <MenuPage name={"Contacts"}>
     </MenuPage>
@@ -220,6 +207,22 @@ function MenuPage(props) {
 
 }
 
+function Home(props) {
+    let {store} = props;
+    return (
+        <MenuPage name={"Home"}>
+            <InfoItem title={"Desk Code"} slug={"People who have this can join you"} imgSrc={DoorOpen}>
+                {store.roomCode ?
+                    <div className={"text-4xl flex flex-wrap content-center"}>
+                        {store.roomCode}
+                    </div>
+                    : ""
+                }
+            </InfoItem>
+        </MenuPage>
+    )
+}
+
 const pages = [
     {name: "Home", component: Home},
     {name: "Join Desk", component: JoinDesk},
@@ -230,7 +233,7 @@ const pages = [
 function Menu() {
 
     let [active, setActive] = useState(0)
-    let [store, setStore] = useState({})
+    let [store, setStore] = useState({app: "Bonsai Desk"})
 
     let SelectedPage = pages[active].component;
 

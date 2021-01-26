@@ -126,18 +126,19 @@ public class TableBrowser : NewBrowser
         public int port;
     }
 
-    public void ButtonPostRoomCode()
+    public void PostRoomInfo(string ipAddress, ushort port)
     {
         KeyVal[] kvs =
         {
-            new KeyVal {Key = "roomCode", Val = "AAAA"},
-            new KeyVal {Key = "somethingElse", Val = "BBBB"},
+            new KeyVal {Key = "ip_address", Val = ipAddress},
+            new KeyVal {Key = "port", Val = port.ToString()},
         };
         var jsMessage = new JSMessageKeyVals()
         {
             Type = "command", Message = "pushStore", Data = kvs
+
         };
-        var output = JsonConvert.SerializeObject(jsMessage);
-        PostMessage(output);
+        var message = JsonConvert.SerializeObject(jsMessage);
+        PostMessage(message);
     }
 }
