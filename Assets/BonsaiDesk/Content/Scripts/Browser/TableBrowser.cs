@@ -62,7 +62,7 @@ public class TableBrowser : NewBrowser
 
     private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs)
     {
-        var message = JsonConvert.DeserializeObject<JSMessage>(eventArgs.Value);
+        var message = JsonConvert.DeserializeObject<JSMessageString>(eventArgs.Value);
 
         Debug.Log($"[BONSAI] JS Message: {message.Type} {message.Message}");
 
@@ -98,11 +98,24 @@ public class TableBrowser : NewBrowser
         }
     }
 
-    private class JSMessage
+    private class JSMessageString
     {
-        public string Data;
-        public string Message;
         public string Type;
+        public string Message;
+        public string Data;
+    }
+
+    private class JSMessageKeyVal
+    {
+        public string Type;
+        public string Message;
+        public KeyVal Data;
+    }
+
+    public class KeyVal
+    {
+        public string Key;
+        public string Val;
     }
 
     public class RoomData
@@ -111,5 +124,15 @@ public class TableBrowser : NewBrowser
         public string ip_address;
         public int pinged;
         public int port;
+    }
+
+    public void ButtonPostRoomCode()
+    {
+        var jsMessage = new JSMessageKeyVal()
+        {
+            Type = "command", Message = "pushStore", Data= new KeyVal {Key="roomCode", Val = "AAAA"}
+        };
+        var output = JsonConvert.SerializeObject(jsMessage);
+        PostMessage(output);
     }
 }

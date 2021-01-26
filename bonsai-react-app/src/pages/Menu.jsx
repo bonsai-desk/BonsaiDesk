@@ -1,7 +1,8 @@
-import React, {useState, useEffect} from 'react'
+import React, {useState, useEffect, useCallback} from 'react'
 import "./Menu.css"
 import {postJson} from "../utilities";
 import axios from "axios"
+import DoorOpen from "../static/door-open.svg"
 
 
 let API_BASE = "https://api.desk.link"
@@ -84,7 +85,7 @@ function JoinDesk() {
     let [loading, setLoading] = useState(false);
     let [message, setMessage] = useState("")
 
-    useEffect (()=>{
+    useEffect(() => {
         if (loading) return;
 
         if (code.length === 4) {
@@ -97,14 +98,13 @@ function JoinDesk() {
                 postJoinRoom(response.data)
                 setCode("")
                 setLoading(false)
-                setMessage("Connecting!")
             }).catch(err => {
                 setCode("")
                 setLoading(false)
                 setMessage("Could not find room, try again")
             })
         }
-    },[loading, code])
+    }, [loading, code])
 
     function handleClick(char) {
         setMessage("")
@@ -160,9 +160,41 @@ function JoinDesk() {
     )
 }
 
-function Home() {
-    return <MenuPage name={"Home"}>
-    </MenuPage>
+function InfoItem(props) {
+    return (
+        <div className={"flex w-full"}>
+            <div className={"flex w-full"}>
+                <div className={"flex flex-wrap content-center  p-2 mr-2"}>
+                    <img className={"h-9"} src={props.imgSrc} alt={""}/>
+                </div>
+                <div>
+                    <div className={"text-xl"}>
+                        {props.title}
+                    </div>
+                    <div className={"text-gray-400"}>
+                        {props.slug}
+                    </div>
+                </div>
+            </div>
+            {props.children}
+        </div>
+    )
+}
+
+function Home(props) {
+    let {store} = props;
+    return (
+        <MenuPage name={"Home"}>
+            <InfoItem title={"Desk Code"} slug={"People who have this can join you"} imgSrc={DoorOpen}>
+                {store.roomCode ?
+                    <div className={"text-4xl flex flex-wrap content-center"}>
+                        {store.roomCode}
+                    </div>
+                    : ""
+                }
+            </InfoItem>
+        </MenuPage>
+    )
 }
 
 function Contacts() {
@@ -174,13 +206,13 @@ function MenuPage(props) {
     let {name} = props;
 
     return (
-        <div className={"text-white p-4 h-full"}>
+        <div className={"text-white p-4 h-full pr-8"}>
             {name ?
-                <div className={"pb-4 text-xl"}>
+                <div className={"pb-8 text-xl"}>
                     {name}
                 </div>
                 : ""}
-            <div className={"flex space-x-2"}>
+            <div className={"space-y-8"}>
                 {props.children}
             </div>
         </div>
@@ -198,8 +230,53 @@ const pages = [
 function Menu() {
 
     let [active, setActive] = useState(0)
+    let [store, setStore] = useState({})
 
     let SelectedPage = pages[active].component;
+
+    let menuListeners = useCallback(event => {
+        let json = JSON.parse(event.data)
+        switch (json.Type) {
+            case "command":
+                switch (json.Message) {
+                    case "pushStore":
+                        let kv = json.Data;
+                        let _store = {...store}
+                        _store[kv.Key] = kv.Val;
+                        console.log("pushStore", _store)
+                        setStore(_store)
+                        break;
+                    default:
+                        console.log("message not handled " + event.data)
+                        break;
+                }
+                break;
+            default:
+                console.log("command not handled " + event.data)
+                console.log(json)
+                break;
+        }
+
+    }, [store])
+
+    useEffect(() => {
+        if (window.vuplex != null) {
+            console.log("bonsai: vuplex is not null -> menuListeners")
+            window.vuplex.addEventListener('message', menuListeners)
+        } else {
+            console.log("bonsai: vuplex is null")
+            window.addEventListener('vuplexready', _ => {
+                console.log("bonsai: vuplexready -> menuListeners")
+                window.vuplex.addEventListener('message', menuListeners)
+            })
+        }
+        return () => {
+            if (window.vuplex) {
+                console.log("bonsai: remove menuListeners")
+                window.vuplex.removeEventListener("message", menuListeners)
+            }
+        }
+    }, [menuListeners])
 
     return (
         <div className={"flex text-lg text-gray-500 h-full"}>
@@ -216,7 +293,7 @@ function Menu() {
                 </SettingsList>
             </div>
             <div className={"w-full"}>
-                <SelectedPage/>
+                <SelectedPage store={store}/>
             </div>
         </div>
     )
