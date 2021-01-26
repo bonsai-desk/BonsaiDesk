@@ -5,7 +5,6 @@ using System.Linq;
 using Dissonance;
 using Mirror;
 using NobleConnect.Mirror;
-using Oculus.Platform.Models;
 using OVRSimpleJSON;
 using TMPro;
 using UnityEngine;
@@ -72,10 +71,6 @@ public class NetworkManagerGame : NobleNetworkManager
 
     public GameObject neutralButtons;
     public GameObject relayFailedButtons;
-    public GameObject hostButtons;
-    public GameObject clientButtons;
-    public GameObject hostStartedButtons;
-    public GameObject clientStartedButtons;
 
     private string _assignedRoomTag = "";
     private DissonanceComms _comms;
@@ -83,7 +78,6 @@ public class NetworkManagerGame : NobleNetworkManager
     private ConnectionState _connectionState;
     private string _enteredRoomTag = "";
     private string _fakeRoomTag;
-    private Coroutine _refreshRoomCoroutine;
     private UnityWebRequest _roomRequest;
 
     public ConnectionState State
@@ -237,7 +231,6 @@ public class NetworkManagerGame : NobleNetworkManager
                 if (work == Work.Setup)
                 {
                     textMesh.text = "\nOpening\n\n\n\nClose Desk";
-                    StartCoroutine(PostCreateRoom(HostEndPoint.Address.ToString(), (ushort) HostEndPoint.Port));
                 }
 
                 break;
@@ -247,13 +240,9 @@ public class NetworkManagerGame : NobleNetworkManager
                 if (work == Work.Setup)
                 {
                     textMesh.text = "\n" + _assignedRoomTag + "\n\n\n\nClose Desk";
-                    _refreshRoomCoroutine = StartCoroutine(RefreshRoomEverySeconds());
-                    ActivateButtons(hostButtons, waitBeforeSpawnButton);
                 }
                 else
                 {
-                    DisableButtons(hostButtons);
-                    StopCoroutine(_refreshRoomCoroutine);
                     StartCoroutine(DeleteRoom());
                 }
 
@@ -264,12 +253,10 @@ public class NetworkManagerGame : NobleNetworkManager
                 if (work == Work.Setup)
                 {
                     textMesh.text = "Exit";
-                    ActivateButtons(hostStartedButtons, waitBeforeSpawnButton);
                     SetCommsActive(_comms, true);
                 }
                 else
                 {
-                    DisableButtons(hostStartedButtons);
                     StartCoroutine(DeleteRoom());
                     StartCoroutine(KickClients());
                 }
@@ -282,11 +269,9 @@ public class NetworkManagerGame : NobleNetworkManager
                 {
                     _enteredRoomTag = "";
                     UpdateClientEntryText();
-                    ActivateButtons(clientButtons, waitBeforeSpawnButton);
                 }
                 else
                 {
-                    DisableButtons(clientButtons);
                 }
 
                 break;
@@ -307,12 +292,10 @@ public class NetworkManagerGame : NobleNetworkManager
                 {
                     textMesh.text = "Exit";
                     fader.FadeIn();
-                    ActivateButtons(clientStartedButtons, waitBeforeSpawnButton);
                     SetCommsActive(_comms, true);
                 }
                 else
                 {
-                    DisableButtons(clientStartedButtons);
                     client?.Disconnect();
                     StopClient();
                 }
@@ -479,52 +462,6 @@ public class NetworkManagerGame : NobleNetworkManager
         StartCoroutine(SmoothStartClient());
     }
 
-    private IEnumerator PostCreateRoom(string ipAddress, ushort port)
-    {
-        Debug.Log("[BONSAI] PostCreateRoom:" + ipAddress + ":" + port);
-        var form = new WWWForm();
-
-        form.AddField("ip_address", ipAddress);
-        form.AddField("port", port);
-
-        var delay = new WaitForSeconds(0.25f);
-
-        using (var www = UnityWebRequest.Post(apiBaseUri + "/rooms", form))
-        {
-            yield return www.SendWebRequest();
-            // wait a little if the request goes to quickly
-            yield return delay;
-
-            if (www.isHttpError)
-            {
-                Debug.LogWarning("[BONSAI] CreateRoom FAIL www error");
-                textMesh.text = "Failed to create room\n\n\n\nReset";
-                ActivateButtons(hostButtons, waitBeforeSpawnButton);
-            }
-            else if (www.isNetworkError)
-            {
-                StartCoroutine(FadeToState(ConnectionState.RelayError));
-                //textMesh.text = "Internet not working!\n\n[" + roomID + "]\n\n(try again)";
-                _roomRequest = null;
-            }
-            else
-            {
-                yield return www.downloadHandler.isDone;
-                var jsonNode = JSONNode.Parse(www.downloadHandler.text) as JSONObject;
-                if (!(jsonNode is null) && jsonNode["tag"])
-                {
-                    _assignedRoomTag = jsonNode["tag"];
-                    State = ConnectionState.HostWaiting;
-                }
-                else
-                {
-                    Debug.LogWarning("[BONSAI] CreateRoom FAIL bad server data");
-                    textMesh.text = "Server returned bad data\n\n\n\nReset";
-                    ActivateButtons(hostButtons, waitBeforeSpawnButton);
-                }
-            }
-        }
-    }
 
     private IEnumerator DeleteRoom()
     {
@@ -538,42 +475,6 @@ public class NetworkManagerGame : NobleNetworkManager
                 Debug.Log("[BONSAI] DeleteRoom OK");
         }
     }
-
-    private IEnumerator PostRefreshRoom()
-    {
-        var form = new WWWForm();
-        using (var www = UnityWebRequest.Post(apiBaseUri + "/rooms/" + _assignedRoomTag + "/refresh", form))
-        {
-            yield return www.SendWebRequest();
-
-            if (www.isNetworkError || www.isHttpError)
-            {
-                Debug.LogWarning("[BONSAI] PostRefreshRoom fail");
-                State = ConnectionState.Neutral;
-            }
-
-            else
-            {
-                Debug.Log("[BONSAI] PostRefreshRoom OK");
-            }
-        }
-    }
-
-    private IEnumerator RefreshRoomEverySeconds()
-    {
-        const int timeOut = 60 * 5;
-        var startTime = Time.time;
-        while (Time.time - startTime < timeOut)
-        {
-            yield return new WaitForSeconds(refreshRoomEverySeconds);
-            yield return PostRefreshRoom();
-        }
-
-        Debug.Log("[BONSAI] Host waiting for too long, returning to Neutral");
-        State = ConnectionState.Neutral;
-    }
-
-
 
     
     public event Action<NetworkConnection> ServerAddPlayer;
@@ -624,7 +525,6 @@ public class NetworkManagerGame : NobleNetworkManager
 
         if (serverOnlyIfEditor && Application.isEditor)
         {
-            hostButtons.SetActive(false);
             neutralButtons.SetActive(false);
             tableBrowser.ToggleHidden();
         }
@@ -801,39 +701,6 @@ public class NetworkManagerGame : NobleNetworkManager
         StartCoroutine(StopHostFadeReturnToLoading());
     }
 
-    public void ClickStartHost()
-    {
-        State = ConnectionState.HostCreating;
-    }
-
-    public void ClickStopHost()
-    {
-        State = ConnectionState.Neutral;
-    }
-
-    public void ClickExitHost()
-    {
-        State = ConnectionState.Loading;
-    }
-
-    public void AppendRoomString(string s)
-    {
-        _enteredRoomTag += s;
-        if (_enteredRoomTag.Length >= roomTagLength && _roomRequest == null)
-            State = ConnectionState.ClientConnecting;
-        else
-            UpdateClientEntryText();
-    }
-
-    public void ClickStartClient()
-    {
-        State = ConnectionState.ClientEntry;
-    }
-
-    public void ClickStopClient()
-    {
-        State = ConnectionState.Loading;
-    }
 
     public void ClickExitClient()
     {

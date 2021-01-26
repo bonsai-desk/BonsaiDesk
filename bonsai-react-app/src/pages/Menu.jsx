@@ -4,8 +4,7 @@ import {postJson} from "../utilities";
 import axios from "axios"
 import DoorOpen from "../static/door-open.svg"
 import {useStore} from "../DataProvider"
-import {BeatLoader, BounceLoader, ClipLoader, FadeLoader, PulseLoader} from "react-spinners";
-
+import {BounceLoader} from "react-spinners";
 
 let API_BASE = "https://api.desk.link"
 
@@ -26,6 +25,7 @@ function postMouseUp() {
 function postHover() {
     postJson({Type: "event", Message: "hover"})
 }
+
 
 function Button(props) {
     return <div onMouseDown={postMouseDown} onMouseUp={postMouseUp} onMouseEnter={postHover}>{props.children}</div>
@@ -94,7 +94,6 @@ function InfoItem(props) {
     )
 }
 
-
 function MenuContent(props) {
     let {name} = props;
 
@@ -115,75 +114,23 @@ function MenuContent(props) {
 
 
 function HomePage() {
-    let {store} = useStore()
+    let {store, pushStore} = useStore()
 
-    let [roomCode, setRoomCode] = useState("");
+    let refreshButtonClass = "py-1 px-2 bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center"
 
-    let [postedInfo, setPostedInfo] = useState(false);
-
-    useEffect(() => {
-        let refreshRoom = () => {
-            if (roomCode){
-                axios({
-                    method: 'post',
-                    url: API_BASE + `/rooms/${roomCode}/refresh`,
-                }).then(reponse => {
-                    console.log(reponse)
-                }).catch(err => {
-                    console.log(err)
-                    setRoomCode("")
-                    setPostedInfo(false)
-                })
-                console.log("refresh " + roomCode)
-            }
-        }
-
-        let interval = window.setInterval(refreshRoom, 5000)
-
-        return () => {
-            window.clearInterval(interval)
-        }
-
-    }, [roomCode])
-
-    useEffect(() => {
-
-        // remove the room code if no ip/port
-        if (roomCode && !store.ip_address && !store.port) {
-            setRoomCode("");
-            return;
-        }
-
-        // send ip/port out for a room code
-        if (!roomCode && !postedInfo && store.ip_address && store.port) {
-            setPostedInfo(true)
-            let url = API_BASE + "/rooms"
-            axios(
-                {
-                    method: 'post',
-                    url: url,
-                    data: `ip_address=${store.ip_address}&port=${store.port}`,
-                    header: {'content-type': "application/x-www-form-urlencoded"}
-                }
-            ).then(response => {
-                setRoomCode(response.data.tag)
-                setPostedInfo(false)
-            }).catch(err => {
-                setPostedInfo(false)
-            })
-        }
-
-    }, [roomCode, postedInfo, store.ip_address, store.port])
+    let resetCode = () => {
+        pushStore({roomCode: ""})
+    }
 
     return (
         <MenuContent name={"Home"}>
 
             <InfoItem title={"Desk Code"} slug={"People who have this can join you"} imgSrc={DoorOpen}>
                 <div className={"text-4xl flex flex-wrap content-center"}>
-                    {roomCode ?
-                        roomCode
-                    : <BounceLoader size={40} color={"#737373"}/>
-                }
+                    {store.roomCode ?
+                        <Button><div className={refreshButtonClass} onClick={resetCode} >{store.roomCode}</div></Button>
+                        : <BounceLoader size={40} color={"#737373"}/>
+                    }
                 </div>
             </InfoItem>
         </MenuContent>
@@ -301,12 +248,14 @@ function SettingsPage(props) {
     )
 }
 
+
 const pages = [
     {name: "Home", component: HomePage},
     {name: "Join Desk", component: JoinDeskPage},
     {name: "Contacts", component: ContactsPage},
     {name: "Settings", component: SettingsPage},
 ]
+
 
 function Menu() {
 
@@ -334,5 +283,6 @@ function Menu() {
         </div>
     )
 }
+
 
 export default Menu;
