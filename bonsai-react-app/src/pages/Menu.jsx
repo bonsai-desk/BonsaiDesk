@@ -240,10 +240,11 @@ function Menu() {
             case "command":
                 switch (json.Message) {
                     case "pushStore":
-                        let kv = json.Data;
                         let _store = {...store}
-                        _store[kv.Key] = kv.Val;
-                        console.log("pushStore", _store)
+                        let kvs = json.Data;
+                        kvs.map(kv => {
+                            _store[kv.Key] = kv.Val;
+                        })
                         setStore(_store)
                         break;
                     default:

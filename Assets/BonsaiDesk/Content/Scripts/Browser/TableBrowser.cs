@@ -104,12 +104,12 @@ public class TableBrowser : NewBrowser
         public string Message;
         public string Data;
     }
-
-    private class JSMessageKeyVal
+    
+    private class JSMessageKeyVals
     {
         public string Type;
         public string Message;
-        public KeyVal Data;
+        public KeyVal[] Data;
     }
 
     public class KeyVal
@@ -128,9 +128,14 @@ public class TableBrowser : NewBrowser
 
     public void ButtonPostRoomCode()
     {
-        var jsMessage = new JSMessageKeyVal()
+        KeyVal[] kvs =
         {
-            Type = "command", Message = "pushStore", Data= new KeyVal {Key="roomCode", Val = "AAAA"}
+            new KeyVal {Key = "roomCode", Val = "AAAA"},
+            new KeyVal {Key = "somethingElse", Val = "BBBB"},
+        };
+        var jsMessage = new JSMessageKeyVals()
+        {
+            Type = "command", Message = "pushStore", Data = kvs
         };
         var output = JsonConvert.SerializeObject(jsMessage);
         PostMessage(output);
