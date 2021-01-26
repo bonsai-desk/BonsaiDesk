@@ -626,6 +626,7 @@ public class NetworkManagerGame : NobleNetworkManager
         {
             hostButtons.SetActive(false);
             neutralButtons.SetActive(false);
+            tableBrowser.ToggleHidden();
         }
 
         if (Application.isEditor && !serverOnlyIfEditor)

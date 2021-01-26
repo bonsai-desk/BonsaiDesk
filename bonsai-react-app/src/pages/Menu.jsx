@@ -4,6 +4,7 @@ import {postJson} from "../utilities";
 import axios from "axios"
 import DoorOpen from "../static/door-open.svg"
 import {useStore} from "../DataProvider"
+import {BeatLoader, BounceLoader, ClipLoader, FadeLoader, PulseLoader} from "react-spinners";
 
 
 let API_BASE = "https://api.desk.link"
@@ -121,6 +122,31 @@ function HomePage() {
     let [postedInfo, setPostedInfo] = useState(false);
 
     useEffect(() => {
+        let refreshRoom = () => {
+            if (roomCode){
+                axios({
+                    method: 'post',
+                    url: API_BASE + `/rooms/${roomCode}/refresh`,
+                }).then(reponse => {
+                    console.log(reponse)
+                }).catch(err => {
+                    console.log(err)
+                    setRoomCode("")
+                    setPostedInfo(false)
+                })
+                console.log("refresh " + roomCode)
+            }
+        }
+
+        let interval = window.setInterval(refreshRoom, 5000)
+
+        return () => {
+            window.clearInterval(interval)
+        }
+
+    }, [roomCode])
+
+    useEffect(() => {
 
         // remove the room code if no ip/port
         if (roomCode && !store.ip_address && !store.port) {
@@ -149,16 +175,16 @@ function HomePage() {
 
     }, [roomCode, postedInfo, store.ip_address, store.port])
 
-
     return (
         <MenuContent name={"Home"}>
+
             <InfoItem title={"Desk Code"} slug={"People who have this can join you"} imgSrc={DoorOpen}>
-                {roomCode ?
-                    <div className={"text-4xl flex flex-wrap content-center"}>
-                        {roomCode}
-                    </div>
-                    : ""
+                <div className={"text-4xl flex flex-wrap content-center"}>
+                    {roomCode ?
+                        roomCode
+                    : <BounceLoader size={40} color={"#737373"}/>
                 }
+                </div>
             </InfoItem>
         </MenuContent>
     )
