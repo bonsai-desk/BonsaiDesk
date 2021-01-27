@@ -55,12 +55,9 @@ class Store {
 const store = new Store();
 Object.seal(store);
 let pushStoreList = action((kvList) => {
-  console.log(store);
-  console.log(kvList);
   kvList.forEach(kv => {
     store[kv.Key] = kv.Val;
   });
-  console.log(store);
 });
 let pushStore = action(obj => {
   for (const prop in obj) {

@@ -115,29 +115,39 @@ function MenuContent(props) {
 
 }
 
-let HomePage = observer(() => {
+let HostHomePage = observer(() => {
 
   let {store, pushStore} = useStore();
 
   let buttonClass = 'px-2 py-1 bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
 
   return (
+      <InfoItem title={'Desk Code'} slug={'People who have this can join you'}
+                imgSrc={DoorOpen}>
+        <div className={'text-4xl flex flex-wrap content-center'}>
+          {store.room_code ?
+              <Button>
+                <div onClick={() => {
+                  pushStore({room_code: null});
+                }} className={buttonClass}>{store.room_code}</div>
+              </Button>
+
+              : <BounceLoader size={40} color={'#737373'}/>
+          }
+        </div>
+      </InfoItem>
+  );
+
+});
+
+let HomePage = observer(() => {
+
+  let {store} = useStore();
+
+  return (
       <MenuContent name={'Home'}>
-
-        <InfoItem title={'Desk Code'} slug={'People who have this can join you'}
-                  imgSrc={DoorOpen}>
-          <div className={'text-4xl flex flex-wrap content-center'}>
-            {store.room_code ?
-                <Button>
-                  <div onClick={() => {
-                    pushStore({room_code: null});
-                  }} className={buttonClass}>{store.room_code}</div>
-                </Button>
-
-                : <BounceLoader size={40} color={'#737373'}/>
-            }
-          </div>
-        </InfoItem>
+        {(store.network_state === 'HostWaiting' || store.network_state ===
+            'Hosting') ? <HostHomePage/> : ''}
       </MenuContent>
   );
 });
@@ -276,43 +286,44 @@ let Menu = () => {
 
   let SelectedPage = pages[active].component;
 
-  const disposer = autorun(() => {
-    // remove room code if
-    if (store.room_code && (!store.ip_address || !store.port)) {
-      console.log('rm room code');
-      pushStore({room_code: null});
-      return;
-    }
+  useEffect(() => {
+    autorun(() => {
+      // remove room code if
+      if (store.room_code && (!store.ip_address || !store.port)) {
+        console.log('rm room code');
+        pushStore({room_code: null});
+        return;
+      }
 
-    // send ip/port out for a room code
-    if (!store.room_code && !store.loading_room_code && store.ip_address &&
-        store.port) {
-      console.log('fetch room code');
-      pushStore({loading_room_code: true});
-      let url = API_BASE + '/rooms';
-      axios(
-          {
-            method: 'post',
-            url: url,
-            data: `ip_address=${store.ip_address}&port=${store.port}`,
-            header: {'content-type': 'application/x-www-form-urlencoded'},
-          },
-      ).then(response => {
-        pushStore({room_code: response.data.tag, loading_room_code: false});
-      }).catch(err => {
-        console.log(err);
-        pushStore({loading_room_code: false});
-      });
-    }
+      // send ip/port out for a room code
+      if (!store.room_code && !store.loading_room_code && store.ip_address &&
+          store.port) {
+        console.log('fetch room code');
+        pushStore({loading_room_code: true});
+        let url = API_BASE + '/rooms';
+        axios(
+            {
+              method: 'post',
+              url: url,
+              data: `ip_address=${store.ip_address}&port=${store.port}`,
+              header: {'content-type': 'application/x-www-form-urlencoded'},
+            },
+        ).then(response => {
+          pushStore({room_code: response.data.tag, loading_room_code: false});
+        }).catch(err => {
+          console.log(err);
+          pushStore({loading_room_code: false});
+        });
+      }
+    });
+
   });
 
   useEffect(() => {
     return () => {
-      console.log('disposing menu');
       pushStore({room_code: null});
-      disposer();
     };
-  }, [disposer, pushStore]);
+  }, [pushStore]);
 
   return (
       <div className={'flex text-lg text-gray-500 h-full'}>
