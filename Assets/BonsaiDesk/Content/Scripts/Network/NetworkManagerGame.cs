@@ -16,8 +16,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 		RelayError,
 		Loading,
 		Neutral,
-		HostCreating,
-		HostWaiting,
 		Hosting,
 		ClientConnecting,
 		ClientConnected
@@ -116,6 +114,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 	public override void Update() {
 		base.Update();
+		
 		if (Time.time - _postRoomInfoLast > postRoomInfoEvery) {
 			_postRoomInfoLast = Time.time;
 			tableBrowser.PostNetworkState(State.ToString());
@@ -126,6 +125,8 @@ public class NetworkManagerGame : NobleNetworkManager {
 				tableBrowser.PostRoomInfo("", "");
 			}
 		}
+		// TODO 
+		// StartCoroutine(StopHostFadeReturnToLoading());
 	}
 
 	private void OnApplicationFocus(bool focus) {
@@ -209,10 +210,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 					if (fader.currentAlpha != 0) {
 						fader.FadeIn();
 					}
-
-					if (serverOnlyIfEditor && Application.isEditor) {
-						State = ConnectionState.HostWaiting;
-					}
 				}
 
 				break;
@@ -242,7 +239,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 				break;
 
 			default:
-				Debug.LogError($"[BONSAI] HandleState not handled {State}");
+				Debug.LogWarning($"[BONSAI] HandleState not handled {State}");
 				break;
 		}
 	}
@@ -272,6 +269,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	private IEnumerator SmoothStartClient() {
+		State = ConnectionState.ClientConnecting;
 		fader.FadeOut();
 		yield return new WaitForSeconds(fader.fadeTime);
 		Debug.Log("[BONSAI] SmoothStartClient StopHost");
@@ -409,7 +407,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 		PlayerInfos.Add(conn, new PlayerInfo(openSpotId));
 
 		// triggers when client joins
-		if (NetworkServer.connections.Count > 1) {
+		if (NetworkServer.connections.Count > 1 && State != ConnectionState.Hosting) {
 			State = ConnectionState.Hosting;
 		}
 	}

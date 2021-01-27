@@ -7,6 +7,7 @@ using Vuplex.WebView;
 public class TableBrowser : NewBrowser {
 	public string initialUrl;
 	public CustomInputModule customInputModule;
+	public bool useBuiltHtml;
 
 	public SoundFXRef hoverSound;
 	public SoundFXRef mouseDownSound;
@@ -14,7 +15,16 @@ public class TableBrowser : NewBrowser {
 
 	protected override void Start() {
 		base.Start();
-		_webViewPrefab.DragMode   = DragMode.DragToScroll;
+		_webViewPrefab.DragMode = DragMode.DragToScroll;
+
+	#if UNITY_EDITOR || DEVELOPMENT_BUILD
+		if (useBuiltHtml) {
+			initialUrl = "streaming-assets://build/index.html";
+		}
+	#else
+        _autoBrowser.LoadUrl("streaming-assets://build/index.html");
+	#endif
+
 		_webViewPrefab.InitialUrl = initialUrl;
 		BrowserReady += () =>
 		{
@@ -63,7 +73,7 @@ public class TableBrowser : NewBrowser {
 	}
 
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
-		var message = JsonConvert.DeserializeObject<JSMessageString>(eventArgs.Value);
+		var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
 
 		Debug.Log($"[BONSAI] JS Message: {message.Type} {message.Message}");
 
@@ -106,7 +116,7 @@ public class TableBrowser : NewBrowser {
 		KeyVal[] kvs = {
 			new KeyVal {Key = "network_state", Val = state}
 		};
-		var jsMessage = new JSMessageKeyVals {
+		var jsMessage = new JsMessageKeyVals {
 			Type = "command", Message = "pushStore", Data = kvs
 		};
 		var message = JsonConvert.SerializeObject(jsMessage);
@@ -118,26 +128,26 @@ public class TableBrowser : NewBrowser {
 			new KeyVal {Key = "ip_address", Val = ipAddress},
 			new KeyVal {Key = "port", Val       = port}
 		};
-		var jsMessage = new JSMessageKeyVals {
+		var jsMessage = new JsMessageKeyVals {
 			Type = "command", Message = "pushStore", Data = kvs
 		};
 		var message = JsonConvert.SerializeObject(jsMessage);
 		PostMessage(message);
 	}
 
-	private class JSMessageString {
+	private class JsMessageString {
 		public string Data;
 		public string Message;
 		public string Type;
 	}
 
-	private class JSMessageKeyVals {
+	private class JsMessageKeyVals {
 		public KeyVal[] Data;
 		public string Message;
 		public string Type;
 	}
 
-	public class KeyVal {
+	private class KeyVal {
 		public string Key;
 		public string Val;
 	}

@@ -150,7 +150,6 @@ public class NewBrowser : MonoBehaviour {
 	}
 
 	public void PostMessage(string data) {
-		//Debug.Log($"[BONSAI {NetworkClient.connection.identity.netId}] PostMessage {data}");
 		_webViewPrefab.WebView.PostMessage(data);
 	}
 

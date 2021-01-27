@@ -19,21 +19,22 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 
 	#region Server
 
-    /// <summary>
-    ///     Called on server from StartServer to initialize the Authenticator
-    ///     <para>Server message handlers should be registered in this method.</para>
-    /// </summary>
-    public override void OnStartServer() {
+	/// <summary>
+	///     Called on server from StartServer to initialize the Authenticator
+	///     <para>Server message handlers should be registered in this method.</para>
+	/// </summary>
+	public override void OnStartServer() {
 		// do nothing
 	}
 
-    /// <summary>
-    ///     Called on server from OnServerAuthenticateInternal when a client needs to authenticate
-    /// </summary>
-    /// <param name="conn">Connection to client.</param>
-    public override void OnServerAuthenticate(NetworkConnection conn) {
+	/// <summary>
+	///     Called on server from OnServerAuthenticateInternal when a client needs to authenticate
+	/// </summary>
+	/// <param name="conn">Connection to client.</param>
+	public override void OnServerAuthenticate(NetworkConnection conn) {
 		Debug.Log("[BONSAI] OnServerAuthenticate");
-		if (NetworkManagerGame.Singleton.State == NetworkManagerGame.ConnectionState.HostWaiting ||
+		if (NetworkManagerGame.Singleton.State == NetworkManagerGame.ConnectionState.Hosting ||
+		    NetworkManagerGame.Singleton.State == NetworkManagerGame.ConnectionState.Neutral ||
 		    conn.connectionId == NetworkServer.localConnection.connectionId) {
 			var authResponseMessage = new AuthResponseMessage {
 				code = 100
@@ -65,20 +66,20 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 
 	#region Client
 
-    /// <summary>
-    ///     Called on client from StartClient to initialize the Authenticator
-    ///     <para>Client message handlers should be registered in this method.</para>
-    /// </summary>
-    public override void OnStartClient() {
+	/// <summary>
+	///     Called on client from StartClient to initialize the Authenticator
+	///     <para>Client message handlers should be registered in this method.</para>
+	/// </summary>
+	public override void OnStartClient() {
 		// register a handler for the authentication response we expect from server
 		NetworkClient.RegisterHandler<AuthResponseMessage>(OnAuthResponseMessage, false);
 	}
 
-    /// <summary>
-    ///     Called on client from OnClientAuthenticateInternal when a client needs to authenticate
-    /// </summary>
-    /// <param name="conn">Connection of the client.</param>
-    public override void OnClientAuthenticate(NetworkConnection conn) {
+	/// <summary>
+	///     Called on client from OnClientAuthenticateInternal when a client needs to authenticate
+	/// </summary>
+	/// <param name="conn">Connection of the client.</param>
+	public override void OnClientAuthenticate(NetworkConnection conn) {
 		// do nothing just wait for AuthMessageResponse
 	}
 
