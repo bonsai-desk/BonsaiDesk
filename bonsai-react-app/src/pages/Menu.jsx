@@ -191,7 +191,9 @@ let HomePage = observer(() => {
   );
 });
 
-function JoinDeskPage() {
+function JoinDeskPage(props) {
+  let {navHome} = props;
+
   let [code, setCode] = useState('');
   let [loading, setLoading] = useState(false);
   let [message, setMessage] = useState('');
@@ -207,6 +209,7 @@ function JoinDeskPage() {
         url: url,
       }).then(response => {
         postJoinRoom(response.data);
+        navHome();
         setCode('');
         setLoading(false);
       }).catch(err => {
@@ -361,6 +364,10 @@ let Menu = () => {
 
   let SelectedPage = pages[active].component;
 
+  let navHome = () => {
+    setActive(0);
+  };
+
   useEffect(() => {
     autorun(() => {
       // remove room code if
@@ -415,7 +422,7 @@ let Menu = () => {
           </SettingsList>
         </div>
         <div className={'w-full'}>
-          <SelectedPage/>
+          <SelectedPage navHome={navHome}/>
         </div>
       </div>
   );

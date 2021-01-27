@@ -109,10 +109,10 @@ public class TableBrowser : NewBrowser {
 		PostMessage(message);
 	}
 
-	public void PostRoomInfo(string ipAddress, ushort port) {
+	public void PostRoomInfo(string ipAddress, string port) {
 		KeyVal[] kvs = {
 			new KeyVal {Key = "ip_address", Val = ipAddress},
-			new KeyVal {Key = "port", Val       = port.ToString()}
+			new KeyVal {Key = "port", Val       = port}
 		};
 		var jsMessage = new JSMessageKeyVals {
 			Type = "command", Message = "pushStore", Data = kvs
