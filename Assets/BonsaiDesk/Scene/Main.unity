@@ -2311,7 +2311,7 @@ MonoBehaviour:
   relayLifetime: 30
   isDisconnecting: 0
   tableBrowser: {fileID: 320584329}
-  serverOnlyIfEditor: 1
+  serverOnlyIfEditor: 0
   visualizeAuthority: 0
   moveToDesk: {fileID: 1212259449}
   togglePause: {fileID: 96659938}
@@ -18521,7 +18521,7 @@ PrefabInstance:
     - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.321
+      value: 0.3764
       objectReference: {fileID: 0}
     - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
         type: 3}
@@ -18531,7 +18531,7 @@ PrefabInstance:
     - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.205
+      value: 0.107
       objectReference: {fileID: 0}
     - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
         type: 3}

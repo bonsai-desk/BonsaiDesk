@@ -10,7 +10,7 @@ import {action, autorun} from 'mobx';
 
 let API_BASE = 'https://api.desk.link';
 
-let buttonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
+let roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 
 function postJoinRoom(data) {
   postJson({Type: 'command', Message: 'joinRoom', data: JSON.stringify(data)});
@@ -67,7 +67,7 @@ function JoinDeskButton(props) {
       <Button>
         <div onClick={() => {
           handleClick(char);
-        }} className={buttonClass}>
+        }} className={roundButtonClass}>
             <span className={'w-full text-center'}>
                 {char}
             </span>
@@ -146,8 +146,9 @@ let HomePage = observer(() => {
 
   return (
       <MenuContent name={'Home'}>
-        {(store.network_state === 'HostWaiting' || store.network_state ===
-            'Hosting') ? <HostHomePage/> : ''}
+        {(store.network_state === 'Neutral' ||
+            store.network_state === 'HostWaiting' ||
+            store.network_state === 'Hosting') ? <HostHomePage/> : ''}
       </MenuContent>
   );
 });
@@ -242,6 +243,8 @@ function ContactsPage() {
 let SettingsPage = observer(() => {
   let {store} = useStore();
 
+  let buttonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded p-4 cursor-pointer flex flex-wrap content-center';
+
   let addFakeIpPort = action((store) => {
     store.ip_address = 1234;
     store.port = 4321;
@@ -252,15 +255,49 @@ let SettingsPage = observer(() => {
     store.port = null;
   });
 
+  let setNetState = action((store, netState) => {
+    store.network_state = netState;
+  });
+
   return (
       <MenuContent name={'Settings'}>
-        <div className={buttonClass} onClick={() => {
-          addFakeIpPort(store);
-        }}>+fake ip/port
+        <div className={'flex space-x-2'}>
+          <Button>
+            <div onClick={() => {
+              setNetState(store, 'Neutral');
+            }} className={buttonClass}>Neutral
+            </div>
+          </Button>
+          <Button>
+            <div onClick={() => {
+              setNetState(store, 'HostWaiting');
+            }} className={buttonClass}>HostWaiting
+            </div>
+          </Button>
+          <Button>
+            <div onClick={() => {
+              setNetState(store, 'Hosting');
+            }} className={buttonClass}>Hosting
+            </div>
+          </Button>
+          <Button>
+            <div onClick={() => {
+              setNetState(store, 'ClientConnected');
+            }} className={buttonClass}>ClientConnected
+            </div>
+          </Button>
+
+
         </div>
-        <div className={buttonClass} onClick={() => {
-          rmFakeIpPort(store);
-        }}>-fake ip/port
+        <div className={'flex space-x-2'}>
+          <div className={buttonClass} onClick={() => {
+            addFakeIpPort(store);
+          }}>+fake ip/port
+          </div>
+          <div className={buttonClass} onClick={() => {
+            rmFakeIpPort(store);
+          }}>-fake ip/port
+          </div>
         </div>
         <ul>
           {Object.entries(store).map(info => {
