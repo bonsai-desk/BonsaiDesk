@@ -3,6 +3,7 @@ import './Menu.css';
 import {postJson} from '../utilities';
 import axios from 'axios';
 import DoorOpen from '../static/door-open.svg';
+import LinkImg from '../static/link.svg';
 import {useStore} from '../DataProvider';
 import {BounceLoader} from 'react-spinners';
 import {observer} from 'mobx-react-lite';
@@ -14,6 +15,11 @@ let roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded
 
 function postJoinRoom(data) {
   postJson({Type: 'command', Message: 'joinRoom', data: JSON.stringify(data)});
+}
+
+function postLeaveRoom() {
+  postJson({Type: 'command', Message: 'leaveRoom'});
+
 }
 
 function postMouseDown() {
@@ -115,6 +121,18 @@ function MenuContent(props) {
 
 }
 
+let ClientHomePage = () => {
+  let buttonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
+  return (
+      <div className={'flex'}>
+        <InfoItem title={'Connected'} slug={'You are connected to a host'}
+                  imgSrc={LinkImg}>
+          <div onClick={postLeaveRoom} className={buttonClass}>EXIT</div>
+        </InfoItem>
+      </div>
+  );
+};
+
 let HostHomePage = observer(() => {
 
   let {store, pushStore} = useStore();
@@ -140,15 +158,35 @@ let HostHomePage = observer(() => {
 
 });
 
+let LoadingHomePage = () => {
+  return <div className={'flex justify-center w-full h-full'}>
+    <BounceLoader size={200} color={'#737373'}/>
+  </div>;
+};
+
 let HomePage = observer(() => {
 
   let {store} = useStore();
 
+  let Inner;
+
+  switch (store.network_state) {
+    case 'Neutral':
+    case 'HostWaiting':
+    case 'Hosting':
+      Inner = <HostHomePage/>;
+      break;
+    case 'ClientConnected':
+      Inner = <ClientHomePage/>;
+      break;
+    default:
+      Inner = <LoadingHomePage/>;
+      break;
+  }
+
   return (
       <MenuContent name={'Home'}>
-        {(store.network_state === 'Neutral' ||
-            store.network_state === 'HostWaiting' ||
-            store.network_state === 'Hosting') ? <HostHomePage/> : ''}
+        {Inner}
       </MenuContent>
   );
 });
@@ -292,11 +330,11 @@ let SettingsPage = observer(() => {
         <div className={'flex space-x-2'}>
           <div className={buttonClass} onClick={() => {
             addFakeIpPort(store);
-          }}>+fake ip/port
+          }}>+ fake ip/port
           </div>
           <div className={buttonClass} onClick={() => {
             rmFakeIpPort(store);
-          }}>-fake ip/port
+          }}>- fake ip/port
           </div>
         </div>
         <ul>

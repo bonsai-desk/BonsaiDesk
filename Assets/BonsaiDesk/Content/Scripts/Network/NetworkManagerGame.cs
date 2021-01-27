@@ -479,6 +479,10 @@ public class NetworkManagerGame : NobleNetworkManager
         StartCoroutine(SmoothStartClient());
     }
 
+    private void HandleLeaveRoom() {
+        StartCoroutine(FadeThenReturnToLoading());
+    }
+
     private IEnumerator PostCreateRoom(string ipAddress, ushort port)
     {
         Debug.Log("[BONSAI] PostCreateRoom:" + ipAddress + ":" + port);
@@ -607,7 +611,8 @@ public class NetworkManagerGame : NobleNetworkManager
             tableBrowser.ToggleHidden();
         };
 
-        tableBrowser.JoinRoom += HandleJoinRoom;
+        tableBrowser.JoinRoom  += HandleJoinRoom;
+        tableBrowser.LeaveRoom += HandleLeaveRoom;
 
         _camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
 

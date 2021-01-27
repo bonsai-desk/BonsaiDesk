@@ -26,6 +26,7 @@ public class TableBrowser : NewBrowser {
 	}
 
 	public event Action<RoomData> JoinRoom;
+	public event Action LeaveRoom;
 
 	private void NavToMenu(object sender, ProgressChangedEventArgs eventArgs) {
 		if (eventArgs.Type == ProgressChangeType.Finished) {
@@ -72,6 +73,9 @@ public class TableBrowser : NewBrowser {
 						var roomData = JsonConvert.DeserializeObject<RoomData>(message.Data);
 						Debug.Log($"[BONSAI] Join Room {message.Data}");
 						JoinRoom?.Invoke(roomData);
+						break;
+					case "leaveRoom":
+						LeaveRoom?.Invoke();
 						break;
 				}
 

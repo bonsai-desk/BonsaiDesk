@@ -29,9 +29,8 @@ class Store {
     this._room_code = code;
     if (code) {
       this._refresh_room_code_handler = setInterval(
-          () => {
-            console.log('refresh ' + this._room_code);
-          }, 1000);
+          this.refreshRoomCode
+          , 1000);
     } else {
       clearInterval(this._refresh_room_code_handler);
       this._refresh_room_code_handler = null;
