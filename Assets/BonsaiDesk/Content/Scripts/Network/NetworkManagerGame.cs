@@ -593,7 +593,7 @@ public class NetworkManagerGame : NobleNetworkManager
         if (HostEndPoint != null && Time.time - postRoomInfoLast > postRoomInfoEvery)
         {
             tableBrowser.PostRoomInfo(HostEndPoint.Address.ToString(), (ushort) HostEndPoint.Port);
-            //tableBrowser.PostNetworkState(State.ToString());
+            tableBrowser.PostNetworkState(State.ToString());
             postRoomInfoLast = Time.time;
         }
     }

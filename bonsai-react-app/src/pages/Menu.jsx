@@ -1,37 +1,39 @@
-import React, {useState, useEffect} from 'react'
+import React, {useEffect, useState} from 'react'
 import "./Menu.css"
 import {postJson} from "../utilities";
 import axios from "axios"
 import DoorOpen from "../static/door-open.svg"
 import {useStore} from "../DataProvider"
-import {BeatLoader, BounceLoader, ClipLoader, FadeLoader, PulseLoader} from "react-spinners";
+import {BounceLoader} from "react-spinners";
+import {observer} from "mobx-react-lite"
+import {action} from "mobx";
 
 
 let API_BASE = "https://api.desk.link"
 
 let buttonClass = "bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center"
 
-function postJoinRoom(data) {
+function postJoinRoom (data) {
     postJson({Type: "command", Message: "joinRoom", data: JSON.stringify(data)})
 }
 
-function postMouseDown() {
+function postMouseDown () {
     postJson({Type: "event", Message: "mouseDown"})
 }
 
-function postMouseUp() {
+function postMouseUp () {
     postJson({Type: "event", Message: "mouseUp"})
 }
 
-function postHover() {
+function postHover () {
     postJson({Type: "event", Message: "hover"})
 }
 
-function Button(props) {
+function Button (props) {
     return <div onMouseDown={postMouseDown} onMouseUp={postMouseUp} onMouseEnter={postHover}>{props.children}</div>
 }
 
-function ListItem(props) {
+function ListItem (props) {
     let {selected, handleClick} = props;
     let className = selected ?
         "rounded bg-blue-700 text-white px-3 py-2 cursor-pointer" :
@@ -45,7 +47,7 @@ function ListItem(props) {
     )
 }
 
-function SettingsList(props) {
+function SettingsList (props) {
     return (
         <div className={"space-y-1 px-2 h-full overflow-auto"}>
             {props.children}
@@ -53,11 +55,11 @@ function SettingsList(props) {
 
 }
 
-function SettingsTitle(props) {
+function SettingsTitle (props) {
     return <div className={"text-white font-bold text-xl px-5 pt-5 pb-2"}>{props.children}</div>
 }
 
-function JoinDeskButton(props) {
+function JoinDeskButton (props) {
     let {handleClick, char} = props
 
     return (
@@ -73,7 +75,7 @@ function JoinDeskButton(props) {
     )
 }
 
-function InfoItem(props) {
+function InfoItem (props) {
     return (
         <div className={"flex w-full"}>
             <div className={"flex w-full"}>
@@ -95,7 +97,7 @@ function InfoItem(props) {
 }
 
 
-function MenuContent(props) {
+function MenuContent (props) {
     let {name} = props;
 
     return (
@@ -114,7 +116,7 @@ function MenuContent(props) {
 }
 
 
-function HomePage() {
+let HomePage = observer(() => {
     let {store} = useStore()
 
     let [roomCode, setRoomCode] = useState("");
@@ -123,7 +125,7 @@ function HomePage() {
 
     useEffect(() => {
         let refreshRoom = () => {
-            if (roomCode){
+            if (roomCode) {
                 axios({
                     method: 'post',
                     url: API_BASE + `/rooms/${roomCode}/refresh`,
@@ -182,15 +184,15 @@ function HomePage() {
                 <div className={"text-4xl flex flex-wrap content-center"}>
                     {roomCode ?
                         roomCode
-                    : <BounceLoader size={40} color={"#737373"}/>
-                }
+                        : <BounceLoader size={40} color={"#737373"}/>
+                    }
                 </div>
             </InfoItem>
         </MenuContent>
     )
-}
+})
 
-function JoinDeskPage() {
+function JoinDeskPage () {
     let [code, setCode] = useState("")
     let [loading, setLoading] = useState(false);
     let [message, setMessage] = useState("")
@@ -216,7 +218,7 @@ function JoinDeskPage() {
         }
     }, [loading, code])
 
-    function handleClick(char) {
+    function handleClick (char) {
         setMessage("")
         switch (code.length) {
             case 4:
@@ -228,7 +230,7 @@ function JoinDeskPage() {
         }
     }
 
-    function handleBackspace() {
+    function handleBackspace () {
         if (code.length > 0) {
             setCode(code.slice(0, code.length - 1))
         }
@@ -270,28 +272,34 @@ function JoinDeskPage() {
     )
 }
 
-function ContactsPage() {
+function ContactsPage () {
     return <MenuContent name={"Contacts"}>
     </MenuContent>
 }
 
-function SettingsPage(props) {
-    let {store, setStore} = useStore();
+let SettingsPage = observer((props) => {
+    let {store} = useStore();
 
-    let addFakeIpPort = () => {
-        let _store = {...store}
-        setStore({..._store, ip_address: 1234, port: 4321})
-    }
+    let addFakeIpPort = action((store) => {
+        store.ip_address = 1234
+        store.port = 4321
+    })
 
-    let rmFakeIpPort = () => {
-        let _store = {...store}
-        setStore({..._store, ip_address: null, port: null})
-    }
+    let rmFakeIpPort = action(store => {
+        store.ip_address = null
+        store.port = null
+    })
 
     return (
         <MenuContent name={"Settings"}>
-            <div className={buttonClass} onClick={addFakeIpPort}>+fake ip/port</div>
-            <div className={buttonClass} onClick={rmFakeIpPort}>-fake ip/port</div>
+            <div className={buttonClass} onClick={() => {
+                addFakeIpPort(store)
+            }}>+fake ip/port
+            </div>
+            <div className={buttonClass} onClick={() => {
+                rmFakeIpPort(store)
+            }}>-fake ip/port
+            </div>
             <ul>
                 {Object.entries(store).map(info => {
                     return <li key={info[0]}>{info[0]}{": "}{info[1]}</li>
@@ -299,7 +307,7 @@ function SettingsPage(props) {
             </ul>
         </MenuContent>
     )
-}
+})
 
 const pages = [
     {name: "Home", component: HomePage},
@@ -308,7 +316,7 @@ const pages = [
     {name: "Settings", component: SettingsPage},
 ]
 
-function Menu() {
+let Menu = () => {
 
     let [active, setActive] = useState(0)
 
@@ -334,5 +342,4 @@ function Menu() {
         </div>
     )
 }
-
 export default Menu;

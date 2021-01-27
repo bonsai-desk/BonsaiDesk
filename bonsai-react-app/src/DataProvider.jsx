@@ -1,42 +1,56 @@
-import React, {useState, useContext, useCallback, useEffect} from "react";
+import React, {useContext, useEffect, useState} from "react";
+import {action, makeAutoObservable} from "mobx";
 
 export const StoreContext = React.createContext();
 export const useStore = () => useContext(StoreContext);
 
-export const StoreProvider = ({ children }) => {
+class Store {
+    ip_address = null;
+    port = null;
+    network_state = null;
+
+    constructor () {
+        makeAutoObservable(this)
+    }
+}
+
+const store = new Store()
+Object.seal(store)
+
+let pushStore = action((kvList) => {
+    kvList.forEach(kv => {
+        store[kv.Key] = kv.Val
+    })
+})
+
+export const StoreProvider = ({children}) => {
     let [init, setInit] = useState(false);
-    let [store, setStore] = useState({});
-
-    let storeListeners = useCallback(event => {
-        let json = JSON.parse(event.data)
-        switch (json.Type) {
-            case "command":
-                switch (json.Message) {
-                    case "pushStore":
-                        let _store = {...store}
-                        json.Data.map(kv => {
-                            _store[kv.Key] = kv.Val;
-                            return 0;
-                        })
-                        setStore(_store)
-                        break;
-                    default:
-                        console.log("message not handled " + event.data)
-                        break;
-                }
-                break;
-            default:
-                console.log("command not handled " + event.data)
-                console.log(json)
-                break;
-        }
-
-    }, [store])
 
     useEffect(() => {
         if (init) return;
 
         setInit(true)
+
+        let storeListeners = event => {
+            let json = JSON.parse(event.data)
+            switch (json.Type) {
+                case "command":
+                    switch (json.Message) {
+                        case "pushStore":
+                            pushStore(json.Data)
+                            break;
+                        default:
+                            console.log("message not handled " + event.data)
+                            break;
+                    }
+                    break;
+                default:
+                    console.log("command not handled " + event.data)
+                    console.log(json)
+                    break;
+            }
+
+        }
 
         if (window.vuplex != null) {
             console.log("bonsai: vuplex is not null -> storeListeners")
@@ -49,8 +63,7 @@ export const StoreProvider = ({ children }) => {
             })
         }
 
-    }, [init, storeListeners])
+    }, [init])
 
-
-    return <StoreContext.Provider value={{ store, setStore }}>{children}</StoreContext.Provider>;
+    return <StoreContext.Provider value={{store}}>{children}</StoreContext.Provider>;
 };
