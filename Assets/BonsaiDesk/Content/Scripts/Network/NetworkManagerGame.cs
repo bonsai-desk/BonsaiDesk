@@ -593,6 +593,7 @@ public class NetworkManagerGame : NobleNetworkManager
         if (HostEndPoint != null && Time.time - postRoomInfoLast > postRoomInfoEvery)
         {
             tableBrowser.PostRoomInfo(HostEndPoint.Address.ToString(), (ushort) HostEndPoint.Port);
+            //tableBrowser.PostNetworkState(State.ToString());
             postRoomInfoLast = Time.time;
         }
     }
@@ -600,6 +601,11 @@ public class NetworkManagerGame : NobleNetworkManager
     public override void Start()
     {
         base.Start();
+
+        tableBrowser.BrowserReady += () =>
+        {
+            tableBrowser.ToggleHidden();
+        };
 
         tableBrowser.JoinRoom += HandleJoinRoom;
 
@@ -626,7 +632,6 @@ public class NetworkManagerGame : NobleNetworkManager
         {
             hostButtons.SetActive(false);
             neutralButtons.SetActive(false);
-            tableBrowser.ToggleHidden();
         }
 
         if (Application.isEditor && !serverOnlyIfEditor)
