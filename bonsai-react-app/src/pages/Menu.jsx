@@ -13,6 +13,8 @@ let API_BASE = 'https://api.desk.link';
 
 let roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 
+let redButtonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
+
 function postJoinRoom(data) {
   postJson({Type: 'command', Message: 'joinRoom', data: JSON.stringify(data)});
 }
@@ -20,6 +22,10 @@ function postJoinRoom(data) {
 function postLeaveRoom() {
   postJson({Type: 'command', Message: 'leaveRoom'});
 
+}
+
+function postKickAll() {
+  postJson({Type: 'command', Message: 'kickAll'});
 }
 
 function postMouseDown() {
@@ -84,10 +90,10 @@ function JoinDeskButton(props) {
 
 function InfoItem(props) {
   return (
-      <div className={'flex w-full'}>
-        <div className={'flex w-full'}>
+      <div className={'flex w-full justify-between'}>
+        <div className={'flex w-auto'}>
           <div className={'flex flex-wrap content-center  p-2 mr-2'}>
-            <img className={'h-9'} src={props.imgSrc} alt={''}/>
+            <img className={'h-9 w-9'} src={props.imgSrc} alt={''}/>
           </div>
           <div>
             <div className={'text-xl'}>
@@ -122,12 +128,13 @@ function MenuContent(props) {
 }
 
 let ClientHomePage = () => {
-  let buttonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
   return (
       <div className={'flex'}>
         <InfoItem title={'Connected'} slug={'You are connected to a host'}
                   imgSrc={LinkImg}>
-          <div onClick={postLeaveRoom} className={buttonClass}>EXIT</div>
+          <Button>
+            <div onClick={postLeaveRoom} className={redButtonClass}>exit</div>
+          </Button>
         </InfoItem>
       </div>
   );
@@ -138,22 +145,35 @@ let HostHomePage = observer(() => {
   let {store, pushStore} = useStore();
 
   let buttonClass = 'px-2 py-1 bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
+  let redbuttonClass = 'font-xl h-20 font-bold px-2 py-1 bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
 
   return (
-      <InfoItem title={'Desk Code'} slug={'People who have this can join you'}
-                imgSrc={DoorOpen}>
-        <div className={'text-4xl flex flex-wrap content-center'}>
-          {store.room_code ?
-              <Button>
-                <div onClick={() => {
-                  pushStore({room_code: null});
-                }} className={buttonClass}>{store.room_code}</div>
-              </Button>
+      <React.Fragment>
+        <InfoItem title={'Desk Code'} slug={'People who have this can join you'}
+                  imgSrc={DoorOpen}>
+          <div className={'text-4xl flex flex-wrap content-center'}>
+            {store.room_code ?
+                <Button>
+                  <div onClick={() => {
+                    pushStore({room_code: null});
+                  }} className={buttonClass}>{store.room_code}</div>
+                </Button>
 
-              : <BounceLoader size={40} color={'#737373'}/>
-          }
-        </div>
-      </InfoItem>
+                : <BounceLoader size={40} color={'#737373'}/>
+            }
+          </div>
+        </InfoItem>
+        {store.network_state === 'Hosting' ?
+            <InfoItem title={'Clients connected'}
+                      slug={'There are people in your room'} imgSrc={LinkImg}>
+              <Button>
+                <div onClick={postKickAll} className={redButtonClass}>
+                  kick all
+                </div>
+              </Button>
+            </InfoItem> :
+            ''}
+      </React.Fragment>
   );
 
 });
@@ -331,14 +351,18 @@ let SettingsPage = observer(() => {
 
         </div>
         <div className={'flex space-x-2'}>
-          <div className={buttonClass} onClick={() => {
-            addFakeIpPort(store);
-          }}>+ fake ip/port
-          </div>
-          <div className={buttonClass} onClick={() => {
-            rmFakeIpPort(store);
-          }}>- fake ip/port
-          </div>
+          <Button>
+            <div className={buttonClass} onClick={() => {
+              addFakeIpPort(store);
+            }}>+ fake ip/port
+            </div>
+          </Button>
+          <Button>
+            <div className={buttonClass} onClick={() => {
+              rmFakeIpPort(store);
+            }}>- fake ip/port
+            </div>
+          </Button>
         </div>
         <ul>
           {Object.entries(store).map(info => {

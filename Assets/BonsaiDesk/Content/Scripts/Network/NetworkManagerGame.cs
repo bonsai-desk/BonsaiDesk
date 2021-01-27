@@ -111,6 +111,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 		tableBrowser.JoinRoom  += HandleJoinRoom;
 		tableBrowser.LeaveRoom += HandleLeaveRoom;
+		tableBrowser.KickAll   += HandleKickAll;
 
 		_camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
 
@@ -514,6 +515,10 @@ public class NetworkManagerGame : NobleNetworkManager {
 		StartCoroutine(FadeThenReturnToLoading());
 	}
 
+	private void HandleKickAll() {
+		State = ConnectionState.Loading;
+	}
+
 	private IEnumerator PostCreateRoom(string ipAddress, ushort port) {
 		Debug.Log("[BONSAI] PostCreateRoom:" + ipAddress + ":" + port);
 		var form = new WWWForm();
@@ -653,6 +658,10 @@ public class NetworkManagerGame : NobleNetworkManager {
 		});
 
 		base.OnServerAddPlayer(conn);
+
+		if (State != ConnectionState.Hosting) {
+			State = ConnectionState.Hosting;
+		}
 
 		ServerAddPlayer?.Invoke(conn);
 	}

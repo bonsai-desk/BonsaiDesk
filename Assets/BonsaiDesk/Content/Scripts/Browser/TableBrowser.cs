@@ -27,6 +27,7 @@ public class TableBrowser : NewBrowser {
 
 	public event Action<RoomData> JoinRoom;
 	public event Action LeaveRoom;
+	public event Action KickAll;
 
 	private void NavToMenu(object sender, ProgressChangedEventArgs eventArgs) {
 		if (eventArgs.Type == ProgressChangeType.Finished) {
@@ -76,6 +77,9 @@ public class TableBrowser : NewBrowser {
 						break;
 					case "leaveRoom":
 						LeaveRoom?.Invoke();
+						break;
+					case "kickAll":
+						KickAll?.Invoke();
 						break;
 				}
 
