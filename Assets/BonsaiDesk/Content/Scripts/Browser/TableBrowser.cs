@@ -187,9 +187,4 @@ public class TableBrowser : NewBrowser {
 		public int port;
 	}
 
-	public struct PlayerDatas {
-		public PlayerData[] Data;
-		public string Message;
-		public string Type;
-	}
 }

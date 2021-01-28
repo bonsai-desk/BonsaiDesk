@@ -163,7 +163,7 @@ let HostHomePage = observer(() => {
             }
           </div>
         </InfoItem>
-        {store.network_state === 'Hosting' ?
+        {store.player_info.length > 1 ?
             <InfoItem title={'Clients connected'}
                       slug={'There are people in your room'} imgSrc={LinkImg}>
               <Button>
