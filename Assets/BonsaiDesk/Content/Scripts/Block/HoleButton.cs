@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.Events;
 
 public class HoleButton : MonoBehaviour
@@ -262,4 +263,24 @@ public class HoleButton : MonoBehaviour
                 rightAction.Invoke();
         }
     }
+    
+	public static IEnumerator DelayActivateButtons(GameObject buttons, float seconds) {
+		yield return new WaitForSeconds(seconds);
+		foreach (Transform child in buttons.transform) {
+			var button = child.gameObject;
+
+			if (button != null) {
+				button.SetActive(true);
+			}
+		}
+	}
+    
+	public static void DisableButtons(GameObject buttons) {
+		foreach (Transform child in buttons.transform) {
+			var button = child.GetComponent<HoleButton>();
+			if (button != null) {
+				button.DisableButton();
+			}
+		}
+	}
 }
