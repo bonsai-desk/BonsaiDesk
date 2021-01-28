@@ -24,6 +24,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 	[Header("Bonsai Network Manager")] public bool serverOnlyIfEditor;
 	public bool visualizeAuthority;
+	public bool browserReady;
 	public TableBrowser tableBrowser;
 	public MoveToDesk moveToDesk;
 	public TogglePause togglePause;
@@ -68,7 +69,11 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public override void Start() {
 		base.Start();
 
-		tableBrowser.BrowserReady += () => { tableBrowser.ToggleHidden(); };
+		tableBrowser.BrowserReady += () =>
+		{
+			browserReady = true;
+			tableBrowser.ToggleHidden();
+		};
 
 		tableBrowser.JoinRoom         += HandleJoinRoom;
 		tableBrowser.LeaveRoom        += HandleLeaveRoom;
@@ -107,7 +112,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public override void Update() {
 		base.Update();
 
-		if (Time.time - _postRoomInfoLast > postRoomInfoEvery) {
+		if (browserReady && Time.time - _postRoomInfoLast > postRoomInfoEvery) {
 			_postRoomInfoLast = Time.time;
 			tableBrowser.PostNetworkState(State.ToString());
 			tableBrowser.PostPlayerInfo(PlayerInfos);

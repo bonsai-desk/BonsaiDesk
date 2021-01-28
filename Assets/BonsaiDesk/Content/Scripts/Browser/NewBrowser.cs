@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using UnityEngine;
 using Vuplex.WebView;
 
@@ -32,6 +33,8 @@ public class NewBrowser : MonoBehaviour {
 	}
 
 	public event Action BrowserReady;
+	
+	public event Action ListenersReady;
 
 	private void SetupHolePuncher() {
 	#if UNITY_ANDROID && !UNITY_EDITOR
@@ -97,14 +100,29 @@ public class NewBrowser : MonoBehaviour {
 
 		_webViewPrefab.Initialized += (sender, eventArgs) =>
 		{
+			_webViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
+			
 			const int ppuu = 2000;
 			_webViewPrefab.WebView.SetResolution(ppuu);
 			var res = new Vector2Int((int) (ppuu * _bounds.x), (int) (ppuu * _bounds.y));
 			RebuildOverlay(res);
-			//ChangeAspect(startingAspect);
 			ToggleHidden();
 			BrowserReady?.Invoke();
 		};
+	}
+
+	private void HandleJavaScriptMessage(object _, EventArgs<string> eventArgs) {
+		var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
+		switch (message.Type) {
+			case "event":
+				switch (message.Message) {
+					case "listenersReady":
+						ListenersReady?.Invoke();
+						break;
+				}
+
+				break;
+		}
 	}
 
 	private static void PreConfigureWebView() {
@@ -206,5 +224,11 @@ public class NewBrowser : MonoBehaviour {
 			       $"\"path\": \"{path}\"" +
 			       "}";
 		}
+	}
+	
+	protected struct JsMessageString {
+		public string Data;
+		public string Message;
+		public string Type;
 	}
 }

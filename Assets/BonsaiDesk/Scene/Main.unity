@@ -1921,6 +1921,7 @@ MonoBehaviour:
   isDisconnecting: 0
   serverOnlyIfEditor: 0
   visualizeAuthority: 0
+  browserReady: 0
   tableBrowser: {fileID: 320584329}
   moveToDesk: {fileID: 1212259449}
   togglePause: {fileID: 96659938}

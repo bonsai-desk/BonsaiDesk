@@ -32,22 +32,19 @@ public class TableBrowser : NewBrowser {
 		BrowserReady += () =>
 		{
 			OnMessageEmitted(HandleJavascriptMessage);
-			_webViewPrefab.WebView.LoadProgressChanged += NavToMenu;
 			var view = _webViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView");
 			CustomInputModule.Singleton.screens.Add(view);
 		};
+		ListenersReady += NavToMenu;
 	}
 
 	public event Action<RoomData> JoinRoom;
 	public event Action LeaveRoom;
 	public event Action KickAll;
-	
 	public event Action<int> KickConnectionId;
 
-	private void NavToMenu(object sender, ProgressChangedEventArgs eventArgs) {
-		if (eventArgs.Type == ProgressChangeType.Finished) {
-			PostMessage(BrowserMessage.NavToMenu);
-		}
+	private void NavToMenu() {
+		PostMessage(BrowserMessage.NavToMenu);
 	}
 
 	public override Vector2Int ChangeAspect(Vector2 newAspect) {
@@ -168,12 +165,6 @@ public class TableBrowser : NewBrowser {
 	public struct PlayerData {
 		public string Name;
 		public int ConnectionId;
-	}
-
-	private struct JsMessageString {
-		public string Data;
-		public string Message;
-		public string Type;
 	}
 
 	private class CsMessageKeyVals {

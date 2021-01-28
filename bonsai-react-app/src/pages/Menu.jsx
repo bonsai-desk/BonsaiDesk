@@ -66,7 +66,7 @@ function ListItem(props) {
 
 function SettingsList(props) {
   return (
-      <div className={'space-y-1 px-2 h-full overflow-auto'}>
+      <div className={'space-y-1 px-2'}>
         {props.children}
       </div>);
 
@@ -95,9 +95,13 @@ function JoinDeskButton(props) {
 
 function ConnectedClient(props) {
   let {info} = props;
-  let {Name, ConnectionId} = info
-  return <InfoItem title={Name} slug={ConnectionId} imgSrc={ThinkingFace}><Button>
-    <div onClick={()=>{postKickConnectionId(ConnectionId)}} className={redButtonClass}>kick</div>
+  let {Name, ConnectionId} = info;
+  return <InfoItem title={Name} slug={ConnectionId}
+                   imgSrc={ThinkingFace}><Button>
+    <div onClick={() => {
+      postKickConnectionId(ConnectionId);
+    }} className={redButtonClass}>kick
+    </div>
   </Button></InfoItem>;
 }
 
@@ -187,7 +191,7 @@ let HostHomePage = observer(() => {
               </InfoItem>
               {store.player_info.map(info => <ConnectedClient info={info}/>)}
             </React.Fragment>
-          :
+            :
             ''}
       </React.Fragment>
   );
@@ -326,7 +330,6 @@ let SettingsPage = observer(() => {
     store.ip_address = 1234;
     store.port = 4321;
   });
-
   let rmFakeIpPort = action(store => {
     store.ip_address = null;
     store.port = null;
@@ -337,11 +340,11 @@ let SettingsPage = observer(() => {
   });
 
   let addFakeClient = action(store => {
-    store.player_info.push({Name:"cam", ConnectionId: 0})
-  })
+    store.player_info.push({Name: 'cam', ConnectionId: 0});
+  });
   let rmFakeClient = action(store => {
-    store.player_info.pop()
-  })
+    store.player_info.pop();
+  });
 
   return (
       <MenuContent name={'Settings'}>
@@ -387,12 +390,18 @@ let SettingsPage = observer(() => {
             </div>
           </Button>
         </div>
-        <div>
+        <div className={'flex space-x-2'}>
           <Button>
-            <div onClick={()=>{addFakeClient(store)}} className={buttonClass}>+ fake client</div>
+            <div onClick={() => {
+              addFakeClient(store);
+            }} className={buttonClass}>+ fake client
+            </div>
           </Button>
           <Button>
-            <div onClick={()=>{rmFakeClient(store)}} className={buttonClass}>- fake client</div>
+            <div onClick={() => {
+              rmFakeClient(store);
+            }} className={buttonClass}>- fake client
+            </div>
           </Button>
         </div>
         <ul>
@@ -479,19 +488,22 @@ let Menu = () => {
 
   return (
       <div className={'flex text-lg text-gray-500 h-full'}>
-        <div className={'w-4/12 bg-black h-full overflow-hidden'}>
-          <SettingsTitle>
-            Menu
-          </SettingsTitle>
-          <SettingsList>
-            {pages.map((info, i) => {
-              return <ListItem key={info.name} handleClick={() => {
-                setActive(i);
-              }} selected={active === i}>{info.name}</ListItem>;
-            })}
-          </SettingsList>
+        <div className={'w-4/12 bg-black overflow-auto scrollhost static'}>
+          <div className={"w-4/12 bg-black fixed"}>
+            <SettingsTitle>
+              Menu
+            </SettingsTitle>
+          </div>
+          <div className={"h-16"} />
+            <SettingsList>
+              {pages.map((info, i) => {
+                return <ListItem key={info.name} handleClick={() => {
+                  setActive(i);
+                }} selected={active === i}>{info.name}</ListItem>;
+              })}
+            </SettingsList>
         </div>
-        <div className={'w-full'}>
+        <div className={'bg-gray-900 z-10 w-full overflow-auto scrollhost'}>
           <SelectedPage navHome={navHome}/>
         </div>
       </div>
