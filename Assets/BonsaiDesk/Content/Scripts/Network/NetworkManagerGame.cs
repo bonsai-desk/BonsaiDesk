@@ -70,9 +70,10 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 		tableBrowser.BrowserReady += () => { tableBrowser.ToggleHidden(); };
 
-		tableBrowser.JoinRoom  += HandleJoinRoom;
-		tableBrowser.LeaveRoom += HandleLeaveRoom;
-		tableBrowser.KickAll   += HandleKickAll;
+		tableBrowser.JoinRoom         += HandleJoinRoom;
+		tableBrowser.LeaveRoom        += HandleLeaveRoom;
+		tableBrowser.KickAll          += HandleKickAll;
+		tableBrowser.KickConnectionId += HandleKickConnectionId;
 
 		_camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
 
@@ -96,6 +97,11 @@ public class NetworkManagerGame : NobleNetworkManager {
 		if (Application.isEditor && !serverOnlyIfEditor) {
 			StartCoroutine(StartXR());
 		}
+	}
+
+	private void HandleKickConnectionId(int id) {
+		Debug.Log($"[BONSAI] Kick Id {id}");
+		StartCoroutine(KickClient(id));
 	}
 
 	public override void Update() {
@@ -263,6 +269,21 @@ public class NetworkManagerGame : NobleNetworkManager {
 		foreach (var conn in NetworkServer.connections.Values.ToList()
 		                                  .Where(conn => conn.connectionId != NetworkConnection.LocalConnectionId)) {
 			conn.Disconnect();
+		}
+	}
+
+	private IEnumerator KickClient(int id) {
+		NetworkConnectionToClient _conn = null;
+		foreach (var conn in NetworkServer.connections.Values.ToList()) {
+			if (conn.connectionId != NetworkConnection.LocalConnectionId && conn.connectionId == id) {
+				_conn = conn;
+				break;
+			}
+		}
+		if (_conn != null) {
+			_conn.Send(new ShouldDisconnectMessage());
+			yield return new WaitForSeconds(fader.fadeTime + 0.15f);
+			_conn.Disconnect();
 		}
 	}
 

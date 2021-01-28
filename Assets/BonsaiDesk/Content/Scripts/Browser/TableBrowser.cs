@@ -41,6 +41,8 @@ public class TableBrowser : NewBrowser {
 	public event Action<RoomData> JoinRoom;
 	public event Action LeaveRoom;
 	public event Action KickAll;
+	
+	public event Action<int> KickConnectionId;
 
 	private void NavToMenu(object sender, ProgressChangedEventArgs eventArgs) {
 		if (eventArgs.Type == ProgressChangeType.Finished) {
@@ -94,6 +96,11 @@ public class TableBrowser : NewBrowser {
 					case "kickAll":
 						KickAll?.Invoke();
 						break;
+					case "kickConnectionId":
+						// todo what happens when this fails?
+						var id = JsonConvert.DeserializeObject<int>(message.Data);
+						KickConnectionId?.Invoke(id);
+						break;
 				}
 
 				break;
@@ -139,7 +146,7 @@ public class TableBrowser : NewBrowser {
 	}
 
 	public void PostPlayerInfo(Dictionary<NetworkConnection, NetworkManagerGame.PlayerInfo> playerInfos) {
-		var data = playerInfos.Select(entry => new PlayerData(){Name="cam", ConnectionId = 0}).ToArray();
+		var data = playerInfos.Select(entry => new PlayerData(){Name="Player", ConnectionId = entry.Key.connectionId}).ToArray();
 
 		var csMessage = new CsMessageKeyType<PlayerData[]> {Data = new KeyType<PlayerData[]>{Key="player_info", Val=data}};
 		

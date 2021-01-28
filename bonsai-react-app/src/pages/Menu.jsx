@@ -4,6 +4,7 @@ import {postJson} from '../utilities';
 import axios from 'axios';
 import DoorOpen from '../static/door-open.svg';
 import LinkImg from '../static/link.svg';
+import ThinkingFace from '../static/thinking-face.svg';
 import {useStore} from '../DataProvider';
 import {BounceLoader} from 'react-spinners';
 import {observer} from 'mobx-react-lite';
@@ -26,6 +27,10 @@ function postLeaveRoom() {
 
 function postKickAll() {
   postJson({Type: 'command', Message: 'kickAll'});
+}
+
+function postKickConnectionId(id) {
+  postJson({Type: 'command', Message: 'kickConnectionId', Data: id});
 }
 
 function postMouseDown() {
@@ -88,6 +93,14 @@ function JoinDeskButton(props) {
   );
 }
 
+function ConnectedClient(props) {
+  let {info} = props;
+  let {Name, ConnectionId} = info
+  return <InfoItem title={Name} slug={ConnectionId} imgSrc={ThinkingFace}><Button>
+    <div onClick={()=>{postKickConnectionId(ConnectionId)}} className={redButtonClass}>kick</div>
+  </Button></InfoItem>;
+}
+
 function InfoItem(props) {
   return (
       <div className={'flex w-full justify-between'}>
@@ -145,7 +158,6 @@ let HostHomePage = observer(() => {
   let {store, pushStore} = useStore();
 
   let buttonClass = 'px-2 py-1 bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
-  let redbuttonClass = 'font-xl h-20 font-bold px-2 py-1 bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
 
   return (
       <React.Fragment>
@@ -164,14 +176,18 @@ let HostHomePage = observer(() => {
           </div>
         </InfoItem>
         {store.player_info.length > 1 ?
-            <InfoItem title={'Clients connected'}
-                      slug={'There are people in your room'} imgSrc={LinkImg}>
-              <Button>
-                <div onClick={postKickAll} className={redButtonClass}>
-                  kick all
-                </div>
-              </Button>
-            </InfoItem> :
+            <React.Fragment>
+              <InfoItem title={'Clients connected'}
+                        slug={'There are people in your room'} imgSrc={LinkImg}>
+                <Button>
+                  <div onClick={postKickAll} className={redButtonClass}>
+                    kick all
+                  </div>
+                </Button>
+              </InfoItem>
+              {store.player_info.map(info => <ConnectedClient info={info}/>)}
+            </React.Fragment>
+          :
             ''}
       </React.Fragment>
   );
@@ -320,6 +336,13 @@ let SettingsPage = observer(() => {
     store.network_state = netState;
   });
 
+  let addFakeClient = action(store => {
+    store.player_info.push({Name:"cam", ConnectionId: 0})
+  })
+  let rmFakeClient = action(store => {
+    store.player_info.pop()
+  })
+
   return (
       <MenuContent name={'Settings'}>
         <div className={'flex space-x-2'}>
@@ -364,6 +387,14 @@ let SettingsPage = observer(() => {
             </div>
           </Button>
         </div>
+        <div>
+          <Button>
+            <div onClick={()=>{addFakeClient(store)}} className={buttonClass}>+ fake client</div>
+          </Button>
+          <Button>
+            <div onClick={()=>{rmFakeClient(store)}} className={buttonClass}>- fake client</div>
+          </Button>
+        </div>
         <ul>
           {Object.entries(store).map(info => {
             return <li key={info[0]}>{info[0]}{': '}{showInfo(info)}</li>;
@@ -382,17 +413,17 @@ const pages = [
 
 function showInfo(info) {
   switch (info[0]) {
-    case "player_info":
-      return showPlayerInfo(info[1])
+    case 'player_info':
+      return showPlayerInfo(info[1]);
     default:
-      return info[1] ? info[1].toString() : ""
+      return info[1] ? info[1].toString() : '';
   }
 }
 
-function showPlayerInfo (playerInfo) {
-  return "[" + playerInfo.map(info => {
-    return `(${info.Name}, ${info.ConnectionId})`
-  }).join(" ") + "]"
+function showPlayerInfo(playerInfo) {
+  return '[' + playerInfo.map(info => {
+    return `(${info.Name}, ${info.ConnectionId})`;
+  }).join(' ') + ']';
 }
 
 let Menu = () => {
