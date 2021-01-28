@@ -14,6 +14,7 @@ class Store {
   network_state = null;
   loading_room_code = false;
   _refresh_room_code_handler = null;
+  player_info = [];
 
   constructor() {
     makeAutoObservable(this);
@@ -63,6 +64,9 @@ let pushStore = action(obj => {
     store[prop] = obj[prop];
   }
 });
+let pushStoreSingle = action (obj => {
+  store[obj.Key] = obj.Val;
+})
 
 function useListeners() {
   let [init, setInit] = useState(false);
@@ -79,6 +83,9 @@ function useListeners() {
           switch (json.Message) {
             case 'pushStore':
               pushStoreList(json.Data);
+              break;
+            case 'pushStoreSingle':
+              pushStoreSingle(json.Data);
               break;
             default:
               console.log('message not handled ' + event.data);

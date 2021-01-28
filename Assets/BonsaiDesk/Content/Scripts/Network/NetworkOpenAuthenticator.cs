@@ -34,7 +34,6 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 	public override void OnServerAuthenticate(NetworkConnection conn) {
 		Debug.Log("[BONSAI] OnServerAuthenticate");
 		if (NetworkManagerGame.Singleton.State == NetworkManagerGame.ConnectionState.Hosting ||
-		    NetworkManagerGame.Singleton.State == NetworkManagerGame.ConnectionState.Neutral ||
 		    conn.connectionId == NetworkServer.localConnection.connectionId) {
 			var authResponseMessage = new AuthResponseMessage {
 				code = 100

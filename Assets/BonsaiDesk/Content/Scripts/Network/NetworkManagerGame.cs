@@ -5,7 +5,6 @@ using System.Linq;
 using Dissonance;
 using Mirror;
 using NobleConnect.Mirror;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Android;
 using UnityEngine.Networking;
@@ -15,42 +14,29 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public enum ConnectionState {
 		RelayError,
 		Loading,
-		Neutral,
 		Hosting,
 		ClientConnecting,
 		ClientConnected
 	}
 
 	public static NetworkManagerGame Singleton;
-
 	public static int AssignedColorIndex;
-	public TableBrowser tableBrowser;
 
-	public bool serverOnlyIfEditor;
+	[Header("Bonsai Network Manager")] public bool serverOnlyIfEditor;
 	public bool visualizeAuthority;
-
+	public TableBrowser tableBrowser;
 	public MoveToDesk moveToDesk;
-
 	public TogglePause togglePause;
-
-	public TextMeshProUGUI textMesh;
 	public BonsaiScreenFade fader;
-
-	public float waitBeforeSpawnButton = 0.4f;
-
-	public GameObject relayFailedButtons;
-
 	private readonly bool[] _spotInUse = new bool[2];
 
 	public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos =
 		new Dictionary<NetworkConnection, PlayerInfo>();
 
 	private readonly float postRoomInfoEvery = 1f;
-
 	private Camera _camera;
 	private DissonanceComms _comms;
-
-	private ConnectionState _connectionState;
+	private ConnectionState _connectionState = ConnectionState.RelayError;
 	private float _postRoomInfoLast;
 	private UnityWebRequest _roomRequest;
 
@@ -114,10 +100,11 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 	public override void Update() {
 		base.Update();
-		
+
 		if (Time.time - _postRoomInfoLast > postRoomInfoEvery) {
 			_postRoomInfoLast = Time.time;
 			tableBrowser.PostNetworkState(State.ToString());
+			tableBrowser.PostPlayerInfo(PlayerInfos);
 			if (HostEndPoint != null) {
 				tableBrowser.PostRoomInfo(HostEndPoint.Address.ToString(), HostEndPoint.Port.ToString());
 			}
@@ -125,8 +112,10 @@ public class NetworkManagerGame : NobleNetworkManager {
 				tableBrowser.PostRoomInfo("", "");
 			}
 		}
+
 		// TODO 
 		// StartCoroutine(StopHostFadeReturnToLoading());
+		// i.e. automatically try to reconnect to the relay service if not connected
 	}
 
 	private void OnApplicationFocus(bool focus) {
@@ -142,15 +131,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 		SetCommsActive(_comms, false);
 		moveToDesk.ResetPosition();
-	}
-
-	private IEnumerator StopHostFadeReturnToLoading() {
-		fader.FadeOut();
-		yield return new WaitForSeconds(fader.fadeTime);
-		StopHost();
-		yield return new WaitForSeconds(0.5f);
-		State = ConnectionState.Loading;
-		fader.FadeIn();
 	}
 
 	private void OnShouldDisconnect(ShouldDisconnectMessage _) {
@@ -175,15 +155,11 @@ public class NetworkManagerGame : NobleNetworkManager {
 	private void HandleState(ConnectionState state, Work work) {
 		switch (state) {
 			case ConnectionState.RelayError:
+				// set to loading to get out of here
+				// you will get bounced back if there is no internet
 				if (work == Work.Setup) {
-					isLANOnly     = true;
-					textMesh.text = "Internet Disconnected!\n\n\n\n(reconnect)";
+					isLANOnly = true;
 					Debug.Log("[BONSAI] RelayError Setup");
-					ActivateButtons(relayFailedButtons, waitBeforeSpawnButton);
-				}
-				else {
-					textMesh.text = "...";
-					DisableButtons(relayFailedButtons);
 				}
 
 				break;
@@ -204,16 +180,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 				break;
 
-			// Has a HostEndPoint and now can open room or join a room
-			case ConnectionState.Neutral:
-				if (work == Work.Setup) {
-					if (fader.currentAlpha != 0) {
-						fader.FadeIn();
-					}
-				}
-
-				break;
-
 			// Has a client connected
 			case ConnectionState.Hosting:
 				if (work == Work.Setup) {
@@ -228,7 +194,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 			// Client connected to a host
 			case ConnectionState.ClientConnected:
 				if (work == Work.Setup) {
-					fader.FadeIn();
+					// todo set fade mask 0
 					SetCommsActive(_comms, true);
 				}
 				else {
@@ -260,17 +226,15 @@ public class NetworkManagerGame : NobleNetworkManager {
 			}
 		}
 		else {
-			State = ConnectionState.Neutral;
+			State = ConnectionState.Hosting;
 		}
 
-		if (fader.currentAlpha != 0) {
-			fader.FadeIn();
-		}
+		// todo set fade mask 0
 	}
 
 	private IEnumerator SmoothStartClient() {
 		State = ConnectionState.ClientConnecting;
-		fader.FadeOut();
+		// todo set fade mask 1
 		yield return new WaitForSeconds(fader.fadeTime);
 		Debug.Log("[BONSAI] SmoothStartClient StopHost");
 		StopHost();
@@ -284,33 +248,9 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	private IEnumerator FadeThenReturnToLoading() {
-		fader.FadeOut();
+		// todo set fade mask 1
 		yield return new WaitForSeconds(fader.fadeTime);
 		State = ConnectionState.Loading;
-	}
-
-	private void ActivateButtons(GameObject buttons, float delayTime) {
-		StartCoroutine(DelayActivateButtons(buttons, delayTime));
-	}
-
-	private static void DisableButtons(GameObject buttons) {
-		foreach (Transform child in buttons.transform) {
-			var button = child.GetComponent<HoleButton>();
-			if (button != null) {
-				button.DisableButton();
-			}
-		}
-	}
-
-	private static IEnumerator DelayActivateButtons(GameObject buttons, float seconds) {
-		yield return new WaitForSeconds(seconds);
-		foreach (Transform child in buttons.transform) {
-			var button = child.gameObject;
-
-			if (button != null) {
-				button.SetActive(true);
-			}
-		}
 	}
 
 	private IEnumerator KickClients() {
@@ -378,11 +318,8 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	public override void OnServerPrepared(string hostAddress, ushort hostPort) {
-		Debug.Log("[BONSAI] OnServerPrepared isLanOnly: " + isLANOnly);
-		Debug.Log("[BONSAI] OnServerPrepared: " + hostAddress + ":" + hostPort);
-
-		// triggers on startup
-		State = !isLANOnly ? ConnectionState.Neutral : ConnectionState.RelayError;
+		Debug.Log($"[BONSAI] OnServerPrepared ({hostAddress} : {hostPort}) isLanOnly={isLANOnly}");
+		State = !isLANOnly ? ConnectionState.Hosting : ConnectionState.RelayError;
 	}
 
 	public override void OnServerConnect(NetworkConnection conn) {
@@ -506,7 +443,8 @@ public class NetworkManagerGame : NobleNetworkManager {
 				// this happens on client when the host exits rudely (power off, etc)
 				// base method stops client with a delay so it can gracefully disconnct
 				// since the client is getting booted here, we don't need to wait (which introduces bugs)
-				fader.SetFadeLevel(1.0f);
+
+				// todo set fade mask 1
 				State = ConnectionState.Loading;
 				break;
 			case ConnectionState.ClientConnecting:
@@ -518,10 +456,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 				base.OnClientDisconnect(conn);
 				break;
 		}
-	}
-
-	public void ClickRelayFailed() {
-		StartCoroutine(StopHostFadeReturnToLoading());
 	}
 
 	private static void OnSpot(NetworkConnection conn, SpotMessage msg) {

@@ -366,7 +366,7 @@ let SettingsPage = observer(() => {
         </div>
         <ul>
           {Object.entries(store).map(info => {
-            return <li key={info[0]}>{info[0]}{': '}{info[1]}</li>;
+            return <li key={info[0]}>{info[0]}{': '}{showInfo(info)}</li>;
           })}
         </ul>
       </MenuContent>
@@ -379,6 +379,21 @@ const pages = [
   {name: 'Contacts', component: ContactsPage},
   {name: 'Settings', component: SettingsPage},
 ];
+
+function showInfo(info) {
+  switch (info[0]) {
+    case "player_info":
+      return showPlayerInfo(info[1])
+    default:
+      return info[1] ? info[1].toString() : ""
+  }
+}
+
+function showPlayerInfo (playerInfo) {
+  return "[" + playerInfo.map(info => {
+    return `(${info.Name}, ${info.ConnectionId})`
+  }).join(" ") + "]"
+}
 
 let Menu = () => {
 

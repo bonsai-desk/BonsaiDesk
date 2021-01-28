@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Mirror;
 using Newtonsoft.Json;
 using OVR;
 using UnityEngine;
@@ -22,7 +25,7 @@ public class TableBrowser : NewBrowser {
 			initialUrl = "streaming-assets://build/index.html";
 		}
 	#else
-        _autoBrowser.LoadUrl("streaming-assets://build/index.html");
+		initialUrl = "streaming-assets://build/index.html";
 	#endif
 
 		_webViewPrefab.InitialUrl = initialUrl;
@@ -116,7 +119,7 @@ public class TableBrowser : NewBrowser {
 		KeyVal[] kvs = {
 			new KeyVal {Key = "network_state", Val = state}
 		};
-		var jsMessage = new JsMessageKeyVals {
+		var jsMessage = new CsMessageKeyVals {
 			Type = "command", Message = "pushStore", Data = kvs
 		};
 		var message = JsonConvert.SerializeObject(jsMessage);
@@ -128,34 +131,65 @@ public class TableBrowser : NewBrowser {
 			new KeyVal {Key = "ip_address", Val = ipAddress},
 			new KeyVal {Key = "port", Val       = port}
 		};
-		var jsMessage = new JsMessageKeyVals {
-			Type = "command", Message = "pushStore", Data = kvs
+		var jsMessage = new CsMessageKeyVals {
+			Data = kvs
 		};
 		var message = JsonConvert.SerializeObject(jsMessage);
 		PostMessage(message);
 	}
 
-	private class JsMessageString {
+	public void PostPlayerInfo(Dictionary<NetworkConnection, NetworkManagerGame.PlayerInfo> playerInfos) {
+		var data = playerInfos.Select(entry => new PlayerData(){Name="cam", ConnectionId = 0}).ToArray();
+
+		var csMessage = new CsMessageKeyType<PlayerData[]> {Data = new KeyType<PlayerData[]>{Key="player_info", Val=data}};
+		
+		var message   = JsonConvert.SerializeObject(csMessage);
+		PostMessage(message);
+	}
+
+	private class CsMessageKeyType<T> {
+		public KeyType<T> Data;
+		public string Message = "pushStoreSingle";
+		public string Type = "command";
+	}
+
+	private class KeyType<T> {
+		public string Key;
+		public T Val;
+	}
+
+	public struct PlayerData {
+		public string Name;
+		public int ConnectionId;
+	}
+
+	private struct JsMessageString {
 		public string Data;
 		public string Message;
 		public string Type;
 	}
 
-	private class JsMessageKeyVals {
+	private class CsMessageKeyVals {
 		public KeyVal[] Data;
-		public string Message;
-		public string Type;
+		public string Message = "pushStore";
+		public string Type = "command";
 	}
 
-	private class KeyVal {
+	private struct KeyVal {
 		public string Key;
 		public string Val;
 	}
 
-	public class RoomData {
+	public struct RoomData {
 		public string id;
 		public string ip_address;
 		public int pinged;
 		public int port;
+	}
+
+	public struct PlayerDatas {
+		public PlayerData[] Data;
+		public string Message;
+		public string Type;
 	}
 }
