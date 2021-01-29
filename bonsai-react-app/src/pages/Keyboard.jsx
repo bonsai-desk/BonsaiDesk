@@ -5,6 +5,7 @@ import CaretSquareUpHollow from '../static/caret-square-up-hollow.svg';
 import CaretSquareUp from '../static/caret-square-up.svg';
 import BackSpaceImg from '../static/backspace.svg';
 import BackSpaceImgHollow from '../static/backspace-hollow.svg';
+import KeyBoardImg from '../static/keyboard-dismiss.svg';
 
 const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 
@@ -33,6 +34,22 @@ function Key(props) {
     </span>
         </div>
       </Button>);
+}
+
+function KeyBoardDismiss() {
+  const shiftButtonClass = 'bg-gray-900 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer w-20 h-20 flex flex-wrap content-center';
+
+  const imgVisible = 'h-10 w-10';
+
+  return <Button>
+    <div className={shiftButtonClass}>
+      <div onClick={()=>{postKeyEvent("dismiss")}} className={'w-full flex justify-center'}>
+        <img className={imgVisible}
+             src={KeyBoardImg} alt={''}/>
+      </div>
+    </div>
+  </Button>;
+
 }
 
 function BackSpace() {
@@ -289,6 +306,7 @@ function Keyboard() {
         <div className={'w-full flex space-x-2 justify-center'}>
           <NumsOrChar handleClick={handleClickNumOrChar}/>
           <Space/>
+          <KeyBoardDismiss/>
         </div>
 
       </div>
