@@ -21,8 +21,6 @@ public class ServerTestButtons : MonoBehaviour
             if (!first)
                 print("---");
             print(player.Value.spot);
-            print(player.Value.youtubePlayerState);
-            print(player.Value.youtubePlayerCurrentTime);
             first = false;
         }
     }
