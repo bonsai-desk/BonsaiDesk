@@ -43,7 +43,7 @@ class Store {
       method: 'post',
       url: API_BASE + `/rooms/${store.room_code}/refresh`,
     }).then(response => {
-      console.log('refresh ' + store.room_code);
+      //console.log('refresh ' + store.room_code);
     }).catch(err => {
       console.log(err);
       this.room_code = null;

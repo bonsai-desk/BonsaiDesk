@@ -78,13 +78,22 @@ function SettingsTitle(props) {
 }
 
 function JoinDeskButton(props) {
-  let {handleClick, char} = props;
+  let {handleClick, char, triggerMouseDown = false} = props;
 
   return (
       <Button>
-        <div onClick={() => {
-          handleClick(char);
-        }} className={roundButtonClass}>
+        <div
+            onMouseDown={() => {
+              if (triggerMouseDown) {
+                handleClick(char);
+              }
+            }}
+            onMouseUp={() => {
+              if (!triggerMouseDown) {
+                handleClick(char);
+              }
+            }}
+            className={roundButtonClass}>
             <span className={'w-full text-center'}>
                 {char}
             </span>
@@ -254,14 +263,15 @@ function JoinDeskPage(props) {
         setLoading(false);
       }).catch(err => {
         console.log(err);
+        setMessage(`Could not find ${code}, try again`);
         setCode('');
         setLoading(false);
-        setMessage('Could not find room, try again');
       });
     }
   }, [loading, code]);
 
   function handleClick(char) {
+    console.log('handleclick');
     setMessage('');
     switch (code.length) {
       case 4:
@@ -288,24 +298,24 @@ function JoinDeskPage(props) {
             </div>
             <div
                 className={'text-9xl h-full flex flex-wrap content-center justify-center'}>
-              {code}
+              {code.length < 4 ? code : ""}
             </div>
           </div>
           <div className={'p-2 rounded space-y-4 text-2xl'}>
             <div className={'flex space-x-4'}>
-              <JoinDeskButton handleClick={handleClick} char={'L'}/>
-              <JoinDeskButton handleClick={handleClick} char={'R'}/>
-              <JoinDeskButton handleClick={handleClick} char={'C'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'L'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'R'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'C'}/>
             </div>
             <div className={'flex space-x-4'}>
-              <JoinDeskButton handleClick={handleClick} char={'D'}/>
-              <JoinDeskButton handleClick={handleClick} char={'E'}/>
-              <JoinDeskButton handleClick={handleClick} char={'F'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'D'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'E'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'F'}/>
             </div>
             <div className={'flex space-x-4'}>
-              <JoinDeskButton handleClick={handleClick} char={'G'}/>
-              <JoinDeskButton handleClick={handleClick} char={'H'}/>
-              <JoinDeskButton handleClick={handleClick} char={'I'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'G'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'H'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'I'}/>
             </div>
             <div className={'flex flex-wrap w-full justify-around'}>
               <JoinDeskButton handleClick={handleBackspace} char={'<'}/>
@@ -489,19 +499,19 @@ let Menu = () => {
   return (
       <div className={'flex text-lg text-gray-500 h-full'}>
         <div className={'w-4/12 bg-black overflow-auto scrollhost static'}>
-          <div className={"w-4/12 bg-black fixed"}>
+          <div className={'w-4/12 bg-black fixed'}>
             <SettingsTitle>
               Menu
             </SettingsTitle>
           </div>
-          <div className={"h-16"} />
-            <SettingsList>
-              {pages.map((info, i) => {
-                return <ListItem key={info.name} handleClick={() => {
-                  setActive(i);
-                }} selected={active === i}>{info.name}</ListItem>;
-              })}
-            </SettingsList>
+          <div className={'h-16'}/>
+          <SettingsList>
+            {pages.map((info, i) => {
+              return <ListItem key={info.name} handleClick={() => {
+                setActive(i);
+              }} selected={active === i}>{info.name}</ListItem>;
+            })}
+          </SettingsList>
         </div>
         <div className={'bg-gray-900 z-10 w-full overflow-auto scrollhost'}>
           <SelectedPage navHome={navHome}/>

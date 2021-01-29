@@ -694,7 +694,7 @@ namespace Vuplex.WebView {
                     _webView.Click(eventArgs.Point, _options.clickWithoutStealingFocus);
                 } else {
                     var pointerOptions = eventArgs.ToPointerOptions();
-                    webViewWithPointerDownAndUp.PointerDown(eventArgs.Point, pointerOptions);
+                    //webViewWithPointerDownAndUp.PointerDown(eventArgs.Point, pointerOptions);
                     webViewWithPointerDownAndUp.PointerUp(eventArgs.Point, pointerOptions);
                 }
             }

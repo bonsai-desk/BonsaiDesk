@@ -21,8 +21,6 @@ function genNavListeners(history) {
 
   function _navListeners(event) {
 
-    console.log(event.data)
-
     let json = JSON.parse(event.data);
 
     if (json.type !== 'nav') return;
