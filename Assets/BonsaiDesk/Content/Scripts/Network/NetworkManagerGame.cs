@@ -29,6 +29,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public MoveToDesk moveToDesk;
 	public TogglePause togglePause;
 	public BonsaiScreenFade fader;
+	public bool roomOpen;
 	private readonly bool[] _spotInUse = new bool[2];
 
 	public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos =
@@ -55,6 +56,8 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 			Debug.Log("[BONSAI] HandleState Setup " + value);
 			HandleState(value, Work.Setup);
+
+			PostInfo();
 		}
 	}
 
@@ -77,8 +80,10 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 		tableBrowser.JoinRoom         += HandleJoinRoom;
 		tableBrowser.LeaveRoom        += HandleLeaveRoom;
-		tableBrowser.KickAll          += HandleKickAll;
 		tableBrowser.KickConnectionId += HandleKickConnectionId;
+
+		tableBrowser.OpenRoom  += HandleOpenRoom;
+		tableBrowser.CloseRoom += HandleCloseRoom;
 
 		_camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
 
@@ -104,24 +109,11 @@ public class NetworkManagerGame : NobleNetworkManager {
 		}
 	}
 
-	private void HandleKickConnectionId(int id) {
-		Debug.Log($"[BONSAI] Kick Id {id}");
-		StartCoroutine(KickClient(id));
-	}
-
 	public override void Update() {
 		base.Update();
 
-		if (browserReady && Time.time - _postRoomInfoLast > postRoomInfoEvery) {
-			_postRoomInfoLast = Time.time;
-			tableBrowser.PostNetworkState(State.ToString());
-			tableBrowser.PostPlayerInfo(PlayerInfos);
-			if (HostEndPoint != null) {
-				tableBrowser.PostRoomInfo(HostEndPoint.Address.ToString(), HostEndPoint.Port.ToString());
-			}
-			else {
-				tableBrowser.PostRoomInfo("", "");
-			}
+		if (Time.time - _postRoomInfoLast > postRoomInfoEvery) {
+			PostInfo();
 		}
 
 		// TODO 
@@ -142,6 +134,37 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 		SetCommsActive(_comms, false);
 		moveToDesk.ResetPosition();
+	}
+
+	private void PostInfo() {
+		if (browserReady) {
+			_postRoomInfoLast = Time.time;
+			tableBrowser.PostNetworkState(State.ToString());
+			tableBrowser.PostPlayerInfo(PlayerInfos);
+			tableBrowser.PostRoomOpen(roomOpen);
+			if (HostEndPoint != null) {
+				tableBrowser.PostRoomInfo(HostEndPoint.Address.ToString(), HostEndPoint.Port.ToString());
+			}
+			else {
+				tableBrowser.PostRoomInfo("", "");
+			}
+		}
+	}
+
+	private void HandleCloseRoom() {
+		roomOpen = false;
+		State    = ConnectionState.Loading;
+		PostInfo();
+	}
+
+	private void HandleOpenRoom() {
+		roomOpen = true;
+		PostInfo();
+	}
+
+	private void HandleKickConnectionId(int id) {
+		Debug.Log($"[BONSAI] Kick Id {id}");
+		StartCoroutine(KickClient(id));
 	}
 
 	private void OnShouldDisconnect(ShouldDisconnectMessage _) {
@@ -230,6 +253,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 			Debug.Log("[BONSAI] StartHostAfterDisconnect StartHost ");
 			isLANOnly = false;
 			if (serverOnlyIfEditor && Application.isEditor) {
+				roomOpen = true;
 				StartServer();
 			}
 			else {
@@ -285,11 +309,14 @@ public class NetworkManagerGame : NobleNetworkManager {
 				break;
 			}
 		}
+
 		if (_conn != null) {
 			_conn.Send(new ShouldDisconnectMessage());
 			yield return new WaitForSeconds(fader.fadeTime + 0.15f);
 			_conn.Disconnect();
 		}
+
+		PostInfo();
 	}
 
 	private void VoidAndDeafen() {
@@ -321,10 +348,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 	private void HandleLeaveRoom() {
 		StartCoroutine(FadeThenReturnToLoading());
-	}
-
-	private void HandleKickAll() {
-		State = ConnectionState.Loading;
 	}
 
 	public event Action<NetworkConnection> ServerAddPlayer;

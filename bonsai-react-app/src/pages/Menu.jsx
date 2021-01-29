@@ -6,15 +6,25 @@ import DoorOpen from '../static/door-open.svg';
 import LinkImg from '../static/link.svg';
 import ThinkingFace from '../static/thinking-face.svg';
 import {useStore} from '../DataProvider';
-import {BounceLoader} from 'react-spinners';
+import {BeatLoader, BounceLoader} from 'react-spinners';
 import {observer} from 'mobx-react-lite';
 import {action, autorun} from 'mobx';
 
 let API_BASE = 'https://api.desk.link';
 
-let roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
+const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
+const redButtonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
+const greenButtonClass = 'py-4 px-8 font-bold bg-green-800 active:bg-green-700 hover:bg-green-600 rounded cursor-pointer flex flex-wrap content-center';
+const grayButtonClass = 'py-4 px-8 font-bold bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
+const grayButtonClassInert = 'py-4 px-8 font-bold bg-gray-800 rounded flex flex-wrap content-center';
 
-let redButtonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
+function postOpenRoom() {
+  postJson({Type: 'command', Message: 'openRoom'});
+}
+
+function postCloseRoom() {
+  postJson({Type: 'command', Message: 'closeRoom'});
+}
 
 function postJoinRoom(data) {
   postJson({Type: 'command', Message: 'joinRoom', data: JSON.stringify(data)});
@@ -23,10 +33,6 @@ function postJoinRoom(data) {
 function postLeaveRoom() {
   postJson({Type: 'command', Message: 'leaveRoom'});
 
-}
-
-function postKickAll() {
-  postJson({Type: 'command', Message: 'kickAll'});
 }
 
 function postKickConnectionId(id) {
@@ -109,7 +115,7 @@ function ConnectedClient(props) {
                    imgSrc={ThinkingFace}><Button>
     <div onClick={() => {
       postKickConnectionId(ConnectionId);
-    }} className={redButtonClass}>kick
+    }} className={redButtonClass}>Kick
     </div>
   </Button></InfoItem>;
 }
@@ -159,45 +165,78 @@ let ClientHomePage = () => {
         <InfoItem title={'Connected'} slug={'You are connected to a host'}
                   imgSrc={LinkImg}>
           <Button>
-            <div onClick={postLeaveRoom} className={redButtonClass}>exit</div>
+            <div onClick={postLeaveRoom} className={redButtonClass}>Exit</div>
           </Button>
         </InfoItem>
       </div>
   );
 };
 
-let HostHomePage = observer(() => {
-
+let RoomInfo = observer(() => {
   let {store, pushStore} = useStore();
 
   let buttonClass = 'px-2 py-1 bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
 
-  return (
-      <React.Fragment>
-        <InfoItem title={'Desk Code'} slug={'People who have this can join you'}
-                  imgSrc={DoorOpen}>
-          <div className={'text-4xl flex flex-wrap content-center'}>
+  let OpenRoom =
+      <InfoItem title={'Room'} slug={'Invite others'} imgSrc={DoorOpen}>
+        <Button>
+          <div className={greenButtonClass} onClick={postOpenRoom}>
+            Open Up
+          </div>
+        </Button>
+      </InfoItem>;
+
+  let CloseRoom =
+      <InfoItem title={'Room'} slug={'Ready to accept connections'}
+                imgSrc={DoorOpen}>
+        <Button>
+          <div className={redButtonClass} onClick={postCloseRoom}>
+            Close
+          </div>
+        </Button>
+      </InfoItem>;
+
+  if (store.room_open) {
+    return (
+        <React.Fragment>
+          {CloseRoom}
+          <InfoItem title={'Desk Code'}
+                    slug={'People who have this can join you'}
+                    imgSrc={LinkImg}>
             {store.room_code ?
                 <Button>
                   <div onClick={() => {
                     pushStore({room_code: null});
-                  }} className={buttonClass}>{store.room_code}</div>
+                  }} className={grayButtonClass}>{store.room_code}</div>
                 </Button>
 
-                : <BounceLoader size={40} color={'#737373'}/>
+                :
+                <div className={grayButtonClassInert}><BeatLoader size={8}
+                                                                  color={'#737373'}/>
+                </div>
             }
-          </div>
-        </InfoItem>
-        {store.player_info.length > 1 ?
+          </InfoItem>
+        </React.Fragment>
+    );
+  } else {
+    return (
+        <React.Fragment>
+          {OpenRoom}
+        </React.Fragment>
+    );
+  }
+
+});
+
+let HostHomePage = observer(() => {
+
+  let {store, pushStore} = useStore();
+
+  return (
+      <React.Fragment>
+        <RoomInfo/>
+        {store.player_info.length > 0 && store.room_open ?
             <React.Fragment>
-              <InfoItem title={'Clients connected'}
-                        slug={'There are people in your room'} imgSrc={LinkImg}>
-                <Button>
-                  <div onClick={postKickAll} className={redButtonClass}>
-                    kick all
-                  </div>
-                </Button>
-              </InfoItem>
               {store.player_info.map(info => <ConnectedClient info={info}/>)}
             </React.Fragment>
             :
@@ -263,7 +302,7 @@ function JoinDeskPage(props) {
         setLoading(false);
       }).catch(err => {
         console.log(err);
-        setMessage(`Could not find ${code}, try again`);
+        setMessage(`Could not find ${code} try again`);
         setCode('');
         setLoading(false);
       });
@@ -298,24 +337,33 @@ function JoinDeskPage(props) {
             </div>
             <div
                 className={'text-9xl h-full flex flex-wrap content-center justify-center'}>
-              {code.length < 4 ? code : ""}
+              {code.length < 4 ? code : ''}
             </div>
           </div>
           <div className={'p-2 rounded space-y-4 text-2xl'}>
             <div className={'flex space-x-4'}>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'L'}/>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'R'}/>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'C'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+                              char={'L'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+                              char={'R'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+                              char={'C'}/>
             </div>
             <div className={'flex space-x-4'}>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'D'}/>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'E'}/>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'F'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+                              char={'D'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+                              char={'E'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+                              char={'F'}/>
             </div>
             <div className={'flex space-x-4'}>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'G'}/>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'H'}/>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick} char={'I'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+                              char={'G'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+                              char={'H'}/>
+              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+                              char={'I'}/>
             </div>
             <div className={'flex flex-wrap w-full justify-around'}>
               <JoinDeskButton handleClick={handleBackspace} char={'<'}/>
@@ -354,6 +402,10 @@ let SettingsPage = observer(() => {
   });
   let rmFakeClient = action(store => {
     store.player_info.pop();
+  });
+
+  let toggleRoomOpen = action(store => {
+    store.room_open = !store.room_open;
   });
 
   return (
@@ -399,8 +451,6 @@ let SettingsPage = observer(() => {
             }}>- fake ip/port
             </div>
           </Button>
-        </div>
-        <div className={'flex space-x-2'}>
           <Button>
             <div onClick={() => {
               addFakeClient(store);
@@ -413,6 +463,15 @@ let SettingsPage = observer(() => {
             }} className={buttonClass}>- fake client
             </div>
           </Button>
+        </div>
+        <Button>
+          <div onClick={() => {
+            toggleRoomOpen(store);
+          }} className={buttonClass}>
+            toggle room open
+          </div>
+        </Button>
+        <div className={'flex space-x-2'}>
         </div>
         <ul>
           {Object.entries(store).map(info => {
@@ -460,14 +519,16 @@ let Menu = () => {
   useEffect(() => {
     autorun(() => {
       // remove room code if
-      if (store.room_code && (!store.ip_address || !store.port)) {
+      if (store.room_code &&
+          (!store.ip_address || !store.port || !store.room_open)) {
         console.log('rm room code');
         pushStore({room_code: null});
         return;
       }
 
       // send ip/port out for a room code
-      if (!store.room_code && !store.loading_room_code && store.ip_address &&
+      if (store.room_open && !store.room_code && !store.loading_room_code &&
+          store.ip_address &&
           store.port) {
         console.log('fetch room code');
         pushStore({loading_room_code: true});
