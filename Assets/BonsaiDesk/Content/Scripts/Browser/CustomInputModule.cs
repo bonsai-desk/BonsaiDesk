@@ -9,6 +9,7 @@ public class CustomInputModule : StandaloneInputModule
     [Header("Custom Input Module")]
     public static CustomInputModule Singleton;
 
+    public Vector3 cursorRoot;
     public OVRCursor m_Cursor;
     public List<Transform> screens;
     public float hoverDistance = 0.1f;
@@ -82,6 +83,8 @@ public class CustomInputModule : StandaloneInputModule
             {
                 fingerInScreen = rightFingerInScreen;
             }
+
+            cursorRoot = screen.TransformPoint(fingerInScreen);
 
             // determine click
             var inBounds = FingerInBounds(fingerInScreen);
