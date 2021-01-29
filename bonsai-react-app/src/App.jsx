@@ -10,6 +10,7 @@ import YouTube from './pages/YouTube';
 import Spring from './pages/Spring';
 import Twitch from './pages/Twitch';
 import Menu from './pages/Menu';
+import Keyboard from './pages/Keyboard';
 import {postJson} from './utilities';
 
 function postListenersReady() {
@@ -80,12 +81,11 @@ function Boot() {
           <li>
             <Link to={'/twitch'}>twitch</Link>
           </li>
-          <li onClick={() => {
-            history.push('/menu');
-          }} className={'text-white'}>menu
-          </li>
           <li>
             <Link to={'/menu'}>menu</Link>
+          </li>
+          <li>
+            <Link to={'/keyboard'}>keyboard</Link>
           </li>
         </ul>
       </div>
@@ -110,6 +110,8 @@ function App() {
             <Route path={'/twitch'} component={Twitch}/>
 
             <Route path={'/menu'} component={Menu}/>
+
+            <Route path={'/keyboard'} component={Keyboard}/>
 
             <Route path={'/youtube/:id/:timeStamp'} component={YouTube}/>
 
