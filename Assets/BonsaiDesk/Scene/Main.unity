@@ -1919,7 +1919,7 @@ MonoBehaviour:
   maxRelayRefreshAttempts: 3
   relayLifetime: 30
   isDisconnecting: 0
-  serverOnlyIfEditor: 1
+  serverOnlyIfEditor: 0
   visualizeAuthority: 0
   browserReady: 0
   tableBrowser: {fileID: 320584329}
@@ -2501,7 +2501,7 @@ Transform:
   m_Children:
   - {fileID: 1520135412}
   m_Father: {fileID: 877365330}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -90, y: 180, z: 0}
 --- !u!1 &329180640
 GameObject:
@@ -10153,8 +10153,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 836979148}
   - {fileID: 320584330}
+  - {fileID: 836979148}
   - {fileID: 874699798}
   - {fileID: 667714760}
   - {fileID: 423013165}
@@ -17256,7 +17256,7 @@ PrefabInstance:
     - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
         type: 3}
       propertyPath: m_RootOrder
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
         type: 3}

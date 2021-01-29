@@ -58,9 +58,11 @@ function Button(props) {
 
 function ListItem(props) {
   let {selected, handleClick} = props;
-  let className = selected ?
-      'rounded bg-blue-700 text-white px-3 py-2 cursor-pointer' :
-      'rounded hover:bg-gray-800 active:bg-gray-900 hover:text-white px-3 py-2 cursor-pointer';
+
+  const buttonClassSelected = 'py-4 px-8 bg-blue-700 text-white rounded cursor-pointer flex flex-wrap content-center';
+  const buttonClass = 'py-4 px-8 hover:bg-gray-800 active:bg-gray-900 hover:text-white rounded cursor-pointer flex flex-wrap content-center';
+
+  let className = selected ? buttonClassSelected : buttonClass;
   return (
       <Button>
         <div className={className} onClick={handleClick}>
@@ -111,13 +113,25 @@ function JoinDeskButton(props) {
 function ConnectedClient(props) {
   let {info} = props;
   let {Name, ConnectionId} = info;
-  return <InfoItem title={Name} slug={ConnectionId}
-                   imgSrc={ThinkingFace}><Button>
-    <div onClick={() => {
-      postKickConnectionId(ConnectionId);
-    }} className={redButtonClass}>Kick
-    </div>
-  </Button></InfoItem>;
+
+  if (ConnectionId === 0) {
+    return (
+        <InfoItem title={"You"} slug={`${ConnectionId}`}
+                  imgSrc={ThinkingFace}>
+        </InfoItem>);
+  } else {
+    return (
+        <InfoItem title={Name} slug={ConnectionId}
+                  imgSrc={ThinkingFace}>
+          <Button>
+            <div onClick={() => {
+              postKickConnectionId(ConnectionId);
+            }} className={redButtonClass}>Kick
+            </div>
+          </Button>
+        </InfoItem>);
+  }
+
 }
 
 function InfoItem(props) {
@@ -127,7 +141,7 @@ function InfoItem(props) {
           <div className={'flex flex-wrap content-center  p-2 mr-2'}>
             <img className={'h-9 w-9'} src={props.imgSrc} alt={''}/>
           </div>
-          <div>
+          <div className={'my-auto'}>
             <div className={'text-xl'}>
               {props.title}
             </div>
@@ -173,9 +187,7 @@ let ClientHomePage = () => {
 };
 
 let RoomInfo = observer(() => {
-  let {store, pushStore} = useStore();
-
-  let buttonClass = 'px-2 py-1 bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
+  let {store} = useStore();
 
   let OpenRoom =
       <InfoItem title={'Room'} slug={'Invite others'} imgSrc={DoorOpen}>
@@ -196,6 +208,8 @@ let RoomInfo = observer(() => {
         </Button>
       </InfoItem>;
 
+  const roomCodeCLass = 'text-5xl ';
+
   if (store.room_open) {
     return (
         <React.Fragment>
@@ -203,18 +217,16 @@ let RoomInfo = observer(() => {
           <InfoItem title={'Desk Code'}
                     slug={'People who have this can join you'}
                     imgSrc={LinkImg}>
+            <div className={"h-20 flex flex-wrap content-center"}>
             {store.room_code ?
-                <Button>
-                  <div onClick={() => {
-                    pushStore({room_code: null});
-                  }} className={grayButtonClass}>{store.room_code}</div>
-                </Button>
+                <div className={roomCodeCLass}>{store.room_code}</div>
 
                 :
                 <div className={grayButtonClassInert}><BeatLoader size={8}
                                                                   color={'#737373'}/>
                 </div>
             }
+            </div>
           </InfoItem>
         </React.Fragment>
     );
@@ -230,13 +242,14 @@ let RoomInfo = observer(() => {
 
 let HostHomePage = observer(() => {
 
-  let {store, pushStore} = useStore();
+  let {store} = useStore();
 
   return (
       <React.Fragment>
         <RoomInfo/>
         {store.player_info.length > 0 && store.room_open ?
             <React.Fragment>
+              <div className={'text-xl'}>People in Your Room</div>
               {store.player_info.map(info => <ConnectedClient info={info}/>)}
             </React.Fragment>
             :
@@ -247,7 +260,7 @@ let HostHomePage = observer(() => {
 });
 
 let LoadingHomePage = () => {
-  return <div className={'flex justify-center w-full h-full'}>
+  return <div className={'flex justify-center w-full flex-wrap'}>
     <BounceLoader size={200} color={'#737373'}/>
   </div>;
 };
@@ -307,7 +320,7 @@ function JoinDeskPage(props) {
         setLoading(false);
       });
     }
-  }, [loading, code]);
+  }, [loading, code, navHome]);
 
   function handleClick(char) {
     console.log('handleclick');
@@ -366,7 +379,8 @@ function JoinDeskPage(props) {
                               char={'I'}/>
             </div>
             <div className={'flex flex-wrap w-full justify-around'}>
-              <JoinDeskButton handleClick={handleBackspace} char={'<'}/>
+              <JoinDeskButton triggerMouseDown={true}
+                              handleClick={handleBackspace} char={'<'}/>
             </div>
           </div>
         </div>
@@ -382,8 +396,6 @@ function ContactsPage() {
 let SettingsPage = observer(() => {
   let {store} = useStore();
 
-  let buttonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded p-4 cursor-pointer flex flex-wrap content-center';
-
   let addFakeIpPort = action((store) => {
     store.ip_address = 1234;
     store.port = 4321;
@@ -398,7 +410,11 @@ let SettingsPage = observer(() => {
   });
 
   let addFakeClient = action(store => {
-    store.player_info.push({Name: 'cam', ConnectionId: 0});
+    if (store.player_info.length > 0) {
+      store.player_info.push({Name: 'cam', ConnectionId: 1});
+    } else {
+      store.player_info.push({Name: 'cam', ConnectionId: 0});
+    }
   });
   let rmFakeClient = action(store => {
     store.player_info.pop();
@@ -414,25 +430,25 @@ let SettingsPage = observer(() => {
           <Button>
             <div onClick={() => {
               setNetState(store, 'Neutral');
-            }} className={buttonClass}>Neutral
+            }} className={grayButtonClass}>Neutral
             </div>
           </Button>
           <Button>
             <div onClick={() => {
               setNetState(store, 'HostWaiting');
-            }} className={buttonClass}>HostWaiting
+            }} className={grayButtonClass}>HostWaiting
             </div>
           </Button>
           <Button>
             <div onClick={() => {
               setNetState(store, 'Hosting');
-            }} className={buttonClass}>Hosting
+            }} className={grayButtonClass}>Hosting
             </div>
           </Button>
           <Button>
             <div onClick={() => {
               setNetState(store, 'ClientConnected');
-            }} className={buttonClass}>ClientConnected
+            }} className={grayButtonClass}>ClientConnected
             </div>
           </Button>
 
@@ -440,13 +456,13 @@ let SettingsPage = observer(() => {
         </div>
         <div className={'flex space-x-2'}>
           <Button>
-            <div className={buttonClass} onClick={() => {
+            <div className={grayButtonClass} onClick={() => {
               addFakeIpPort(store);
             }}>+ fake ip/port
             </div>
           </Button>
           <Button>
-            <div className={buttonClass} onClick={() => {
+            <div className={grayButtonClass} onClick={() => {
               rmFakeIpPort(store);
             }}>- fake ip/port
             </div>
@@ -454,20 +470,20 @@ let SettingsPage = observer(() => {
           <Button>
             <div onClick={() => {
               addFakeClient(store);
-            }} className={buttonClass}>+ fake client
+            }} className={grayButtonClass}>+ fake client
             </div>
           </Button>
           <Button>
             <div onClick={() => {
               rmFakeClient(store);
-            }} className={buttonClass}>- fake client
+            }} className={grayButtonClass}>- fake client
             </div>
           </Button>
         </div>
         <Button>
           <div onClick={() => {
             toggleRoomOpen(store);
-          }} className={buttonClass}>
+          }} className={grayButtonClass}>
             toggle room open
           </div>
         </Button>
