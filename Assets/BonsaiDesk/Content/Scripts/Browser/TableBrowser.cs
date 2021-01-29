@@ -40,7 +40,8 @@ public class TableBrowser : NewBrowser {
 
 	public event Action<RoomData> JoinRoom;
 	public event Action LeaveRoom;
-	public event Action KickAll;
+	public event Action OpenRoom;
+	public event Action CloseRoom;
 	public event Action<int> KickConnectionId;
 
 	private void NavToMenu() {
@@ -90,8 +91,11 @@ public class TableBrowser : NewBrowser {
 					case "leaveRoom":
 						LeaveRoom?.Invoke();
 						break;
-					case "kickAll":
-						KickAll?.Invoke();
+					case "openRoom":
+						OpenRoom?.Invoke();
+						break;
+					case "closeRoom":
+						CloseRoom?.Invoke();
 						break;
 					case "kickConnectionId":
 						// todo what happens when this fails?
@@ -130,6 +134,13 @@ public class TableBrowser : NewBrowser {
 		PostMessage(message);
 	}
 
+	public void PostRoomOpen(bool open) {
+		var kv        = new KeyType<bool> {Key           = "room_open", Val = open};
+		var jsMessage = new CsMessageKeyType<bool> {Data = kv};
+		var message   = JsonConvert.SerializeObject(jsMessage);
+		PostMessage(message);
+	}
+
 	public void PostRoomInfo(string ipAddress, string port) {
 		KeyVal[] kvs = {
 			new KeyVal {Key = "ip_address", Val = ipAddress},
@@ -143,11 +154,13 @@ public class TableBrowser : NewBrowser {
 	}
 
 	public void PostPlayerInfo(Dictionary<NetworkConnection, NetworkManagerGame.PlayerInfo> playerInfos) {
-		var data = playerInfos.Select(entry => new PlayerData(){Name="Player", ConnectionId = entry.Key.connectionId}).ToArray();
+		var data = playerInfos.Select(entry => new PlayerData {Name = "Player", ConnectionId = entry.Key.connectionId})
+		                      .ToArray();
 
-		var csMessage = new CsMessageKeyType<PlayerData[]> {Data = new KeyType<PlayerData[]>{Key="player_info", Val=data}};
-		
-		var message   = JsonConvert.SerializeObject(csMessage);
+		var csMessage = new CsMessageKeyType<PlayerData[]>
+			{Data = new KeyType<PlayerData[]> {Key = "player_info", Val = data}};
+
+		var message = JsonConvert.SerializeObject(csMessage);
 		PostMessage(message);
 	}
 
@@ -184,5 +197,4 @@ public class TableBrowser : NewBrowser {
 		public int pinged;
 		public int port;
 	}
-
 }

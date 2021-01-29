@@ -20,6 +20,19 @@ class Store {
     makeAutoObservable(this);
   }
 
+  _room_open = false;
+
+  get room_open() {
+    return this._room_open;
+  }
+
+  set room_open(open) {
+    this._room_open = open;
+    if (!open) {
+      this.room_code = '';
+    }
+  }
+
   _room_code = null;
 
   get room_code() {
@@ -29,8 +42,11 @@ class Store {
   set room_code(code) {
     this._room_code = code;
     if (code) {
-      this._refresh_room_code_handler = setInterval(
-          this.refreshRoomCode
+      this._refresh_room_code_handler = setInterval(() => {
+            if (this.room_code) {
+              this.refreshRoomCode();
+            }
+          }
           , 1000);
     } else {
       clearInterval(this._refresh_room_code_handler);
@@ -43,7 +59,7 @@ class Store {
       method: 'post',
       url: API_BASE + `/rooms/${store.room_code}/refresh`,
     }).then(response => {
-      console.log('refresh ' + store.room_code);
+      //console.log('refresh ' + store.room_code);
     }).catch(err => {
       console.log(err);
       this.room_code = null;
@@ -64,9 +80,9 @@ let pushStore = action(obj => {
     store[prop] = obj[prop];
   }
 });
-let pushStoreSingle = action (obj => {
+let pushStoreSingle = action(obj => {
   store[obj.Key] = obj.Val;
-})
+});
 
 function useListeners() {
   let [init, setInit] = useState(false);
