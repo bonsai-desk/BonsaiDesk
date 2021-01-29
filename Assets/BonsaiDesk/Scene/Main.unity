@@ -2480,7 +2480,7 @@ MonoBehaviour:
   screenTransform: {fileID: 1520135412}
   initialUrl: http://192.168.0.166:3000
   customInputModule: {fileID: 744943659}
-  useBuiltHtml: 0
+  useBuiltHtml: 1
   hoverSound:
     soundFXName: vcv hover
   mouseDownSound:
@@ -15396,7 +15396,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   useBuiltHtml: 1
-  hotReloadUrl: http://localhost:3000
+  hotReloadUrl: http://192.168.0.166:3000
   togglePause: {fileID: 96659938}
   tabletSpot: {fileID: 144652441}
 --- !u!1 &1384374492
