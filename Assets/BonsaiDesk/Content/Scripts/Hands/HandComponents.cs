@@ -131,6 +131,7 @@ public class HandComponents
             {
                 _physicsRenderer.enabled = true;
             }
+            PhysicsHandController.SetCapsulesActiveTarget(true);
         }
         else if (Mathf.Approximately(_handAlpha, 0f))
         {
@@ -138,6 +139,7 @@ public class HandComponents
             {
                 _physicsRenderer.enabled = false;
             }
+            PhysicsHandController.SetCapsulesActiveTarget(false);
         }
         else
         {
@@ -151,6 +153,8 @@ public class HandComponents
             }
 
             _handMaterial.color = new Color(1, 1, 1, _handAlpha);
+            
+            PhysicsHandController.SetCapsulesActiveTarget(true);
         }
     }
 
