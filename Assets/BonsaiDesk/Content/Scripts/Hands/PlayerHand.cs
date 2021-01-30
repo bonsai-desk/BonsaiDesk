@@ -111,7 +111,7 @@ public class PlayerHand : MonoBehaviour
         {
             return false;
         }
-        
+
         if (_gestures.TryGetValue(gesture, out var value))
         {
             return value;
@@ -228,7 +228,8 @@ public class PlayerHand : MonoBehaviour
 
     public float FingerCloseStrength(OVRSkeleton.BoneId boneId)
     {
-        float r1 = Vector3.Angle(HandComponents.PhysicsMapper.transform.right, HandComponents.PhysicsMapper.CustomBones[(int) boneId].right);
+        float r1 = Vector3.Angle(HandComponents.PhysicsMapper.transform.right,
+            HandComponents.PhysicsMapper.CustomBones[(int) boneId].right);
         float r2 = Vector3.Angle(HandComponents.PhysicsMapper.CustomBones[(int) boneId].right,
             HandComponents.PhysicsMapper.CustomBones[(int) boneId + 2].right);
 
@@ -240,7 +241,8 @@ public class PlayerHand : MonoBehaviour
 
     public float FlatFingerStrength(OVRSkeleton.BoneId boneId)
     {
-        float r1 = Vector3.Angle(HandComponents.PhysicsMapper.transform.right, HandComponents.PhysicsMapper.CustomBones[(int) boneId].right);
+        float r1 = Vector3.Angle(HandComponents.PhysicsMapper.transform.right,
+            HandComponents.PhysicsMapper.CustomBones[(int) boneId].right);
         r1 /= 60f;
         return Mathf.Clamp01(r1);
     }
