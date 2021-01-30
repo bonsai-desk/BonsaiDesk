@@ -24,6 +24,9 @@ public class TogglePauseHand : MonoBehaviour, IHandTick
             headAngleToObject.AngleBelowThreshold() || _lastPointingAtScreen)
             pointingAtScreen = angleToObject.AngleBelowThreshold();
 
+        if (!playerHand.HandComponents.TrackingRecently)
+            pointingAtScreen = false;
+
         togglePause.Point(playerHand.skeletonType, pointingAtScreen, playerHand.palm.position);
 
         if (playerHand.GetGesture(PlayerHand.Gesture.FlatFist))

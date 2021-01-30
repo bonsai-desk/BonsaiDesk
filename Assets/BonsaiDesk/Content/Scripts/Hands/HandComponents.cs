@@ -36,6 +36,7 @@ public class HandComponents
     public HandComponents(PlayerHand playerHand, Transform handAnchor, Transform handObject)
     {
         PlayerHand = playerHand;
+        PlayerHand.HandComponents = this;
         HandAnchor = handAnchor;
 
         _handScale = 1f;
@@ -53,7 +54,6 @@ public class HandComponents
         TargetHand.name += "_Local";
 
         PhysicsMapper = PhysicsHand.GetComponentInChildren<OVRHandTransformMapper>();
-        PlayerHand.physicsMapper = PhysicsMapper;
 
         TargetMapper = TargetHand.GetComponent<OVRHandTransformMapper>();
         TargetMapper.targetObject = handAnchor;

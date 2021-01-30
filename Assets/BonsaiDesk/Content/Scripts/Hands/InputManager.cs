@@ -166,6 +166,11 @@ public class InputManager : MonoBehaviour
     {
         return Left.Tracking && Right.Tracking;
     }
+    
+    public bool TrackingRecently()
+    {
+        return Left.TrackingRecently && Right.TrackingRecently;
+    }
 
     private void CalculateFingerTipPositions()
     {
