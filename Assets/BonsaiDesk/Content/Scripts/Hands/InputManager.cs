@@ -126,6 +126,8 @@ public class InputManager : MonoBehaviour
                 {
                     handComponents.TargetMapper.UpdateBonesToTargets();
                 }
+
+                handComponents.PhysicsHandController.SetHandScale(handComponents.OVRSkeleton.transform.localScale.x);
             }
         }
         else if (controller == OVRInput.Controller.Touch)
@@ -136,6 +138,8 @@ public class InputManager : MonoBehaviour
                 handComponents.TargetHand.position = handComponents.HandAnchor.TransformPoint(controllerOffset);
                 handComponents.TargetHand.rotation = handComponents.HandAnchor.rotation * rotationOffset;
                 handComponents.TargetMapper.UpdateBonesToStartPose();
+
+                handComponents.PhysicsHandController.SetHandScale(1f);
             }
         }
     }
