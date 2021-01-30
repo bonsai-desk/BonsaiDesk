@@ -19,9 +19,12 @@ public class PhysicsHandController : MonoBehaviour
     public Transform[] fingerTargets;
 
     public Vector3 jointOffset = new Vector3(0.035f, 0, 0);
+    private Vector3 _initialJointOffset;
+    public Vector3 InitialJointOffset => _initialJointOffset;
 
     private bool _initialized = false;
     private ConfigurableJoint _joint;
+    public ConfigurableJoint Joint => _joint;
     private Rigidbody _rigidbody;
     private Quaternion _startRotation;
 
@@ -29,6 +32,8 @@ public class PhysicsHandController : MonoBehaviour
 
     private bool _capsulesActive = false;
     private bool _capsulesActiveTarget = false;
+
+    private float _handScale = 1f;
 
     private void Awake()
     {
@@ -68,6 +73,33 @@ public class PhysicsHandController : MonoBehaviour
     //     SetCapsulesActiveTarget(false);
     //     SetCapsulesActiveTarget(true);
     // }
+
+    public void SetHandScale(float scale)
+    {
+        if (Mathf.Approximately(_handScale, scale))
+        {
+            return;
+        }
+        
+        print("update: " + Time.time);
+
+        _handScale = scale;
+
+        var localScale = new Vector3(scale, scale, scale);
+        transform.localScale = localScale;
+        transform.parent.GetChild(1).localScale = localScale;
+
+        Joint.anchor = jointOffset * (1f / scale);
+
+        //this does nothing but causes the joint to realize that one of its parents has changed scale
+        Joint.connectedAnchor = Joint.connectedAnchor;
+
+        for (int i = 0; i < fingerJoints.Length; i++)
+        {
+            //this does nothing but causes the joint to realize that one of its parents has changed scale
+            fingerJoints[i].connectedAnchor = fingerJoints[i].connectedAnchor;
+        }
+    }
 
     public void SetCapsulesActiveTarget(bool active)
     {
@@ -232,6 +264,8 @@ public class PhysicsHandController : MonoBehaviour
         if (_initialized)
             return;
         _initialized = true;
+
+        _initialJointOffset = jointOffset;
 
         IgnoreCollisions();
         SetupJoint();

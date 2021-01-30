@@ -24,10 +24,14 @@ public class HandComponents
     public int physicsLayer;
     private int _touchScreenSurfaceLayer;
 
+    private float _handScale;
+
     public HandComponents(PlayerHand playerHand, Transform handAnchor, Transform handObject)
     {
         PlayerHand = playerHand;
         HandAnchor = handAnchor;
+
+        _handScale = 1f;
 
         PhysicsHand = handObject.GetChild(0);
         PhysicsHandController = PhysicsHand.GetComponent<PhysicsHandController>();
@@ -88,7 +92,7 @@ public class HandComponents
     {
         Tracking = tracking;
     }
-    
+
     /// <summary>
     /// changes the layer collision matrix for TouchScreenSurface to not collide or not collide with this hand
     /// excluding the index tip collider
