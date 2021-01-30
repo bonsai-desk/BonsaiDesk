@@ -55,7 +55,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         }
 
         //start pinch pull action. note that the action is started by the hand which grabs the rope
-        if (InputManager.Hands.Tracking() && playerHand.GetGestureStart(PlayerHand.Gesture.IndexPinching) &&
+        if (InputManager.Hands.TrackingRecently() && playerHand.GetGestureStart(PlayerHand.Gesture.IndexPinching) &&
             playerHand.OtherHand.GetGesture(PlayerHand.Gesture.IndexPinching) &&
             Vector3.Distance(playerHand.PinchPosition(), playerHand.OtherHand.PinchPosition()) <
             PinchPullGestureStartDistance &&
@@ -79,7 +79,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
             {
                 hit.hitAutoAuthority.Interact(NetworkClient.connection.identity.netId);
                 hit.hitAutoAuthority.VisualizePinchPull();
-                if (InputManager.Hands.Tracking())
+                if (InputManager.Hands.TrackingRecently())
                     drawLocal = true;
             }
         }
@@ -157,7 +157,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
     private (AutoAuthority hitAutoAuthority, Vector3 hitPoint) GetPinchPullCandidate()
     {
-        if (InputManager.Hands.GetHand(playerHand.skeletonType).Tracking &&
+        if (playerHand.HandComponents.TrackingRecently &&
             playerHand.GetGesture(PlayerHand.Gesture.IndexPinching))
         {
             //perform raycast in a cone from the hand

@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class PlayerHand : MonoBehaviour
 {
+    public HandComponents HandComponents;
     [HideInInspector] public OVRSkeleton.SkeletonType skeletonType;
-    [HideInInspector] public OVRHandTransformMapper physicsMapper;
 
     private IHandTick[] _handTicks;
     private Dictionary<Type, IHandTick> _handTicksDictionary;
@@ -107,6 +107,11 @@ public class PlayerHand : MonoBehaviour
 
     public bool GetGesture(Gesture gesture)
     {
+        if (!HandComponents.TrackingRecently)
+        {
+            return false;
+        }
+        
         if (_gestures.TryGetValue(gesture, out var value))
         {
             return value;
@@ -135,15 +140,15 @@ public class PlayerHand : MonoBehaviour
         return !GetGesture(gesture) && GetLastGesture(gesture);
     }
 
-    public bool GetGestureActiveWithin(Gesture gesture, float time)
-    {
-        if (_lastGestureActiveTime.TryGetValue(gesture, out float value))
-        {
-            return Time.time - value <= time;
-        }
-
-        return false;
-    }
+    // public bool GetGestureActiveWithin(Gesture gesture, float time)
+    // {
+    //     if (_lastGestureActiveTime.TryGetValue(gesture, out float value))
+    //     {
+    //         return Time.time - value <= time;
+    //     }
+    //
+    //     return false;
+    // }
 
     public void UpdateLastGestures()
     {
@@ -188,8 +193,8 @@ public class PlayerHand : MonoBehaviour
 
     public Vector3 PinchPosition()
     {
-        var indexTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_IndexTip].position;
-        var thumbTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_ThumbTip].position;
+        var indexTip = HandComponents.PhysicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_IndexTip].position;
+        var thumbTip = HandComponents.PhysicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_ThumbTip].position;
         return (indexTip + thumbTip) / 2f;
     }
 
@@ -216,16 +221,16 @@ public class PlayerHand : MonoBehaviour
 
     public float FingerDistanceToThumb(OVRSkeleton.BoneId tipBoneId)
     {
-        var fingerTip = physicsMapper.CustomBones[(int) tipBoneId].position;
-        var thumbTip = physicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_ThumbTip].position;
+        var fingerTip = HandComponents.PhysicsMapper.CustomBones[(int) tipBoneId].position;
+        var thumbTip = HandComponents.PhysicsMapper.CustomBones[(int) OVRSkeleton.BoneId.Hand_ThumbTip].position;
         return Vector3.Distance(fingerTip, thumbTip);
     }
 
     public float FingerCloseStrength(OVRSkeleton.BoneId boneId)
     {
-        float r1 = Vector3.Angle(physicsMapper.transform.right, physicsMapper.CustomBones[(int) boneId].right);
-        float r2 = Vector3.Angle(physicsMapper.CustomBones[(int) boneId].right,
-            physicsMapper.CustomBones[(int) boneId + 2].right);
+        float r1 = Vector3.Angle(HandComponents.PhysicsMapper.transform.right, HandComponents.PhysicsMapper.CustomBones[(int) boneId].right);
+        float r2 = Vector3.Angle(HandComponents.PhysicsMapper.CustomBones[(int) boneId].right,
+            HandComponents.PhysicsMapper.CustomBones[(int) boneId + 2].right);
 
         r1 /= 60f;
         r2 /= 175f;
@@ -235,7 +240,7 @@ public class PlayerHand : MonoBehaviour
 
     public float FlatFingerStrength(OVRSkeleton.BoneId boneId)
     {
-        float r1 = Vector3.Angle(physicsMapper.transform.right, physicsMapper.CustomBones[(int) boneId].right);
+        float r1 = Vector3.Angle(HandComponents.PhysicsMapper.transform.right, HandComponents.PhysicsMapper.CustomBones[(int) boneId].right);
         r1 /= 60f;
         return Mathf.Clamp01(r1);
     }

@@ -30,7 +30,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
             }
         }
         
-        if (_joint && (!InputManager.Hands.GetHand(playerHand.skeletonType).Tracking ||
+        if (_joint && (!playerHand.HandComponents.TrackingRecently ||
                        !playerHand.GetGesture(PlayerHand.Gesture.IndexPinching) &&
                        !playerHand.GetGesture(PlayerHand.Gesture.Fist)))
         {
