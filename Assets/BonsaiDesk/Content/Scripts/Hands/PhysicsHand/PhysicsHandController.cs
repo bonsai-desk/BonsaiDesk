@@ -80,8 +80,6 @@ public class PhysicsHandController : MonoBehaviour
         {
             return;
         }
-        
-        print("update: " + Time.time);
 
         _handScale = scale;
 
