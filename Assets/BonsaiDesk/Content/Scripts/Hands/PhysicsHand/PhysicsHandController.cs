@@ -47,17 +47,14 @@ public class PhysicsHandController : MonoBehaviour
         if (!_initialized)
             return;
 
-        TrySetCapsulesActiveToTarget();
-
-        if ((float.IsNaN(transform.position.x) ||
-             float.IsNaN(transform.position.y) ||
-             float.IsNaN(transform.position.z) ||
-             Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) >
-             SnapBackDistanceThresholdSquared)
+        if ((PhysicsNaN() || Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) >
+                SnapBackDistanceThresholdSquared)
             && !CheckHit())
         {
             ResetFingerJoints();
         }
+
+        TrySetCapsulesActiveToTarget();
 
         UpdateJoint();
         UpdateFingerJoints();
@@ -73,6 +70,28 @@ public class PhysicsHandController : MonoBehaviour
     //     SetCapsulesActiveTarget(false);
     //     SetCapsulesActiveTarget(true);
     // }
+
+    private bool PhysicsNaN()
+    {
+        if (float.IsNaN(transform.position.x) ||
+            float.IsNaN(transform.position.y) ||
+            float.IsNaN(transform.position.z))
+        {
+            return true;
+        }
+
+        for (int i = 0; i < fingerJointBodies.Length; i++)
+        {
+            if (float.IsNaN(fingerJointBodies[i].transform.position.x) ||
+                float.IsNaN(fingerJointBodies[i].transform.position.y) ||
+                float.IsNaN(fingerJointBodies[i].transform.position.z))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public void SetHandScale(float scale)
     {
@@ -136,9 +155,24 @@ public class PhysicsHandController : MonoBehaviour
         }
 
         palmCollider.isTrigger = !active;
+
+        if (!active)
+        {
+            var hits = Physics.OverlapSphere(palmCollider.transform.position, 0.1f, PlayerHand.AllButHandsMask,
+                QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < hits.Length; i++)
+            {
+                var body = hits[i].attachedRigidbody;
+                var autoAuthority = body.GetComponent<AutoAuthority>();
+                if (autoAuthority)
+                {
+                    autoAuthority.KeepAwake();
+                }
+            }
+        }
     }
 
-    private bool CheckHit()
+    public bool CheckHit()
     {
         for (int i = 0; i < palmCapsuleColliders.Length; i++)
         {

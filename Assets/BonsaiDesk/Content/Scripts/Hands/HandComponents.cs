@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using UnityEngine;
 
 public class HandComponents
 {
@@ -99,6 +100,14 @@ public class HandComponents
 
     public void SetTracking(bool tracking)
     {
+        //if tracking just started this frame
+        if (!Tracking && tracking)
+        {
+            PhysicsHandController.SetCapsulesActiveTarget(false);
+            PhysicsHandController.ResetFingerJoints();
+            PhysicsHandController.SetCapsulesActiveTarget(true);
+        }
+
         Tracking = tracking;
 
         if (tracking)
@@ -127,10 +136,12 @@ public class HandComponents
             {
                 MakeMaterialOpaque();
             }
+
             if (!_physicsRenderer.enabled)
             {
                 _physicsRenderer.enabled = true;
             }
+
             PhysicsHandController.SetCapsulesActiveTarget(true);
         }
         else if (Mathf.Approximately(_handAlpha, 0f))
@@ -139,6 +150,7 @@ public class HandComponents
             {
                 _physicsRenderer.enabled = false;
             }
+
             PhysicsHandController.SetCapsulesActiveTarget(false);
         }
         else
@@ -147,13 +159,14 @@ public class HandComponents
             {
                 MakeMaterialTransparent();
             }
+
             if (!_physicsRenderer.enabled)
             {
                 _physicsRenderer.enabled = true;
             }
 
             _handMaterial.color = new Color(1, 1, 1, _handAlpha);
-            
+
             PhysicsHandController.SetCapsulesActiveTarget(true);
         }
     }

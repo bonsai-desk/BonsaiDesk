@@ -28,6 +28,8 @@ public class AutoAuthority : NetworkBehaviour
     private int _colorPropertyId;
     private int _colorId = 0;
 
+    private float _keepAwakeTime = -10f;
+
     private Color[] _colors = new[]
     {
         Color.white,
@@ -74,9 +76,15 @@ public class AutoAuthority : NetworkBehaviour
 
         //code past this point if you have control over the object
         _body.isKinematic = isKinematic;
+
+        if (Time.time - _keepAwakeTime < 1f)
+        {
+            _body.WakeUp();
+        }
     }
 
     //Hello function. I am a client. Do I have authority over this object?
+    [Client]
     public bool ClientHasAuthority()
     {
         if (!isClient)
@@ -86,6 +94,7 @@ public class AutoAuthority : NetworkBehaviour
     }
 
     //Hello function. I am a server. Do I have authority over this object?
+    [Server]
     public bool ServerHasAuthority()
     {
         if (!isServer)
@@ -97,6 +106,11 @@ public class AutoAuthority : NetworkBehaviour
     public bool HasAuthority()
     {
         return isServer && ServerHasAuthority() || isClient && ClientHasAuthority();
+    }
+
+    public void KeepAwake()
+    {
+        _keepAwakeTime = Time.time;
     }
 
     private void UpdateColor()
