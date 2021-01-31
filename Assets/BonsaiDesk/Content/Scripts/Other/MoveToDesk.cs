@@ -16,8 +16,6 @@ public class MoveToDesk : MonoBehaviour
     public Transform oVRCameraRig;
     public Transform centerEyeAnchor;
 
-    //bool fixedTableHeight = false;
-
     public GameObject blackOverlay;
     public GameObject instructions;
 
@@ -49,6 +47,7 @@ public class MoveToDesk : MonoBehaviour
     public Transform handDemo;
     public Transform tableGhost;
     public TextMeshProUGUI tableGhostText;
+    private bool _lastHandsOnEdge = false;
 
     public bool oriented
     {
@@ -147,7 +146,8 @@ public class MoveToDesk : MonoBehaviour
         handDemo.position = centerEyeAnchor.position;
 
         //if hands are on edge of real table
-        if (HandsOnEdge())
+        bool handOnEdge = HandsOnEdge();
+        if (handOnEdge)
         {
             tableGhost.gameObject.SetActive(true);
             tableGhostText.text = "<--- swipe apart --->";
@@ -166,14 +166,28 @@ public class MoveToDesk : MonoBehaviour
             tablePosition.y = (InputManager.Hands.Left.PlayerHand.palm.position.y +
                                InputManager.Hands.Right.PlayerHand.palm.position.y) / 2f;
 
-            tableGhost.position = tablePosition;
-            tableGhost.rotation = tableRotation;
+            if (_lastHandsOnEdge)
+            {
+                float tablePositionDifference = Vector3.Distance(tableGhost.position, tablePosition);
+                tableGhost.position = Vector3.MoveTowards(tableGhost.position, tablePosition,
+                    tablePositionDifference * 3f * Time.deltaTime);
+                float tableAngleDifference = Quaternion.Angle(tableGhost.rotation, tableRotation);
+                tableGhost.rotation = Quaternion.RotateTowards(tableGhost.rotation, tableRotation,
+                    tableAngleDifference * 3f * Time.deltaTime);
+            }
+            else
+            {
+                tableGhost.position = tablePosition;
+                tableGhost.rotation = tableRotation;
+            }
         }
         else
         {
             tableGhost.gameObject.SetActive(false);
             tableGhostText.text = "Place your thumbs on the\n edge of your <i><b>real</b></i> desk";
         }
+
+        _lastHandsOnEdge = handOnEdge;
     }
 
     private void Update()
@@ -290,7 +304,7 @@ public class MoveToDesk : MonoBehaviour
                 {
                     var totalDistance = playerOrientations[playerOrientations.Count - 1].thumbDistance -
                                         playerOrientations[0].thumbDistance;
-                    if (totalDistance >= 0.1f)
+                    if (totalDistance >= 0.08f)
                     {
                         var start = Mathf.RoundToInt(playerOrientations.Count * 0.25f) + 1;
                         var end = Mathf.RoundToInt(playerOrientations.Count * 0.75f) - 1;
@@ -409,10 +423,10 @@ public class MoveToDesk : MonoBehaviour
         }
 
         InputManager.Hands.UpdateHandTargets(false);
-        
+
         InputManager.Hands.Left.PhysicsHandController.ResetFingerJoints();
         InputManager.Hands.Right.PhysicsHandController.ResetFingerJoints();
-        
+
         InputManager.Hands.Left.PhysicsHandController.SetCapsulesActiveTarget(true);
         InputManager.Hands.Right.PhysicsHandController.SetCapsulesActiveTarget(true);
     }
