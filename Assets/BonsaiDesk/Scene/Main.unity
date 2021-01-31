@@ -9386,6 +9386,7 @@ GameObject:
   - component: {fileID: 630641731}
   - component: {fileID: 630641732}
   - component: {fileID: 630641733}
+  - component: {fileID: 630641734}
   m_Layer: 0
   m_Name: RightPlayerHand
   m_TagString: Untagged
@@ -9476,6 +9477,18 @@ MonoBehaviour:
   pinchPullJoint: {fileID: 1994331529}
   pinchPullJointBody: {fileID: 1994331530}
   lineRenderer: {fileID: 1510384917}
+--- !u!114 &630641734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 630641728}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31380ff2692e56347afcbda7e7cd3f94, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &632686398
 GameObject:
   m_ObjectHideFlags: 0
@@ -12300,6 +12313,7 @@ GameObject:
   - component: {fileID: 946290006}
   - component: {fileID: 946290007}
   - component: {fileID: 946290008}
+  - component: {fileID: 946290009}
   m_Layer: 0
   m_Name: LeftPlayerHand
   m_TagString: Untagged
@@ -12389,6 +12403,18 @@ MonoBehaviour:
   pinchPullJoint: {fileID: 1293423861}
   pinchPullJointBody: {fileID: 1293423862}
   lineRenderer: {fileID: 649121919}
+--- !u!114 &946290009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 946290003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31380ff2692e56347afcbda7e7cd3f94, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &952936015
 GameObject:
   m_ObjectHideFlags: 0
