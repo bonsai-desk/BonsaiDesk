@@ -149,6 +149,8 @@ public class MoveToDesk : MonoBehaviour
         bool handOnEdge = HandsOnEdge();
         if (handOnEdge)
         {
+            UpdateState(1);
+
             tableGhost.gameObject.SetActive(true);
             tableGhostText.text = "<--- swipe apart --->";
 
@@ -160,7 +162,7 @@ public class MoveToDesk : MonoBehaviour
                                 Quaternion.AngleAxis(90f, Vector3.up);
 
             var averageThumbPosition = (leftThumb + rightThumb) / 2f;
-            var tableDepthOffset = tableRotation * (Vector3.forward * tableGhost.GetChild(0).localScale.z / 2f);
+            var tableDepthOffset = tableRotation * (Vector3.forward * 0.75f / 2f);
 
             var tablePosition = averageThumbPosition + tableDepthOffset;
             tablePosition.y = (InputManager.Hands.Left.PlayerHand.palm.position.y +
@@ -183,9 +185,14 @@ public class MoveToDesk : MonoBehaviour
         }
         else
         {
+            UpdateState(0);
+
             tableGhost.gameObject.SetActive(false);
             tableGhostText.text = "Place your thumbs on the\n edge of your <i><b>real</b></i> desk";
         }
+
+        leftAnimationHand.localPosition = new Vector3(-rightAnimationHand.localPosition.x,
+            rightAnimationHand.localPosition.y, rightAnimationHand.localPosition.z);
 
         _lastHandsOnEdge = handOnEdge;
     }
@@ -227,7 +234,6 @@ public class MoveToDesk : MonoBehaviour
         if (!InputManager.Hands.Tracking())
         {
             orientatingSelf = false;
-            UpdateState(0);
         }
         else
         {
@@ -273,14 +279,6 @@ public class MoveToDesk : MonoBehaviour
             if (lastHandDistance != null)
                 speed = (thumbDistance - (float) lastHandDistance) / Time.deltaTime;
             lastHandDistance = thumbDistance;
-
-            if (!oriented)
-            {
-                if (diff < 0.0375f)
-                    UpdateState(2);
-                else
-                    UpdateState(1);
-            }
 
             if (speed > 0.5f && diff < 0.0375f)
             {
@@ -385,13 +383,11 @@ public class MoveToDesk : MonoBehaviour
 
     private void UpdateState(int newState)
     {
-        return;
         if (state != newState)
         {
             state = newState;
             animator.SetInteger("State", state);
             animator.SetTrigger("ChangeState");
-            instructionsText.text = instructionsTexts[state];
         }
     }
 
