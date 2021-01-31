@@ -48,6 +48,8 @@ public class MoveToDesk : MonoBehaviour
     public Transform tableGhost;
     public TextMeshProUGUI tableGhostText;
     private bool _lastHandsOnEdge = false;
+    private List<Material> _tableMaterials;
+    private float _tableAlpha = 1f;
 
     public bool oriented
     {
@@ -71,6 +73,13 @@ public class MoveToDesk : MonoBehaviour
         //    fixedTableHeight = true;
         //else
         //    fixedTableHeight = false;
+
+        _tableMaterials = new List<Material>();
+        var tableRenderers = tableGhost.GetComponentsInChildren<MeshRenderer>();
+        foreach (var renderer in tableRenderers)
+        {
+            _tableMaterials.Add(renderer.material);
+        }
 
         playerOrientations = new List<PlayerOrientation>();
 
@@ -151,6 +160,8 @@ public class MoveToDesk : MonoBehaviour
         {
             UpdateState(1);
 
+            _tableAlpha = Mathf.MoveTowards(_tableAlpha, 1f, Time.deltaTime * (1f / 0.35f));
+
             tableGhost.gameObject.SetActive(true);
             tableGhostText.text = "<--- swipe apart --->";
 
@@ -187,12 +198,17 @@ public class MoveToDesk : MonoBehaviour
         {
             UpdateState(0);
 
+            _tableAlpha = 0f;
+
             tableGhost.gameObject.SetActive(false);
             tableGhostText.text = "Place your thumbs on the\n edge of your <i><b>real</b></i> desk";
         }
 
         leftAnimationHand.localPosition = new Vector3(-rightAnimationHand.localPosition.x,
             rightAnimationHand.localPosition.y, rightAnimationHand.localPosition.z);
+
+        _tableMaterials[0].color = new Color(1f, 0.9561622f, 0.8726415f, _tableAlpha);
+        _tableMaterials[1].color = new Color(1f, 1f, 1f, _tableAlpha);
 
         _lastHandsOnEdge = handOnEdge;
     }
