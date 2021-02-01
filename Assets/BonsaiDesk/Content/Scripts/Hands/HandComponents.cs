@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using UnityEngine;
 
 public class HandComponents
 {
@@ -20,16 +21,30 @@ public class HandComponents
 
     public bool MapperTargetsInitialized = false;
     public bool Tracking { get; private set; } = false;
+    public bool TrackingRecently { get; private set; } = false;
 
     public int physicsLayer;
     private int _touchScreenSurfaceLayer;
 
+    private float _handScale;
+
+    private float _lastTrackingTime;
+    private const float RecentTrackingThreshold = 0.35f;
+    private SkinnedMeshRenderer _physicsRenderer;
+    private Material _handMaterial;
+    private float _handAlpha = 1f;
+
     public HandComponents(PlayerHand playerHand, Transform handAnchor, Transform handObject)
     {
         PlayerHand = playerHand;
+        PlayerHand.HandComponents = this;
         HandAnchor = handAnchor;
 
+        _handScale = 1f;
+
         PhysicsHand = handObject.GetChild(0);
+        _physicsRenderer = PhysicsHand.GetComponentInChildren<SkinnedMeshRenderer>();
+        _handMaterial = _physicsRenderer.material;
         PhysicsHandController = PhysicsHand.GetComponent<PhysicsHandController>();
         TargetHand = handObject.GetChild(1);
         PlayerHand.transform.SetParent(PhysicsHand, false);
@@ -40,7 +55,6 @@ public class HandComponents
         TargetHand.name += "_Local";
 
         PhysicsMapper = PhysicsHand.GetComponentInChildren<OVRHandTransformMapper>();
-        PlayerHand.physicsMapper = PhysicsMapper;
 
         TargetMapper = TargetHand.GetComponent<OVRHandTransformMapper>();
         TargetMapper.targetObject = handAnchor;
@@ -86,9 +100,101 @@ public class HandComponents
 
     public void SetTracking(bool tracking)
     {
+        //if tracking just started this frame
+        if (!Tracking && tracking)
+        {
+            PhysicsHandController.SetCapsulesActiveTarget(false);
+            PhysicsHandController.ResetFingerJoints();
+            PhysicsHandController.SetCapsulesActiveTarget(true);
+        }
+
         Tracking = tracking;
+
+        if (tracking)
+        {
+            _lastTrackingTime = Time.time;
+            TrackingRecently = true;
+        }
+        else if (Time.time - _lastTrackingTime > RecentTrackingThreshold)
+        {
+            TrackingRecently = false;
+        }
+
+        UpdateRendererTransparency();
     }
-    
+
+    private void UpdateRendererTransparency()
+    {
+        bool isTransparent = _handMaterial.GetInt("_ZWrite") == 0;
+
+        float handAlphaTarget = Tracking ? 1f : 0f;
+        _handAlpha = Mathf.MoveTowards(_handAlpha, handAlphaTarget, Time.deltaTime / RecentTrackingThreshold);
+
+        if (Mathf.Approximately(_handAlpha, 1f))
+        {
+            if (isTransparent)
+            {
+                MakeMaterialOpaque();
+            }
+
+            if (!_physicsRenderer.enabled)
+            {
+                _physicsRenderer.enabled = true;
+            }
+
+            PhysicsHandController.SetCapsulesActiveTarget(true);
+        }
+        else if (Mathf.Approximately(_handAlpha, 0f))
+        {
+            if (_physicsRenderer.enabled)
+            {
+                _physicsRenderer.enabled = false;
+            }
+
+            PhysicsHandController.SetCapsulesActiveTarget(false);
+        }
+        else
+        {
+            if (!isTransparent)
+            {
+                MakeMaterialTransparent();
+            }
+
+            if (!_physicsRenderer.enabled)
+            {
+                _physicsRenderer.enabled = true;
+            }
+
+            _handMaterial.color = new Color(1, 1, 1, _handAlpha);
+
+            PhysicsHandController.SetCapsulesActiveTarget(true);
+        }
+    }
+
+    private void MakeMaterialTransparent()
+    {
+        _handMaterial.SetInt("_SrcBlend", (int) UnityEngine.Rendering.BlendMode.One);
+        _handMaterial.SetInt("_DstBlend", (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        _handMaterial.SetInt("_ZWrite", 0);
+        _handMaterial.DisableKeyword("_ALPHATEST_ON");
+        _handMaterial.DisableKeyword("_ALPHABLEND_ON");
+        _handMaterial.EnableKeyword("_ALPHAPREMULTIPLY_ON");
+        _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Transparent;
+    }
+
+    private void MakeMaterialOpaque()
+    {
+        _handMaterial.SetInt("_SrcBlend", (int) UnityEngine.Rendering.BlendMode.One);
+        _handMaterial.SetInt("_DstBlend", (int) UnityEngine.Rendering.BlendMode.Zero);
+        _handMaterial.SetInt("_ZWrite", 1);
+        _handMaterial.DisableKeyword("_ALPHATEST_ON");
+        _handMaterial.DisableKeyword("_ALPHABLEND_ON");
+        _handMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Geometry;
+
+        _handMaterial.color = new Color(1, 1, 1, 1);
+    }
+
     /// <summary>
     /// changes the layer collision matrix for TouchScreenSurface to not collide or not collide with this hand
     /// excluding the index tip collider

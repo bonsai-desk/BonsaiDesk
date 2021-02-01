@@ -95,13 +95,13 @@ public class InputManager : MonoBehaviour
         Right.PlayerHand.UpdateLastGestures();
     }
 
-    public void UpdateHandTargets()
+    public void UpdateHandTargets(bool updateTracking = true)
     {
-        UpdateHandTarget(Left, LeftControllerOffset, LeftControllerRotationOffset);
-        UpdateHandTarget(Right, RightControllerOffset, RightControllerRotationOffset);
+        UpdateHandTarget(Left, LeftControllerOffset, LeftControllerRotationOffset, updateTracking);
+        UpdateHandTarget(Right, RightControllerOffset, RightControllerRotationOffset, updateTracking);
     }
 
-    private void HandComponentsUpdate(HandComponents handComponents)
+    private void HandComponentsUpdate(HandComponents handComponents, bool updateTracking = true)
     {
         if (!handComponents.MapperTargetsInitialized && handComponents.OVRSkeleton.IsInitialized)
         {
@@ -110,15 +110,16 @@ public class InputManager : MonoBehaviour
         }
     }
 
-    private void UpdateHandTarget(HandComponents handComponents, Vector3 controllerOffset, Quaternion rotationOffset)
+    private void UpdateHandTarget(HandComponents handComponents, Vector3 controllerOffset, Quaternion rotationOffset,
+        bool updateTracking = true)
     {
         var controller = OVRInput.GetConnectedControllers();
         if (controller == OVRInput.Controller.Hands)
         {
-            handComponents.SetTracking(handComponents.OVRSkeleton.IsInitialized &&
-                                       handComponents.OVRSkeleton.IsDataValid &&
-                                       handComponents.OVRSkeleton.IsDataHighConfidence);
-            if (handComponents.Tracking)
+            bool tracking = handComponents.OVRSkeleton.IsInitialized &&
+                            handComponents.OVRSkeleton.IsDataValid &&
+                            handComponents.OVRSkeleton.IsDataHighConfidence;
+            if (tracking)
             {
                 handComponents.TargetHand.position = handComponents.HandAnchor.position;
                 handComponents.TargetHand.rotation = handComponents.HandAnchor.rotation * HandRotationOffset;
@@ -126,6 +127,14 @@ public class InputManager : MonoBehaviour
                 {
                     handComponents.TargetMapper.UpdateBonesToTargets();
                 }
+
+                handComponents.PhysicsHandController.SetHandScale(
+                    handComponents.OVRSkeleton.transform.localScale.x);
+            }
+
+            if (updateTracking)
+            {
+                handComponents.SetTracking(tracking);
             }
         }
         else if (controller == OVRInput.Controller.Touch)
@@ -136,6 +145,8 @@ public class InputManager : MonoBehaviour
                 handComponents.TargetHand.position = handComponents.HandAnchor.TransformPoint(controllerOffset);
                 handComponents.TargetHand.rotation = handComponents.HandAnchor.rotation * rotationOffset;
                 handComponents.TargetMapper.UpdateBonesToStartPose();
+
+                handComponents.PhysicsHandController.SetHandScale(1f);
             }
         }
     }
@@ -161,6 +172,11 @@ public class InputManager : MonoBehaviour
     public bool Tracking()
     {
         return Left.Tracking && Right.Tracking;
+    }
+
+    public bool TrackingRecently()
+    {
+        return Left.TrackingRecently && Right.TrackingRecently;
     }
 
     private void CalculateFingerTipPositions()
