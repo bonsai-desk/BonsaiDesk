@@ -3076,8 +3076,8 @@ MonoBehaviour:
   holePuncherTransform: {fileID: 884413388}
   screenTransform: {fileID: 1520135412}
   initialUrl: http://localhost:3000
-  customInputModule: {fileID: 744943659}
   useBuiltHtml: 1
+  customInputModule: {fileID: 744943659}
   hoverSound:
     soundFXName: vcv hover
   mouseDownSound:
@@ -18118,6 +18118,8 @@ MonoBehaviour:
   overlayTransform: {fileID: 1403339715}
   holePuncherTransform: {fileID: 2020775455}
   screenTransform: {fileID: 0}
+  initialUrl: http://localhost:3000
+  useBuiltHtml: 1
   screenRigidBody: {fileID: 878527641}
 --- !u!54 &1382784200
 Rigidbody:
@@ -18165,8 +18167,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  useBuiltHtml: 1
-  hotReloadUrl: http://192.168.0.166:3000
   togglePause: {fileID: 96659938}
   tabletSpot: {fileID: 144652441}
 --- !u!1 &1384374492

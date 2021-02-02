@@ -16,7 +16,7 @@ public class TableBrowser : Browser {
 
 	protected override void Start() {
 		base.Start();
-		
+
 		WebViewPrefab.DragMode = DragMode.DragToScroll;
 
 		BrowserReady += () =>
@@ -25,7 +25,7 @@ public class TableBrowser : Browser {
 			var view = WebViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView");
 			CustomInputModule.Singleton.screens.Add(view);
 		};
-		
+
 		ListenersReady += NavToMenu;
 	}
 
@@ -155,6 +155,35 @@ public class TableBrowser : Browser {
 		PostMessage(message);
 	}
 
+	protected override void SetupWebViewPrefab() {
+		WebViewPrefab = WebViewPrefabCustom.Instantiate(Bounds.x, Bounds.y);
+		Destroy(WebViewPrefab.Collider);
+
+		WebViewPrefab.transform.localPosition = Vector3.zero;
+
+		WebViewPrefab.transform.SetParent(screenTransform, false);
+
+		Resizer     = WebViewPrefab.transform.Find("WebViewPrefabResizer");
+		WebViewView = Resizer.transform.Find("WebViewPrefabView");
+
+		holePuncherTransform.SetParent(WebViewView, false);
+		overlayTransform.SetParent(WebViewView, false);
+
+	#if UNITY_ANDROID && !UNITY_EDITOR
+        _webViewView.GetComponent<MeshRenderer>().enabled = false;
+	#endif
+
+		WebViewPrefab.Initialized += (sender, eventArgs) =>
+		{
+			const int ppuu = 2000;
+			WebViewPrefab.WebView.SetResolution(ppuu);
+			var res = new Vector2Int((int) (ppuu * Bounds.x), (int) (ppuu * Bounds.y));
+			RebuildOverlay(res);
+			ToggleHidden();
+		};
+		base.SetupWebViewPrefab();
+	}
+
 	private class CsMessageKeyType<T> {
 		public KeyType<T> Data;
 		public string Message = "pushStoreSingle";
@@ -187,34 +216,5 @@ public class TableBrowser : Browser {
 		public string ip_address;
 		public int pinged;
 		public int port;
-	}
-	
-	protected override void SetupWebViewPrefab() {
-		WebViewPrefab = WebViewPrefabCustom.Instantiate(Bounds.x, Bounds.y);
-		Destroy(WebViewPrefab.Collider);
-
-		WebViewPrefab.transform.localPosition = Vector3.zero;
-
-		WebViewPrefab.transform.SetParent(screenTransform, false);
-
-		Resizer     = WebViewPrefab.transform.Find("WebViewPrefabResizer");
-		WebViewView = Resizer.transform.Find("WebViewPrefabView");
-
-		holePuncherTransform.SetParent(WebViewView, false);
-		overlayTransform.SetParent(WebViewView, false);
-
-	#if UNITY_ANDROID && !UNITY_EDITOR
-        _webViewView.GetComponent<MeshRenderer>().enabled = false;
-	#endif
-
-		WebViewPrefab.Initialized += (sender, eventArgs) =>
-		{
-			const int ppuu = 2000;
-			WebViewPrefab.WebView.SetResolution(ppuu);
-			var res = new Vector2Int((int) (ppuu * Bounds.x), (int) (ppuu * Bounds.y));
-			RebuildOverlay(res);
-			ToggleHidden();
-		};
-		base.SetupWebViewPrefab();
 	}
 }
