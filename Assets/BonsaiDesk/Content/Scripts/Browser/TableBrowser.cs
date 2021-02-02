@@ -170,7 +170,7 @@ public class TableBrowser : Browser {
 		overlayTransform.SetParent(WebViewView, false);
 
 	#if UNITY_ANDROID && !UNITY_EDITOR
-        _webViewView.GetComponent<MeshRenderer>().enabled = false;
+        WebViewView.GetComponent<MeshRenderer>().enabled = false;
 	#endif
 
 		WebViewPrefab.Initialized += (sender, eventArgs) =>

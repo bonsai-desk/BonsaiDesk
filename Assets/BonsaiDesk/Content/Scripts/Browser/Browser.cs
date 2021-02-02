@@ -65,14 +65,14 @@ public class Browser : MonoBehaviour {
 
 	private IEnumerator UpdateAndroidSurface() {
 	#if UNITY_ANDROID && !UNITY_EDITOR
-        while (_overlay.externalSurfaceObject == IntPtr.Zero || _webViewPrefab.WebView == null)
+        while (_overlay.externalSurfaceObject == IntPtr.Zero || WebViewPrefab.WebView == null)
         {
-            Debug.Log("[BONSAI] while WebView not setup\nexternalSurfaceObject: <" + _overlay.externalSurfaceObject + ">\nWebView: <" + _webViewPrefab.WebView + ">");
+            Debug.Log("[BONSAI] while WebView not setup\nexternalSurfaceObject: <" + _overlay.externalSurfaceObject + ">\nWebView: <" + WebViewPrefab.WebView + ">");
             yield return null;
         }
 
-        Debug.Log("[BONSAI] SetSurface" + _overlay.externalSurfaceObject + ", WebView " + _webViewPrefab.WebView);
-        (_webViewPrefab.WebView as AndroidGeckoWebView).SetSurface(_overlay.externalSurfaceObject);
+        Debug.Log("[BONSAI] SetSurface" + _overlay.externalSurfaceObject + ", WebView " + WebViewPrefab.WebView);
+        (WebViewPrefab.WebView as AndroidGeckoWebView).SetSurface(_overlay.externalSurfaceObject);
         Debug.Log("[BONSAI] Done SetSurface");
 	#endif
 		yield break;

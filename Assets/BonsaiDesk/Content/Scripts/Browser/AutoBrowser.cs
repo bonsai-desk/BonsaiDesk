@@ -74,7 +74,7 @@ public class AutoBrowser : Browser {
 		WebViewPrefab.transform.localEulerAngles = new Vector3(0, 180, 0);
 
 	#if UNITY_ANDROID && !UNITY_EDITOR
-        _webViewView.GetComponent<MeshRenderer>().enabled = false;
+        WebViewView.GetComponent<MeshRenderer>().enabled = false;
 	#endif
 
 		WebViewPrefab.Initialized += (sender, eventArgs) => { ChangeAspect(startingAspect); };
