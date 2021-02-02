@@ -12,6 +12,13 @@ public class AutoBrowser : Browser {
 		_defaultLocalPosition      = transform.localPosition;
 		_belowTableLocalPosition   = _defaultLocalPosition;
 		_belowTableLocalPosition.y = -Bounds.y / 2f;
+
+		ListenersReady += NavHome;
+
+	}
+
+	private void NavHome() {
+		PostMessage(BrowserMessage.NavHome);
 	}
 
 	public Vector2Int ChangeAspect(Vector2 newAspect) {

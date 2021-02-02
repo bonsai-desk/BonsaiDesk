@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "./static/css/main.ba28a966.chunk.css",
-    "main.js": "./static/js/main.3cbfa080.chunk.js",
-    "main.js.map": "./static/js/main.3cbfa080.chunk.js.map",
+    "main.js": "./static/js/main.b9fc3520.chunk.js",
+    "main.js.map": "./static/js/main.b9fc3520.chunk.js.map",
     "runtime-main.js": "./static/js/runtime-main.8e35d7b6.js",
     "runtime-main.js.map": "./static/js/runtime-main.8e35d7b6.js.map",
     "static/js/2.75494371.chunk.js": "./static/js/2.75494371.chunk.js",
@@ -15,6 +15,7 @@
     "static/media/caret-square-up-hollow.5d65dc16.svg": "./static/media/caret-square-up-hollow.5d65dc16.svg",
     "static/media/caret-square-up.bce15253.svg": "./static/media/caret-square-up.bce15253.svg",
     "static/media/door-open.d2c81c6b.svg": "./static/media/door-open.d2c81c6b.svg",
+    "static/media/keyboard-dismiss.97d1fde7.svg": "./static/media/keyboard-dismiss.97d1fde7.svg",
     "static/media/link.e557aaf1.svg": "./static/media/link.e557aaf1.svg",
     "static/media/thinking-face.179ede86.svg": "./static/media/thinking-face.179ede86.svg"
   },
@@ -22,6 +23,6 @@
     "static/js/runtime-main.8e35d7b6.js",
     "static/js/2.75494371.chunk.js",
     "static/css/main.ba28a966.chunk.css",
-    "static/js/main.3cbfa080.chunk.js"
+    "static/js/main.b9fc3520.chunk.js"
   ]
 }

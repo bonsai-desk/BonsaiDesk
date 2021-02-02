@@ -200,6 +200,7 @@ public class Browser : MonoBehaviour {
 
 	protected static class BrowserMessage {
 		public static readonly string NavToMenu = PushPath("/menu");
+		public static readonly string NavHome = PushPath("/home");
 
 		private static string PushPath(string path) {
 			return "{" +

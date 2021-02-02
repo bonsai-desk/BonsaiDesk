@@ -85,6 +85,9 @@ function Boot() {
             <Link to={'/menu'}>menu</Link>
           </li>
           <li>
+            <Link to={'/home'}>home</Link>
+          </li>
+          <li>
             <Link to={'/keyboard'}>keyboard</Link>
           </li>
         </ul>
@@ -93,7 +96,7 @@ function Boot() {
 }
 
 function Home() {
-  return <div>home</div>;
+  return <div className={"w-full h-full bg-gray-900"}></div>;
 }
 
 function App() {
