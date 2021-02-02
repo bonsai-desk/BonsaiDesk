@@ -7,7 +7,7 @@ using OVR;
 using UnityEngine;
 using Vuplex.WebView;
 
-public class TableBrowser : NewBrowser {
+public class TableBrowser : Browser {
 	public string initialUrl;
 	public CustomInputModule customInputModule;
 	public bool useBuiltHtml;
