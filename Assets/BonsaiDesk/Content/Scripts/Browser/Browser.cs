@@ -18,15 +18,17 @@ public class Browser : MonoBehaviour {
 	private GameObject _boundsObject;
 	private OVROverlay _overlay;
 	private bool _renderEnabled = true;
-	private Transform _resizer;
-	protected WebViewPrefab _webViewPrefab;
-	private Transform _webViewView;
+	protected Transform _resizer;
+	protected WebViewPrefabCustom _webViewPrefab;
+	protected Transform _webViewView;
 
 	protected virtual void Start() {
 		Debug.Log("browser start");
 
 		CacheTransforms();
 
+		PreConfigureWebView();
+		
 		SetupWebViewPrefab();
 
 		SetupHolePuncher();
@@ -74,30 +76,10 @@ public class Browser : MonoBehaviour {
 		yield break;
 	}
 
-	public virtual Vector2Int ChangeAspect(Vector2 newAspect) {
-		throw new NotImplementedException();
-	}
-
-	private void SetupWebViewPrefab() {
-		PreConfigureWebView();
-
-		_webViewPrefab = WebViewPrefab.Instantiate(1, 1);
-		Destroy(_webViewPrefab.Collider);
-		_webViewPrefab.transform.SetParent(boundsTransform, false);
-		
-		_resizer     = _webViewPrefab.transform.Find("WebViewPrefabResizer");
-		_webViewView = _resizer.transform.Find("WebViewPrefabView");
-		
-		_webViewPrefab.transform.localPosition    = new Vector3(0, 0.5f, 0);
-		_webViewPrefab.transform.localEulerAngles = new Vector3(0, 180, 0);
-
-	#if UNITY_ANDROID && !UNITY_EDITOR
-        _webViewView.GetComponent<MeshRenderer>().enabled = false;
-	#endif
-
+	protected virtual void SetupWebViewPrefab() {
 		_webViewPrefab.Initialized += (sender, eventArgs) =>
 		{
-			ChangeAspect(startingAspect);
+			_webViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
 			BrowserReady?.Invoke();
 		};
 	}

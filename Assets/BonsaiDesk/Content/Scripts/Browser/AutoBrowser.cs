@@ -20,7 +20,7 @@ public class AutoBrowser : Browser
         _belowTableLocalPosition.y = -_bounds.y / 2f;
     }
     
-    public override Vector2Int ChangeAspect(Vector2 newAspect)
+    public Vector2Int ChangeAspect(Vector2 newAspect)
     {
         var aspectRatio = newAspect.x / newAspect.y;
         var localScale = new Vector3(_bounds.y * aspectRatio, _bounds.y, 1);
@@ -70,5 +70,27 @@ public class AutoBrowser : Browser
             transform.GetChild(0).localRotation = Quaternion.identity;
         }
     }
+    
+	protected override void SetupWebViewPrefab() {
+		_webViewPrefab = WebViewPrefabCustom.Instantiate(1, 1);
+		Destroy(_webViewPrefab.Collider);
+		_webViewPrefab.transform.SetParent(boundsTransform, false);
+		
+		_resizer     = _webViewPrefab.transform.Find("WebViewPrefabResizer");
+		_webViewView = _resizer.transform.Find("WebViewPrefabView");
+		
+		_webViewPrefab.transform.localPosition    = new Vector3(0, 0.5f, 0);
+		_webViewPrefab.transform.localEulerAngles = new Vector3(0, 180, 0);
+
+	#if UNITY_ANDROID && !UNITY_EDITOR
+        _webViewView.GetComponent<MeshRenderer>().enabled = false;
+	#endif
+
+		_webViewPrefab.Initialized += (sender, eventArgs) =>
+		{
+			ChangeAspect(startingAspect);
+		};
+		base.SetupWebViewPrefab();
+	}
 
 }
