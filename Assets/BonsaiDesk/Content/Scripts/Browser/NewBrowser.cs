@@ -33,7 +33,7 @@ public class NewBrowser : MonoBehaviour {
 	}
 
 	public event Action BrowserReady;
-	
+
 	public event Action ListenersReady;
 
 	private void SetupHolePuncher() {
@@ -54,8 +54,8 @@ public class NewBrowser : MonoBehaviour {
 		_overlay.externalSurfaceWidth  = resolution.x;
 		_overlay.externalSurfaceHeight = resolution.y;
 
-		_overlay.currentOverlayType = OVROverlay.OverlayType.Underlay;
-		_overlay.isExternalSurface  = true;
+		_overlay.currentOverlayType    = OVROverlay.OverlayType.Underlay;
+		_overlay.isExternalSurface     = true;
 		StartCoroutine(UpdateAndroidSurface());
 	}
 
@@ -101,7 +101,7 @@ public class NewBrowser : MonoBehaviour {
 		_webViewPrefab.Initialized += (sender, eventArgs) =>
 		{
 			_webViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
-			
+
 			const int ppuu = 2000;
 			_webViewPrefab.WebView.SetResolution(ppuu);
 			var res = new Vector2Int((int) (ppuu * _bounds.x), (int) (ppuu * _bounds.y));
@@ -225,7 +225,7 @@ public class NewBrowser : MonoBehaviour {
 			       "}";
 		}
 	}
-	
+
 	protected struct JsMessageString {
 		public string Data;
 		public string Message;
