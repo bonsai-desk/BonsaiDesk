@@ -21,6 +21,8 @@ public class Browser : MonoBehaviour {
 	protected Transform _resizer;
 	protected WebViewPrefabCustom _webViewPrefab;
 	protected Transform _webViewView;
+	public string initialUrl;
+	public bool useBuiltHtml;
 
 	protected virtual void Start() {
 		Debug.Log("browser start");
@@ -82,6 +84,16 @@ public class Browser : MonoBehaviour {
 			_webViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
 			BrowserReady?.Invoke();
 		};
+	#if UNITY_EDITOR || DEVELOPMENT_BUILD
+		if (useBuiltHtml) {
+			initialUrl = "streaming-assets://build/index.html";
+		}
+	#else
+		initialUrl = "streaming-assets://build/index.html";
+	#endif
+
+		_webViewPrefab.InitialUrl = initialUrl;
+		
 	}
 
 	private void HandleJavaScriptMessage(object _, EventArgs<string> eventArgs) {

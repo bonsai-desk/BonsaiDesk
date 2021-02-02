@@ -8,9 +8,7 @@ using UnityEngine;
 using Vuplex.WebView;
 
 public class TableBrowser : Browser {
-	public string initialUrl;
 	public CustomInputModule customInputModule;
-	public bool useBuiltHtml;
 
 	public SoundFXRef hoverSound;
 	public SoundFXRef mouseDownSound;
@@ -18,23 +16,16 @@ public class TableBrowser : Browser {
 
 	protected override void Start() {
 		base.Start();
+		
 		_webViewPrefab.DragMode = DragMode.DragToScroll;
 
-	#if UNITY_EDITOR || DEVELOPMENT_BUILD
-		if (useBuiltHtml) {
-			initialUrl = "streaming-assets://build/index.html";
-		}
-	#else
-		initialUrl = "streaming-assets://build/index.html";
-	#endif
-
-		_webViewPrefab.InitialUrl = initialUrl;
 		BrowserReady += () =>
 		{
 			OnMessageEmitted(HandleJavascriptMessage);
 			var view = _webViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView");
 			CustomInputModule.Singleton.screens.Add(view);
 		};
+		
 		ListenersReady += NavToMenu;
 	}
 

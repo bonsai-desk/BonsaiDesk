@@ -16,8 +16,6 @@ public class AutoBrowserController : NetworkBehaviour
     private const float ClientPingInterval = 0.1f;
     private const float MaxReadyUpPeriod = 10f;
     private const float VideoSyncTolerance = 1f;
-    public bool useBuiltHtml = true;
-    public string hotReloadUrl;
     public TogglePause togglePause;
     public TabletSpot tabletSpot;
     private readonly Dictionary<uint, double> _clientsJoinedNetworkTime = new Dictionary<uint, double>();
@@ -270,15 +268,7 @@ public class AutoBrowserController : NetworkBehaviour
 
     private void SetupBrowser(bool restart = false)
     {
-        Debug.Log($"setup browser {_autoBrowser} {useBuiltHtml}");
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-        if (useBuiltHtml)
-            _autoBrowser.LoadUrl("streaming-assets://build/index.html");
-        else
-            _autoBrowser.LoadUrl(hotReloadUrl);
-#else
-        _autoBrowser.LoadUrl("streaming-assets://build/index.html");
-#endif
+        Debug.Log($"setup browser");
         if (!restart) _autoBrowser.OnMessageEmitted(HandleJavascriptMessage);
     }
 
