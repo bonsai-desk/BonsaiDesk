@@ -7,10 +7,8 @@ using OVR;
 using UnityEngine;
 using Vuplex.WebView;
 
-public class TableBrowser : NewBrowser {
-	public string initialUrl;
+public class TableBrowser : Browser {
 	public CustomInputModule customInputModule;
-	public bool useBuiltHtml;
 
 	public SoundFXRef hoverSound;
 	public SoundFXRef mouseDownSound;
@@ -18,23 +16,16 @@ public class TableBrowser : NewBrowser {
 
 	protected override void Start() {
 		base.Start();
-		_webViewPrefab.DragMode = DragMode.DragToScroll;
 
-	#if UNITY_EDITOR || DEVELOPMENT_BUILD
-		if (useBuiltHtml) {
-			initialUrl = "streaming-assets://build/index.html";
-		}
-	#else
-		initialUrl = "streaming-assets://build/index.html";
-	#endif
+		WebViewPrefab.DragMode = DragMode.DragToScroll;
 
-		_webViewPrefab.InitialUrl = initialUrl;
 		BrowserReady += () =>
 		{
 			OnMessageEmitted(HandleJavascriptMessage);
-			var view = _webViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView");
+			var view = WebViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView");
 			CustomInputModule.Singleton.screens.Add(view);
 		};
+
 		ListenersReady += NavToMenu;
 	}
 
@@ -48,21 +39,21 @@ public class TableBrowser : NewBrowser {
 		PostMessage(BrowserMessage.NavToMenu);
 	}
 
-	public override Vector2Int ChangeAspect(Vector2 newAspect) {
+	public Vector2Int ChangeAspect(Vector2 newAspect) {
 		var aspectRatio = newAspect.x / newAspect.y;
-		var localScale  = new Vector3(_bounds.y * aspectRatio, _bounds.y, 1);
-		if (localScale.x > _bounds.x) {
-			localScale = new Vector3(_bounds.x, _bounds.x * (1f / aspectRatio), 1);
+		var localScale  = new Vector3(Bounds.y * aspectRatio, Bounds.y, 1);
+		if (localScale.x > Bounds.x) {
+			localScale = new Vector3(Bounds.x, Bounds.x * (1f / aspectRatio), 1);
 		}
 
-		var resolution = AutoResolution(_bounds, distanceEstimate, pixelPerDegree, newAspect);
+		var resolution = AutoResolution(Bounds, distanceEstimate, pixelPerDegree, newAspect);
 
 		var res       = resolution.x > resolution.y ? resolution.x : resolution.y;
-		var scale     = _bounds.x > _bounds.y ? _bounds.x : _bounds.y;
+		var scale     = Bounds.x > Bounds.y ? Bounds.x : Bounds.y;
 		var resScaled = res / scale;
 
-		_webViewPrefab.WebView.SetResolution(resScaled);
-		_webViewPrefab.Resize(_bounds.x, _bounds.y);
+		WebViewPrefab.WebView.SetResolution(resScaled);
+		WebViewPrefab.Resize(Bounds.x, Bounds.y);
 
 		Debug.Log($"[BONSAI] ChangeAspect resolution {resolution}");
 
@@ -162,6 +153,35 @@ public class TableBrowser : NewBrowser {
 
 		var message = JsonConvert.SerializeObject(csMessage);
 		PostMessage(message);
+	}
+
+	protected override void SetupWebViewPrefab() {
+		WebViewPrefab = WebViewPrefabCustom.Instantiate(Bounds.x, Bounds.y);
+		Destroy(WebViewPrefab.Collider);
+
+		WebViewPrefab.transform.localPosition = Vector3.zero;
+
+		WebViewPrefab.transform.SetParent(screenTransform, false);
+
+		Resizer     = WebViewPrefab.transform.Find("WebViewPrefabResizer");
+		WebViewView = Resizer.transform.Find("WebViewPrefabView");
+
+		holePuncherTransform.SetParent(WebViewView, false);
+		overlayTransform.SetParent(WebViewView, false);
+
+	#if UNITY_ANDROID && !UNITY_EDITOR
+        WebViewView.GetComponent<MeshRenderer>().enabled = false;
+	#endif
+
+		WebViewPrefab.Initialized += (sender, eventArgs) =>
+		{
+			const int ppuu = 2000;
+			WebViewPrefab.WebView.SetResolution(ppuu);
+			var res = new Vector2Int((int) (ppuu * Bounds.x), (int) (ppuu * Bounds.y));
+			RebuildOverlay(res);
+			ToggleHidden();
+		};
+		base.SetupWebViewPrefab();
 	}
 
 	private class CsMessageKeyType<T> {
