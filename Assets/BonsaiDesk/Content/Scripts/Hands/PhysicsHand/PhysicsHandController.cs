@@ -163,10 +163,13 @@ public class PhysicsHandController : MonoBehaviour
             for (int i = 0; i < hits.Length; i++)
             {
                 var body = hits[i].attachedRigidbody;
-                var autoAuthority = body.GetComponent<AutoAuthority>();
-                if (autoAuthority)
-                {
-                    autoAuthority.KeepAwake();
+                if (body) {
+                    Debug.Log($"BONSAI body {body}");
+                    var autoAuthority = body.GetComponent<AutoAuthority>();
+                    if (autoAuthority)
+                    {
+                        autoAuthority.KeepAwake();
+                    }
                 }
             }
         }
