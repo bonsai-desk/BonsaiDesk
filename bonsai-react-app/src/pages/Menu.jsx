@@ -9,6 +9,7 @@ import {useStore} from '../DataProvider';
 import {BeatLoader, BounceLoader} from 'react-spinners';
 import {observer} from 'mobx-react-lite';
 import {action, autorun} from 'mobx';
+import Button from '../Components/Button';
 
 let API_BASE = 'https://api.desk.link';
 
@@ -37,23 +38,6 @@ function postLeaveRoom() {
 
 function postKickConnectionId(id) {
   postJson({Type: 'command', Message: 'kickConnectionId', Data: id});
-}
-
-function postMouseDown() {
-  postJson({Type: 'event', Message: 'mouseDown'});
-}
-
-function postMouseUp() {
-  postJson({Type: 'event', Message: 'mouseUp'});
-}
-
-function postHover() {
-  postJson({Type: 'event', Message: 'hover'});
-}
-
-function Button(props) {
-  return <div onMouseDown={postMouseDown} onMouseUp={postMouseUp}
-              onMouseEnter={postHover}>{props.children}</div>;
 }
 
 function ListItem(props) {
@@ -116,7 +100,7 @@ function ConnectedClient(props) {
 
   if (ConnectionId === 0) {
     return (
-        <InfoItem title={"You"} slug={`${ConnectionId}`}
+        <InfoItem title={'You'} slug={`${ConnectionId}`}
                   imgSrc={ThinkingFace}>
         </InfoItem>);
   } else {
@@ -217,15 +201,15 @@ let RoomInfo = observer(() => {
           <InfoItem title={'Desk Code'}
                     slug={'People who have this can join you'}
                     imgSrc={LinkImg}>
-            <div className={"h-20 flex flex-wrap content-center"}>
-            {store.room_code ?
-                <div className={roomCodeCLass}>{store.room_code}</div>
+            <div className={'h-20 flex flex-wrap content-center'}>
+              {store.room_code ?
+                  <div className={roomCodeCLass}>{store.room_code}</div>
 
-                :
-                <div className={grayButtonClassInert}><BeatLoader size={8}
-                                                                  color={'#737373'}/>
-                </div>
-            }
+                  :
+                  <div className={grayButtonClassInert}><BeatLoader size={8}
+                                                                    color={'#737373'}/>
+                  </div>
+              }
             </div>
           </InfoItem>
         </React.Fragment>
