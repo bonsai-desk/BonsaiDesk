@@ -48,7 +48,7 @@ public class TableBrowser : NewBrowser {
 		PostMessage(BrowserMessage.NavToMenu);
 	}
 
-	public override Vector2Int ChangeAspect(Vector2 newAspect) {
+	public Vector2Int ChangeAspect(Vector2 newAspect) {
 		var aspectRatio = newAspect.x / newAspect.y;
 		var localScale  = new Vector3(_bounds.y * aspectRatio, _bounds.y, 1);
 		if (localScale.x > _bounds.x) {
@@ -196,5 +196,34 @@ public class TableBrowser : NewBrowser {
 		public string ip_address;
 		public int pinged;
 		public int port;
+	}
+	
+	protected override void SetupWebViewPrefab() {
+		_webViewPrefab = WebViewPrefabCustom.Instantiate(_bounds.x, _bounds.y);
+		Destroy(_webViewPrefab.Collider);
+
+		_webViewPrefab.transform.localPosition = Vector3.zero;
+
+		_webViewPrefab.transform.SetParent(screenTransform, false);
+
+		_resizer     = _webViewPrefab.transform.Find("WebViewPrefabResizer");
+		_webViewView = _resizer.transform.Find("WebViewPrefabView");
+
+		holePuncherTransform.SetParent(_webViewView, false);
+		overlayTransform.SetParent(_webViewView, false);
+
+	#if UNITY_ANDROID && !UNITY_EDITOR
+        _webViewView.GetComponent<MeshRenderer>().enabled = false;
+	#endif
+
+		_webViewPrefab.Initialized += (sender, eventArgs) =>
+		{
+			const int ppuu = 2000;
+			_webViewPrefab.WebView.SetResolution(ppuu);
+			var res = new Vector2Int((int) (ppuu * _bounds.x), (int) (ppuu * _bounds.y));
+			RebuildOverlay(res);
+			ToggleHidden();
+		};
+		base.SetupWebViewPrefab();
 	}
 }

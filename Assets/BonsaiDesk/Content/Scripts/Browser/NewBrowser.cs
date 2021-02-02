@@ -18,15 +18,17 @@ public class NewBrowser : MonoBehaviour {
 	private GameObject _boundsObject;
 	private OVROverlay _overlay;
 	private bool _renderEnabled = true;
-	private Transform _resizer;
+	protected Transform _resizer;
 	protected WebViewPrefabCustom _webViewPrefab;
-	private Transform _webViewView;
+	protected Transform _webViewView;
 
 	protected virtual void Start() {
 		Debug.Log("browser start");
 
 		CacheTransforms();
 
+		PreConfigureWebView();
+		
 		SetupWebViewPrefab();
 
 		SetupHolePuncher();
@@ -74,39 +76,10 @@ public class NewBrowser : MonoBehaviour {
 		yield break;
 	}
 
-	public virtual Vector2Int ChangeAspect(Vector2 newAspect) {
-		throw new NotImplementedException();
-	}
-
-	private void SetupWebViewPrefab() {
-		PreConfigureWebView();
-
-		_webViewPrefab = WebViewPrefabCustom.Instantiate(_bounds.x, _bounds.y);
-		Destroy(_webViewPrefab.Collider);
-
-		_webViewPrefab.transform.localPosition = Vector3.zero;
-
-		_webViewPrefab.transform.SetParent(screenTransform, false);
-
-		_resizer     = _webViewPrefab.transform.Find("WebViewPrefabResizer");
-		_webViewView = _resizer.transform.Find("WebViewPrefabView");
-
-		holePuncherTransform.SetParent(_webViewView, false);
-		overlayTransform.SetParent(_webViewView, false);
-
-	#if UNITY_ANDROID && !UNITY_EDITOR
-        _webViewView.GetComponent<MeshRenderer>().enabled = false;
-	#endif
-
+	protected virtual void SetupWebViewPrefab() {
 		_webViewPrefab.Initialized += (sender, eventArgs) =>
 		{
 			_webViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
-
-			const int ppuu = 2000;
-			_webViewPrefab.WebView.SetResolution(ppuu);
-			var res = new Vector2Int((int) (ppuu * _bounds.x), (int) (ppuu * _bounds.y));
-			RebuildOverlay(res);
-			ToggleHidden();
 			BrowserReady?.Invoke();
 		};
 	}
