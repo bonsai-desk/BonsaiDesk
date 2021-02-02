@@ -14,15 +14,15 @@ public class Browser : MonoBehaviour {
 	public Transform overlayTransform;
 	public Transform holePuncherTransform;
 	public Transform screenTransform;
-	protected Vector2 _bounds;
+	public string initialUrl;
+	public bool useBuiltHtml;
 	private GameObject _boundsObject;
 	private OVROverlay _overlay;
 	private bool _renderEnabled = true;
-	protected Transform _resizer;
-	protected WebViewPrefabCustom _webViewPrefab;
-	protected Transform _webViewView;
-	public string initialUrl;
-	public bool useBuiltHtml;
+	protected Vector2 Bounds;
+	protected Transform Resizer;
+	protected WebViewPrefabCustom WebViewPrefab;
+	protected Transform WebViewView;
 
 	protected virtual void Start() {
 		Debug.Log("browser start");
@@ -30,7 +30,7 @@ public class Browser : MonoBehaviour {
 		CacheTransforms();
 
 		PreConfigureWebView();
-		
+
 		SetupWebViewPrefab();
 
 		SetupHolePuncher();
@@ -49,7 +49,7 @@ public class Browser : MonoBehaviour {
 	}
 
 	private void CacheTransforms() {
-		_bounds = boundsTransform.transform.localScale.xy();
+		Bounds = boundsTransform.transform.localScale.xy();
 	}
 
 	protected void RebuildOverlay(Vector2Int resolution) {
@@ -58,8 +58,8 @@ public class Browser : MonoBehaviour {
 		_overlay.externalSurfaceWidth  = resolution.x;
 		_overlay.externalSurfaceHeight = resolution.y;
 
-		_overlay.currentOverlayType    = OVROverlay.OverlayType.Underlay;
-		_overlay.isExternalSurface     = true;
+		_overlay.currentOverlayType = OVROverlay.OverlayType.Underlay;
+		_overlay.isExternalSurface  = true;
 		StartCoroutine(UpdateAndroidSurface());
 	}
 
@@ -79,9 +79,9 @@ public class Browser : MonoBehaviour {
 	}
 
 	protected virtual void SetupWebViewPrefab() {
-		_webViewPrefab.Initialized += (sender, eventArgs) =>
+		WebViewPrefab.Initialized += (sender, eventArgs) =>
 		{
-			_webViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
+			WebViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
 			BrowserReady?.Invoke();
 		};
 	#if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -92,8 +92,7 @@ public class Browser : MonoBehaviour {
 		initialUrl = "streaming-assets://build/index.html";
 	#endif
 
-		_webViewPrefab.InitialUrl = initialUrl;
-		
+		WebViewPrefab.InitialUrl = initialUrl;
 	}
 
 	private void HandleJavaScriptMessage(object _, EventArgs<string> eventArgs) {
@@ -132,28 +131,28 @@ public class Browser : MonoBehaviour {
 	public void ToggleHidden() {
 		_renderEnabled = !_renderEnabled;
 
-		_webViewPrefab.ClickingEnabled  = _renderEnabled;
-		_webViewPrefab.ScrollingEnabled = _renderEnabled;
-		_webViewPrefab.HoveringEnabled  = _renderEnabled;
+		WebViewPrefab.ClickingEnabled  = _renderEnabled;
+		WebViewPrefab.ScrollingEnabled = _renderEnabled;
+		WebViewPrefab.HoveringEnabled  = _renderEnabled;
 
 	#if UNITY_ANDROID && !UNITY_EDITOR
         holePuncherTransform.GetComponent<MeshRenderer>().enabled = _renderEnabled;
 	#else
-		_webViewView.GetComponent<MeshRenderer>().enabled = _renderEnabled;
+		WebViewView.GetComponent<MeshRenderer>().enabled = _renderEnabled;
 	#endif
 	}
 
 	public void LoadUrl(string url) {
-		_webViewPrefab.WebView.LoadUrl(url);
+		WebViewPrefab.WebView.LoadUrl(url);
 	}
 
 	public void LoadHtml(string html) {
 		Debug.Log("load html");
-		_webViewPrefab.WebView.LoadHtml(html);
+		WebViewPrefab.WebView.LoadHtml(html);
 	}
 
 	public void PostMessage(string data) {
-		_webViewPrefab.WebView.PostMessage(data);
+		WebViewPrefab.WebView.PostMessage(data);
 	}
 
 	public void PostMessages(IEnumerable<string> msgs) {
@@ -163,10 +162,10 @@ public class Browser : MonoBehaviour {
 	}
 
 	public void OnMessageEmitted(EventHandler<EventArgs<string>> messageEmitted) {
-		_webViewPrefab.WebView.MessageEmitted += messageEmitted;
+		WebViewPrefab.WebView.MessageEmitted += messageEmitted;
 	}
 
-	public static int ResolvablePixels(float height, float distanceEstimate, int pixelPerDegree) {
+	private static int ResolvablePixels(float height, float distanceEstimate, int pixelPerDegree) {
 		// calculates the optimal resolution along some dimension
 		// height : side of billboard in unity units
 		// distanceEstimate : estimated closest distance from (user) --- (billboard)

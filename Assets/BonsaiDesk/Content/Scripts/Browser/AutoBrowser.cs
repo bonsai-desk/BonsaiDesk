@@ -17,24 +17,24 @@ public class AutoBrowser : Browser
         Debug.Log("auto browser start");
         _defaultLocalPosition = transform.localPosition;
         _belowTableLocalPosition = _defaultLocalPosition;
-        _belowTableLocalPosition.y = -_bounds.y / 2f;
+        _belowTableLocalPosition.y = -Bounds.y / 2f;
     }
     
     public Vector2Int ChangeAspect(Vector2 newAspect)
     {
         var aspectRatio = newAspect.x / newAspect.y;
-        var localScale = new Vector3(_bounds.y * aspectRatio, _bounds.y, 1);
-        if (localScale.x > _bounds.x)
-            localScale = new Vector3(_bounds.x, _bounds.x * (1f / aspectRatio), 1);
+        var localScale = new Vector3(Bounds.y * aspectRatio, Bounds.y, 1);
+        if (localScale.x > Bounds.x)
+            localScale = new Vector3(Bounds.x, Bounds.x * (1f / aspectRatio), 1);
 
         var resolution = AutoResolution(localScale, distanceEstimate, pixelPerDegree, newAspect);
 
-        if (!Mathf.Approximately(1, _webViewPrefab.WebView.Resolution))
+        if (!Mathf.Approximately(1, WebViewPrefab.WebView.Resolution))
         {
-            _webViewPrefab.WebView.SetResolution(1);
+            WebViewPrefab.WebView.SetResolution(1);
         }
         
-        _webViewPrefab.WebView.Resize(resolution.x, resolution.y);
+        WebViewPrefab.WebView.Resize(resolution.x, resolution.y);
         
         Debug.Log($"[BONSAI] ChangeAspect resolution {resolution}");
 
@@ -72,21 +72,21 @@ public class AutoBrowser : Browser
     }
     
 	protected override void SetupWebViewPrefab() {
-		_webViewPrefab = WebViewPrefabCustom.Instantiate(1, 1);
-		Destroy(_webViewPrefab.Collider);
-		_webViewPrefab.transform.SetParent(boundsTransform, false);
+		WebViewPrefab = WebViewPrefabCustom.Instantiate(1, 1);
+		Destroy(WebViewPrefab.Collider);
+		WebViewPrefab.transform.SetParent(boundsTransform, false);
 		
-		_resizer     = _webViewPrefab.transform.Find("WebViewPrefabResizer");
-		_webViewView = _resizer.transform.Find("WebViewPrefabView");
+		Resizer     = WebViewPrefab.transform.Find("WebViewPrefabResizer");
+		WebViewView = Resizer.transform.Find("WebViewPrefabView");
 		
-		_webViewPrefab.transform.localPosition    = new Vector3(0, 0.5f, 0);
-		_webViewPrefab.transform.localEulerAngles = new Vector3(0, 180, 0);
+		WebViewPrefab.transform.localPosition    = new Vector3(0, 0.5f, 0);
+		WebViewPrefab.transform.localEulerAngles = new Vector3(0, 180, 0);
 
 	#if UNITY_ANDROID && !UNITY_EDITOR
         _webViewView.GetComponent<MeshRenderer>().enabled = false;
 	#endif
 
-		_webViewPrefab.Initialized += (sender, eventArgs) =>
+		WebViewPrefab.Initialized += (sender, eventArgs) =>
 		{
 			ChangeAspect(startingAspect);
 		};
