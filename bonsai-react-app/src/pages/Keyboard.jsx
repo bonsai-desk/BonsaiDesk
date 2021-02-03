@@ -322,16 +322,19 @@ function Keyboard(props) {
   }
 
   return (
-      <div className={'w-full h-screen bg-black space-y-2'}>
-        {level === 0 ? level0 : ''}
-        {level === 1 ? level1 : ''}
-        {level === 2 ? level2 : ''}
-        {level === 1 || level === 2 ? level12 : ''}
-        <div className={'w-full flex space-x-2 justify-center'}>
-          <NumsOrChar handleClick={handleClickNumOrChar}/>
-          <Space/>
-          <div onClick={handleDismiss}>
-            <KeyBoardDismiss/>
+      <div className={'w-full h-screen bg-black flex flex-wrap justify-center content-center'}>
+        <div className={"space-y-2"}>
+
+          {level === 0 ? level0 : ''}
+          {level === 1 ? level1 : ''}
+          {level === 2 ? level2 : ''}
+          {level === 1 || level === 2 ? level12 : ''}
+          <div className={'w-full flex space-x-2 justify-center'}>
+            <NumsOrChar handleClick={handleClickNumOrChar}/>
+            <Space/>
+            <div onClick={handleDismiss}>
+              <KeyBoardDismiss/>
+            </div>
           </div>
         </div>
 
@@ -339,7 +342,8 @@ function Keyboard(props) {
   );
 }
 
-function WebNav() {
+function WebNav(props) {
+  let {handleMenu} = props
   return (
       <div
           className={'w-full h-screen bg-black flex flex-wrap content-center justify-center'}>
@@ -348,7 +352,7 @@ function WebNav() {
             <KeySVG imgSrc={BackImg}/>
             <KeySVG imgSrc={ForwardImg}/>
           </div>
-          <div className={'w-full flex justify-center'}>
+          <div onClick={handleMenu} className={'w-full flex justify-center'}>
             <KeySVG imgSrc={MenuImg}/>
           </div>
         </div>
@@ -359,7 +363,7 @@ function WebNav() {
 function Input() {
   let [small, setSmall] = useState(true)
   if (small){
-    return <WebNav/>;
+    return <WebNav handleMenu={()=>{setSmall(false)}}/>;
   } else {
     return <Keyboard handleDismiss={()=>{setSmall(true)}}/>
   }
