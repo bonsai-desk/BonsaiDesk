@@ -198,7 +198,7 @@ public class Browser : MonoBehaviour {
 		return new Vector2Int((int) (aspect.x / aspect.y * yResolution), yResolution);
 	}
 
-	protected static class BrowserMessage {
+	public static class BrowserMessage {
 		public static readonly string NavToMenu = PushPath("/menu");
 		public static readonly string NavHome = PushPath("/home");
 
@@ -211,7 +211,7 @@ public class Browser : MonoBehaviour {
 		}
 	}
 
-	protected struct JsMessageString {
+	public struct JsMessageString {
 		public string Data;
 		public string Message;
 		public string Type;

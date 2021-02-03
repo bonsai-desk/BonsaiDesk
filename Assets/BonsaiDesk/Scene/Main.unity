@@ -2399,6 +2399,7 @@ MonoBehaviour:
   visualizeAuthority: 0
   browserReady: 0
   tableBrowser: {fileID: 320584329}
+  tableBrowserMenu: {fileID: 320584331}
   moveToDesk: {fileID: 1212259449}
   togglePause: {fileID: 96659938}
   fader: {fileID: 1129058233}
@@ -3048,6 +3049,7 @@ GameObject:
   m_Component:
   - component: {fileID: 320584330}
   - component: {fileID: 320584329}
+  - component: {fileID: 320584331}
   m_Layer: 0
   m_Name: TableBrowser
   m_TagString: Untagged
@@ -3100,6 +3102,18 @@ Transform:
   m_Father: {fileID: 955373202}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -90, y: 180, z: 0}
+--- !u!114 &320584331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 320584328}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14d236040c072f344bbab4d314837566, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &329180640
 GameObject:
   m_ObjectHideFlags: 0
