@@ -45,6 +45,8 @@ public class HandComponents
         PhysicsHand = handObject.GetChild(0);
         _physicsRenderer = PhysicsHand.GetComponentInChildren<SkinnedMeshRenderer>();
         _handMaterial = _physicsRenderer.material;
+        _handMaterial.SetInt("_ZWrite", 1);
+        MakeMaterialOpaque();
         PhysicsHandController = PhysicsHand.GetComponent<PhysicsHandController>();
         TargetHand = handObject.GetChild(1);
         PlayerHand.transform.SetParent(PhysicsHand, false);
@@ -175,7 +177,6 @@ public class HandComponents
     {
         _handMaterial.SetInt("_SrcBlend", (int) UnityEngine.Rendering.BlendMode.One);
         _handMaterial.SetInt("_DstBlend", (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-        _handMaterial.SetInt("_ZWrite", 0);
         _handMaterial.DisableKeyword("_ALPHATEST_ON");
         _handMaterial.DisableKeyword("_ALPHABLEND_ON");
         _handMaterial.EnableKeyword("_ALPHAPREMULTIPLY_ON");
@@ -186,7 +187,6 @@ public class HandComponents
     {
         _handMaterial.SetInt("_SrcBlend", (int) UnityEngine.Rendering.BlendMode.One);
         _handMaterial.SetInt("_DstBlend", (int) UnityEngine.Rendering.BlendMode.Zero);
-        _handMaterial.SetInt("_ZWrite", 1);
         _handMaterial.DisableKeyword("_ALPHATEST_ON");
         _handMaterial.DisableKeyword("_ALPHABLEND_ON");
         _handMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
