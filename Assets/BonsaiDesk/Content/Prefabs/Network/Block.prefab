@@ -236,7 +236,7 @@ GameObject:
   - component: {fileID: -699837060220722056}
   - component: {fileID: 2498230184249292274}
   m_Layer: 0
-  m_Name: BlockArea
+  m_Name: Block
   m_TagString: BlockArea
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -438,8 +438,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  visualizeAuthority: 0
-  visualizeAuthorityMaterial: {fileID: 0}
+  isKinematic: 0
+  allowPinchPull: 1
   meshRenderer: {fileID: 0}
 --- !u!1 &4318712806339903219
 GameObject:

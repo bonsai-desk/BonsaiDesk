@@ -16,6 +16,8 @@ public class NetworkFollow : NetworkBehaviour
         DoNotRenderLayer
     };
 
+    public Rigidbody body;
+
     public RenderBehaviour renderBehaviour = RenderBehaviour.Normal;
 
     // void Start()
@@ -75,8 +77,17 @@ public class NetworkFollow : NetworkBehaviour
 
         if (target != null)
         {
-            transform.position = target.position;
-            transform.rotation = target.rotation;
+            if (body)
+            {
+                body.MovePosition(target.position);
+                body.MoveRotation(target.rotation);
+            }
+            else
+            {
+                transform.position = target.position;
+                transform.rotation = target.rotation;
+            }
+
             transform.localScale = target.localScale;
         }
     }
