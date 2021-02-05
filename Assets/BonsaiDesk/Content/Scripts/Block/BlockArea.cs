@@ -846,47 +846,47 @@ public class BlockArea : NetworkBehaviour
         else
             assymilated = new HashSet<Vector3Int>(blockObjects);
         Dictionary<Vector3Int, Vector2Int[]> boxes = new Dictionary<Vector3Int, Vector2Int[]>();
-        foreach (var block in blocks)
-        {
-            if (!assymilated.Contains(block.Key))
-            {
-                assymilated.Add(block.Key);
-
-                Vector2Int[] boxBounds = {new Vector2Int(), new Vector2Int(), new Vector2Int()};
-
-                bool canSpreadRight = true;
-                bool canSpreadLeft = true;
-                bool canSpreadUp = true;
-                bool canSpreadDown = true;
-                bool canSpreadForward = true;
-                bool canSpreadBackward = true;
-
-                while (canSpreadRight || canSpreadLeft || canSpreadUp || canSpreadDown || canSpreadForward ||
-                       canSpreadBackward)
-                {
-                    if (canSpreadRight)
-                        canSpreadRight =
-                            HitBoxExpand.expandBoxBoundsRight(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadLeft)
-                        canSpreadLeft =
-                            HitBoxExpand.expandBoxBoundsLeft(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadUp)
-                        canSpreadUp =
-                            HitBoxExpand.expandBoxBoundsUp(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadDown)
-                        canSpreadDown =
-                            HitBoxExpand.expandBoxBoundsDown(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadForward)
-                        canSpreadForward =
-                            HitBoxExpand.expandBoxBoundsForward(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadBackward)
-                        canSpreadBackward =
-                            HitBoxExpand.expandBoxBoundsBackward(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                }
-
-                boxes.Add(block.Key, boxBounds);
-            }
-        }
+        // foreach (var block in blocks)
+        // {
+        //     if (!assymilated.Contains(block.Key))
+        //     {
+        //         assymilated.Add(block.Key);
+        //
+        //         Vector2Int[] boxBounds = {new Vector2Int(), new Vector2Int(), new Vector2Int()};
+        //
+        //         bool canSpreadRight = true;
+        //         bool canSpreadLeft = true;
+        //         bool canSpreadUp = true;
+        //         bool canSpreadDown = true;
+        //         bool canSpreadForward = true;
+        //         bool canSpreadBackward = true;
+        //
+        //         while (canSpreadRight || canSpreadLeft || canSpreadUp || canSpreadDown || canSpreadForward ||
+        //                canSpreadBackward)
+        //         {
+        //             if (canSpreadRight)
+        //                 canSpreadRight =
+        //                     HitBoxExpand.expandBoxBoundsRight(block.Key, ref boxBounds, ref assymilated, ref blocks);
+        //             if (canSpreadLeft)
+        //                 canSpreadLeft =
+        //                     HitBoxExpand.expandBoxBoundsLeft(block.Key, ref boxBounds, ref assymilated, ref blocks);
+        //             if (canSpreadUp)
+        //                 canSpreadUp =
+        //                     HitBoxExpand.expandBoxBoundsUp(block.Key, ref boxBounds, ref assymilated, ref blocks);
+        //             if (canSpreadDown)
+        //                 canSpreadDown =
+        //                     HitBoxExpand.expandBoxBoundsDown(block.Key, ref boxBounds, ref assymilated, ref blocks);
+        //             if (canSpreadForward)
+        //                 canSpreadForward =
+        //                     HitBoxExpand.expandBoxBoundsForward(block.Key, ref boxBounds, ref assymilated, ref blocks);
+        //             if (canSpreadBackward)
+        //                 canSpreadBackward =
+        //                     HitBoxExpand.expandBoxBoundsBackward(block.Key, ref boxBounds, ref assymilated, ref blocks);
+        //         }
+        //
+        //         boxes.Add(block.Key, boxBounds);
+        //     }
+        // }
 
         Queue<BoxCollider> boxCollidersNotNeeded = new Queue<BoxCollider>();
         while (boxCollidersInUse.Count > 0)

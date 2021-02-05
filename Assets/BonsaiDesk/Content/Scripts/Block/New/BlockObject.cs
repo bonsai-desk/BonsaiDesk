@@ -4,19 +4,23 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+[RequireComponent(typeof(Rigidbody))]
 public class BlockObject : MonoBehaviour
 {
     public const float CubeScale = 0.05f;
 
+    //public inspector variables
     public Material blockObjectMaterial;
+    public PhysicMaterial blockPhysicMaterial;
 
     //contains all the information required to create this block object
     private BlockObjectData _blockObjectData = new BlockObjectData();
 
+    //contains the information about the local state of the mesh. The structure of the mesh can be slightly
+    //different depending on the order of block add/remove even though the final result looks the same
     private Dictionary<Vector3Int, MeshBlock> _meshBlocks = new Dictionary<Vector3Int, MeshBlock>();
 
     //mesh stuff
-    private MeshRenderer _meshRenderer;
     private MeshFilter _meshFilter;
     private Mesh _mesh;
     private List<Vector3> _vertices = new List<Vector3>();
@@ -25,38 +29,55 @@ public class BlockObject : MonoBehaviour
     private List<int> _triangles = new List<int>();
     private float _texturePadding = 0f;
 
+    //physics
+    private Rigidbody _body;
+    private Transform _physicsBoxesObject;
+    private Queue<BoxCollider> _boxCollidersInUse = new Queue<BoxCollider>();
+    private bool _resetCoM = false; //flag to reset CoM on the next physics update
+
     //bounds of all blocks. used to check if new block is close enough to do checks with this block object
     private Vector2Int[] _bounds = {new Vector2Int(), new Vector2Int(), new Vector2Int()};
 
     private void Start()
     {
+        _body = GetComponent<Rigidbody>();
         transform.localScale = new Vector3(CubeScale, CubeScale, CubeScale);
 
-        var meshObject = new GameObject("Mesh");
-        meshObject.transform.SetParent(transform, false);
-        _meshRenderer = meshObject.AddComponent<MeshRenderer>();
-        _meshFilter = meshObject.AddComponent<MeshFilter>();
+        SetupChildren();
 
-        _meshRenderer.sharedMaterial = blockObjectMaterial;
-        _texturePadding = 1f / _meshRenderer.sharedMaterial.mainTexture.width / 2f;
+        _texturePadding = 1f / blockObjectMaterial.mainTexture.width / 2f;
 
         _mesh = new Mesh();
         _meshFilter.mesh = _mesh;
 
         _blockObjectData.Blocks.Add(Vector3Int.zero, (0, 0));
-
-        for (int i = 0; i < 100; i++)
-        {
-            var coord = new Vector3Int(Random.Range(-10, 10), Random.Range(-10, 10), Random.Range(-10, 10));
-            if (!_blockObjectData.Blocks.ContainsKey(coord))
-            {
-                _blockObjectData.Blocks.Add(coord, ((byte)Random.Range(0, 8), 0));
-            }
-        }
+        _blockObjectData.Blocks.Add(new Vector3Int(0, 1, 0), (0, 0));
+        _blockObjectData.Blocks.Add(new Vector3Int(1, 1, 0), (0, 0));
 
         CalculateInitialBounds();
-        
         CreateInitialMesh();
+    }
+
+    private void FixedUpdate()
+    {
+        if (_resetCoM)
+        {
+            _resetCoM = false;
+            _body.ResetInertiaTensor();
+            _body.ResetCenterOfMass();
+        }
+    }
+
+    private void SetupChildren()
+    {
+        var meshObject = new GameObject("Mesh");
+        meshObject.transform.SetParent(transform, false);
+        meshObject.AddComponent<MeshRenderer>().sharedMaterial = blockObjectMaterial;
+        _meshFilter = meshObject.AddComponent<MeshFilter>();
+
+        var physicsBoxes = new GameObject("PhysicsBoxes");
+        _physicsBoxesObject = physicsBoxes.transform;
+        physicsBoxes.transform.SetParent(transform, false);
     }
 
     private void AddBlockToMesh(byte id, Vector3Int coord, Quaternion rotation, bool updateTheMesh)
@@ -130,7 +151,15 @@ public class BlockObject : MonoBehaviour
         //     }
         // }
 
-        // UpdateHitBox();
+        var (boxCollidersNotNeeded, mass) = BlockUtility.UpdateHitBox(_blockObjectData.Blocks, _boxCollidersInUse,
+            _physicsBoxesObject, blockPhysicMaterial);
+        while (boxCollidersNotNeeded.Count > 0)
+        {
+            Destroy(boxCollidersNotNeeded.Dequeue());
+        }
+
+        _body.mass = mass;
+        _resetCoM = true;
     }
 
     private void ExpandToFit(Vector3Int blockCoord)
@@ -158,6 +187,7 @@ public class BlockObject : MonoBehaviour
         {
             AddBlockToMesh(block.Value.id, block.Key, BlockUtility.ByteToQuaternion(block.Value.rotation), false);
         }
+
         UpdateMesh(UpdateType.AddBlock);
     }
 }

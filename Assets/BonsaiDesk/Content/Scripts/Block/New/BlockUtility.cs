@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public static class BlockUtility
+public static partial class BlockUtility
 {
     /// <summary>
     /// Snaps rotation to nearest rotation where all axes are aligned with world axes.
@@ -204,6 +204,119 @@ public static class BlockUtility
         new Vector3(-0.5f, -0.5f, 0.5f),
         new Vector3(0.5f, -0.5f, 0.5f),
         new Vector3(0.5f, -0.5f, -0.5f),
-        new Vector3(-0.5f, -0.5f, -0.5f),
+        new Vector3(-0.5f, -0.5f, -0.5f)
     };
+
+    public static (Queue<BoxCollider> boxCollidersNotNeeded, float mass) UpdateHitBox(
+        Dictionary<Vector3Int, (byte id, byte rotation)> blocks,
+        Queue<BoxCollider> boxCollidersInUse, Transform boxesParent, PhysicMaterial blockPhysicMaterial)
+    {
+        if (blocks.Count < 1)
+        {
+            Debug.LogError("Cannot update hitbox with no blocks.");
+            return (null, 1f);
+        }
+
+        HashSet<Vector3Int> assymilated = new HashSet<Vector3Int>();
+        // if (blocks.Count == 1)
+        //     assymilated = new HashSet<Vector3Int>();
+        // else
+        //     assymilated = new HashSet<Vector3Int>(blockObjects);
+        Dictionary<Vector3Int, Vector2Int[]> boxes = new Dictionary<Vector3Int, Vector2Int[]>();
+        foreach (var block in blocks)
+        {
+            if (!assymilated.Contains(block.Key))
+            {
+                assymilated.Add(block.Key);
+
+                Vector2Int[] boxBounds = {new Vector2Int(), new Vector2Int(), new Vector2Int()};
+
+                bool canSpreadRight = true;
+                bool canSpreadLeft = true;
+                bool canSpreadUp = true;
+                bool canSpreadDown = true;
+                bool canSpreadForward = true;
+                bool canSpreadBackward = true;
+
+                while (canSpreadRight || canSpreadLeft || canSpreadUp || canSpreadDown || canSpreadForward ||
+                       canSpreadBackward)
+                {
+                    if (canSpreadRight)
+                        canSpreadRight = expandBoxBoundsRight(block.Key, ref boxBounds, ref assymilated, ref blocks);
+                    if (canSpreadLeft)
+                        canSpreadLeft = expandBoxBoundsLeft(block.Key, ref boxBounds, ref assymilated, ref blocks);
+                    if (canSpreadUp)
+                        canSpreadUp = expandBoxBoundsUp(block.Key, ref boxBounds, ref assymilated, ref blocks);
+                    if (canSpreadDown)
+                        canSpreadDown = expandBoxBoundsDown(block.Key, ref boxBounds, ref assymilated, ref blocks);
+                    if (canSpreadForward)
+                        canSpreadForward =
+                            expandBoxBoundsForward(block.Key, ref boxBounds, ref assymilated, ref blocks);
+                    if (canSpreadBackward)
+                        canSpreadBackward =
+                            expandBoxBoundsBackward(block.Key, ref boxBounds, ref assymilated, ref blocks);
+                }
+
+                boxes.Add(block.Key, boxBounds);
+            }
+        }
+
+        Queue<BoxCollider> boxCollidersNotNeeded = new Queue<BoxCollider>();
+        while (boxCollidersInUse.Count > 0)
+        {
+            BoxCollider boxCollider = boxCollidersInUse.Dequeue();
+            boxCollidersNotNeeded.Enqueue(boxCollider);
+        }
+
+        foreach (var box in boxes)
+        {
+            float xScale = 1f + (1f * (-box.Value[0][0] + box.Value[0][1]));
+            float yScale = 1f + (1f * (-box.Value[1][0] + box.Value[1][1]));
+            float zScale = 1f + (1f * (-box.Value[2][0] + box.Value[2][1]));
+
+            float xPosition = -(1f / 2f) - (1f * -box.Value[0][0]) + (xScale / 2f);
+            float yPosition = -(1f / 2f) - (1f * -box.Value[1][0]) + (yScale / 2f);
+            float zPosition = -(1f / 2f) - (1f * -box.Value[2][0]) + (zScale / 2f);
+
+            if (boxCollidersNotNeeded.Count > 0)
+            {
+                BoxCollider boxCollider = boxCollidersNotNeeded.Dequeue();
+                boxCollider.size = new Vector3(xScale, yScale, zScale);
+                boxCollider.center = box.Key + new Vector3(xPosition, yPosition, zPosition);
+                boxCollidersInUse.Enqueue(boxCollider);
+            }
+            else
+            {
+                BoxCollider boxCollider = boxesParent.gameObject.AddComponent<BoxCollider>();
+                boxCollider.material = blockPhysicMaterial;
+                boxCollider.size = new Vector3(xScale, yScale, zScale);
+                boxCollider.center = box.Key + new Vector3(xPosition, yPosition, zPosition);
+                boxCollidersInUse.Enqueue(boxCollider);
+            }
+        }
+
+        // if (blocks.Count == 1)
+        // {
+        //     KeyValuePair<Vector3Int, (byte id, byte rotation)> block;
+        //     foreach (var nextBlock in blocks)
+        //         block = nextBlock;
+        //
+        //     if (Blocks.blocks[block.Value.id].hasSphere)
+        //     {
+        //         var s = transform.GetChild(2).gameObject.AddComponent<SphereCollider>();
+        //         s.material = spherePhysicMaterial;
+        //         s.center = block.Key;
+        //         s.radius = 0.475f;
+        //     }
+        // }
+        // else
+        // {
+        //     var s = transform.GetChild(2).gameObject.GetComponent<SphereCollider>();
+        //     if (s != null)
+        //         Destroy(s);
+        // }
+
+        float mass = Mathf.Clamp((0.075f * blocks.Count) - (0.075f * blocks.Count), 0.075f, Mathf.Infinity);
+        return (boxCollidersNotNeeded, mass);
+    }
 }
