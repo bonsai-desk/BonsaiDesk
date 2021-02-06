@@ -15,6 +15,7 @@ public partial class BlockObject : MonoBehaviour
     //public inspector variables
     public Material blockObjectMaterial;
     public PhysicMaterial blockPhysicMaterial;
+    public PhysicMaterial spherePhysicMaterial;
 
     //contains all the information required to create this block object
     [HideInInspector] public BlockObjectData blockObjectData = new BlockObjectData();
@@ -38,12 +39,15 @@ public partial class BlockObject : MonoBehaviour
     private Queue<BoxCollider> _boxCollidersInUse = new Queue<BoxCollider>();
     private bool _resetCoM = false; //flag to reset CoM on the next physics update
     private AutoAuthority _autoAuthority;
+    private Transform _sphereObject;
 
     //this object is the parent of any BlockObject with 1 block trying to attach to another BlockObject
     [HideInInspector] public Transform potentialBlocksParent;
 
     private void Start()
     {
+        PhysicsStart();
+        
         _autoAuthority = GetComponent<AutoAuthority>();
 
         if (!_blockObjectAuthorities.Contains(_autoAuthority))
@@ -105,6 +109,11 @@ public partial class BlockObject : MonoBehaviour
         const float inverseScale = 1f / CubeScale;
         potentialBlocksParent.localScale = new Vector3(inverseScale, inverseScale, inverseScale);
         potentialBlocksParent.SetParent(transform, false);
+
+        var sphereObject = new GameObject("Sphere");
+        _sphereObject = sphereObject.transform;
+        sphereObject.transform.SetParent(transform, false);
+        sphereObject.layer = LayerMask.NameToLayer("sphere");
     }
 
     private void AddBlock(byte id, Vector3Int coord, Quaternion rotation, bool updateTheMesh)
@@ -185,11 +194,20 @@ public partial class BlockObject : MonoBehaviour
         //     }
         // }
 
-        var (boxCollidersNotNeeded, mass) = BlockUtility.UpdateHitBox(blockObjectData.Blocks, _boxCollidersInUse,
-            _physicsBoxesObject, blockPhysicMaterial);
+        var (boxCollidersNotNeeded, mass, destroySphere) = BlockUtility.UpdateHitBox(blockObjectData.Blocks, _boxCollidersInUse,
+            _physicsBoxesObject, _sphereObject, blockPhysicMaterial, spherePhysicMaterial);
         while (boxCollidersNotNeeded.Count > 0)
         {
             Destroy(boxCollidersNotNeeded.Dequeue());
+        }
+
+        if (destroySphere)
+        {
+            var s = _sphereObject.gameObject.GetComponent<SphereCollider>();
+            if (s)
+            {
+                Destroy(s);
+            }
         }
 
         _body.mass = mass;

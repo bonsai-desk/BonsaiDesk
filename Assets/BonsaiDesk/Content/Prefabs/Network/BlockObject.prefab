@@ -50,6 +50,8 @@ MonoBehaviour:
   blockObjectMaterial: {fileID: 2100000, guid: f78bd9a1577e22849b90e183503c527b, type: 2}
   blockPhysicMaterial: {fileID: 13400000, guid: 76d721a910635a648a5ce8963994bf63,
     type: 2}
+  spherePhysicMaterial: {fileID: 13400000, guid: 2ce95ee1c6692e24b93fd320d0345b99,
+    type: 2}
   potentialBlocksParent: {fileID: 0}
 --- !u!54 &1897995405423690379
 Rigidbody:

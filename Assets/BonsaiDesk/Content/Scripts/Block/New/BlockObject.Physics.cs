@@ -19,6 +19,16 @@ public partial class BlockObject
     private bool _touchingHand = false;
     private bool _lastInCubeArea = false;
 
+    //layers
+    private int _blockLayer;
+    private int _blockAreaLayer;
+
+    private void PhysicsStart()
+    {
+        _blockLayer = LayerMask.NameToLayer("block");
+        _blockAreaLayer = LayerMask.NameToLayer("blockArea");
+    }
+
     private void PhysicsFixedUpdate()
     {
         if (_autoAuthority.HasAuthority())
@@ -98,19 +108,6 @@ public partial class BlockObject
                     if (BlockUtility.AboutEquals(blockPosition, position) &&
                         BlockUtility.AboutEquals(transform.rotation, rotation))
                     {
-                        // transform.parent = initialParent;
-                        // body.useGravity = true;
-                        // myBlockArea.CmdSetActive(true);
-
-                        // transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer("blockArea");
-                        // if (layer == -1)
-                        //     layer = GetLayerRecursively(transform.GetChild(3).gameObject);
-                        // if (layer == 0)
-                        //     SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("blockArea"));
-                        // else
-                        //     SetLayerRecursively(transform.GetChild(3).gameObject, layer);
-
-                        // blockArea.LockBlock(gameObject);
                         for (var i = blockObject.potentialBlocksParent.childCount - 1; i >= 0; i--)
                         {
                             blockObject.potentialBlocksParent.GetChild(i).parent = null;
@@ -127,11 +124,6 @@ public partial class BlockObject
                         return;
                     }
 
-                    //float distance = Vector3.Distance(transform.position, position);
-                    // float scale = distance / (BlockArea.cubeScale / 2f);
-                    // scale = 1 - scale;
-                    // scale = BlockArea.cubeScale / 2f + BlockArea.cubeScale / 2f * scale;
-                    // transform.localScale = new Vector3(scale, scale, scale);
                     AddForceTowardsTarget(blockPosition, position);
                     AddTorqueTowardsTarget(rotation);
                     break;
@@ -139,15 +131,11 @@ public partial class BlockObject
             }
         }
 
-        // if ((isInCubeArea && isNearHole) || (isNearHole && touchingHand))
-        // {
-        //     transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer("block");
-        //     bool sphere = true;
-        //     foreach (var block in myBlockArea.blocks)
-        //         sphere = Blocks.blocks[block.Value.id].hasSphere;
-        //     if (sphere)
-        //         SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("block"));
-        // }
+        if ((isInCubeArea && isNearHole) || (isNearHole && _touchingHand))
+        {
+            _physicsBoxesObject.gameObject.layer = _blockLayer;
+            // SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("block")); //this is for bearings, etc.
+        }
         // else if (isInCubeArea && !touchingHand &&
         //          Blocks.blocks[myBlockArea.blocks[myBlockArea.OnlyBlock()].id].blockType == Block.BlockType.bearing)
         // {
@@ -158,17 +146,17 @@ public partial class BlockObject
         //     if (sphere)
         //         SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("onlyHands"));
         // }
-        // else
-        // {
-        //     transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer("blockArea");
-        //     if (layer == -1)
-        //         layer = GetLayerRecursively(transform.GetChild(3).gameObject);
-        //     if (layer == 0)
-        //         SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("blockArea"));
-        //     else
-        //         SetLayerRecursively(transform.GetChild(3).gameObject, layer);
-        // }
-        //
+        else
+        {
+            _physicsBoxesObject.gameObject.layer = _blockAreaLayer;
+            // if (layer == -1)
+            //     layer = GetLayerRecursively(transform.GetChild(3).gameObject);
+            // if (layer == 0)
+            //     SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("blockArea"));
+            // else
+            //     SetLayerRecursively(transform.GetChild(3).gameObject, layer);
+        }
+
 
         _body.useGravity = !isInCubeArea;
 

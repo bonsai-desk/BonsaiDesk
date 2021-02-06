@@ -932,14 +932,11 @@ public class BlockArea : NetworkBehaviour
             KeyValuePair<Vector3Int, MeshBlock> block;
             foreach (var nextBlock in blocks)
                 block = nextBlock;
-
-            if (Blocks.blocks[block.Value.id].hasSphere)
-            {
-                var s = transform.GetChild(2).gameObject.AddComponent<SphereCollider>();
-                s.material = spherePhysicMaterial;
-                s.center = block.Key;
-                s.radius = 0.475f;
-            }
+            
+            var s = transform.GetChild(2).gameObject.AddComponent<SphereCollider>();
+            s.material = spherePhysicMaterial;
+            s.center = block.Key;
+            s.radius = 0.475f;
         }
         else
         {
@@ -948,7 +945,8 @@ public class BlockArea : NetworkBehaviour
                 Destroy(s);
         }
 
-        body.mass = Mathf.Clamp((BlockObject.CubeMass * blocks.Count) - (BlockObject.CubeMass * blockObjects.Count), BlockObject.CubeMass, Mathf.Infinity);
+        body.mass = Mathf.Clamp((BlockObject.CubeMass * blocks.Count) - (BlockObject.CubeMass * blockObjects.Count),
+            BlockObject.CubeMass, Mathf.Infinity);
     }
 
     private void CreateBlock(int id, Vector3Int coord, bool updateTheMesh, byte forward = 4, byte up = 2)

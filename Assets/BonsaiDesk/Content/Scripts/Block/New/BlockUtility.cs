@@ -53,7 +53,7 @@ public static partial class BlockUtility
         var forwardRounded = new Vector3Int(Mathf.RoundToInt(forward.x), Mathf.RoundToInt(forward.y),
             Mathf.RoundToInt(forward.z));
         var upRounded = new Vector3Int(Mathf.RoundToInt(up.x), Mathf.RoundToInt(up.y), Mathf.RoundToInt(up.z));
-        
+
         if (!DirectionToByte.TryGetValue(forwardRounded, out var forwardByte) ||
             !DirectionToByte.TryGetValue(upRounded, out var upByte))
         {
@@ -222,14 +222,15 @@ public static partial class BlockUtility
         new Vector3(-0.5f, -0.5f, -0.5f)
     };
 
-    public static (Queue<BoxCollider> boxCollidersNotNeeded, float mass) UpdateHitBox(
+    public static (Queue<BoxCollider> boxCollidersNotNeeded, float mass, bool destroySphere) UpdateHitBox(
         Dictionary<Vector3Int, (byte id, byte rotation)> blocks,
-        Queue<BoxCollider> boxCollidersInUse, Transform boxesParent, PhysicMaterial blockPhysicMaterial)
+        Queue<BoxCollider> boxCollidersInUse, Transform boxesParent, Transform sphereObject,
+        PhysicMaterial blockPhysicMaterial, PhysicMaterial spherePhysicMaterial)
     {
         if (blocks.Count < 1)
         {
             Debug.LogError("Cannot update hitbox with no blocks.");
-            return (null, 1f);
+            return (null, 1f, false);
         }
 
         HashSet<Vector3Int> assymilated = new HashSet<Vector3Int>();
@@ -303,37 +304,33 @@ public static partial class BlockUtility
             else
             {
                 BoxCollider boxCollider = boxesParent.gameObject.AddComponent<BoxCollider>();
-                boxCollider.material = blockPhysicMaterial;
+                boxCollider.sharedMaterial = blockPhysicMaterial;
                 boxCollider.size = new Vector3(xScale, yScale, zScale);
                 boxCollider.center = box.Key + new Vector3(xPosition, yPosition, zPosition);
                 boxCollidersInUse.Enqueue(boxCollider);
             }
         }
 
-        // if (blocks.Count == 1)
-        // {
-        //     KeyValuePair<Vector3Int, (byte id, byte rotation)> block;
-        //     foreach (var nextBlock in blocks)
-        //         block = nextBlock;
-        //
-        //     if (Blocks.blocks[block.Value.id].hasSphere)
-        //     {
-        //         var s = transform.GetChild(2).gameObject.AddComponent<SphereCollider>();
-        //         s.material = spherePhysicMaterial;
-        //         s.center = block.Key;
-        //         s.radius = 0.475f;
-        //     }
-        // }
-        // else
-        // {
-        //     var s = transform.GetChild(2).gameObject.GetComponent<SphereCollider>();
-        //     if (s != null)
-        //         Destroy(s);
-        // }
+        bool destroySphere = false;
+        if (blocks.Count == 1)
+        {
+            KeyValuePair<Vector3Int, (byte id, byte rotation)> block;
+            foreach (var nextBlock in blocks)
+                block = nextBlock;
+
+            var s = sphereObject.gameObject.AddComponent<SphereCollider>();
+            s.sharedMaterial = spherePhysicMaterial;
+            s.center = block.Key;
+            s.radius = 0.475f;
+        }
+        else
+        {
+            destroySphere = true;
+        }
 
         float mass = Mathf.Clamp((BlockObject.CubeMass * blocks.Count) - (BlockObject.CubeMass * blocks.Count),
             BlockObject.CubeMass, Mathf.Infinity);
-        return (boxCollidersNotNeeded, mass);
+        return (boxCollidersNotNeeded, mass, destroySphere);
     }
 
     private static bool ContainsBlock(BlockObjectData blockObjectData, Vector3Int testPosition)
