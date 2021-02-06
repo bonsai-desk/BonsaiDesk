@@ -948,7 +948,7 @@ public class BlockArea : NetworkBehaviour
                 Destroy(s);
         }
 
-        body.mass = Mathf.Clamp((0.075f * blocks.Count) - (0.075f * blockObjects.Count), 0.075f, Mathf.Infinity);
+        body.mass = Mathf.Clamp((BlockObject.CubeMass * blocks.Count) - (BlockObject.CubeMass * blockObjects.Count), BlockObject.CubeMass, Mathf.Infinity);
     }
 
     private void CreateBlock(int id, Vector3Int coord, bool updateTheMesh, byte forward = 4, byte up = 2)
@@ -1107,6 +1107,7 @@ public class BlockArea : NetworkBehaviour
             return (false, false);
         }
 
+        //don't @ me
         bool isNearHole =
             (!ContainsBlock(testPosition + new Vector3Int(1, 0, 0)) &&
              (ContainsBlock(testPosition + new Vector3Int(1, -1, 0)) &&

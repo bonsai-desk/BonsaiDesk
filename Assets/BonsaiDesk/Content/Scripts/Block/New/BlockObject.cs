@@ -5,16 +5,19 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(Rigidbody))]
-public class BlockObject : MonoBehaviour
+public partial class BlockObject : MonoBehaviour
 {
     public const float CubeScale = 0.05f;
+
+    //contains all of the BlockObjects in the scene
+    private static HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
 
     //public inspector variables
     public Material blockObjectMaterial;
     public PhysicMaterial blockPhysicMaterial;
 
     //contains all the information required to create this block object
-    private BlockObjectData _blockObjectData = new BlockObjectData();
+    [HideInInspector] public BlockObjectData blockObjectData = new BlockObjectData();
 
     //contains the information about the local state of the mesh. The structure of the mesh can be slightly
     //different depending on the order of block add/remove even though the final result looks the same
@@ -34,13 +37,23 @@ public class BlockObject : MonoBehaviour
     private Transform _physicsBoxesObject;
     private Queue<BoxCollider> _boxCollidersInUse = new Queue<BoxCollider>();
     private bool _resetCoM = false; //flag to reset CoM on the next physics update
+    private AutoAuthority _autoAuthority;
 
-    //bounds of all blocks. used to check if new block is close enough to do checks with this block object
-    private Vector2Int[] _bounds = {new Vector2Int(), new Vector2Int(), new Vector2Int()};
+    //this object is the parent of any BlockObject with 1 block trying to attach to another BlockObject
+    [HideInInspector] public Transform potentialBlocksParent;
 
     private void Start()
     {
+        _autoAuthority = GetComponent<AutoAuthority>();
+
+        if (!_blockObjectAuthorities.Contains(_autoAuthority))
+        {
+            _blockObjectAuthorities.Add(_autoAuthority);
+        }
+
         _body = GetComponent<Rigidbody>();
+        _body.maxAngularVelocity = float.MaxValue;
+
         transform.localScale = new Vector3(CubeScale, CubeScale, CubeScale);
 
         SetupChildren();
@@ -50,16 +63,15 @@ public class BlockObject : MonoBehaviour
         _mesh = new Mesh();
         _meshFilter.mesh = _mesh;
 
-        _blockObjectData.Blocks.Add(Vector3Int.zero, (0, 0));
-        _blockObjectData.Blocks.Add(new Vector3Int(0, 1, 0), (0, 0));
-        _blockObjectData.Blocks.Add(new Vector3Int(1, 1, 0), (0, 0));
+        blockObjectData.Blocks.Add(Vector3Int.zero, (0, 0));
 
-        CalculateInitialBounds();
         CreateInitialMesh();
     }
 
     private void FixedUpdate()
     {
+        PhysicsFixedUpdate();
+
         if (_resetCoM)
         {
             _resetCoM = false;
@@ -68,16 +80,37 @@ public class BlockObject : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        if (_blockObjectAuthorities.Contains(_autoAuthority))
+        {
+            _blockObjectAuthorities.Remove(_autoAuthority);
+        }
+    }
+
     private void SetupChildren()
     {
         var meshObject = new GameObject("Mesh");
         meshObject.transform.SetParent(transform, false);
-        meshObject.AddComponent<MeshRenderer>().sharedMaterial = blockObjectMaterial;
+        var meshRenderer = meshObject.AddComponent<MeshRenderer>();
+        meshRenderer.sharedMaterial = blockObjectMaterial;
+        _autoAuthority.meshRenderer = meshRenderer;
         _meshFilter = meshObject.AddComponent<MeshFilter>();
 
         var physicsBoxes = new GameObject("PhysicsBoxes");
         _physicsBoxesObject = physicsBoxes.transform;
         physicsBoxes.transform.SetParent(transform, false);
+
+        potentialBlocksParent = new GameObject("PotentialBlocksParent").transform;
+        const float inverseScale = 1f / CubeScale;
+        potentialBlocksParent.localScale = new Vector3(inverseScale, inverseScale, inverseScale);
+        potentialBlocksParent.SetParent(transform, false);
+    }
+
+    private void AddBlock(byte id, Vector3Int coord, Quaternion rotation, bool updateTheMesh)
+    {
+        blockObjectData.Blocks.Add(coord, (id, BlockUtility.QuaternionToByte(rotation)));
+        AddBlockToMesh(id, coord, rotation, updateTheMesh);
     }
 
     private void AddBlockToMesh(byte id, Vector3Int coord, Quaternion rotation, bool updateTheMesh)
@@ -103,10 +136,11 @@ public class BlockObject : MonoBehaviour
         // }
 
         _meshBlocks.Add(coord, new MeshBlock(_meshBlocks.Count));
-        ExpandToFit(coord);
 
         if (updateTheMesh)
+        {
             UpdateMesh(UpdateType.AddBlock);
+        }
 
         // if (blocks.Count == 1)
         //     blockPhysics.enabled = true;
@@ -151,7 +185,7 @@ public class BlockObject : MonoBehaviour
         //     }
         // }
 
-        var (boxCollidersNotNeeded, mass) = BlockUtility.UpdateHitBox(_blockObjectData.Blocks, _boxCollidersInUse,
+        var (boxCollidersNotNeeded, mass) = BlockUtility.UpdateHitBox(blockObjectData.Blocks, _boxCollidersInUse,
             _physicsBoxesObject, blockPhysicMaterial);
         while (boxCollidersNotNeeded.Count > 0)
         {
@@ -162,32 +196,69 @@ public class BlockObject : MonoBehaviour
         _resetCoM = true;
     }
 
-    private void ExpandToFit(Vector3Int blockCoord)
-    {
-        for (int axis = 0; axis < 3; axis++)
-        {
-            if (blockCoord[axis] <= _bounds[axis][0])
-                _bounds[axis][0] = blockCoord[axis] - 1;
-            if (blockCoord[axis] >= _bounds[axis][1])
-                _bounds[axis][1] = blockCoord[axis] + 1;
-        }
-    }
-
-    private void CalculateInitialBounds()
-    {
-        foreach (var block in _blockObjectData.Blocks)
-        {
-            ExpandToFit(block.Key);
-        }
-    }
-
     private void CreateInitialMesh()
     {
-        foreach (var block in _blockObjectData.Blocks)
+        foreach (var block in blockObjectData.Blocks)
         {
             AddBlockToMesh(block.Value.id, block.Key, BlockUtility.ByteToQuaternion(block.Value.rotation), false);
         }
 
         UpdateMesh(UpdateType.AddBlock);
+    }
+
+    private Vector3Int GetOnlyBlockCoord()
+    {
+        if (blockObjectData.Blocks.Count != 1)
+        {
+            Debug.LogError("GetOnlyBlockCoord is only valid when there is only 1 block");
+        }
+
+        foreach (var block in blockObjectData.Blocks)
+        {
+            return block.Key;
+        }
+
+        return Vector3Int.zero;
+    }
+
+    public Quaternion GetTargetRotation(Quaternion blockRotation, Vector3Int coord, Block.BlockType blockType)
+    {
+        // if (blockType == Block.BlockType.bearing)
+        // {
+        //     List<Vector3> upCheckAxes = new List<Vector3>();
+        //     for (var i = 0; i < 6; i++)
+        //     {
+        //         Vector3Int testBlock = coord + BlockUtility.Directions[i];
+        //         if (blocks.TryGetValue(testBlock, out MeshBlock block))
+        //         {
+        //             if (Blocks.blocks[block.id].blockType == Block.BlockType.normal)
+        //             {
+        //                 upCheckAxes.Add(-BlockUtility.Directions[i]);
+        //             }
+        //         }
+        //     }
+        //
+        //     Quaternion rotationLocalToArea = Quaternion.Inverse(transform.rotation) * blockRotation;
+        //     Vector3 up = ClosestToAxis(rotationLocalToArea, Vector3.up, upCheckAxes.ToArray());
+        //     Vector3[] forwardCheckAxes = new Vector3[4];
+        //     int n = 0;
+        //     Vector3Int upInt = Vector3Int.RoundToInt(up);
+        //     for (int i = 0; i < directions.Length; i++)
+        //     {
+        //         if (!(directions[i] == upInt || directions[i] == -upInt))
+        //         {
+        //             forwardCheckAxes[n] = directions[i];
+        //             n++;
+        //         }
+        //     }
+        //
+        //     Vector3 forward = ClosestToAxis(rotationLocalToArea, Vector3.forward, forwardCheckAxes);
+        //     return transform.rotation * Quaternion.LookRotation(forward, up);
+        // }
+        // else
+        // {
+        return transform.rotation *
+               BlockUtility.SnapToNearestRightAngle(Quaternion.Inverse(transform.rotation) * blockRotation);
+        // }
     }
 }

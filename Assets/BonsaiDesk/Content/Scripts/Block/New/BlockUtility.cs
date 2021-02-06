@@ -95,6 +95,17 @@ public static partial class BlockUtility
         {new Vector3Int(0, 0, 1), 4},
         {new Vector3Int(0, 0, -1), 5}
     };
+    
+    //the 6 world axes in an iterable form
+    public static readonly Vector3Int[] Directions = new Vector3Int[]
+    {
+        new Vector3Int(1, 0, 0),
+        new Vector3Int(-1, 0, 0),
+        new Vector3Int(0, 1, 0),
+        new Vector3Int(0, -1, 0),
+        new Vector3Int(0, 0, 1),
+        new Vector3Int(0, 0, -1)
+    };
 
     public static (Vector3[] vertices, Vector2[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(int id,
         Vector3Int coord, Quaternion rotation, float texturePadding)
@@ -316,7 +327,94 @@ public static partial class BlockUtility
         //         Destroy(s);
         // }
 
-        float mass = Mathf.Clamp((0.075f * blocks.Count) - (0.075f * blocks.Count), 0.075f, Mathf.Infinity);
+        float mass = Mathf.Clamp((BlockObject.CubeMass * blocks.Count) - (BlockObject.CubeMass * blocks.Count), BlockObject.CubeMass, Mathf.Infinity);
         return (boxCollidersNotNeeded, mass);
+    }
+
+    private static bool ContainsBlock(BlockObjectData blockObjectData, Vector3Int testPosition)
+    {
+        return blockObjectData.Blocks.ContainsKey(testPosition);
+    }
+
+    public static (bool isInCubeArea, bool isNearHole) InCubeArea(BlockObjectData blockObjectData,
+        Vector3Int testPosition, int id)
+    {
+        if (ContainsBlock(blockObjectData, testPosition))
+        {
+            return (false, false);
+        }
+
+        //don't @ me
+        bool isNearHole =
+            (!ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 0, 0)) &&
+             (ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, -1, 0)) &&
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 1, 0)) ||
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 0, -1)) &&
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 0, 1)))) ||
+            (!ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 0, 0)) &&
+             (ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, -1, 0)) &&
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 1, 0)) ||
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 0, -1)) &&
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 0, 1)))) ||
+            (!ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 1, 0)) &&
+             (ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 1, 0)) &&
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 1, 0)) ||
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 1, -1)) &&
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 1, 1)))) ||
+            (!ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, -1, 0)) &&
+             (ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, -1, 0)) &&
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, -1, 0)) ||
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, -1, -1)) &&
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, -1, 1)))) ||
+            (!ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 0, 1)) &&
+             (ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 0, 1)) &&
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 0, 1)) ||
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, -1, 1)) &&
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 1, 1)))) ||
+            (!ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 0, -1)) &&
+             (ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 0, -1)) &&
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 0, -1)) ||
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, -1, -1)) &&
+              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 1, -1)))) ||
+            (ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 0, 0)) &&
+             ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 0, 0)) ||
+             ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, -1, 0)) &&
+             ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 1, 0)) ||
+             ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 0, -1)) &&
+             ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 0, 1)));
+
+        bool inCubeAreaBearing = true;
+        // if (Blocks.blocks[id].blockType == Block.BlockType.bearing)
+        // {
+        //     if (blocks.TryGetValue(testPosition, out MeshBlock block))
+        //     {
+        //         if (Blocks.blocks[block.id].blockType == Block.BlockType.bearing)
+        //             inCubeAreaBearing = false;
+        //     }
+        // }
+
+        bool isInCubeArea = inCubeAreaBearing && (
+            ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 0, 0)) ||
+            ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 0, 0)) ||
+            ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 1, 0)) ||
+            ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, -1, 0)) ||
+            ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 0, 1)) ||
+            ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 0, -1)));
+
+        return (isInCubeArea, isNearHole);
+    }
+    
+    public static bool AboutEquals(Vector3 v1, Vector3 v2)
+    {
+        //+ or - 1mm
+        float tolerance = 0.001f;
+        float distance = (v2.x - v1.x) * (v2.x - v1.x) + (v2.y - v1.y) * (v2.y - v1.y) + (v2.z - v1.z) * (v2.z - v1.z);
+        return distance < tolerance * tolerance;
+    }
+
+    public static bool AboutEquals(Quaternion q1, Quaternion q2)
+    {
+        //+ or - 1 degree
+        return Mathf.Abs(Quaternion.Dot(q1, q2)) > 0.98888889f;
     }
 }

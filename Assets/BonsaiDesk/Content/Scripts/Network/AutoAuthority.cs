@@ -33,7 +33,7 @@ public class AutoAuthority : NetworkBehaviour
     private Color[] _colors = new[]
     {
         Color.white,
-        Color.yellow,
+        Color.red,
         Color.green
     };
 
@@ -161,6 +161,17 @@ public class AutoAuthority : NetworkBehaviour
     {
         if (_ownerIdentityId == identityId)
             _inUse = false;
+    }
+
+    public void Interact()
+    {
+        if (!isClient)
+            return;
+
+        if (NetworkClient.connection != null && NetworkClient.connection.identity)
+        {
+            Interact(NetworkClient.connection.identity.netId);
+        }
     }
 
     public void Interact(uint identityId)

@@ -27,8 +27,6 @@ public class BlockPhysics : MonoBehaviour
 
     private BlockArea myBlockArea;
 
-    public bool debug = false;
-
     private int layer;
 
     private void OnCollisionEnter(Collision collision)
