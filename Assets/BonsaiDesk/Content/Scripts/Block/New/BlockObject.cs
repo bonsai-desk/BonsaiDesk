@@ -22,18 +22,16 @@ public partial class BlockObject : NetworkBehaviour
 {
     public const float CubeScale = 0.05f;
 
-    //contains all of the BlockObjects in the scene
+    //contains all of the AutoAuthority of all BlockObjects in the scene
     private static HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
 
+    //contains all of the information required to construct this BlockObject
     public readonly SyncDictionary<Vector3Int, SyncBlock> Blocks = new SyncDictionary<Vector3Int, SyncBlock>();
 
     //public inspector variables
     public Material blockObjectMaterial;
     public PhysicMaterial blockPhysicMaterial;
     public PhysicMaterial spherePhysicMaterial;
-
-    //contains all the information required to create this block object
-    // [HideInInspector] public BlockObjectData blockObjectData = new BlockObjectData();
 
     //contains the information about the local state of the mesh. The structure of the mesh can be slightly
     //different depending on the order of block add/remove even though the final result looks the same
@@ -59,8 +57,34 @@ public partial class BlockObject : NetworkBehaviour
     //this object is the parent of any BlockObject with 1 block trying to attach to another BlockObject
     [HideInInspector] public Transform potentialBlocksParent;
 
-    private void Start()
+    //used to make sure Init is only called once
+    private bool _isInit = false;
+
+    public override void OnStartServer()
     {
+        base.OnStartServer();
+
+        Blocks.Add(Vector3Int.zero, new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+
+        Init();
+    }
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+
+        Init();
+    }
+
+    private void Init()
+    {
+        if (_isInit)
+        {
+            return;
+        }
+
+        _isInit = true;
+
         PhysicsStart();
 
         _autoAuthority = GetComponent<AutoAuthority>();
@@ -82,9 +106,9 @@ public partial class BlockObject : NetworkBehaviour
         _mesh = new Mesh();
         _meshFilter.mesh = _mesh;
 
-        Blocks.Add(Vector3Int.zero, new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-
         CreateInitialMesh();
+        Blocks.Callback -= OnBlocksDictionaryChange;
+        Blocks.Callback += OnBlocksDictionaryChange;
     }
 
     private void FixedUpdate()
@@ -131,10 +155,23 @@ public partial class BlockObject : NetworkBehaviour
         sphereObject.layer = LayerMask.NameToLayer("sphere");
     }
 
-    private void AddBlock(byte id, Vector3Int coord, Quaternion rotation, bool updateTheMesh)
+    private void OnBlocksDictionaryChange(SyncDictionary<Vector3Int, SyncBlock>.Operation op, Vector3Int key,
+        SyncBlock value)
     {
+        AddBlockToMesh(value.id, key, BlockUtility.ByteToQuaternion(value.rotation), true);
+    }
+
+    [Command(ignoreAuthority = true)]
+    private void CmdAddBlock(byte id, Vector3Int coord, Quaternion rotation, bool updateTheMesh,
+        NetworkIdentity blockToDestroy)
+    {
+        NetworkServer.Destroy(blockToDestroy.gameObject);
         Blocks.Add(coord, new SyncBlock(id, BlockUtility.QuaternionToByte(rotation)));
-        AddBlockToMesh(id, coord, rotation, updateTheMesh);
+
+        if (isServer && !isClient)
+        {
+            AddBlockToMesh(id, coord, rotation, updateTheMesh);
+        }
     }
 
     private void AddBlockToMesh(byte id, Vector3Int coord, Quaternion rotation, bool updateTheMesh)

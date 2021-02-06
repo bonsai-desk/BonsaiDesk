@@ -115,11 +115,10 @@ public partial class BlockObject
 
                         _blockObjectAuthorities.Remove(_autoAuthority);
                         gameObject.SetActive(false);
-                        Destroy(gameObject);
 
                         var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
-                        blockObject.AddBlock(Blocks[coord].id, blockCoord,
-                            BlockUtility.SnapToNearestRightAngle(localRotation), true);
+                        blockObject.CmdAddBlock(Blocks[coord].id, blockCoord,
+                            BlockUtility.SnapToNearestRightAngle(localRotation), true, netIdentity);
 
                         return;
                     }
