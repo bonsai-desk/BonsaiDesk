@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Mirror;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(Rigidbody))]
-public partial class BlockObject : MonoBehaviour
+public partial class BlockObject : NetworkBehaviour
 {
     public const float CubeScale = 0.05f;
 
