@@ -27,7 +27,7 @@ public class NetworkBlockSpawn : NetworkBehaviour
             if (_readyToSpawnTime > SpawnCooldown)
             {
                 _readyToSpawnTime = 0f;
-                CmdSpawnObject();
+                CmdSpawnObject(transform.position);
             }
         }
         else
@@ -37,9 +37,9 @@ public class NetworkBlockSpawn : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdSpawnObject()
+    private void CmdSpawnObject(Vector3 position)
     {
-        var spawnedObject = Instantiate(spawnObjectPrefab, transform.position, Quaternion.identity);
+        var spawnedObject = Instantiate(spawnObjectPrefab, position, Quaternion.identity);
         NetworkServer.Spawn(spawnedObject);
     }
 }
