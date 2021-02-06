@@ -53,9 +53,13 @@ public static partial class BlockUtility
         var forwardRounded = new Vector3Int(Mathf.RoundToInt(forward.x), Mathf.RoundToInt(forward.y),
             Mathf.RoundToInt(forward.z));
         var upRounded = new Vector3Int(Mathf.RoundToInt(up.x), Mathf.RoundToInt(up.y), Mathf.RoundToInt(up.z));
-
-        var forwardByte = DirectionToByte[forwardRounded];
-        var upByte = DirectionToByte[upRounded];
+        
+        if (!DirectionToByte.TryGetValue(forwardRounded, out var forwardByte) ||
+            !DirectionToByte.TryGetValue(upRounded, out var upByte))
+        {
+            Debug.LogError("Invalid direction. Maybe snap the angle before using this function?");
+            return 0;
+        }
 
         byte rotationByte = upByte;
         rotationByte <<= 4;
@@ -95,7 +99,7 @@ public static partial class BlockUtility
         {new Vector3Int(0, 0, 1), 4},
         {new Vector3Int(0, 0, -1), 5}
     };
-    
+
     //the 6 world axes in an iterable form
     public static readonly Vector3Int[] Directions = new Vector3Int[]
     {
@@ -327,7 +331,8 @@ public static partial class BlockUtility
         //         Destroy(s);
         // }
 
-        float mass = Mathf.Clamp((BlockObject.CubeMass * blocks.Count) - (BlockObject.CubeMass * blocks.Count), BlockObject.CubeMass, Mathf.Infinity);
+        float mass = Mathf.Clamp((BlockObject.CubeMass * blocks.Count) - (BlockObject.CubeMass * blocks.Count),
+            BlockObject.CubeMass, Mathf.Infinity);
         return (boxCollidersNotNeeded, mass);
     }
 
@@ -403,7 +408,7 @@ public static partial class BlockUtility
 
         return (isInCubeArea, isNearHole);
     }
-    
+
     public static bool AboutEquals(Vector3 v1, Vector3 v2)
     {
         //+ or - 1mm

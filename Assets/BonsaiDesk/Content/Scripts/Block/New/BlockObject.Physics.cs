@@ -21,17 +21,24 @@ public partial class BlockObject
 
     private void PhysicsFixedUpdate()
     {
-        if (_autoAuthority.HasAuthority() && blockObjectData.Blocks.Count == 1)
+        if (_autoAuthority.HasAuthority())
         {
-            var leftHandLockedJoint = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>().joint;
-            var rightHandLockedJoint = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>().joint;
-            if (leftHandLockedJoint && leftHandLockedJoint.connectedBody == _body ||
-                rightHandLockedJoint && rightHandLockedJoint.connectedBody == _body)
+            if (blockObjectData.Blocks.Count == 1)
             {
-                _touchingHand = true;
-            }
+                var leftHandLockedJoint = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>().joint;
+                var rightHandLockedJoint = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>().joint;
+                if (leftHandLockedJoint && leftHandLockedJoint.connectedBody == _body ||
+                    rightHandLockedJoint && rightHandLockedJoint.connectedBody == _body)
+                {
+                    _touchingHand = true;
+                }
 
-            CalculateForces();
+                CalculateForces();
+            }
+            else
+            {
+                _body.useGravity = true;
+            }
         }
 
         _touchingHand = false;
@@ -48,9 +55,9 @@ public partial class BlockObject
         bool isNearHole = false;
         foreach (var nextOwnedObject in _blockObjectAuthorities)
         {
+            //TODO go on with calculation and interact if in area
             if (!nextOwnedObject.HasAuthority())
             {
-                nextOwnedObject.Interact();
                 continue;
             }
 
@@ -67,8 +74,9 @@ public partial class BlockObject
                 if (inArea.isNearHole)
                     isNearHole = true;
                 isInCubeArea = inArea.isInCubeArea;
-                isInCubeArea = isInCubeArea && ((transform.parent == null && _touchingHand) ||
-                                                transform.parent == blockObject.potentialBlocksParent);
+                isInCubeArea = isInCubeArea &&
+                               ((transform.parent == null && _touchingHand && potentialBlocksParent.childCount == 0) ||
+                                transform.parent == blockObject.potentialBlocksParent);
 
                 if (isInCubeArea)
                 {
@@ -108,6 +116,7 @@ public partial class BlockObject
                             blockObject.potentialBlocksParent.GetChild(i).parent = null;
                         }
 
+                        _blockObjectAuthorities.Remove(_autoAuthority);
                         gameObject.SetActive(false);
                         Destroy(gameObject);
 

@@ -63,7 +63,7 @@ public partial class BlockObject : MonoBehaviour
         _mesh = new Mesh();
         _meshFilter.mesh = _mesh;
 
-        blockObjectData.Blocks.Add(Vector3Int.zero, (0, 0));
+        blockObjectData.Blocks.Add(Vector3Int.zero, (0, BlockUtility.QuaternionToByte(Quaternion.identity)));
 
         CreateInitialMesh();
     }
