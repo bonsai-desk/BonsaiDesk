@@ -36,7 +36,7 @@ public class NetworkBlockSpawn : NetworkBehaviour
         }
     }
 
-    [Command(ignoreAuthority = false)]
+    [Command(ignoreAuthority = true)]
     private void CmdSpawnObject()
     {
         var spawnedObject = Instantiate(spawnObjectPrefab, transform.position, Quaternion.identity);
