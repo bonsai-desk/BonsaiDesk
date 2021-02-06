@@ -14,7 +14,7 @@ public class NetworkBlockSpawn : NetworkBehaviour
 
     private void Update()
     {
-        if (!isClient)
+        if (!(isClient && NetworkClient.connection != null && NetworkClient.connection.identity))
         {
             return;
         }
@@ -36,6 +36,7 @@ public class NetworkBlockSpawn : NetworkBehaviour
         }
     }
 
+    [Command(ignoreAuthority = false)]
     private void CmdSpawnObject()
     {
         var spawnedObject = Instantiate(spawnObjectPrefab, transform.position, Quaternion.identity);

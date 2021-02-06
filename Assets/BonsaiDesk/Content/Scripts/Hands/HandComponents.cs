@@ -127,7 +127,7 @@ public class HandComponents
 
     private void UpdateRendererTransparency()
     {
-        bool isTransparent = _handMaterial.GetInt("_ZWrite") == 0;
+        bool isTransparent = _handMaterial.GetInt("_DstBlend") == (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
 
         float handAlphaTarget = Tracking ? 1f : 0f;
         _handAlpha = Mathf.MoveTowards(_handAlpha, handAlphaTarget, Time.deltaTime / RecentTrackingThreshold);

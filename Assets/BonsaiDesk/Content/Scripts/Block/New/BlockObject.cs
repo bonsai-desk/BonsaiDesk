@@ -113,6 +113,16 @@ public partial class BlockObject : NetworkBehaviour
 
     private void FixedUpdate()
     {
+        if (!_isInit)
+        {
+            return;
+        }
+        
+        if (!(isClient && NetworkClient.connection != null && NetworkClient.connection.identity))
+        {
+            return;
+        }
+        
         PhysicsFixedUpdate();
 
         if (_resetCoM)
