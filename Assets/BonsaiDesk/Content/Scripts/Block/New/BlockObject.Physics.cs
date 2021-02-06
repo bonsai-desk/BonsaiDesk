@@ -33,7 +33,7 @@ public partial class BlockObject
     {
         if (_autoAuthority.HasAuthority())
         {
-            if (blockObjectData.Blocks.Count == 1)
+            if (Blocks.Count == 1)
             {
                 var leftHandLockedJoint = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>().joint;
                 var rightHandLockedJoint = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>().joint;
@@ -79,8 +79,8 @@ public partial class BlockObject
                 Vector3 blockPosition = transform.TransformPoint(coord);
                 Vector3 positionLocalToCubeArea = blockObject.transform.InverseTransformPoint(blockPosition);
                 Vector3Int blockCoord = Vector3Int.RoundToInt(positionLocalToCubeArea);
-                var inArea = BlockUtility.InCubeArea(blockObject.blockObjectData, blockCoord,
-                    blockObjectData.Blocks[coord].id);
+                var inArea = BlockUtility.InCubeArea(blockObject, blockCoord,
+                    Blocks[coord].id);
                 if (inArea.isNearHole)
                     isNearHole = true;
                 isInCubeArea = inArea.isInCubeArea;
@@ -91,7 +91,7 @@ public partial class BlockObject
                 if (isInCubeArea)
                 {
                     // Vector3 bearingOffset = Vector3.zero;
-                    // if (blockObject.blockObjectData.Blocks.TryGetValue(blockCoord, out BlockArea.MeshBlock block))
+                    // if (blockObject._blocks.TryGetValue(blockCoord, out BlockArea.MeshBlock block))
                     // {
                     //     if (Blocks.blocks[block.id].blockType == Block.BlockType.bearing)
                     //     {
@@ -103,7 +103,7 @@ public partial class BlockObject
 
                     var position = blockObject.transform.TransformPoint(blockCoord);
                     var rotation = blockObject.GetTargetRotation(transform.rotation, blockCoord,
-                        Blocks.blocks[blockObjectData.Blocks[coord].id].blockType);
+                        global::Blocks.blocks[Blocks[coord].id].blockType);
 
                     if (BlockUtility.AboutEquals(blockPosition, position) &&
                         BlockUtility.AboutEquals(transform.rotation, rotation))
@@ -118,7 +118,7 @@ public partial class BlockObject
                         Destroy(gameObject);
 
                         var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
-                        blockObject.AddBlock(blockObjectData.Blocks[coord].id, blockCoord,
+                        blockObject.AddBlock(Blocks[coord].id, blockCoord,
                             BlockUtility.SnapToNearestRightAngle(localRotation), true);
 
                         return;

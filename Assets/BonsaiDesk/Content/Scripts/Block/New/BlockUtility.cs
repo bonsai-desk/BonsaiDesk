@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Mirror;
 using UnityEngine;
 
 public static partial class BlockUtility
@@ -223,7 +224,7 @@ public static partial class BlockUtility
     };
 
     public static (Queue<BoxCollider> boxCollidersNotNeeded, float mass, bool destroySphere) UpdateHitBox(
-        Dictionary<Vector3Int, (byte id, byte rotation)> blocks,
+        SyncDictionary<Vector3Int, SyncBlock> blocks,
         Queue<BoxCollider> boxCollidersInUse, Transform boxesParent, Transform sphereObject,
         PhysicMaterial blockPhysicMaterial, PhysicMaterial spherePhysicMaterial)
     {
@@ -314,7 +315,7 @@ public static partial class BlockUtility
         bool destroySphere = false;
         if (blocks.Count == 1)
         {
-            KeyValuePair<Vector3Int, (byte id, byte rotation)> block;
+            KeyValuePair<Vector3Int, SyncBlock> block;
             foreach (var nextBlock in blocks)
                 block = nextBlock;
 
@@ -333,57 +334,57 @@ public static partial class BlockUtility
         return (boxCollidersNotNeeded, mass, destroySphere);
     }
 
-    private static bool ContainsBlock(BlockObjectData blockObjectData, Vector3Int testPosition)
+    private static bool ContainsBlock(BlockObject blockObject, Vector3Int testPosition)
     {
-        return blockObjectData.Blocks.ContainsKey(testPosition);
+        return blockObject.Blocks.ContainsKey(testPosition);
     }
 
-    public static (bool isInCubeArea, bool isNearHole) InCubeArea(BlockObjectData blockObjectData,
+    public static (bool isInCubeArea, bool isNearHole) InCubeArea(BlockObject blockObject,
         Vector3Int testPosition, int id)
     {
-        if (ContainsBlock(blockObjectData, testPosition))
+        if (ContainsBlock(blockObject, testPosition))
         {
             return (false, false);
         }
 
         //don't @ me
         bool isNearHole =
-            (!ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 0, 0)) &&
-             (ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, -1, 0)) &&
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 1, 0)) ||
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 0, -1)) &&
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 0, 1)))) ||
-            (!ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 0, 0)) &&
-             (ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, -1, 0)) &&
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 1, 0)) ||
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 0, -1)) &&
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 0, 1)))) ||
-            (!ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 1, 0)) &&
-             (ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 1, 0)) &&
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 1, 0)) ||
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 1, -1)) &&
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 1, 1)))) ||
-            (!ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, -1, 0)) &&
-             (ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, -1, 0)) &&
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, -1, 0)) ||
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, -1, -1)) &&
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, -1, 1)))) ||
-            (!ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 0, 1)) &&
-             (ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 0, 1)) &&
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 0, 1)) ||
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, -1, 1)) &&
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 1, 1)))) ||
-            (!ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 0, -1)) &&
-             (ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 0, -1)) &&
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 0, -1)) ||
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, -1, -1)) &&
-              ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 1, -1)))) ||
-            (ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 0, 0)) &&
-             ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 0, 0)) ||
-             ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, -1, 0)) &&
-             ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 1, 0)) ||
-             ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 0, -1)) &&
-             ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 0, 1)));
+            (!ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 0)) &&
+             (ContainsBlock(blockObject, testPosition + new Vector3Int(1, -1, 0)) &&
+              ContainsBlock(blockObject, testPosition + new Vector3Int(1, 1, 0)) ||
+              ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, -1)) &&
+              ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 1)))) ||
+            (!ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 0)) &&
+             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, -1, 0)) &&
+              ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 1, 0)) ||
+              ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, -1)) &&
+              ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 1)))) ||
+            (!ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, 0)) &&
+             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 1, 0)) &&
+              ContainsBlock(blockObject, testPosition + new Vector3Int(1, 1, 0)) ||
+              ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, -1)) &&
+              ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, 1)))) ||
+            (!ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, 0)) &&
+             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, -1, 0)) &&
+              ContainsBlock(blockObject, testPosition + new Vector3Int(1, -1, 0)) ||
+              ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, -1)) &&
+              ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, 1)))) ||
+            (!ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, 1)) &&
+             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 1)) &&
+              ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 1)) ||
+              ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, 1)) &&
+              ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, 1)))) ||
+            (!ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, -1)) &&
+             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, -1)) &&
+              ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, -1)) ||
+              ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, -1)) &&
+              ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, -1)))) ||
+            (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 0)) &&
+             ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 0)) ||
+             ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, 0)) &&
+             ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, 0)) ||
+             ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, -1)) &&
+             ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, 1)));
 
         bool inCubeAreaBearing = true;
         // if (Blocks.blocks[id].blockType == Block.BlockType.bearing)
@@ -396,12 +397,12 @@ public static partial class BlockUtility
         // }
 
         bool isInCubeArea = inCubeAreaBearing && (
-            ContainsBlock(blockObjectData, testPosition + new Vector3Int(1, 0, 0)) ||
-            ContainsBlock(blockObjectData, testPosition + new Vector3Int(-1, 0, 0)) ||
-            ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 1, 0)) ||
-            ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, -1, 0)) ||
-            ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 0, 1)) ||
-            ContainsBlock(blockObjectData, testPosition + new Vector3Int(0, 0, -1)));
+            ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 0)) ||
+            ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 0)) ||
+            ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, 0)) ||
+            ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, 0)) ||
+            ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, 1)) ||
+            ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, -1)));
 
         return (isInCubeArea, isNearHole);
     }

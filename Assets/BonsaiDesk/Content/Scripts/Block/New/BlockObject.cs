@@ -5,6 +5,18 @@ using Mirror;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+public struct SyncBlock
+{
+    public byte id;
+    public byte rotation;
+
+    public SyncBlock(byte id, byte rotation)
+    {
+        this.id = id;
+        this.rotation = rotation;
+    }
+}
+
 [RequireComponent(typeof(Rigidbody))]
 public partial class BlockObject : NetworkBehaviour
 {
@@ -13,13 +25,15 @@ public partial class BlockObject : NetworkBehaviour
     //contains all of the BlockObjects in the scene
     private static HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
 
+    public readonly SyncDictionary<Vector3Int, SyncBlock> Blocks = new SyncDictionary<Vector3Int, SyncBlock>();
+
     //public inspector variables
     public Material blockObjectMaterial;
     public PhysicMaterial blockPhysicMaterial;
     public PhysicMaterial spherePhysicMaterial;
 
     //contains all the information required to create this block object
-    [HideInInspector] public BlockObjectData blockObjectData = new BlockObjectData();
+    // [HideInInspector] public BlockObjectData blockObjectData = new BlockObjectData();
 
     //contains the information about the local state of the mesh. The structure of the mesh can be slightly
     //different depending on the order of block add/remove even though the final result looks the same
@@ -48,7 +62,7 @@ public partial class BlockObject : NetworkBehaviour
     private void Start()
     {
         PhysicsStart();
-        
+
         _autoAuthority = GetComponent<AutoAuthority>();
 
         if (!_blockObjectAuthorities.Contains(_autoAuthority))
@@ -68,7 +82,7 @@ public partial class BlockObject : NetworkBehaviour
         _mesh = new Mesh();
         _meshFilter.mesh = _mesh;
 
-        blockObjectData.Blocks.Add(Vector3Int.zero, (0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+        Blocks.Add(Vector3Int.zero, new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
 
         CreateInitialMesh();
     }
@@ -119,7 +133,7 @@ public partial class BlockObject : NetworkBehaviour
 
     private void AddBlock(byte id, Vector3Int coord, Quaternion rotation, bool updateTheMesh)
     {
-        blockObjectData.Blocks.Add(coord, (id, BlockUtility.QuaternionToByte(rotation)));
+        Blocks.Add(coord, new SyncBlock(id, BlockUtility.QuaternionToByte(rotation)));
         AddBlockToMesh(id, coord, rotation, updateTheMesh);
     }
 
@@ -195,7 +209,8 @@ public partial class BlockObject : NetworkBehaviour
         //     }
         // }
 
-        var (boxCollidersNotNeeded, mass, destroySphere) = BlockUtility.UpdateHitBox(blockObjectData.Blocks, _boxCollidersInUse,
+        var (boxCollidersNotNeeded, mass, destroySphere) = BlockUtility.UpdateHitBox(Blocks,
+            _boxCollidersInUse,
             _physicsBoxesObject, _sphereObject, blockPhysicMaterial, spherePhysicMaterial);
         while (boxCollidersNotNeeded.Count > 0)
         {
@@ -217,7 +232,7 @@ public partial class BlockObject : NetworkBehaviour
 
     private void CreateInitialMesh()
     {
-        foreach (var block in blockObjectData.Blocks)
+        foreach (var block in Blocks)
         {
             AddBlockToMesh(block.Value.id, block.Key, BlockUtility.ByteToQuaternion(block.Value.rotation), false);
         }
@@ -227,12 +242,12 @@ public partial class BlockObject : NetworkBehaviour
 
     private Vector3Int GetOnlyBlockCoord()
     {
-        if (blockObjectData.Blocks.Count != 1)
+        if (Blocks.Count != 1)
         {
             Debug.LogError("GetOnlyBlockCoord is only valid when there is only 1 block");
         }
 
-        foreach (var block in blockObjectData.Blocks)
+        foreach (var block in Blocks)
         {
             return block.Key;
         }
