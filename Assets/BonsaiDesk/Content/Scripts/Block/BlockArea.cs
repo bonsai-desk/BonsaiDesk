@@ -10,14 +10,18 @@ public struct NetworkBlockInfo
 }
 
 [System.Serializable]
-public class SyncDictionaryVector3IntNetworkBlockInfo : SyncDictionary<Vector3Int, NetworkBlockInfo> { }
+public class SyncDictionaryVector3IntNetworkBlockInfo : SyncDictionary<Vector3Int, NetworkBlockInfo>
+{
+}
 
 public class BlockArea : NetworkBehaviour
 {
     public static float cubeScale = 0.05f;
 
     public static HashSet<NetworkIdentity> blockAreaIdentities = new HashSet<NetworkIdentity>();
-    public readonly SyncDictionaryVector3IntNetworkBlockInfo networkBlocks = new SyncDictionaryVector3IntNetworkBlockInfo();
+
+    public readonly SyncDictionaryVector3IntNetworkBlockInfo networkBlocks =
+        new SyncDictionaryVector3IntNetworkBlockInfo();
 
     // [SyncVar] public int startBlockId = 0;
     [SyncVar] public bool active = true;
@@ -54,7 +58,7 @@ public class BlockArea : NetworkBehaviour
     public PhysicMaterial spherePhysicMaterial;
 
     [HideInInspector]
-    public Vector2Int[] bounds = { new Vector2Int(), new Vector2Int(), new Vector2Int() };
+    public Vector2Int[] bounds = {new Vector2Int(), new Vector2Int(), new Vector2Int()};
 
     public Dictionary<Vector3Int, MeshBlock> blocks = new Dictionary<Vector3Int, MeshBlock>();
     public Dictionary<Vector3Int, BlockBreak> damagedBlocks = new Dictionary<Vector3Int, BlockBreak>();
@@ -73,7 +77,8 @@ public class BlockArea : NetworkBehaviour
         public MeshRenderer meshRenderer;
         public Joint connected;
 
-        public MeshBlock(int id, int positionInList, byte forward, byte up, GameObject blockObject, MeshRenderer meshRenderer, Joint connected)
+        public MeshBlock(int id, int positionInList, byte forward, byte up, GameObject blockObject,
+            MeshRenderer meshRenderer, Joint connected)
         {
             this.id = id;
             this.positionInList = positionInList;
@@ -123,6 +128,7 @@ public class BlockArea : NetworkBehaviour
             transform.GetChild(i).localRotation = Quaternion.identity;
             transform.GetChild(i).localScale = new Vector3(cubeScale, cubeScale, cubeScale);
         }
+
         transform.GetChild(5).gameObject.SetActive(false);
 
         meshFilter = transform.GetChild(0).GetComponent<MeshFilter>();
@@ -150,18 +156,23 @@ public class BlockArea : NetworkBehaviour
             {
                 CreateBlock(block.Value.id, block.Key, false, block.Value.forward, block.Value.up);
             }
+
             foreach (var bearingJoint in startBearingJoints)
             {
-                if (!blocks.ContainsKey(bearingJoint.Key) || Blocks.blocks[blocks[bearingJoint.Key].id].blockType != Block.BlockType.bearing)
+                if (!blocks.ContainsKey(bearingJoint.Key) ||
+                    Blocks.blocks[blocks[bearingJoint.Key].id].blockType != Block.BlockType.bearing)
                     Debug.LogError("Invalid bearing joint");
                 blocks[bearingJoint.Key].connected = bearingJoint.Value;
                 blocks[bearingJoint.Key].connected.connectedBody = body;
             }
         }
+
         foreach (var block in networkBlocks)
         {
-            CreateBlock(block.Value.id, block.Key, false, ByteRotationForward(block.Value.rotation), ByteRotationUp(block.Value.rotation));
+            CreateBlock(block.Value.id, block.Key, false, ByteRotationForward(block.Value.rotation),
+                ByteRotationUp(block.Value.rotation));
         }
+
         UpdateMesh(true);
         // }
         // else
@@ -182,6 +193,7 @@ public class BlockArea : NetworkBehaviour
             wakeUp--;
             body.WakeUp();
         }
+
         HashSet<Vector3Int> removeFromDamage = new HashSet<Vector3Int>();
         foreach (var block in damagedBlocks)
         {
@@ -194,6 +206,7 @@ public class BlockArea : NetworkBehaviour
                 {
                     blocks[block.Key].meshRenderer.material.SetFloat("_Health", 1f);
                 }
+
                 removeFromDamage.Add(block.Key);
             }
             else
@@ -204,12 +217,14 @@ public class BlockArea : NetworkBehaviour
                 blocks[block.Key] = meshBlock;
             }
         }
+
         foreach (var block in removeFromDamage)
         {
             //int id = damagedBlocks[block].id;
             Destroy(damagedBlocks[block].gameObject);
             damagedBlocks.Remove(block);
         }
+
         if (framesSinceLastDamage >= 3)
         {
             if (!Mathf.Approximately(health, 1))
@@ -220,6 +235,7 @@ public class BlockArea : NetworkBehaviour
                     blocks[coord].meshRenderer.material.SetFloat("_Health", 1);
                 }
             }
+
             health = 1f;
             if (emitterId > -1)
             {
@@ -281,20 +297,20 @@ public class BlockArea : NetworkBehaviour
 
     public static byte ByteRotationForward(byte rotation)
     {
-        return (byte)(rotation & 0b_1111);
+        return (byte) (rotation & 0b_1111);
     }
 
     public static byte ByteRotationUp(byte rotation)
     {
         rotation >>= 4;
-        return (byte)(rotation & 0b_1111);
+        return (byte) (rotation & 0b_1111);
     }
 
     public static byte ForwardUpToByte(int forward, int up)
     {
-        byte rotation = (byte)up;
+        byte rotation = (byte) up;
         rotation <<= 4;
-        rotation |= (byte)forward;
+        rotation |= (byte) forward;
         return rotation;
     }
 
@@ -318,14 +334,17 @@ public class BlockArea : NetworkBehaviour
             break;
         }
 
-        Vector3 blockPosition = physicsBlock.transform.TransformPoint((Vector3)physicsCoord * cubeScale);
+        Vector3 blockPosition = physicsBlock.transform.TransformPoint((Vector3) physicsCoord * cubeScale);
         Vector3 positionLocalToCubeArea = transform.InverseTransformPoint(blockPosition);
         Vector3Int coord = GetBlockCoord(positionLocalToCubeArea);
 
         Vector3 forward = transform.InverseTransformDirection(physicsBlock.transform.forward);
         Vector3 up = transform.InverseTransformDirection(physicsBlock.transform.up);
-        byte forwardInt = directionToInt[new Vector3Int(Mathf.RoundToInt(forward.x), Mathf.RoundToInt(forward.y), Mathf.RoundToInt(forward.z))];
-        byte upInt = directionToInt[new Vector3Int(Mathf.RoundToInt(up.x), Mathf.RoundToInt(up.y), Mathf.RoundToInt(up.z))];
+        byte forwardInt =
+            directionToInt[
+                new Vector3Int(Mathf.RoundToInt(forward.x), Mathf.RoundToInt(forward.y), Mathf.RoundToInt(forward.z))];
+        byte upInt =
+            directionToInt[new Vector3Int(Mathf.RoundToInt(up.x), Mathf.RoundToInt(up.y), Mathf.RoundToInt(up.z))];
 
         if (!blocks.ContainsKey(coord))
         {
@@ -335,7 +354,7 @@ public class BlockArea : NetworkBehaviour
             CmdDestroy(physicsBlock.GetComponent<NetworkIdentity>());
 
             CreateBlock(id, coord, true, forwardInt, upInt);
-            CmdCreateBlock((byte)id, coord, ForwardUpToByte(forwardInt, upInt));
+            CmdCreateBlock((byte) id, coord, ForwardUpToByte(forwardInt, upInt));
         }
         else if (Blocks.blocks[blocks[coord].id].blockType == Block.BlockType.bearing)
         {
@@ -343,20 +362,26 @@ public class BlockArea : NetworkBehaviour
 
             physicsBlock.GetComponent<BlockPhysics>().enabled = false;
 
-            physicsBlock.transform.position = BlockCoordToPosition(coord) - (physicsBlock.transform.rotation * ((Vector3)physicsCoord * cubeScale));
-            physicsBlock.transform.rotation = GetTargetRotation(physicsBlock.transform.rotation, coord, Blocks.blocks[blockArea.blocks[blockArea.OnlyBlock()].id].blockType);
+            physicsBlock.transform.position = BlockCoordToPosition(coord) -
+                                              (physicsBlock.transform.rotation * ((Vector3) physicsCoord * cubeScale));
+            physicsBlock.transform.rotation = GetTargetRotation(physicsBlock.transform.rotation, coord,
+                Blocks.blocks[blockArea.blocks[blockArea.OnlyBlock()].id].blockType);
 
             HingeJoint joint = physicsBlock.AddComponent<HingeJoint>();
             joint.autoConfigureConnectedAnchor = false;
 
-            Vector3 axis = physicsBlock.transform.InverseTransformDirection(transform.rotation * Quaternion.LookRotation(intToDirection[blocks[coord].forward], intToDirection[blocks[coord].up]) * Vector3.up);
+            Vector3 axis = physicsBlock.transform.InverseTransformDirection(transform.rotation *
+                                                                            Quaternion.LookRotation(
+                                                                                intToDirection[blocks[coord].forward],
+                                                                                intToDirection[blocks[coord].up]) *
+                                                                            Vector3.up);
             axis = new Vector3(Mathf.Round(axis.x), Mathf.Round(axis.y), Mathf.Round(axis.z));
             axis = axis.normalized;
             joint.axis = axis;
 
-            joint.anchor = (Vector3)physicsCoord * cubeScale - ((axis * 0.1f * cubeScale));
+            joint.anchor = (Vector3) physicsCoord * cubeScale - ((axis * 0.1f * cubeScale));
 
-            joint.connectedAnchor = (Vector3)coord * cubeScale;
+            joint.connectedAnchor = (Vector3) coord * cubeScale;
 
             joint.enableCollision = true;
             joint.connectedBody = body;
@@ -380,6 +405,7 @@ public class BlockArea : NetworkBehaviour
         {
             emitterId = breakingSound.PlaySoundAt(position);
         }
+
         if (!damagedThisFrame)
         {
             damagedThisFrame = true;
@@ -391,6 +417,7 @@ public class BlockArea : NetworkBehaviour
                 Destroy(gameObject);
                 CmdDestroy(GetComponent<NetworkIdentity>());
             }
+
             meshRenderer.sharedMaterial.SetFloat("_Health", health);
             foreach (var coord in blockObjects)
             {
@@ -417,6 +444,7 @@ public class BlockArea : NetworkBehaviour
                 blockBreak.emitterId = breakingSound.PlaySoundAt(blockObject.transform.position);
                 damagedBlocks.Add(coord, blockBreak);
             }
+
             if (!blocks[coord].damagedThisFrame)
             {
                 MeshBlock meshBlock = blocks[coord];
@@ -428,6 +456,7 @@ public class BlockArea : NetworkBehaviour
                 {
                     blocks[coord].meshRenderer.material.SetFloat("_Health", damagedBlocks[coord].health);
                 }
+
                 if (damagedBlocks[coord].health <= 0)
                 {
                     breakSound.PlaySoundAt(damagedBlocks[coord].transform.position);
@@ -441,7 +470,8 @@ public class BlockArea : NetworkBehaviour
         }
     }
 
-    private readonly Vector3Int[] directions = new Vector3Int[] {
+    private readonly Vector3Int[] directions = new Vector3Int[]
+    {
         new Vector3Int(1, 0, 0),
         new Vector3Int(-1, 0, 0),
         new Vector3Int(0, 1, 0),
@@ -455,7 +485,7 @@ public class BlockArea : NetworkBehaviour
     {
         if (!(NetworkServer.active && NetworkClient.isConnected))
             CreateBlock(id, coord, true, ByteRotationForward(rotation), ByteRotationUp(rotation));
-        networkBlocks.Add(coord, new NetworkBlockInfo() { id = id, rotation = rotation });
+        networkBlocks.Add(coord, new NetworkBlockInfo() {id = id, rotation = rotation});
         RpcCreateBlock(id, coord, rotation);
     }
 
@@ -502,8 +532,10 @@ public class BlockArea : NetworkBehaviour
 
             for (int i = 0; i < 6 * 6; i++)
             {
-                triangles[tStart + i] = triangles[tLastStart + i] - ((blocks.Count - 1 - blocks[coord].positionInList) * 6 * 4);
+                triangles[tStart + i] = triangles[tLastStart + i] -
+                                        ((blocks.Count - 1 - blocks[coord].positionInList) * 6 * 4);
             }
+
             triangles.RemoveRange(tLastStart, 6 * 6);
 
             for (int i = 0; i < 6 * 4; i++)
@@ -512,6 +544,7 @@ public class BlockArea : NetworkBehaviour
                 uv[vStart + i] = uv[vLastStart + i];
                 uv2[vStart + i] = uv2[vLastStart + i];
             }
+
             vertices.RemoveRange(vLastStart, 6 * 4);
             uv.RemoveRange(vLastStart, 6 * 4);
             uv2.RemoveRange(vLastStart, 6 * 4);
@@ -526,13 +559,16 @@ public class BlockArea : NetworkBehaviour
                     key = entry.Key;
                 }
             }
-            blocks[key] = new MeshBlock(blocks[key].id, blocks[coord].positionInList, blocks[key].forward, blocks[key].up, blocks[key].blockObject, blocks[key].meshRenderer, blocks[key].connected);
+
+            blocks[key] = new MeshBlock(blocks[key].id, blocks[coord].positionInList, blocks[key].forward,
+                blocks[key].up, blocks[key].blockObject, blocks[key].meshRenderer, blocks[key].connected);
 
             if (blocks[coord].blockObject != null)
             {
                 Destroy(blocks[coord].blockObject);
                 blockObjects.Remove(coord);
             }
+
             if (blocks[coord].connected != null)
             {
                 if (blocks[coord].connected.GetComponent<BlockArea>().blocks.Count == 1)
@@ -567,7 +603,9 @@ public class BlockArea : NetworkBehaviour
                 {
                     if (Blocks.blocks[block.id].blockType == Block.BlockType.bearing)
                     {
-                        Vector3Int connectedTo = testBlock + Vector3Int.RoundToInt(block.blockObject.transform.localRotation * Vector3.down);
+                        Vector3Int connectedTo = testBlock +
+                                                 Vector3Int.RoundToInt(block.blockObject.transform.localRotation *
+                                                                       Vector3.down);
                         if (connectedTo == coord)
                         {
                             DeleteBlock(testBlock);
@@ -593,6 +631,7 @@ public class BlockArea : NetworkBehaviour
                         }
                     }
                 }
+
                 List<Dictionary<Vector3Int, MeshBlock>> structures = new List<Dictionary<Vector3Int, MeshBlock>>();
                 if (surroundingBlocks.Count > 1)
                 {
@@ -615,7 +654,8 @@ public class BlockArea : NetworkBehaviour
 
                     foreach (var structure in structures)
                     {
-                        if (!(structure.Count == 1 && Blocks.blocks[structure[OnlyBlock(structure)].id].blockType == Block.BlockType.bearing))
+                        if (!(structure.Count == 1 && Blocks.blocks[structure[OnlyBlock(structure)].id].blockType ==
+                            Block.BlockType.bearing))
                         {
                             GameObject blockArea = Instantiate(StaticPrefabs.instance.blockAreaPrefab);
                             blockArea.transform.parent = transform.parent;
@@ -630,9 +670,15 @@ public class BlockArea : NetworkBehaviour
                                     bearingJoints.Add(block, blocks[block].connected);
                                 }
                             }
+
                             BlockArea blockAreaBlockArea = blockArea.GetComponent<BlockArea>();
                             foreach (var block in structure)
-                                blockAreaBlockArea.networkBlocks.Add(block.Key, new NetworkBlockInfo() { id = (byte)block.Value.id, rotation = ForwardUpToByte(block.Value.forward, block.Value.up) });
+                                blockAreaBlockArea.networkBlocks.Add(block.Key,
+                                    new NetworkBlockInfo()
+                                    {
+                                        id = (byte) block.Value.id,
+                                        rotation = ForwardUpToByte(block.Value.forward, block.Value.up)
+                                    });
                             blockAreaBlockArea.startBlocks = structure;
                             blockAreaBlockArea.startBearingJoints = bearingJoints;
 
@@ -681,6 +727,7 @@ public class BlockArea : NetworkBehaviour
                     {
                         // Destroy(gameObject);
                     }
+
                     return networkDestroy;
                 }
             }
@@ -709,6 +756,7 @@ public class BlockArea : NetworkBehaviour
                 }
             }
         }
+
         return networkDestroy;
     }
 
@@ -746,6 +794,7 @@ public class BlockArea : NetworkBehaviour
             mesh.triangles = triangles.ToArray();
             mesh.vertices = vertices.ToArray();
         }
+
         mesh.uv = uv.ToArray();
         mesh.uv2 = uv2.ToArray();
         mesh.RecalculateNormals();
@@ -755,7 +804,7 @@ public class BlockArea : NetworkBehaviour
         {
             if (blocks[OnlyBlock()].blockObject != null)
             {
-                transform.GetChild(5).localPosition = (Vector3)OnlyBlock() * cubeScale;
+                transform.GetChild(5).localPosition = (Vector3) OnlyBlock() * cubeScale;
                 transform.GetChild(5).gameObject.SetActive(true);
             }
         }
@@ -777,6 +826,7 @@ public class BlockArea : NetworkBehaviour
         {
             return block.Key;
         }
+
         Debug.LogError("No blocks. Returning Vector3Int.zero");
         return Vector3Int.zero;
     }
@@ -796,40 +846,47 @@ public class BlockArea : NetworkBehaviour
         else
             assymilated = new HashSet<Vector3Int>(blockObjects);
         Dictionary<Vector3Int, Vector2Int[]> boxes = new Dictionary<Vector3Int, Vector2Int[]>();
-        foreach (var block in blocks)
-        {
-            if (!assymilated.Contains(block.Key))
-            {
-                assymilated.Add(block.Key);
-
-                Vector2Int[] boxBounds = { new Vector2Int(), new Vector2Int(), new Vector2Int() };
-
-                bool canSpreadRight = true;
-                bool canSpreadLeft = true;
-                bool canSpreadUp = true;
-                bool canSpreadDown = true;
-                bool canSpreadForward = true;
-                bool canSpreadBackward = true;
-
-                while (canSpreadRight || canSpreadLeft || canSpreadUp || canSpreadDown || canSpreadForward || canSpreadBackward)
-                {
-                    if (canSpreadRight)
-                        canSpreadRight = HitBoxExpand.expandBoxBoundsRight(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadLeft)
-                        canSpreadLeft = HitBoxExpand.expandBoxBoundsLeft(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadUp)
-                        canSpreadUp = HitBoxExpand.expandBoxBoundsUp(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadDown)
-                        canSpreadDown = HitBoxExpand.expandBoxBoundsDown(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadForward)
-                        canSpreadForward = HitBoxExpand.expandBoxBoundsForward(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadBackward)
-                        canSpreadBackward = HitBoxExpand.expandBoxBoundsBackward(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                }
-
-                boxes.Add(block.Key, boxBounds);
-            }
-        }
+        // foreach (var block in blocks)
+        // {
+        //     if (!assymilated.Contains(block.Key))
+        //     {
+        //         assymilated.Add(block.Key);
+        //
+        //         Vector2Int[] boxBounds = {new Vector2Int(), new Vector2Int(), new Vector2Int()};
+        //
+        //         bool canSpreadRight = true;
+        //         bool canSpreadLeft = true;
+        //         bool canSpreadUp = true;
+        //         bool canSpreadDown = true;
+        //         bool canSpreadForward = true;
+        //         bool canSpreadBackward = true;
+        //
+        //         while (canSpreadRight || canSpreadLeft || canSpreadUp || canSpreadDown || canSpreadForward ||
+        //                canSpreadBackward)
+        //         {
+        //             if (canSpreadRight)
+        //                 canSpreadRight =
+        //                     HitBoxExpand.expandBoxBoundsRight(block.Key, ref boxBounds, ref assymilated, ref blocks);
+        //             if (canSpreadLeft)
+        //                 canSpreadLeft =
+        //                     HitBoxExpand.expandBoxBoundsLeft(block.Key, ref boxBounds, ref assymilated, ref blocks);
+        //             if (canSpreadUp)
+        //                 canSpreadUp =
+        //                     HitBoxExpand.expandBoxBoundsUp(block.Key, ref boxBounds, ref assymilated, ref blocks);
+        //             if (canSpreadDown)
+        //                 canSpreadDown =
+        //                     HitBoxExpand.expandBoxBoundsDown(block.Key, ref boxBounds, ref assymilated, ref blocks);
+        //             if (canSpreadForward)
+        //                 canSpreadForward =
+        //                     HitBoxExpand.expandBoxBoundsForward(block.Key, ref boxBounds, ref assymilated, ref blocks);
+        //             if (canSpreadBackward)
+        //                 canSpreadBackward =
+        //                     HitBoxExpand.expandBoxBoundsBackward(block.Key, ref boxBounds, ref assymilated, ref blocks);
+        //         }
+        //
+        //         boxes.Add(block.Key, boxBounds);
+        //     }
+        // }
 
         Queue<BoxCollider> boxCollidersNotNeeded = new Queue<BoxCollider>();
         while (boxCollidersInUse.Count > 0)
@@ -864,6 +921,7 @@ public class BlockArea : NetworkBehaviour
                 boxCollidersInUse.Enqueue(boxCollider);
             }
         }
+
         while (boxCollidersNotNeeded.Count > 0)
         {
             Destroy(boxCollidersNotNeeded.Dequeue());
@@ -874,14 +932,11 @@ public class BlockArea : NetworkBehaviour
             KeyValuePair<Vector3Int, MeshBlock> block;
             foreach (var nextBlock in blocks)
                 block = nextBlock;
-
-            if (Blocks.blocks[block.Value.id].hasSphere)
-            {
-                var s = transform.GetChild(2).gameObject.AddComponent<SphereCollider>();
-                s.material = spherePhysicMaterial;
-                s.center = block.Key;
-                s.radius = 0.475f;
-            }
+            
+            var s = transform.GetChild(2).gameObject.AddComponent<SphereCollider>();
+            s.material = spherePhysicMaterial;
+            s.center = block.Key;
+            s.radius = 0.475f;
         }
         else
         {
@@ -890,7 +945,8 @@ public class BlockArea : NetworkBehaviour
                 Destroy(s);
         }
 
-        body.mass = Mathf.Clamp((0.075f * blocks.Count) - (0.075f * blockObjects.Count), 0.075f, Mathf.Infinity);
+        body.mass = Mathf.Clamp((BlockObject.CubeMass * blocks.Count) - (BlockObject.CubeMass * blockObjects.Count),
+            BlockObject.CubeMass, Mathf.Infinity);
     }
 
     private void CreateBlock(int id, Vector3Int coord, bool updateTheMesh, byte forward = 4, byte up = 2)
@@ -932,18 +988,21 @@ public class BlockArea : NetworkBehaviour
             blockPhysics.enabled = false;
     }
 
-    public static (Vector3[] vertices, Vector2[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(int id, byte forward = 4, byte up = 2)
+    public static (Vector3[] vertices, Vector2[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(int id,
+        byte forward = 4, byte up = 2)
     {
         return GetBlockMesh(id, Vector3Int.zero, forward, up);
     }
 
-    private static (Vector3[] vertices, Vector2[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(int id, Vector3Int coord, byte forward = 4, byte up = 2)
+    private static (Vector3[] vertices, Vector2[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(int id,
+        Vector3Int coord, byte forward = 4, byte up = 2)
     {
         if (id == -1)
         {
             id = 0;
             Debug.LogError("Attempted to getBlockMesh with id of -1");
         }
+
         Vector3[] vertices = new Vector3[6 * 4];
         Vector2[] uv = new Vector2[6 * 4];
         Vector2[] uv2 = new Vector2[6 * 4];
@@ -952,7 +1011,7 @@ public class BlockArea : NetworkBehaviour
         Vector2 topBlockuv = GetBlockuv(Blocks.blocks[id].topTextureIndex);
         Vector2 sideBlockuv = GetBlockuv(Blocks.blocks[id].sideTextureIndex);
         Vector2 bottomBlockuv = GetBlockuv(Blocks.blocks[id].bottomTextureIndex);
-        Vector2 blockuv;// = Vector2.zero;
+        Vector2 blockuv; // = Vector2.zero;
 
         Quaternion rotation = Quaternion.LookRotation(intToDirection[forward], intToDirection[up]);
 
@@ -962,6 +1021,7 @@ public class BlockArea : NetworkBehaviour
             {
                 vertices[face * 4 + v] = (rotation * cubeVertices[face * 4 + v]) + coord;
             }
+
             if (face < 4)
                 blockuv = sideBlockuv;
             else if (face < 5)
@@ -969,9 +1029,12 @@ public class BlockArea : NetworkBehaviour
             else
                 blockuv = bottomBlockuv;
             uv[face * 4 + 0] = blockuv + new Vector2(texturePadding, texturePadding);
-            uv[face * 4 + 1] = blockuv + new Vector2(Block.textureWidth, 0) + new Vector2(-texturePadding, texturePadding);
-            uv[face * 4 + 2] = blockuv + new Vector2(Block.textureWidth, Block.textureWidth) + new Vector2(-texturePadding, -texturePadding);
-            uv[face * 4 + 3] = blockuv + new Vector2(0, Block.textureWidth) + new Vector2(texturePadding, -texturePadding);
+            uv[face * 4 + 1] = blockuv + new Vector2(Block.textureWidth, 0) +
+                               new Vector2(-texturePadding, texturePadding);
+            uv[face * 4 + 2] = blockuv + new Vector2(Block.textureWidth, Block.textureWidth) +
+                               new Vector2(-texturePadding, -texturePadding);
+            uv[face * 4 + 3] = blockuv + new Vector2(0, Block.textureWidth) +
+                               new Vector2(texturePadding, -texturePadding);
 
             uv2[face * 4 + 0] = new Vector2(0, 0);
             uv2[face * 4 + 1] = new Vector2(Block.breakTextureWidth, 0);
@@ -1020,8 +1083,8 @@ public class BlockArea : NetworkBehaviour
     public void ResetBounds()
     {
         for (int axis = 0; axis < 3; axis++)
-            for (int component = 0; component < 2; component++)
-                bounds[axis][component] = 0;
+        for (int component = 0; component < 2; component++)
+            bounds[axis][component] = 0;
     }
 
     public void ExpandToFit(Vector3Int blockCoord)
@@ -1033,7 +1096,6 @@ public class BlockArea : NetworkBehaviour
             if (blockCoord[axis] >= bounds[axis][1])
                 bounds[axis][1] = blockCoord[axis] + 1;
         }
-        //setVisualSize();
     }
 
     public (bool isInCubeArea, bool isNearHole) InCubeArea(Vector3Int testPosition, int id)
@@ -1043,28 +1105,44 @@ public class BlockArea : NetworkBehaviour
             return (false, false);
         }
 
+        //don't @ me
         bool isNearHole =
             (!ContainsBlock(testPosition + new Vector3Int(1, 0, 0)) &&
-            (ContainsBlock(testPosition + new Vector3Int(1, -1, 0)) && ContainsBlock(testPosition + new Vector3Int(1, 1, 0)) ||
-            ContainsBlock(testPosition + new Vector3Int(1, 0, -1)) && ContainsBlock(testPosition + new Vector3Int(1, 0, 1)))) ||
+             (ContainsBlock(testPosition + new Vector3Int(1, -1, 0)) &&
+              ContainsBlock(testPosition + new Vector3Int(1, 1, 0)) ||
+              ContainsBlock(testPosition + new Vector3Int(1, 0, -1)) &&
+              ContainsBlock(testPosition + new Vector3Int(1, 0, 1)))) ||
             (!ContainsBlock(testPosition + new Vector3Int(-1, 0, 0)) &&
-            (ContainsBlock(testPosition + new Vector3Int(-1, -1, 0)) && ContainsBlock(testPosition + new Vector3Int(-1, 1, 0)) ||
-            ContainsBlock(testPosition + new Vector3Int(-1, 0, -1)) && ContainsBlock(testPosition + new Vector3Int(-1, 0, 1)))) ||
+             (ContainsBlock(testPosition + new Vector3Int(-1, -1, 0)) &&
+              ContainsBlock(testPosition + new Vector3Int(-1, 1, 0)) ||
+              ContainsBlock(testPosition + new Vector3Int(-1, 0, -1)) &&
+              ContainsBlock(testPosition + new Vector3Int(-1, 0, 1)))) ||
             (!ContainsBlock(testPosition + new Vector3Int(0, 1, 0)) &&
-            (ContainsBlock(testPosition + new Vector3Int(-1, 1, 0)) && ContainsBlock(testPosition + new Vector3Int(1, 1, 0)) ||
-            ContainsBlock(testPosition + new Vector3Int(0, 1, -1)) && ContainsBlock(testPosition + new Vector3Int(0, 1, 1)))) ||
+             (ContainsBlock(testPosition + new Vector3Int(-1, 1, 0)) &&
+              ContainsBlock(testPosition + new Vector3Int(1, 1, 0)) ||
+              ContainsBlock(testPosition + new Vector3Int(0, 1, -1)) &&
+              ContainsBlock(testPosition + new Vector3Int(0, 1, 1)))) ||
             (!ContainsBlock(testPosition + new Vector3Int(0, -1, 0)) &&
-            (ContainsBlock(testPosition + new Vector3Int(-1, -1, 0)) && ContainsBlock(testPosition + new Vector3Int(1, -1, 0)) ||
-            ContainsBlock(testPosition + new Vector3Int(0, -1, -1)) && ContainsBlock(testPosition + new Vector3Int(0, -1, 1)))) ||
+             (ContainsBlock(testPosition + new Vector3Int(-1, -1, 0)) &&
+              ContainsBlock(testPosition + new Vector3Int(1, -1, 0)) ||
+              ContainsBlock(testPosition + new Vector3Int(0, -1, -1)) &&
+              ContainsBlock(testPosition + new Vector3Int(0, -1, 1)))) ||
             (!ContainsBlock(testPosition + new Vector3Int(0, 0, 1)) &&
-            (ContainsBlock(testPosition + new Vector3Int(-1, 0, 1)) && ContainsBlock(testPosition + new Vector3Int(1, 0, 1)) ||
-            ContainsBlock(testPosition + new Vector3Int(0, -1, 1)) && ContainsBlock(testPosition + new Vector3Int(0, 1, 1)))) ||
+             (ContainsBlock(testPosition + new Vector3Int(-1, 0, 1)) &&
+              ContainsBlock(testPosition + new Vector3Int(1, 0, 1)) ||
+              ContainsBlock(testPosition + new Vector3Int(0, -1, 1)) &&
+              ContainsBlock(testPosition + new Vector3Int(0, 1, 1)))) ||
             (!ContainsBlock(testPosition + new Vector3Int(0, 0, -1)) &&
-            (ContainsBlock(testPosition + new Vector3Int(-1, 0, -1)) && ContainsBlock(testPosition + new Vector3Int(1, 0, -1)) ||
-            ContainsBlock(testPosition + new Vector3Int(0, -1, -1)) && ContainsBlock(testPosition + new Vector3Int(0, 1, -1)))) ||
-            (ContainsBlock(testPosition + new Vector3Int(-1, 0, 0)) && ContainsBlock(testPosition + new Vector3Int(1, 0, 0)) ||
-            ContainsBlock(testPosition + new Vector3Int(0, -1, 0)) && ContainsBlock(testPosition + new Vector3Int(0, 1, 0)) ||
-            ContainsBlock(testPosition + new Vector3Int(0, 0, -1)) && ContainsBlock(testPosition + new Vector3Int(0, 0, 1)));
+             (ContainsBlock(testPosition + new Vector3Int(-1, 0, -1)) &&
+              ContainsBlock(testPosition + new Vector3Int(1, 0, -1)) ||
+              ContainsBlock(testPosition + new Vector3Int(0, -1, -1)) &&
+              ContainsBlock(testPosition + new Vector3Int(0, 1, -1)))) ||
+            (ContainsBlock(testPosition + new Vector3Int(-1, 0, 0)) &&
+             ContainsBlock(testPosition + new Vector3Int(1, 0, 0)) ||
+             ContainsBlock(testPosition + new Vector3Int(0, -1, 0)) &&
+             ContainsBlock(testPosition + new Vector3Int(0, 1, 0)) ||
+             ContainsBlock(testPosition + new Vector3Int(0, 0, -1)) &&
+             ContainsBlock(testPosition + new Vector3Int(0, 0, 1)));
 
         bool inCubeAreaBearing = true;
         if (Blocks.blocks[id].blockType == Block.BlockType.bearing)
@@ -1113,7 +1191,10 @@ public class BlockArea : NetworkBehaviour
 
     private Vector3 SnapPosition(Vector3 currentPosition)
     {
-        currentPosition = new Vector3(Mathf.Floor(currentPosition.x * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale), Mathf.Floor(currentPosition.y * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale), Mathf.Floor(currentPosition.z * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale));
+        currentPosition = new Vector3(
+            Mathf.Floor(currentPosition.x * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale),
+            Mathf.Floor(currentPosition.y * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale),
+            Mathf.Floor(currentPosition.z * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale));
         currentPosition.x += BlockArea.cubeScale / 2f;
         currentPosition.y += BlockArea.cubeScale / 2f;
         currentPosition.z += BlockArea.cubeScale / 2f;
@@ -1136,6 +1217,7 @@ public class BlockArea : NetworkBehaviour
                     }
                 }
             }
+
             Quaternion rotationLocalToArea = Quaternion.Inverse(transform.rotation) * blockRotation;
             Vector3 up = ClosestToAxis(rotationLocalToArea, Vector3.up, upCheckAxes.ToArray());
             Vector3[] forwardCheckAxes = new Vector3[4];
@@ -1149,6 +1231,7 @@ public class BlockArea : NetworkBehaviour
                     n++;
                 }
             }
+
             Vector3 forward = ClosestToAxis(rotationLocalToArea, Vector3.forward, forwardCheckAxes);
             return transform.rotation * Quaternion.LookRotation(forward, up);
         }
@@ -1210,7 +1293,8 @@ public class BlockArea : NetworkBehaviour
     }
 
     //finds the closest axis to the input rotations specified axis
-    private void Check(ref float highestDot, ref Vector3 closest, Quaternion currentRotation, Vector3 axis, Vector3 checkDir)
+    private void Check(ref float highestDot, ref Vector3 closest, Quaternion currentRotation, Vector3 axis,
+        Vector3 checkDir)
     {
         float dot = Vector3.Dot(currentRotation * axis, checkDir);
         if (dot > highestDot)
@@ -1237,7 +1321,8 @@ public class BlockArea : NetworkBehaviour
         return Quaternion.LookRotation(intToDirection[forward], intToDirection[up]);
     }
 
-    public static readonly Vector3[] cubeVertices = new Vector3[] {
+    public static readonly Vector3[] cubeVertices = new Vector3[]
+    {
         //front
         new Vector3(-0.5f, -0.5f, -0.5f),
         new Vector3(0.5f, -0.5f, -0.5f),
@@ -1275,7 +1360,7 @@ public class BlockArea : NetworkBehaviour
         new Vector3(-0.5f, -0.5f, -0.5f),
     };
 
-    public static IReadOnlyDictionary<byte, Vector3> intToDirection = new Dictionary<byte, Vector3>
+    public static readonly IReadOnlyDictionary<byte, Vector3> intToDirection = new Dictionary<byte, Vector3>
     {
         {0, new Vector3(1, 0, 0)},
         {1, new Vector3(-1, 0, 0)},
@@ -1285,7 +1370,7 @@ public class BlockArea : NetworkBehaviour
         {5, new Vector3(0, 0, -1)}
     };
 
-    public static IReadOnlyDictionary<Vector3Int, byte> directionToInt = new Dictionary<Vector3Int, byte>
+    public static readonly IReadOnlyDictionary<Vector3Int, byte> directionToInt = new Dictionary<Vector3Int, byte>
     {
         {new Vector3Int(1, 0, 0), 0},
         {new Vector3Int(-1, 0, 0), 1},
@@ -1309,6 +1394,7 @@ public class BlockArea : NetworkBehaviour
                 }
             }
         }
+
         // blockAreas.Remove(this);
         if (blockAreaIdentities.Contains(GetComponent<NetworkIdentity>()))
             blockAreaIdentities.Remove(GetComponent<NetworkIdentity>());

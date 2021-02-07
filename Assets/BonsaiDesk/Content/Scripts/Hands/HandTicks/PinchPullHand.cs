@@ -208,7 +208,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
                 if (hitAutoAuthority != null)
                 {
-                    if (hit.distance < 0.2f)
+                    if (hit.distance < 0.1f)
                         break;
                     hitPoint = hit.point;
                     return true;

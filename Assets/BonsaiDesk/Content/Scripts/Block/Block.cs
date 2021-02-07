@@ -11,7 +11,6 @@ public class Block
     public int bottomTextureIndex;
 
     public GameObject blockObject;
-    public bool hasSphere;
 
     public enum BlockType
     {
@@ -27,7 +26,6 @@ public class Block
         sideTextureIndex = textureIndex;
         bottomTextureIndex = textureIndex;
         blockObject = null;
-        hasSphere = true;
         blockType = BlockType.normal;
     }
 
@@ -37,7 +35,6 @@ public class Block
         this.sideTextureIndex = sideTextureIndex;
         this.bottomTextureIndex = bottomTextureIndex;
         blockObject = null;
-        hasSphere = true;
         blockType = BlockType.normal;
     }
 
@@ -47,17 +44,6 @@ public class Block
         sideTextureIndex = 0;
         bottomTextureIndex = 0;
         blockObject = Resources.Load("BlockObjects/" + blockObjectName) as GameObject;
-        hasSphere = true;
-        blockType = BlockType.normal;
-    }
-
-    public Block(string blockObjectName, bool hasSphere)
-    {
-        topTextureIndex = 0;
-        sideTextureIndex = 0;
-        bottomTextureIndex = 0;
-        blockObject = Resources.Load("BlockObjects/" + blockObjectName) as GameObject;
-        this.hasSphere = hasSphere;
         blockType = BlockType.normal;
     }
 
@@ -67,7 +53,6 @@ public class Block
         sideTextureIndex = 0;
         bottomTextureIndex = 0;
         blockObject = Resources.Load("BlockObjects/" + blockObjectName) as GameObject;
-        hasSphere = true;
         this.blockType = blockType;
     }
 }

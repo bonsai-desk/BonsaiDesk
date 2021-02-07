@@ -27,8 +27,6 @@ public class BlockPhysics : MonoBehaviour
 
     private BlockArea myBlockArea;
 
-    public bool debug = false;
-
     private int layer;
 
     private void OnCollisionEnter(Collision collision)
@@ -154,21 +152,13 @@ public class BlockPhysics : MonoBehaviour
         if ((isInCubeArea && isNearHole) || (isNearHole && touchingHand))
         {
             transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer("block");
-            bool sphere = true;
-            foreach (var block in myBlockArea.blocks)
-                sphere = Blocks.blocks[block.Value.id].hasSphere;
-            if (sphere)
-                SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("block"));
+            SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("block"));
         }
         else if (isInCubeArea && !touchingHand &&
                  Blocks.blocks[myBlockArea.blocks[myBlockArea.OnlyBlock()].id].blockType == Block.BlockType.bearing)
         {
             transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer("onlyHands");
-            bool sphere = true;
-            foreach (var block in myBlockArea.blocks)
-                sphere = Blocks.blocks[block.Value.id].hasSphere;
-            if (sphere)
-                SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("onlyHands"));
+            SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("onlyHands"));
         }
         else
         {
