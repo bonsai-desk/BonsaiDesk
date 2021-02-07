@@ -2401,7 +2401,7 @@ MonoBehaviour:
   maxRelayRefreshAttempts: 3
   relayLifetime: 30
   isDisconnecting: 0
-  serverOnlyIfEditor: 0
+  serverOnlyIfEditor: 1
   visualizeAuthority: 0
   browserReady: 0
   tableBrowser: {fileID: 1361515864}
@@ -8424,7 +8424,7 @@ Transform:
   - {fileID: 1803093821}
   - {fileID: 1341802854}
   m_Father: {fileID: 877365330}
-  m_RootOrder: 3
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &454429991
 GameObject:
@@ -11976,13 +11976,13 @@ Transform:
   - {fileID: 955373202}
   - {fileID: 874699798}
   - {fileID: 836979148}
-  - {fileID: 423013165}
-  - {fileID: 1568658784}
   - {fileID: 667714760}
-  - {fileID: 931601756}
+  - {fileID: 423013165}
   - {fileID: 1149884543}
-  - {fileID: 1086726481}
+  - {fileID: 1568658784}
+  - {fileID: 931601756}
   - {fileID: 1505112830}
+  - {fileID: 1086726481}
   - {fileID: 1428547956}
   m_Father: {fileID: 1757354512}
   m_RootOrder: 0
@@ -12286,7 +12286,7 @@ Transform:
   - {fileID: 1118727149}
   - {fileID: 150189290}
   m_Father: {fileID: 877365330}
-  m_RootOrder: 7
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &934709930
 GameObject:
@@ -13523,7 +13523,7 @@ Transform:
   m_LocalScale: {x: 0.08, y: 1, z: 0.0255}
   m_Children: []
   m_Father: {fileID: 877365330}
-  m_RootOrder: 8
+  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!64 &1086726482
 MeshCollider:
@@ -19206,7 +19206,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 877365330}
-  m_RootOrder: 10
+  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1428547957
 MonoBehaviour:
@@ -20649,7 +20649,7 @@ Transform:
   - {fileID: 739380268}
   - {fileID: 74668778}
   m_Father: {fileID: 877365330}
-  m_RootOrder: 5
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1568710727
 GameObject:

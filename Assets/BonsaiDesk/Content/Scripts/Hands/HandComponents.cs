@@ -44,6 +44,11 @@ public class HandComponents
 
         PhysicsHand = handObject.GetChild(0);
         _physicsRenderer = PhysicsHand.GetComponentInChildren<SkinnedMeshRenderer>();
+        if (NetworkManagerGame.Singleton.serverOnlyIfEditor && Application.isEditor)
+        {
+            _physicsRenderer.enabled = false;
+        }
+
         _handMaterial = _physicsRenderer.material;
         _handMaterial.SetInt("_ZWrite", 1);
         MakeMaterialOpaque();
@@ -127,7 +132,8 @@ public class HandComponents
 
     private void UpdateRendererTransparency()
     {
-        bool isTransparent = _handMaterial.GetInt("_DstBlend") == (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
+        bool isTransparent =
+            _handMaterial.GetInt("_DstBlend") == (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
 
         float handAlphaTarget = Tracking ? 1f : 0f;
         _handAlpha = Mathf.MoveTowards(_handAlpha, handAlphaTarget, Time.deltaTime / RecentTrackingThreshold);

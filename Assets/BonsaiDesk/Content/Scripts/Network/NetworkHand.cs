@@ -24,10 +24,8 @@ public class NetworkHand : NetworkBehaviour
     private float lastRotationsUpdateTime = 0;
 
     // public SkinnedMeshRenderer meshRenderer;
-    
-    // public Texture[] handTextures;
 
-    [SyncVar(hook = nameof(ColorHook))] private byte colorIndex = 0;
+    // public Texture[] handTextures;
 
     public LineRenderer lineRenderer;
 
@@ -37,7 +35,7 @@ public class NetworkHand : NetworkBehaviour
     [SyncVar] private uint _pinchPullAttachedToId = uint.MaxValue;
     [SyncVar] private Vector3 _pinchPullLocalHitPoint = Vector3.zero;
     [SyncVar] private float _pinchPullRopeLength = 0f;
-    
+
     private GameObject physicsHand;
 
     private void Start()
@@ -50,39 +48,54 @@ public class NetworkHand : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
-        UpdateColor();
+        if (!isClient)
+        {
+            SetupPhysicsHand();
+        }
     }
 
     public override void OnStartClient()
     {
         base.OnStartClient();
-        UpdateColor();
 
         if (!hasAuthority)
         {
-            GameObject physicsHandPrefab;
-            if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
-                physicsHandPrefab = Resources.Load<GameObject>("Left_Hand");
-            else
-                physicsHandPrefab = Resources.Load<GameObject>("Right_Hand");
-            var hand = Instantiate(physicsHandPrefab);
-            var physicsMapper = hand.transform.GetChild(1).GetComponent<OVRHandTransformMapper>();
-            physicsMapper.targetObject = transform;
-            physicsMapper.capsulesParent = transform;
-            physicsMapper.TryAutoMapBonesTargetsByName();
-            physicsMapper.moveObjectToTarget = true;
-            physicsMapper.moveBonesToTargets = true;
-            physicsMapper.fixRotation = false;
-            physicsHand = hand;
+            SetupPhysicsHand();
             return;
         }
-
-        CmdSetColor(NetworkManagerGame.AssignedColorIndex);
 
         if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
             InputManager.Hands.Left.NetworkHand = this;
         if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
             InputManager.Hands.Right.NetworkHand = this;
+    }
+
+    private void SetupPhysicsHand()
+    {
+        GameObject physicsHandPrefab;
+        if (_skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+            physicsHandPrefab = Resources.Load<GameObject>("Left_Hand");
+        else
+            physicsHandPrefab = Resources.Load<GameObject>("Right_Hand");
+        var hand = Instantiate(physicsHandPrefab);
+        var physicsMapper = hand.transform.GetChild(1).GetComponent<OVRHandTransformMapper>();
+        physicsMapper.targetObject = transform;
+        physicsMapper.capsulesParent = transform;
+        physicsMapper.TryAutoMapBonesTargetsByName();
+        physicsMapper.moveObjectToTarget = true;
+        physicsMapper.moveBonesToTargets = true;
+        physicsMapper.fixRotation = false;
+        physicsHand = hand;
+    }
+
+    public override void OnStopServer()
+    {
+        if (physicsHand)
+        {
+            Destroy(physicsHand);
+        }
+
+        base.OnStopServer();
     }
 
     public override void OnStopClient()
@@ -132,7 +145,7 @@ public class NetworkHand : NetworkBehaviour
             lastSetTime = Time.time;
             var (rotations, tRotations) = GetFingerRotations(hand.PhysicsMapper);
             CmdSetFingerRotations(rotations, tRotations);
-            
+
             //uncomment this for the network hand to also update for the player who owns it
             // SetFingerRotations();
         }
@@ -196,28 +209,6 @@ public class NetworkHand : NetworkBehaviour
         positions[2] = to;
         positions[3] = end;
         lineRenderer.SetPositions(positions);
-    }
-
-    [Command]
-    private void CmdSetColor(int color)
-    {
-        colorIndex = (byte) color;
-    }
-
-    private void ColorHook(byte oldColor, byte newColor)
-    {
-        UpdateColor();
-    }
-
-    private void UpdateColor()
-    {
-        // meshRenderer.material.SetTexture("_MainTex", handTextures[colorIndex]);
-        if (hasAuthority)
-        {
-            //TODO fix hand materials
-            // PlayerHands.hands.left.material.SetTexture("_MainTex", handTextures[colorIndex]);
-            // PlayerHands.hands.right.material.SetTexture("_MainTex", handTextures[colorIndex]);
-        }
     }
 
     private void FingerRotationsHook(ulong oldRotations, ulong newRotations)
