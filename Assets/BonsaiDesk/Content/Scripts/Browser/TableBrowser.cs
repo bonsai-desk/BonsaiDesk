@@ -5,7 +5,6 @@ using UnityEngine;
 using Vuplex.WebView;
 
 public class TableBrowser : Browser {
-	public CustomInputModule customInputModule;
 
 	public SoundFXRef hoverSound;
 	public SoundFXRef mouseDownSound;
@@ -35,13 +34,13 @@ public class TableBrowser : Browser {
 			case "event":
 				switch (message.Message) {
 					case "hover":
-						hoverSound.PlaySoundAt(customInputModule.cursorRoot);
+						hoverSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
 						break;
 					case "mouseDown":
-						mouseDownSound.PlaySoundAt(customInputModule.cursorRoot);
+						mouseDownSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
 						break;
 					case "mouseUp":
-						mouseUpSound.PlaySoundAt(customInputModule.cursorRoot);
+						mouseUpSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
 						break;
 					case "keyPress":
 						KeyPress?.Invoke(message.Data);
