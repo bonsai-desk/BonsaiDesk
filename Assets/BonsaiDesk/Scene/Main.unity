@@ -2395,7 +2395,7 @@ MonoBehaviour:
   maxRelayRefreshAttempts: 3
   relayLifetime: 30
   isDisconnecting: 0
-  serverOnlyIfEditor: 1
+  serverOnlyIfEditor: 0
   visualizeAuthority: 0
   browserReady: 0
   tableBrowser: {fileID: 1361515864}
@@ -22429,8 +22429,8 @@ Transform:
   - {fileID: 165813270}
   - {fileID: 1699593685}
   - {fileID: 752977762}
-  - {fileID: 2146071976}
   - {fileID: 255299881}
+  - {fileID: 2146071976}
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
