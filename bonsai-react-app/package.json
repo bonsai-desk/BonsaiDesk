@@ -36,11 +36,13 @@
     "build:css": "postcss src/index.css -o src/assets/main.css",
     "watch:css": "postcss src/index.css -o src/assets/main.css",
     "build-streaming": "npm run build && npm run clear-streaming-build && npm run copy-to-streaming",
-    "build-streaming-notstupid": "npm run build && npm run clear-streaming-build-notstupid && npm run copy-to-streaming-notstupid",
     "clear-streaming-build": "rm -rf '../Assets/StreamingAssets/build'",
     "copy-to-streaming": "cp -r build '../Assets/StreamingAssets'",
-    "clear-streaming-build-notstupid": "del /F /Q ..\\Assets\\StreamingAssets\\build\\*",
-    "copy-to-streaming-notstupid": "xcopy build ..\\Assets\\StreamingAssets"
+
+    "build-streaming-windows": "npm run build && npm run copy-build-windows",
+    "copy-build-windows": "npm run clear-streaming-build-windows && npm run copy-to-streaming-windows",
+    "clear-streaming-build-windows": "if exist ..\\Assets\\StreamingAssets\\build rmdir /s /q ..\\Assets\\StreamingAssets\\build",
+    "copy-to-streaming-windows": "mkdir ..\\Assets\\StreamingAssets\\build && xcopy /e /i /q build ..\\Assets\\StreamingAssets\\build"
   },
   "eslintConfig": {
     "extends": [
