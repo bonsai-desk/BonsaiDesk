@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public class WebBrowserParent : MonoBehaviour {
 	public TableBrowser _web;
@@ -6,7 +7,7 @@ public class WebBrowserParent : MonoBehaviour {
 
 	// Start is called before the first frame update
 	private void Start() {
-		_web.ListenersReady      += SetupWeb;
+		_web.BrowserReady        += SetupWeb;
 		_keyboard.ListenersReady += SetupKeyboard;
 	}
 
@@ -14,12 +15,19 @@ public class WebBrowserParent : MonoBehaviour {
 	private void Update() { }
 
 	private void SetupKeyboard() {
+		Debug.Log("[BONSAI] Keyboard Ready");
+		_keyboard.KeyPress += HandleKeyPress;
 		_keyboard.PostMessage(Browser.BrowserMessage.NavKeyboard);
 		_keyboard.ToggleHidden();
 	}
 
 	private void SetupWeb() {
-		_web.PostMessage(Browser.BrowserMessage.NavHome);
+		Debug.Log("[BONSAI] Web Ready");
+		//_web.PostMessage(Browser.BrowserMessage.NavHome);
 		_web.ToggleHidden();
+	}
+
+	private void HandleKeyPress(string key) {
+		_web.HandleKeyboardInput(key);
 	}
 }

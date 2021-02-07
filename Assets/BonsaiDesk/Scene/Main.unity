@@ -2395,7 +2395,7 @@ MonoBehaviour:
   maxRelayRefreshAttempts: 3
   relayLifetime: 30
   isDisconnecting: 0
-  serverOnlyIfEditor: 0
+  serverOnlyIfEditor: 1
   visualizeAuthority: 0
   browserReady: 0
   tableBrowser: {fileID: 1361515864}
@@ -3092,7 +3092,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &328235780
 Transform:
   m_ObjectHideFlags: 0
@@ -11086,6 +11086,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
+      propertyPath: initialUrl
+      value: http://192.168.0.166:3000
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: useBuiltHtml
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
       propertyPath: customInputModule
       value: 
       objectReference: {fileID: 744943659}
@@ -12462,7 +12472,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &955373202
 Transform:
   m_ObjectHideFlags: 0
@@ -12622,6 +12632,16 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
+      propertyPath: initialUrl
+      value: www.google.com
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: useBuiltHtml
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
       propertyPath: customInputModule
       value: 
       objectReference: {fileID: 744943659}
@@ -12629,6 +12649,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: WebBrowser
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141497, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141499, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}

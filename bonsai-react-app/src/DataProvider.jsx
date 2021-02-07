@@ -109,8 +109,6 @@ function useListeners() {
           }
           break;
         default:
-          console.log('command not handled ' + event.data);
-          console.log(json);
           break;
       }
 

@@ -69,7 +69,7 @@ function BackSpace() {
     <div
         onMouseDown={() => {
           setPressed(true);
-          postKeyEvent('backspace');
+          postChar('Backspace');
         }}
         onMouseUp={() => {
           setPressed(false);

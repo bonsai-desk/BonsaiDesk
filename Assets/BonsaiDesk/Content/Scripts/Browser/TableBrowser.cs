@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 using OVR;
 using UnityEngine;
 using Vuplex.WebView;
@@ -23,6 +24,8 @@ public class TableBrowser : Browser {
 		};
 	}
 
+	public event Action<string> KeyPress;
+
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
 
@@ -39,6 +42,9 @@ public class TableBrowser : Browser {
 						break;
 					case "mouseUp":
 						mouseUpSound.PlaySoundAt(customInputModule.cursorRoot);
+						break;
+					case "keyPress":
+						KeyPress?.Invoke(message.Data);
 						break;
 				}
 

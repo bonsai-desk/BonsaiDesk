@@ -14,7 +14,7 @@ import Keyboard from './pages/Keyboard';
 import {postJson} from './utilities';
 
 function postListenersReady() {
-  postJson({Type: 'event', Message: 'listenersReady'});
+  postJson({Type: 'event', Message: 'listenersReady', Data: new Date().getTime()});
 
 }
 
@@ -25,6 +25,8 @@ function genNavListeners(history) {
     let json = JSON.parse(event.data);
 
     if (json.type !== 'nav') return;
+
+    console.log("asdf")
 
     switch (json.command) {
       case 'push':

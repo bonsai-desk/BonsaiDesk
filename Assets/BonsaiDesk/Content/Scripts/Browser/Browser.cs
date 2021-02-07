@@ -97,6 +97,7 @@ public class Browser : MonoBehaviour {
 
 	private void HandleJavaScriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
+		print("handle javascript message " + message.Message);
 		switch (message.Type) {
 			case "event":
 				switch (message.Message) {
@@ -153,6 +154,10 @@ public class Browser : MonoBehaviour {
 
 	public void PostMessage(string data) {
 		WebViewPrefab.WebView.PostMessage(data);
+	}
+
+	public void HandleKeyboardInput(string key) {
+		WebViewPrefab.WebView.HandleKeyboardInput(key);
 	}
 
 	public void PostMessages(IEnumerable<string> msgs) {
