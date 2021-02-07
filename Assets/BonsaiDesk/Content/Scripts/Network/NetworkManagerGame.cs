@@ -26,6 +26,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public bool visualizeAuthority;
 	public bool browserReady;
 	public TableBrowser tableBrowser;
+	public TableBrowserMenu tableBrowserMenu;
 	public MoveToDesk moveToDesk;
 	public TogglePause togglePause;
 	public BonsaiScreenFade fader;
@@ -78,12 +79,12 @@ public class NetworkManagerGame : NobleNetworkManager {
 			tableBrowser.ToggleHidden();
 		};
 
-		tableBrowser.JoinRoom         += HandleJoinRoom;
-		tableBrowser.LeaveRoom        += HandleLeaveRoom;
-		tableBrowser.KickConnectionId += HandleKickConnectionId;
+		tableBrowserMenu.JoinRoom         += HandleJoinRoom;
+		tableBrowserMenu.LeaveRoom        += HandleLeaveRoom;
+		tableBrowserMenu.KickConnectionId += HandleKickConnectionId;
 
-		tableBrowser.OpenRoom  += HandleOpenRoom;
-		tableBrowser.CloseRoom += HandleCloseRoom;
+		tableBrowserMenu.OpenRoom  += HandleOpenRoom;
+		tableBrowserMenu.CloseRoom += HandleCloseRoom;
 
 		_camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
 
@@ -139,14 +140,14 @@ public class NetworkManagerGame : NobleNetworkManager {
 	private void PostInfo() {
 		if (browserReady) {
 			_postRoomInfoLast = Time.time;
-			tableBrowser.PostNetworkState(State.ToString());
-			tableBrowser.PostPlayerInfo(PlayerInfos);
-			tableBrowser.PostRoomOpen(roomOpen);
+			tableBrowserMenu.PostNetworkState(State.ToString());
+			tableBrowserMenu.PostPlayerInfo(PlayerInfos);
+			tableBrowserMenu.PostRoomOpen(roomOpen);
 			if (HostEndPoint != null) {
-				tableBrowser.PostRoomInfo(HostEndPoint.Address.ToString(), HostEndPoint.Port.ToString());
+				tableBrowserMenu.PostRoomInfo(HostEndPoint.Address.ToString(), HostEndPoint.Port.ToString());
 			}
 			else {
-				tableBrowser.PostRoomInfo("", "");
+				tableBrowserMenu.PostRoomInfo("", "");
 			}
 		}
 	}
@@ -339,7 +340,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 		SetCommsActive(_comms, oriented);
 	}
 
-	private void HandleJoinRoom(TableBrowser.RoomData roomData) {
+	private void HandleJoinRoom(TableBrowserMenu.RoomData roomData) {
 		Debug.Log($"[Bonsai] NetworkManager Join Room {roomData.ip_address} {roomData.port}");
 		networkAddress = roomData.ip_address;
 		networkPort    = roomData.port;
