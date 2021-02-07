@@ -14,7 +14,6 @@ public class AutoBrowser : Browser {
 		_belowTableLocalPosition.y = -Bounds.y / 2f;
 
 		ListenersReady += NavHome;
-
 	}
 
 	private void NavHome() {

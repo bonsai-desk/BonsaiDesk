@@ -6,6 +6,9 @@ import CaretSquareUp from '../static/caret-square-up.svg';
 import BackSpaceImg from '../static/backspace.svg';
 import BackSpaceImgHollow from '../static/backspace-hollow.svg';
 import KeyBoardImg from '../static/keyboard-dismiss.svg';
+import BackImg from '../static/back.svg';
+import ForwardImg from '../static/forward.svg';
+import MenuImg from '../static/application-menu.svg';
 
 const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 
@@ -43,7 +46,9 @@ function KeyBoardDismiss() {
 
   return <Button>
     <div className={shiftButtonClass}>
-      <div onClick={()=>{postKeyEvent("dismiss")}} className={'w-full flex justify-center'}>
+      <div onClick={() => {
+        postKeyEvent('dismiss');
+      }} className={'w-full flex justify-center'}>
         <img className={imgVisible}
              src={KeyBoardImg} alt={''}/>
       </div>
@@ -64,7 +69,7 @@ function BackSpace() {
     <div
         onMouseDown={() => {
           setPressed(true);
-          postKeyEvent('backspace');
+          postChar('Backspace');
         }}
         onMouseUp={() => {
           setPressed(false);
@@ -161,7 +166,26 @@ function Space(props) {
       </Button>);
 }
 
-function Keyboard() {
+function KeySVG(props) {
+  let {imgSrc} = props;
+  const buttonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer w-20 h-20 flex flex-wrap content-center';
+
+  const imgVisible = 'h-10 w-10 absolute -bottom-5 left-5';
+
+  return (
+      <Button>
+        <div className={buttonClass}>
+          <div className={'relative w-full flex justify-center'}>
+            <img className={imgVisible}
+                 src={imgSrc} alt={''}/>
+          </div>
+        </div>
+      </Button>
+  );
+}
+
+function Keyboard(props) {
+  let {handleDismiss} = props;
   let [shift, setShift] = useState(false);
   let [level, setLevel] = useState(0);
   let level0 = (
@@ -298,19 +322,51 @@ function Keyboard() {
   }
 
   return (
-      <div className={'w-full h-screen bg-black space-y-2'}>
-        {level === 0 ? level0 : ''}
-        {level === 1 ? level1 : ''}
-        {level === 2 ? level2 : ''}
-        {level === 1 || level === 2 ? level12 : ''}
-        <div className={'w-full flex space-x-2 justify-center'}>
-          <NumsOrChar handleClick={handleClickNumOrChar}/>
-          <Space/>
-          <KeyBoardDismiss/>
+      <div className={'w-full h-screen bg-black flex flex-wrap justify-center content-center'}>
+        <div className={"space-y-2"}>
+
+          {level === 0 ? level0 : ''}
+          {level === 1 ? level1 : ''}
+          {level === 2 ? level2 : ''}
+          {level === 1 || level === 2 ? level12 : ''}
+          <div className={'w-full flex space-x-2 justify-center'}>
+            <NumsOrChar handleClick={handleClickNumOrChar}/>
+            <Space/>
+            <div onClick={handleDismiss}>
+              <KeyBoardDismiss/>
+            </div>
+          </div>
         </div>
 
       </div>
   );
 }
 
-export default Keyboard;
+function WebNav(props) {
+  let {handleMenu} = props
+  return (
+      <div
+          className={'w-full h-screen bg-black flex flex-wrap content-center justify-center'}>
+        <div className={'space-y-2 mb-2'}>
+          <div className={'flex space-x-2'}>
+            <KeySVG imgSrc={BackImg}/>
+            <KeySVG imgSrc={ForwardImg}/>
+          </div>
+          <div onClick={handleMenu} className={'w-full flex justify-center'}>
+            <KeySVG imgSrc={MenuImg}/>
+          </div>
+        </div>
+      </div>
+  );
+}
+
+function Input() {
+  let [small, setSmall] = useState(true)
+  if (small){
+    return <WebNav handleMenu={()=>{setSmall(false)}}/>;
+  } else {
+    return <Keyboard handleDismiss={()=>{setSmall(true)}}/>
+  }
+}
+
+export default Input;
