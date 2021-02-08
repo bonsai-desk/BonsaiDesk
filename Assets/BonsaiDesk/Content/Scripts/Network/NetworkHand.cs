@@ -48,6 +48,7 @@ public class NetworkHand : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
+
         if (!isClient)
         {
             SetupPhysicsHand();

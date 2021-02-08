@@ -117,12 +117,12 @@ public partial class BlockObject : NetworkBehaviour
         {
             return;
         }
-        
+
         if (!(isClient && NetworkClient.connection != null && NetworkClient.connection.identity))
         {
             return;
         }
-        
+
         PhysicsFixedUpdate();
 
         if (_resetCoM)
@@ -177,11 +177,6 @@ public partial class BlockObject : NetworkBehaviour
     {
         NetworkServer.Destroy(blockToDestroy.gameObject);
         Blocks.Add(coord, new SyncBlock(id, BlockUtility.QuaternionToByte(rotation)));
-
-        if (isServer && !isClient)
-        {
-            AddBlockToMesh(id, coord, rotation, updateTheMesh);
-        }
     }
 
     private void AddBlockToMesh(byte id, Vector3Int coord, Quaternion rotation, bool updateTheMesh)

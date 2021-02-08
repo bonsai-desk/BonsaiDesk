@@ -47,8 +47,14 @@ public class PhysicsHandController : MonoBehaviour
         if (!_initialized)
             return;
 
-        if ((PhysicsNaN() || Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) >
-                SnapBackDistanceThresholdSquared)
+        if (PhysicsNaN())
+        {
+            SetCapsulesActiveTarget(false);
+            ResetFingerJoints();
+        }
+
+        if (Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) >
+            SnapBackDistanceThresholdSquared
             && !CheckHit())
         {
             ResetFingerJoints();
@@ -163,7 +169,8 @@ public class PhysicsHandController : MonoBehaviour
             for (int i = 0; i < hits.Length; i++)
             {
                 var body = hits[i].attachedRigidbody;
-                if (body) {
+                if (body)
+                {
                     Debug.Log($"BONSAI body {body}");
                     var autoAuthority = body.GetComponent<AutoAuthority>();
                     if (autoAuthority)
