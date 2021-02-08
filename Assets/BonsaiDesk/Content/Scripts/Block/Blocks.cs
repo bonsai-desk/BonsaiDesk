@@ -16,7 +16,7 @@
         // new Block(7),               //5, bricks
         // new Block(9, 8, 10),        //6, tnt
         // new Block(16),              //7, cobblestone
-        new Block(0),
+        new Block(12),
         new Block(1),
         new Block(2),
         new Block(3),

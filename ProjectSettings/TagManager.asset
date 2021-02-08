@@ -37,7 +37,7 @@ TagManager:
   - bearing
   - onlyHands
   - doNotRender
-  - handOnly
+  - 
   - noHand
   - networkPlayer
   - 

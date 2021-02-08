@@ -495,6 +495,7 @@ GameObject:
   - component: {fileID: 2482834880378478163}
   - component: {fileID: 5873238580600341142}
   - component: {fileID: 9215190182876982407}
+  - component: {fileID: 3765429293320518224}
   m_Layer: 23
   m_Name: NetworkHead
   m_TagString: Untagged
@@ -624,6 +625,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   targetName: CenterEyeAnchor
+  body: {fileID: 3765429293320518224}
   renderBehaviour: 2
 --- !u!114 &5873238580600341142
 MonoBehaviour:
@@ -652,6 +654,22 @@ SphereCollider:
   serializedVersion: 2
   m_Radius: 0.145
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!54 &3765429293320518224
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8502092791694960064}
+  serializedVersion: 2
+  m_Mass: 5
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &8511288414153105935
 GameObject:
   m_ObjectHideFlags: 0

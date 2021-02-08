@@ -26,8 +26,6 @@ public class HandComponents
     public int physicsLayer;
     private int _touchScreenSurfaceLayer;
 
-    private float _handScale;
-
     private float _lastTrackingTime;
     private const float RecentTrackingThreshold = 0.35f;
     private SkinnedMeshRenderer _physicsRenderer;
@@ -40,10 +38,13 @@ public class HandComponents
         PlayerHand.HandComponents = this;
         HandAnchor = handAnchor;
 
-        _handScale = 1f;
-
         PhysicsHand = handObject.GetChild(0);
         _physicsRenderer = PhysicsHand.GetComponentInChildren<SkinnedMeshRenderer>();
+        if (NetworkManagerGame.Singleton.serverOnlyIfEditor && Application.isEditor)
+        {
+            _physicsRenderer.enabled = false;
+        }
+
         _handMaterial = _physicsRenderer.material;
         _handMaterial.SetInt("_ZWrite", 1);
         MakeMaterialOpaque();
@@ -127,7 +128,8 @@ public class HandComponents
 
     private void UpdateRendererTransparency()
     {
-        bool isTransparent = _handMaterial.GetInt("_ZWrite") == 0;
+        bool isTransparent =
+            _handMaterial.GetInt("_DstBlend") == (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
 
         float handAlphaTarget = Tracking ? 1f : 0f;
         _handAlpha = Mathf.MoveTowards(_handAlpha, handAlphaTarget, Time.deltaTime / RecentTrackingThreshold);
