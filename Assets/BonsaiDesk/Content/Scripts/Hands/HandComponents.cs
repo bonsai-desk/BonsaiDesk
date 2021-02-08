@@ -26,8 +26,6 @@ public class HandComponents
     public int physicsLayer;
     private int _touchScreenSurfaceLayer;
 
-    private float _handScale;
-
     private float _lastTrackingTime;
     private const float RecentTrackingThreshold = 0.35f;
     private SkinnedMeshRenderer _physicsRenderer;
@@ -39,8 +37,6 @@ public class HandComponents
         PlayerHand = playerHand;
         PlayerHand.HandComponents = this;
         HandAnchor = handAnchor;
-
-        _handScale = 1f;
 
         PhysicsHand = handObject.GetChild(0);
         _physicsRenderer = PhysicsHand.GetComponentInChildren<SkinnedMeshRenderer>();
