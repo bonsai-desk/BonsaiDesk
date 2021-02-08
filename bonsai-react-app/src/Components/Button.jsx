@@ -18,8 +18,8 @@ function Button(props) {
   let {className=""} = props
   return (
       <div onMouseEnter={postHover}
-           onMouseDown={postMouseDown}
-           onMouseUp={postMouseUp}
+           onTouchStart={postMouseDown}
+           onTouchEnd={postMouseUp}
            className={className}
       >
         {props.children}

@@ -2988,6 +2988,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 955373202}
     m_Modifications:
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: initialUrl
+      value: http://192.168.0.166:3000
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: useBuiltHtml
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141497, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
       propertyPath: m_Name
