@@ -2401,7 +2401,7 @@ MonoBehaviour:
   maxRelayRefreshAttempts: 3
   relayLifetime: 30
   isDisconnecting: 0
-  serverOnlyIfEditor: 1
+  serverOnlyIfEditor: 0
   visualizeAuthority: 0
   browserReady: 0
   tableBrowser: {fileID: 1361515864}
@@ -28158,7 +28158,7 @@ PrefabInstance:
     - target: {fileID: 6876464847205822898, guid: 58577b8f94ebfd842a65f7340cee4843,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.008
+      value: 0.697
       objectReference: {fileID: 0}
     - target: {fileID: 6876464847205822898, guid: 58577b8f94ebfd842a65f7340cee4843,
         type: 3}
@@ -28168,7 +28168,7 @@ PrefabInstance:
     - target: {fileID: 6876464847205822898, guid: 58577b8f94ebfd842a65f7340cee4843,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.447
+      value: 0.681
       objectReference: {fileID: 0}
     - target: {fileID: 6876464847205822898, guid: 58577b8f94ebfd842a65f7340cee4843,
         type: 3}

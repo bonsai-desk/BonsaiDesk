@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Mirror;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -123,14 +124,14 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        PhysicsFixedUpdate();
-
         if (_resetCoM)
         {
             _resetCoM = false;
             _body.ResetInertiaTensor();
             _body.ResetCenterOfMass();
         }
+
+        PhysicsFixedUpdate();
     }
 
     private void OnDestroy()
@@ -168,7 +169,18 @@ public partial class BlockObject : NetworkBehaviour
     private void OnBlocksDictionaryChange(SyncDictionary<Vector3Int, SyncBlock>.Operation op, Vector3Int key,
         SyncBlock value)
     {
-        AddBlockToMesh(value.id, key, BlockUtility.ByteToQuaternion(value.rotation), true);
+        switch (op)
+        {
+            case SyncIDictionary<Vector3Int, SyncBlock>.Operation.OP_ADD:
+                AddBlockToMesh(value.id, key, BlockUtility.ByteToQuaternion(value.rotation), true);
+                break;
+            case SyncIDictionary<Vector3Int, SyncBlock>.Operation.OP_REMOVE:
+                RemoveBlockFromMesh(key);
+                break;
+            default:
+                Debug.LogError("Unknown dictionary operation.");
+                break;
+        }
     }
 
     [Command(ignoreAuthority = true)]
@@ -176,11 +188,24 @@ public partial class BlockObject : NetworkBehaviour
         NetworkIdentity blockToDestroy)
     {
         NetworkServer.Destroy(blockToDestroy.gameObject);
+
+        if (Blocks.ContainsKey(coord))
+        {
+            Debug.LogError("Command: Attempted to add block which already exists");
+            return;
+        }
+
         Blocks.Add(coord, new SyncBlock(id, BlockUtility.QuaternionToByte(rotation)));
     }
 
     private void AddBlockToMesh(byte id, Vector3Int coord, Quaternion rotation, bool updateTheMesh)
     {
+        if (_meshBlocks.ContainsKey(coord))
+        {
+            Debug.LogError("Attempted to add block to mesh which already exists in _meshBlocks");
+            return;
+        }
+
         var blockMesh = BlockUtility.GetBlockMesh(id, coord, rotation, _texturePadding);
         _vertices.AddRange(blockMesh.vertices);
         _uv.AddRange(blockMesh.uv);
@@ -207,11 +232,82 @@ public partial class BlockObject : NetworkBehaviour
         {
             UpdateMesh(UpdateType.AddBlock);
         }
+    }
 
-        // if (blocks.Count == 1)
-        //     blockPhysics.enabled = true;
-        // else
-        //     blockPhysics.enabled = false;
+    [Command(ignoreAuthority = true)]
+    private void CmdRemoveBlock(Vector3Int coord)
+    {
+        if (!Blocks.ContainsKey(coord))
+        {
+            Debug.LogError("Command: Attempted to remove block which does not exist in Blocks.");
+            return;
+        }
+
+        if (Blocks.Count <= 1)
+        {
+            NetworkServer.Destroy(gameObject);
+        }
+        else
+        {
+            Blocks.Remove(coord);
+        }
+    }
+
+    private void RemoveBlockFromMesh(Vector3Int coord)
+    {
+        if (!_meshBlocks.ContainsKey(coord))
+        {
+            Debug.LogError("Attempted to remove block which does not exist in _meshBlocks.");
+            return;
+        }
+
+        int vStart = _meshBlocks[coord].positionInList * 6 * 4;
+        int tStart = _meshBlocks[coord].positionInList * 6 * 6;
+
+        int vLastStart = _meshBlocks.Count * 6 * 4 - (6 * 4);
+        int tLastStart = _meshBlocks.Count * 6 * 6 - (6 * 6);
+
+        //move the last block mesh into where the block you want to remove is
+        for (int i = 0; i < 6 * 6; i++)
+        {
+            _triangles[tStart + i] = _triangles[tLastStart + i] -
+                                     ((_meshBlocks.Count - 1 - _meshBlocks[coord].positionInList) * 6 * 4);
+        }
+
+        _triangles.RemoveRange(tLastStart, 6 * 6);
+
+        for (int i = 0; i < 6 * 4; i++)
+        {
+            _vertices[vStart + i] = _vertices[vLastStart + i];
+            _uv[vStart + i] = _uv[vLastStart + i];
+            _uv2[vStart + i] = _uv2[vLastStart + i];
+        }
+
+        //remove the last block because it has been moved somewhere else
+        _vertices.RemoveRange(vLastStart, 6 * 4);
+        _uv.RemoveRange(vLastStart, 6 * 4);
+        _uv2.RemoveRange(vLastStart, 6 * 4);
+
+        //find the last block. its not a list, so you must loop through
+        //this block is no longer the last block, but the positionInList has not been updated yet, so we can find it like this
+        int max = -1;
+        Vector3Int key = Vector3Int.zero;
+        foreach (var entry in _meshBlocks)
+        {
+            if (entry.Value.positionInList > max)
+            {
+                max = entry.Value.positionInList;
+                key = entry.Key;
+            }
+        }
+
+        //update the positionInList for the block which moved
+        _meshBlocks[key].positionInList = _meshBlocks[coord].positionInList;
+
+        //finally remove the block from the mesh blocks
+        _meshBlocks.Remove(coord);
+
+        UpdateMesh(UpdateType.RemoveBlock);
     }
 
     enum UpdateType
