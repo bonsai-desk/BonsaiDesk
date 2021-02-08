@@ -75,12 +75,12 @@ function JoinDeskButton(props) {
   return (
       <Button>
         <div
-            onTouchStart={() => {
+            onPointerDown={() => {
               if (triggerMouseDown) {
                 handleClick(char);
               }
             }}
-            onTouchEnd={() => {
+            onPointerUp={() => {
               if (!triggerMouseDown) {
                 handleClick(char);
               }
@@ -410,12 +410,6 @@ let SettingsPage = observer(() => {
 
   return (
       <MenuContent name={'Settings'}>
-        <div className={'flex space-x-2'}>
-          <div onTouchStart={() => {
-            postJson({Type: 'event', Message: 'mouseDown'});
-          }} className={grayButtonClass}>Test button onTouchStart
-          </div>
-        </div>
         <div className={'flex space-x-2'}>
           <Button>
             <div onClick={() => {
