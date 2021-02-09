@@ -384,6 +384,7 @@ namespace Vuplex.WebView {
         bool _pointerIsDown;
         Vector2 _previousDragPoint;
         Vector2 _previousMovePointerPoint;
+        private bool _dragThresholdLastFrame;
         ViewportMaterialView _videoLayer;
         bool _videoLayerDisabled;
         Material _videoMaterial;
@@ -579,7 +580,8 @@ namespace Vuplex.WebView {
 
         void InputDetector_BeganDrag(object sender, EventArgs<Vector2> eventArgs) {
 
-            _previousDragPoint = _convertRatioPointToUnityUnits(_pointerDownRatioPoint);
+            _dragThresholdLastFrame = false;
+            _previousDragPoint      = _convertRatioPointToUnityUnits(_pointerDownRatioPoint);
         }
 
         void InputDetector_Dragged(object sender, EventArgs<Vector2> eventArgs) {
@@ -611,7 +613,9 @@ namespace Vuplex.WebView {
 
             // DragMode == DragMode.DragToScroll
             var dragDelta = previousDragPoint - newDragPoint;
-            _scrollIfNeeded(dragDelta, _pointerDownRatioPoint);
+            if (_dragThresholdLastFrame && dragThresholdReached) {
+                _scrollIfNeeded(dragDelta, _pointerDownRatioPoint);
+            }
 
             if (dragDelta != Vector2.zero)
             {
@@ -625,6 +629,8 @@ namespace Vuplex.WebView {
                     _clickIsPending = false;
                 }
             }
+
+            _dragThresholdLastFrame = dragThresholdReached;
         }
 
         protected virtual void InputDetector_PointerDown(object sender, PointerEventArgs eventArgs)
