@@ -70,8 +70,8 @@ public class CustomInputModule : StandaloneInputModule {
 			var leftInBounds  = FingerInBounds(leftFingerInScreen);
 			var rightInBounds = FingerInBounds(rightFingerInScreen);
 
-			var leftValid  = leftFingerInScreen.z <= 0 && leftInBounds;
-			var rightValid = rightFingerInScreen.z <= 0 && rightInBounds;
+			var leftValid  = leftFingerInScreen.z <= 0.04 && leftInBounds;
+			var rightValid = rightFingerInScreen.z <= 0.04 && rightInBounds;
 
 			var leftHover  = -leftFingerInScreen.z < hoverDistance && leftValid;
 			var rightHover = -rightFingerInScreen.z < hoverDistance && rightValid;
