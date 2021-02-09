@@ -104,7 +104,6 @@ public class TableBrowser : Browser {
 			WebViewPrefab.WebView.SetResolution(ppuu);
 			var res = new Vector2Int((int) (ppuu * Bounds.x), (int) (ppuu * Bounds.y));
 			RebuildOverlay(res);
-			ToggleHidden();
 		};
 		base.SetupWebViewPrefab();
 	}
