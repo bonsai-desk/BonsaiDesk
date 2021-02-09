@@ -14,8 +14,8 @@ function postHover() {
   postJson({Type: 'event', Message: 'hover'});
 }
 
-function Button(props) {
-  let {className=""} = props
+function SoundButton(props) {
+  let {className = ''} = props;
   return (
       <div onPointerEnter={postHover}
            onPointerDown={postMouseDown}
@@ -27,4 +27,15 @@ function Button(props) {
   );
 }
 
-export default Button;
+export function Button(props) {
+  let {handleClick, className = ''} = props;
+  return (
+      <SoundButton>
+        <div className={className} onPointerDown={handleClick}>
+          {props.children}
+        </div>
+      </SoundButton>
+
+  );
+}
+

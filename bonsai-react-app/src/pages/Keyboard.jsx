@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import Button from '../Components/Button';
+import {Button} from '../Components/Button';
 import {postJson} from '../utilities';
 import CaretSquareUpHollow from '../static/caret-square-up-hollow.svg';
 import CaretSquareUp from '../static/caret-square-up.svg';
