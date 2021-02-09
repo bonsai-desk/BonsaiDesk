@@ -104,14 +104,14 @@ public class CustomInputModule : StandaloneInputModule {
 				foundScreen = true;
 			}
 
-			if (handActive == Active.Right) {
+			if (handActive == Active.Right && rightHover) {
 				ProcessHover(rightFingerInScreen, screen);
 				ProcessClick(rightFingerInScreen, screen, leftData, leftValid, rightValid);
 
 				break;
 			}
 
-			if (handActive == Active.Left) {
+			if (handActive == Active.Left && leftHover) {
 				ProcessHover(leftFingerInScreen, screen);
 				ProcessClick(leftFingerInScreen, screen, leftData, leftValid, rightValid);
 				break;
