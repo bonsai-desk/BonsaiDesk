@@ -97,7 +97,6 @@ public class Browser : MonoBehaviour {
 
 	private void HandleJavaScriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
-		print("handle javascript message " + message.Message);
 		switch (message.Type) {
 			case "event":
 				switch (message.Message) {

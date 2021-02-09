@@ -75,12 +75,12 @@ function JoinDeskButton(props) {
   return (
       <Button>
         <div
-            onMouseDown={() => {
+            onPointerDown={() => {
               if (triggerMouseDown) {
                 handleClick(char);
               }
             }}
-            onMouseUp={() => {
+            onPointerUp={() => {
               if (!triggerMouseDown) {
                 handleClick(char);
               }

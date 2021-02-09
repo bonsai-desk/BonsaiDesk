@@ -27,8 +27,6 @@ public class TableBrowserMenu : MonoBehaviour {
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<Browser.JsMessageString>(eventArgs.Value);
 
-		Debug.Log($"[BONSAI] JS Message: {message.Type} {message.Message}");
-
 		switch (message.Type) {
 			case "command":
 				switch (message.Message) {

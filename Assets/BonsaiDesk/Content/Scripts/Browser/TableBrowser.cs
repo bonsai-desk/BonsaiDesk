@@ -28,8 +28,6 @@ public class TableBrowser : Browser {
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
 
-		Debug.Log($"[BONSAI] JS Message: {message.Type} {message.Message}");
-
 		switch (message.Type) {
 			case "event":
 				switch (message.Message) {
