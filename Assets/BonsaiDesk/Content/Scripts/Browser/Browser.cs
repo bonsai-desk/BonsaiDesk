@@ -142,6 +142,10 @@ public class Browser : MonoBehaviour {
             user_pref('media.autoplay.default', 0);
             user_pref('media.geckoview.autoplay.request', false);
         ");
+		AndroidGeckoWebView.EnsureBuiltInExtension(
+			"resource://android/assets/ublock/",
+			"uBlock0@raymondhill.net"
+		);
 	#elif UNITY_EDITOR
 		StandaloneWebView.SetCommandLineArguments("--autoplay-policy=no-user-gesture-required");
 	#endif
