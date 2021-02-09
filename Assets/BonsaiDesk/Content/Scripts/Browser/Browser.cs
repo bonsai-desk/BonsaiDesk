@@ -151,8 +151,8 @@ public class Browser : MonoBehaviour {
 	#endif
 	}
 
-	public void ToggleHidden() {
-		_renderEnabled = !_renderEnabled;
+	public void SetHidden(bool hidden) {
+		_renderEnabled = !hidden;
 
 		WebViewPrefab.ClickingEnabled  = _renderEnabled;
 		WebViewPrefab.ScrollingEnabled = _renderEnabled;
@@ -163,6 +163,11 @@ public class Browser : MonoBehaviour {
 	#else
 		WebViewView.GetComponent<MeshRenderer>().enabled = _renderEnabled;
 	#endif
+		
+	}
+
+	public void ToggleHidden() {
+		SetHidden(_renderEnabled);
 	}
 
 	public void LoadUrl(string url) {
@@ -176,6 +181,14 @@ public class Browser : MonoBehaviour {
 
 	public void PostMessage(string data) {
 		WebViewPrefab.WebView.PostMessage(data);
+	}
+
+	public void GoBack() {
+		WebViewPrefab.WebView.GoBack();
+	}
+	
+	public void GoForward() {
+		WebViewPrefab.WebView.GoForward();
 	}
 
 	public void HandleKeyboardInput(string key) {

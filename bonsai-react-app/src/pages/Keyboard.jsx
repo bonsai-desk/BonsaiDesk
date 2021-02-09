@@ -17,9 +17,9 @@ function postChar(char) {
   postJson({Type: 'event', Message: 'keyPress', Data: char});
 }
 
-function postKeyEvent(event) {
-  console.log(event);
-  postJson({Type: 'event', Message: 'keyEvent', Data: event});
+function postCommand(message) {
+  console.log(message);
+  postJson({Type: 'command', Message: message});
 }
 
 function Key(props) {
@@ -47,7 +47,7 @@ function KeyBoardDismiss() {
   return <Button>
     <div className={shiftButtonClass}>
       <div onClick={() => {
-        postKeyEvent('dismiss');
+        postCommand('dismissKeyboard');
       }} className={'w-full flex justify-center'}>
         <img className={imgVisible}
              src={KeyBoardImg} alt={''}/>
@@ -157,7 +157,7 @@ function Space(props) {
   return (
       <Button>
         <div className={buttonClass} onMouseDown={() => {
-          postKeyEvent('space');
+          postChar(' ');
         }}>
     <span className={'w-80 text-center text-white text-3xl'}>
       {_char}
@@ -173,14 +173,12 @@ function KeySVG(props) {
   const imgVisible = 'h-10 w-10 absolute -bottom-5 left-5';
 
   return (
-      <Button>
-        <div className={buttonClass}>
-          <div className={'relative w-full flex justify-center'}>
-            <img className={imgVisible}
-                 src={imgSrc} alt={''}/>
-          </div>
+      <div className={buttonClass}>
+        <div className={'relative w-full flex justify-center'}>
+          <img className={imgVisible}
+               src={imgSrc} alt={''}/>
         </div>
-      </Button>
+      </div>
   );
 }
 
@@ -225,6 +223,7 @@ function Keyboard(props) {
           <Key shift={shift} char={'n'}/>
           <Key shift={shift} char={'m'}/>
           <BackSpace/>
+          <Key shift={shift} char={'Enter'}/>
         </div>
       </React.Fragment>
   );
@@ -322,8 +321,9 @@ function Keyboard(props) {
   }
 
   return (
-      <div className={'w-full h-screen bg-black flex flex-wrap justify-center content-center'}>
-        <div className={"space-y-2"}>
+      <div
+          className={'w-full h-screen bg-black flex flex-wrap justify-center content-center'}>
+        <div className={'space-y-2'}>
 
           {level === 0 ? level0 : ''}
           {level === 1 ? level1 : ''}
@@ -343,17 +343,27 @@ function Keyboard(props) {
 }
 
 function WebNav(props) {
-  let {handleMenu} = props
+  let {handleMenu} = props;
   return (
       <div
           className={'w-full h-screen bg-black flex flex-wrap content-center justify-center'}>
         <div className={'space-y-2 mb-2'}>
           <div className={'flex space-x-2'}>
-            <KeySVG imgSrc={BackImg}/>
-            <KeySVG imgSrc={ForwardImg}/>
+            <Button handleClick={() => {
+              postCommand('navBack');
+            }}>
+              <KeySVG imgSrc={BackImg}/>
+            </Button>
+            <Button handleClick={() => {
+              postCommand('navForward');
+            }}>
+              <KeySVG imgSrc={ForwardImg}/>
+            </Button>
           </div>
           <div onClick={handleMenu} className={'w-full flex justify-center'}>
-            <KeySVG imgSrc={MenuImg}/>
+            <Button>
+              <KeySVG imgSrc={MenuImg}/>
+            </Button>
           </div>
         </div>
       </div>
@@ -361,11 +371,15 @@ function WebNav(props) {
 }
 
 function Input() {
-  let [small, setSmall] = useState(true)
-  if (small){
-    return <WebNav handleMenu={()=>{setSmall(false)}}/>;
+  let [small, setSmall] = useState(true);
+  if (small) {
+    return <WebNav handleMenu={() => {
+      setSmall(false);
+    }}/>;
   } else {
-    return <Keyboard handleDismiss={()=>{setSmall(true)}}/>
+    return <Keyboard handleDismiss={() => {
+      setSmall(true);
+    }}/>;
   }
 }
 
