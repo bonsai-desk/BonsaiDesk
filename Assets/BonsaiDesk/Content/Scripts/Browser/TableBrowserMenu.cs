@@ -21,6 +21,7 @@ public class TableBrowserMenu : MonoBehaviour {
 	}
 
 	private void NavToMenu() {
+		Debug.Log("[BONSAI] nav to menu");
 		_browser.PostMessage(Browser.BrowserMessage.NavToMenu);
 	}
 

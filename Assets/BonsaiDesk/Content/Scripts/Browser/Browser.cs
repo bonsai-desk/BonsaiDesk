@@ -18,6 +18,7 @@ public class Browser : MonoBehaviour {
 	public bool useBuiltHtml;
 	private GameObject _boundsObject;
 	private OVROverlay _overlay;
+	private bool _postedListenersReady;
 	private bool _renderEnabled = true;
 	protected Vector2 Bounds;
 	protected Transform Resizer;
@@ -81,6 +82,7 @@ public class Browser : MonoBehaviour {
 	protected virtual void SetupWebViewPrefab() {
 		WebViewPrefab.Initialized += (sender, eventArgs) =>
 		{
+			Debug.Log("[BONSAI] Browser Initialized");
 			WebViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
 			BrowserReady?.Invoke();
 		};
@@ -97,11 +99,28 @@ public class Browser : MonoBehaviour {
 
 	private void HandleJavaScriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
+
 		switch (message.Type) {
 			case "event":
 				switch (message.Message) {
 					case "listenersReady":
-						ListenersReady?.Invoke();
+						Debug.Log($"[BONSAI] invoke listeners ready ... {_postedListenersReady}");
+						if (!useBuiltHtml) {
+							// todo: for some reason when using a hot reload url
+							// the app posts listeners-ready twice so we just check it here
+							if (!_postedListenersReady) {
+								ListenersReady?.Invoke();
+							}
+							else {
+								Debug.LogWarning("[BONSAI] Browser trying to post listeners twice, ignoring");
+							}
+						}
+						else {
+							ListenersReady?.Invoke();
+						}
+
+						_postedListenersReady = true;
+
 						break;
 				}
 

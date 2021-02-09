@@ -15,7 +15,7 @@ public class WebBrowserParent : MonoBehaviour {
 	private void Update() { }
 
 	private void SetupKeyboard() {
-		Debug.Log("[BONSAI] Keyboard Ready");
+		Debug.Log("[BONSAI] Browser Keyboard Ready");
 		_keyboard.KeyPress += HandleKeyPress;
 		_keyboard.PostMessage(Browser.BrowserMessage.NavKeyboard);
 		_keyboard.ToggleHidden();

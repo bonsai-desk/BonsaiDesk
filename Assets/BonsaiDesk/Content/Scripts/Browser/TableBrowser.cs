@@ -21,6 +21,10 @@ public class TableBrowser : Browser {
 			CustomInputModule.Singleton.screens.Add(view);
 			OnMessageEmitted(HandleJavascriptMessage);
 		};
+		ListenersReady += () =>
+		{
+			Debug.Log("[BONSAI] TableBrowser listeners ready");
+		};
 	}
 
 	public event Action<string> KeyPress;
