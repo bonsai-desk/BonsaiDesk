@@ -14,6 +14,7 @@ public class TableBrowserMenu : MonoBehaviour {
 		_browser                =  GetComponent<TableBrowser>();
 		_browser.BrowserReady   += SetupBrowser;
 		_browser.ListenersReady += NavToMenu;
+		OVRManager.HMDUnmounted += () => { _browser.SetHidden(true); };
 	}
 
 	private void SetupBrowser() {
