@@ -11,6 +11,7 @@ import ForwardImg from '../static/forward.svg';
 import MenuImg from '../static/application-menu.svg';
 
 const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
+const stretchButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded p-4 cursor-pointer h-20 flex flex-wrap content-center';
 
 function postChar(char) {
   console.log(char);
@@ -23,11 +24,17 @@ function postCommand(message) {
 }
 
 function Key(props) {
-  let {char, shift, handleClick} = props;
+  let {char, shift, handleClick, stretch = false, className} = props;
   const _char = shift ? char.toUpperCase() : char;
+  let _className;
+  if (className) {
+    _className = className;
+  } else {
+    _className = !stretch ? roundButtonClass : stretchButtonClass;
+  }
   return (
       <Button>
-        <div className={roundButtonClass} onMouseDown={() => {
+        <div className={_className} onMouseDown={() => {
           postChar(_char);
           if (handleClick) handleClick();
 
@@ -40,7 +47,7 @@ function Key(props) {
 }
 
 function KeyBoardDismiss() {
-  const shiftButtonClass = 'bg-gray-900 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer w-20 h-20 flex flex-wrap content-center';
+  const shiftButtonClass = 'bg-gray-900 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer w-24 h-20 flex flex-wrap content-center';
 
   const imgVisible = 'h-10 w-10';
 
@@ -109,35 +116,46 @@ function Shift(props) {
 }
 
 function NumsOrChar(props) {
-  let {handleClick} = props;
-  let [shift, setShift] = useState(false);
+  let {handleClick, level} = props;
 
-  const shiftButtonClass = 'bg-gray-900 hover:bg-gray-600 rounded cursor-pointer w-20 h-20 flex flex-wrap content-center';
+  let shift;
+  if (level !== 0) {
+    shift = false;
+  } else {
+    shift = true;
+  }
+
+  const shiftButtonClass = 'bg-gray-900 hover:bg-gray-600 rounded cursor-pointer w-24 h-20 flex flex-wrap content-center';
 
   return <Button>
     <div onMouseDown={() => {
       handleClick();
-      setShift(!shift);
     }}
          className={shiftButtonClass}>
       <div
           className={'relative w-full flex justify-center text-white text-3xl'}>
-        {shift ? '123' : 'ABC'}
+        {shift ? '.?123' : 'ABC'}
       </div>
     </div>
   </Button>;
 }
 
 function SymbolsOrNum(props) {
-  let {handleClick} = props;
-  let [shift, setShift] = useState(false);
+  let {handleClick, level} = props;
+  //let [shift, setShift] = useState(false);
+
+  let shift;
+  if (level !== 1) {
+    shift = true;
+  } else {
+    shift = false;
+  }
 
   const shiftButtonClass = 'bg-gray-900 hover:bg-gray-600 rounded cursor-pointer w-20 h-20 flex flex-wrap content-center';
 
   return <Button>
     <div onMouseDown={() => {
       handleClick();
-      setShift(!shift);
     }}
          className={shiftButtonClass}>
       <div
@@ -159,7 +177,7 @@ function Space(props) {
         <div className={buttonClass} onMouseDown={() => {
           postChar(' ');
         }}>
-    <span className={'w-80 text-center text-white text-3xl'}>
+    <span className={'w-96 text-center text-white text-3xl'}>
       {_char}
     </span>
         </div>
@@ -182,6 +200,11 @@ function KeySVG(props) {
   );
 }
 
+function Enter() {
+  const wideButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded p-4 cursor-pointer w-32 h-20 flex flex-wrap content-center';
+  return <Key className={wideButtonClass} char={'Enter'}/>;
+}
+
 function Keyboard(props) {
   let {handleDismiss} = props;
   let [shift, setShift] = useState(false);
@@ -199,8 +222,9 @@ function Keyboard(props) {
           <Key shift={shift} char={'i'}/>
           <Key shift={shift} char={'o'}/>
           <Key shift={shift} char={'p'}/>
+          <BackSpace/>
         </div>
-        <div className={'flex space-x-2 justify-center'}>
+        <div className={'flex space-x-2 justify-end'}>
           <Key shift={shift} char={'a'}/>
           <Key shift={shift} char={'s'}/>
           <Key shift={shift} char={'d'}/>
@@ -210,6 +234,7 @@ function Keyboard(props) {
           <Key shift={shift} char={'j'}/>
           <Key shift={shift} char={'k'}/>
           <Key shift={shift} char={'l'}/>
+          <Enter/>
         </div>
         <div className={'flex space-x-2 justify-center'}>
           <Shift shift={shift} toggleShift={() => {
@@ -222,13 +247,45 @@ function Keyboard(props) {
           <Key shift={shift} char={'b'}/>
           <Key shift={shift} char={'n'}/>
           <Key shift={shift} char={'m'}/>
-          <BackSpace/>
-          <Key shift={shift} char={'Enter'}/>
+          <Key shift={shift} char={','}/>
+          <Key shift={shift} char={'.'}/>
+          <Shift shift={shift} toggleShift={() => {
+            setShift(!shift);
+          }}/>
         </div>
       </React.Fragment>
   );
 
   let level1 = (
+      <React.Fragment>
+        <div className={'flex space-x-2 justify-end'}>
+          <Key shift={shift} char={'@'}/>
+          <Key shift={shift} char={'#'}/>
+          <Key shift={shift} char={'$'}/>
+          <Key shift={shift} char={'&'}/>
+          <Key shift={shift} char={'*'}/>
+          <Key shift={shift} char={'('}/>
+          <Key shift={shift} char={')'}/>
+          <Key shift={shift} char={'\''}/>
+          <Key shift={shift} char={'"'}/>
+          <Enter/>
+        </div>
+        <div className={'flex space-x-2 justify-end'}>
+          <SymbolsOrNum level={level} handleClick={handleClickSymbolOrNum}/>
+          <Key shift={shift} char={'%'}/>
+          <Key shift={shift} char={'-'}/>
+          <Key shift={shift} char={'+'}/>
+          <Key shift={shift} char={'='}/>
+          <Key shift={shift} char={'/'}/>
+          <Key shift={shift} char={';'}/>
+          <Key shift={shift} char={':'}/>
+          <Key shift={shift} char={','}/>
+          <Key shift={shift} char={'.'}/>
+          <SymbolsOrNum level={level} handleClick={handleClickSymbolOrNum}/>
+        </div>
+      </React.Fragment>
+  );
+  let level12 = (
       <React.Fragment>
         <div className={'flex space-x-2 justify-center'}>
           <Key shift={shift} char={'1'}/>
@@ -240,62 +297,39 @@ function Keyboard(props) {
           <Key shift={shift} char={'7'}/>
           <Key shift={shift} char={'8'}/>
           <Key shift={shift} char={'9'}/>
-          <Key shift={shift} char={'10'}/>
-        </div>
-        <div className={'flex space-x-2 justify-center'}>
-          <Key shift={shift} char={'-'}/>
-          <Key shift={shift} char={'/'}/>
-          <Key shift={shift} char={':'}/>
-          <Key shift={shift} char={';'}/>
-          <Key shift={shift} char={'('}/>
-          <Key shift={shift} char={')'}/>
-          <Key shift={shift} char={'$'}/>
-          <Key shift={shift} char={'&'}/>
-          <Key shift={shift} char={'@'}/>
-          <Key shift={shift} char={'"'}/>
+          <Key shift={shift} char={'0'}/>
+          <BackSpace/>
         </div>
       </React.Fragment>
   );
   let level2 = (
       <React.Fragment>
-        <div className={'flex space-x-2 justify-center'}>
+        <div className={'flex space-x-2 justify-end'}>
+          <Key shift={shift} char={'€'}/>
+          <Key shift={shift} char={'£'}/>
+          <Key shift={shift} char={'¥'}/>
+          <Key shift={shift} char={'_'}/>
+          <Key shift={shift} char={'^'}/>
           <Key shift={shift} char={'['}/>
           <Key shift={shift} char={']'}/>
           <Key shift={shift} char={'{'}/>
           <Key shift={shift} char={'}'}/>
-          <Key shift={shift} char={'#'}/>
-          <Key shift={shift} char={'%'}/>
-          <Key shift={shift} char={'^'}/>
-          <Key shift={shift} char={'*'}/>
-          <Key shift={shift} char={'+'}/>
-          <Key shift={shift} char={'='}/>
+          <Enter/>
         </div>
         <div className={'flex space-x-2 justify-center'}>
-          <Key shift={shift} char={'_'}/>
-          <Key shift={shift} char={'\\'}/>
+          <SymbolsOrNum level={level} handleClick={handleClickSymbolOrNum}/>
+          <Key shift={shift} char={'§'}/>
           <Key shift={shift} char={'|'}/>
           <Key shift={shift} char={'~'}/>
+          <Key shift={shift} char={'…'}/>
+          <Key shift={shift} char={'\\'}/>
           <Key shift={shift} char={'<'}/>
           <Key shift={shift} char={'>'}/>
-          <Key shift={shift} char={'€'}/>
-          <Key shift={shift} char={'£'}/>
-          <Key shift={shift} char={'¥'}/>
-          <Key shift={shift} char={'•'}/>
+          <Key shift={shift} char={'!'}/>
+          <Key shift={shift} char={'?'}/>
+          <SymbolsOrNum level={level} handleClick={handleClickSymbolOrNum}/>
         </div>
       </React.Fragment>
-  );
-  let level12 = (
-      <div className={'flex space-x-2 justify-center'}>
-        <SymbolsOrNum handleClick={handleClickSymbolOrNum}/>
-        <Key shift={shift} char={'.'}/>
-        <Key shift={shift} char={','}/>
-        <Key shift={shift} char={'?'}/>
-        <Key shift={shift} char={'!'}/>
-        <Key handleClick={() => {
-          setLevel(0);
-        }} shift={shift} char={'\''}/>
-        <BackSpace/>
-      </div>
   );
 
   function handleClickSymbolOrNum() {
@@ -326,14 +360,18 @@ function Keyboard(props) {
         <div className={'space-y-2'}>
 
           {level === 0 ? level0 : ''}
+          {level === 1 || level === 2 ? level12 : ''}
           {level === 1 ? level1 : ''}
           {level === 2 ? level2 : ''}
-          {level === 1 || level === 2 ? level12 : ''}
-          <div className={'w-full flex space-x-2 justify-center'}>
-            <NumsOrChar handleClick={handleClickNumOrChar}/>
+          <div className={'w-full flex space-x-2 justify-between'}>
+            <NumsOrChar level={level} handleClick={handleClickNumOrChar}/>
+            <div className={'w-2'}/>
             <Space/>
-            <div onClick={handleDismiss}>
-              <KeyBoardDismiss/>
+            <div className={'flex space-x-2'}>
+              <NumsOrChar level={level} handleClick={handleClickNumOrChar}/>
+              <div onClick={handleDismiss}>
+                <KeyBoardDismiss/>
+              </div>
             </div>
           </div>
         </div>
