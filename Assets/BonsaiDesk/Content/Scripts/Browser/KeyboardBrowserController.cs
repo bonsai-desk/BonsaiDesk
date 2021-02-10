@@ -5,22 +5,41 @@ using Vuplex.WebView;
 
 [RequireComponent(typeof(TableBrowser))]
 public class KeyboardBrowserController : MonoBehaviour {
+	public Transform screen;
+	public Transform altTransform;
+	private bool _alt;
 	private TableBrowser _browser;
 
 	// Start is called before the first frame update
 	private void Start() {
-		_browser              =  GetComponent<TableBrowser>();
+		_browser = GetComponent<TableBrowser>();
 		_browser.BrowserReady += () =>
 		{
 			_browser.OnMessageEmitted(HandleJavascriptMessage);
-			//_browser.ChangeRes(new Vector2(0.2f, 0.2f));
-			//_browser.ChangeAspect(new Vector2(0.2f, 0.2f));
-			_browser.ChangeRes(new Vector2(0.1f, 0.15f));
+			SetAlt(true);
 		};
 	}
 
 	// Update is called once per frame
 	private void Update() { }
+
+	public void SetAlt(bool alt) {
+		_alt = alt;
+		if (_alt) {
+			screen.localPosition    = altTransform.localPosition;
+			screen.localEulerAngles = altTransform.localEulerAngles;
+			_browser.ChangeRes(new Vector2(0.1f, 0.15f));
+		}
+		else {
+			screen.localPosition    = Vector3.zero;
+			screen.localEulerAngles = Vector3.zero;
+			_browser.ChangeRes(_browser.Bounds);
+		}
+	}
+
+	public void ToggleAlt() {
+		SetAlt(!_alt);
+	}
 
 	public event Action NavBack;
 	public event Action NavForward;

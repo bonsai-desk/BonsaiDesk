@@ -37,10 +37,12 @@ public class WebBrowserParent : MonoBehaviour {
 
 	public void HandleSpawnKeyboard() {
 		_WebBrowserController.SetRaised(true);
+		_KeyboardBrowserController.SetAlt(false);
 	}
 
 	public void HandleDismissKeyboard() {
 		_WebBrowserController.SetRaised(false);
+		_KeyboardBrowserController.SetAlt(true);
 	}
 
 	private void SetupWeb() {

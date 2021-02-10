@@ -20,7 +20,7 @@ public class Browser : MonoBehaviour {
 	private OVROverlay _overlay;
 	private bool _postedListenersReady;
 	private bool _renderEnabled = true;
-	protected Vector2 Bounds;
+	public Vector2 Bounds;
 	protected Transform Resizer;
 	protected WebViewPrefabCustom WebViewPrefab;
 	protected Transform WebViewView;

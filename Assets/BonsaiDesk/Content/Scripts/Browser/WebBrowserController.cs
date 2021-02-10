@@ -8,7 +8,7 @@ public class WebBrowserController : MonoBehaviour {
 
 	// Start is called before the first frame update
 	private void Start() {
-		SetRaised(true);
+		SetRaised(false);
 	}
 
 	// Update is called once per frame
