@@ -5,10 +5,11 @@ import CaretSquareUpHollow from '../static/caret-square-up-hollow.svg';
 import CaretSquareUp from '../static/caret-square-up.svg';
 import BackSpaceImg from '../static/backspace.svg';
 import BackSpaceImgHollow from '../static/backspace-hollow.svg';
-import KeyBoardImg from '../static/keyboard-dismiss.svg';
+import KeyBoardDismissImg from '../static/keyboard-dismiss.svg';
+import KeyBoardImg from '../static/keyboard.svg';
 import BackImg from '../static/back.svg';
+import CloseImg from '../static/close.svg';
 import ForwardImg from '../static/forward.svg';
-import MenuImg from '../static/application-menu.svg';
 
 const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 const stretchButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded p-4 cursor-pointer h-20 flex flex-wrap content-center';
@@ -57,7 +58,7 @@ function KeyBoardDismiss() {
         postCommand('dismissKeyboard');
       }} className={'w-full flex justify-center'}>
         <img className={imgVisible}
-             src={KeyBoardImg} alt={''}/>
+             src={KeyBoardDismissImg} alt={''}/>
       </div>
     </div>
   </Button>;
@@ -185,8 +186,14 @@ function Space(props) {
 }
 
 function KeySVG(props) {
-  let {imgSrc} = props;
-  const buttonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer w-20 h-20 flex flex-wrap content-center';
+  let {imgSrc, className} = props;
+
+  let buttonClass;
+  if (className) {
+    buttonClass = className;
+  } else {
+    buttonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer w-20 h-20 flex flex-wrap content-center';
+  }
 
   const imgVisible = 'h-10 w-10 absolute -bottom-5 left-5';
 
@@ -382,10 +389,21 @@ function Keyboard(props) {
 
 function WebNav(props) {
   let {handleMenu} = props;
+
+  let closeButtonClass = 'bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer w-20 h-20 flex flex-wrap content-center';
+
+  let handleClose = () => {
+    postCommand('closeWeb');
+  };
+
   return (
       <div
           className={'w-full h-screen bg-black flex flex-wrap content-center justify-center'}>
         <div className={'space-y-2 mb-2'}>
+          <Button className={'w-full flex justify-center'}
+                  handleClick={handleClose}>
+            <KeySVG className={closeButtonClass} imgSrc={CloseImg}/>
+          </Button>
           <div className={'flex space-x-2'}>
             <Button handleClick={() => {
               postCommand('navBack');
@@ -398,11 +416,10 @@ function WebNav(props) {
               <KeySVG imgSrc={ForwardImg}/>
             </Button>
           </div>
-          <div onClick={handleMenu} className={'w-full flex justify-center'}>
-            <Button>
-              <KeySVG imgSrc={MenuImg}/>
-            </Button>
-          </div>
+          <Button className={'w-full flex justify-center'}
+                  handleClick={handleMenu}>
+            <KeySVG imgSrc={KeyBoardImg}/>
+          </Button>
         </div>
       </div>
   );
