@@ -417,7 +417,10 @@ function WebNav(props) {
             </Button>
           </div>
           <Button className={'w-full flex justify-center'}
-                  handleClick={handleMenu}>
+                  handleClick={()=>{
+                    postCommand("spawnKeyboard")
+                    handleMenu()
+                  }}>
             <KeySVG imgSrc={KeyBoardImg}/>
           </Button>
         </div>

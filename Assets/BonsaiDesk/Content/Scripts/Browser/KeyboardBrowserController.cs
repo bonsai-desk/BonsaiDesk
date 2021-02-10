@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 using Vuplex.WebView;
 
+[RequireComponent(typeof(TableBrowser))]
 public class KeyboardBrowserController : MonoBehaviour {
 	private TableBrowser _browser;
 
@@ -17,6 +18,8 @@ public class KeyboardBrowserController : MonoBehaviour {
 
 	public event Action NavBack;
 	public event Action NavForward;
+	public event Action CloseWeb;
+	public event Action SpawnKeyboard;
 
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<Browser.JsMessageString>(eventArgs.Value);
@@ -27,6 +30,12 @@ public class KeyboardBrowserController : MonoBehaviour {
 					break;
 				case "navForward":
 					NavForward?.Invoke();
+					break;
+				case "closeWeb":
+					CloseWeb?.Invoke();
+					break;
+				case "spawnKeyboard":
+					SpawnKeyboard?.Invoke();
 					break;
 			}
 		}
