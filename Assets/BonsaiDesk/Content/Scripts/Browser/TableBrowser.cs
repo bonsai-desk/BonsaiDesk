@@ -5,7 +5,6 @@ using UnityEngine;
 using Vuplex.WebView;
 
 public class TableBrowser : Browser {
-
 	public SoundFXRef hoverSound;
 	public SoundFXRef mouseDownSound;
 	public SoundFXRef mouseUpSound;
@@ -21,10 +20,7 @@ public class TableBrowser : Browser {
 			CustomInputModule.Singleton.screens.Add(view);
 			OnMessageEmitted(HandleJavascriptMessage);
 		};
-		ListenersReady += () =>
-		{
-			Debug.Log("[BONSAI] TableBrowser listeners ready");
-		};
+		ListenersReady += () => { Debug.Log("[BONSAI] TableBrowser listeners ready"); };
 	}
 
 	public event Action<string> KeyPress;
@@ -100,11 +96,19 @@ public class TableBrowser : Browser {
 
 		WebViewPrefab.Initialized += (sender, eventArgs) =>
 		{
-			const int ppuu = 2000;
-			WebViewPrefab.WebView.SetResolution(ppuu);
-			var res = new Vector2Int((int) (ppuu * Bounds.x), (int) (ppuu * Bounds.y));
-			RebuildOverlay(res);
+			ChangeRes(Bounds);
+			//todo ChangeRes(Bounds);
+			//ChangeSize(0.3f, 0.3f);
 		};
 		base.SetupWebViewPrefab();
+	}
+
+	public void ChangeRes(Vector2 bounds, int ppu = 2000) {
+		WebViewPrefab.WebView.SetResolution(ppu);
+		WebViewPrefab.Resize(bounds.x, bounds.y);
+		var res = new Vector2Int((int) (ppu * bounds.x), (int) (ppu * bounds.y));
+	#if UNITY_ANDROID && !UNITY_EDITOR
+		RebuildOverlay(res);
+	#endif
 	}
 }

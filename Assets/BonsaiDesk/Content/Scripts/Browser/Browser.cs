@@ -29,8 +29,8 @@ public class Browser : MonoBehaviour {
 		Debug.Log("browser start");
 
 		CacheTransforms();
-
-		PreConfigureWebView();
+		
+		// WebView preconfiguring is done once in the BrowserSetup class
 
 		SetupWebViewPrefab();
 

@@ -10,7 +10,13 @@ public class KeyboardBrowserController : MonoBehaviour {
 	// Start is called before the first frame update
 	private void Start() {
 		_browser              =  GetComponent<TableBrowser>();
-		_browser.BrowserReady += () => { _browser.OnMessageEmitted(HandleJavascriptMessage); };
+		_browser.BrowserReady += () =>
+		{
+			_browser.OnMessageEmitted(HandleJavascriptMessage);
+			//_browser.ChangeRes(new Vector2(0.2f, 0.2f));
+			//_browser.ChangeAspect(new Vector2(0.2f, 0.2f));
+			_browser.ChangeRes(new Vector2(0.1f, 0.15f));
+		};
 	}
 
 	// Update is called once per frame
@@ -20,22 +26,26 @@ public class KeyboardBrowserController : MonoBehaviour {
 	public event Action NavForward;
 	public event Action CloseWeb;
 	public event Action SpawnKeyboard;
+	public event Action DismissKeyboard;
 
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<Browser.JsMessageString>(eventArgs.Value);
 		if (message.Type == "command") {
 			switch (message.Message) {
+				case "closeWeb":
+					CloseWeb?.Invoke();
+					break;
 				case "navBack":
 					NavBack?.Invoke();
 					break;
 				case "navForward":
 					NavForward?.Invoke();
 					break;
-				case "closeWeb":
-					CloseWeb?.Invoke();
-					break;
 				case "spawnKeyboard":
 					SpawnKeyboard?.Invoke();
+					break;
+				case "dismissKeyboard":
+					DismissKeyboard?.Invoke();
 					break;
 			}
 		}

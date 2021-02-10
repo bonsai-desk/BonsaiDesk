@@ -3146,6 +3146,7 @@ MonoBehaviour:
   _web: {fileID: 1337465468}
   _keyboard: {fileID: 787575870}
   _KeyboardBrowserController: {fileID: 787575871}
+  _WebBrowserController: {fileID: 1337465469}
 --- !u!1 &329180640
 GameObject:
   m_ObjectHideFlags: 0

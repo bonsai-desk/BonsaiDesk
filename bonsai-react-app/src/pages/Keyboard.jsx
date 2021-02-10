@@ -120,11 +120,7 @@ function NumsOrChar(props) {
   let {handleClick, level} = props;
 
   let shift;
-  if (level !== 0) {
-    shift = false;
-  } else {
-    shift = true;
-  }
+  shift = level === 0;
 
   const shiftButtonClass = 'bg-gray-900 hover:bg-gray-600 rounded cursor-pointer w-24 h-20 flex flex-wrap content-center';
 
@@ -146,11 +142,7 @@ function SymbolsOrNum(props) {
   //let [shift, setShift] = useState(false);
 
   let shift;
-  if (level !== 1) {
-    shift = true;
-  } else {
-    shift = false;
-  }
+  shift = level !== 1;
 
   const shiftButtonClass = 'bg-gray-900 hover:bg-gray-600 rounded cursor-pointer w-20 h-20 flex flex-wrap content-center';
 
