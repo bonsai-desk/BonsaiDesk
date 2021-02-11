@@ -14,6 +14,7 @@ public class BrowserSetup : MonoBehaviour {
 
 	private static void PreConfigureWebView() {
 		Debug.Log("[BONSAI] Preconfigure WebView");
+		Web.SetUserAgent(true);
 	#if UNITY_EDITOR || DEVELOPMENT_BUILD
 	#if UNITY_ANDROID && !UNITY_EDITOR
         AndroidGeckoWebView.EnableRemoteDebugging();

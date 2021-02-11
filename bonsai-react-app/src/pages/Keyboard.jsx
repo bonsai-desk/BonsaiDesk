@@ -5,7 +5,6 @@ import CaretSquareUpHollow from '../static/caret-square-up-hollow.svg';
 import CaretSquareUp from '../static/caret-square-up.svg';
 import BackSpaceImg from '../static/backspace.svg';
 import BackSpaceImgHollow from '../static/backspace-hollow.svg';
-import KeyBoardDismissImg from '../static/keyboard-dismiss.svg';
 
 const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 const stretchButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded p-4 cursor-pointer h-20 flex flex-wrap content-center';
@@ -13,11 +12,6 @@ const stretchButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rou
 function postChar(char) {
   console.log(char);
   postJson({Type: 'event', Message: 'keyPress', Data: char});
-}
-
-function postCommand(message) {
-  console.log(message);
-  postJson({Type: 'command', Message: message});
 }
 
 function Key(props) {
@@ -41,24 +35,6 @@ function Key(props) {
     </span>
         </div>
       </Button>);
-}
-
-function KeyBoardDismiss() {
-  const shiftButtonClass = 'bg-gray-900 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer w-24 h-20 flex flex-wrap content-center';
-
-  const imgVisible = 'h-10 w-10';
-
-  return <Button>
-    <div className={shiftButtonClass}>
-      <div onClick={() => {
-        postCommand('dismissKeyboard');
-      }} className={'w-full flex justify-center'}>
-        <img className={imgVisible}
-             src={KeyBoardDismissImg} alt={''}/>
-      </div>
-    </div>
-  </Button>;
-
 }
 
 function BackSpace() {
@@ -179,7 +155,6 @@ function Enter() {
 }
 
 function Keyboard(props) {
-  let {handleDismiss} = props;
   let [shift, setShift] = useState(false);
   let [level, setLevel] = useState(0);
   let level0 = (
@@ -338,13 +313,9 @@ function Keyboard(props) {
           {level === 2 ? level2 : ''}
           <div className={'w-full flex space-x-2 justify-between'}>
             <NumsOrChar level={level} handleClick={handleClickNumOrChar}/>
-            <div className={'w-2'}/>
             <Space/>
             <div className={'flex space-x-2'}>
               <NumsOrChar level={level} handleClick={handleClickNumOrChar}/>
-              <div onClick={handleDismiss}>
-                <KeyBoardDismiss/>
-              </div>
             </div>
           </div>
         </div>

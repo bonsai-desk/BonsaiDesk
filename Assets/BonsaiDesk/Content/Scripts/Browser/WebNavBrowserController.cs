@@ -9,7 +9,7 @@ public class WebNavBrowserController : MonoBehaviour {
 
 	// Start is called before the first frame update
 	private void Start() {
-		_browser              =  GetComponent<TableBrowser>();
+		_browser                =  GetComponent<TableBrowser>();
 		_browser.ListenersReady += SetupBrowser;
 	}
 
@@ -18,6 +18,7 @@ public class WebNavBrowserController : MonoBehaviour {
 
 	private void SetupBrowser() {
 		_browser.PostMessage(Browser.BrowserMessage.NavWebNav);
+		_browser.OnMessageEmitted(HandleJavascriptMessage);
 		_browser.SetHidden(false);
 	}
 
@@ -29,6 +30,7 @@ public class WebNavBrowserController : MonoBehaviour {
 
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<Browser.JsMessageString>(eventArgs.Value);
+		Debug.Log(eventArgs.Value);
 		if (message.Type == "command") {
 			switch (message.Message) {
 				case "closeWeb":

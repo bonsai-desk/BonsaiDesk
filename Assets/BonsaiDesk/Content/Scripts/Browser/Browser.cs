@@ -192,6 +192,7 @@ public class Browser : MonoBehaviour {
 	}
 
 	public void HandleKeyboardInput(string key) {
+		Debug.Log($"[BONSAI] HandleKeyboardInput {key} {WebViewPrefab.WebView}");
 		WebViewPrefab.WebView.HandleKeyboardInput(key);
 	}
 

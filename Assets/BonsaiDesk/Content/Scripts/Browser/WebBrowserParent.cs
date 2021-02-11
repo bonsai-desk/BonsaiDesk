@@ -19,6 +19,7 @@ public class WebBrowserParent : MonoBehaviour {
 	private void Update() { }
 
 	private void SetupWebWebNavBrowser() {
+		Debug.Log("[BONSAI] SetupWebWebNavBrowser");
 		webNavBrowserController.GoBack          += HandleGoBack;
 		webNavBrowserController.GoForward       += HandleGoForward;
 		webNavBrowserController.SpawnKeyboard   += HandleSpawnKeyboard;
@@ -27,6 +28,7 @@ public class WebBrowserParent : MonoBehaviour {
 	}
 
 	private void SetupKeyboardBrowser() {
+		Debug.Log("[BONSAI] SetupKeyboardBrowser");
 		keyboardBrowser.KeyPress += HandleKeyPress;
 	}
 
