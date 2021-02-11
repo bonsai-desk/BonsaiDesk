@@ -105,15 +105,15 @@ public class CustomInputModule : StandaloneInputModule {
 			}
 
 			if (handActive == Active.Right && rightHover) {
-				ProcessHover(rightFingerInScreen, screen);
-				ProcessClick(rightFingerInScreen, screen, leftData, leftValid, rightValid);
+				ProcessCursor(rightFingerInScreen, screen);
+				ProcessRay(rightFingerInScreen, screen, leftData, leftValid, rightValid);
 
 				break;
 			}
 
 			if (handActive == Active.Left && leftHover) {
-				ProcessHover(leftFingerInScreen, screen);
-				ProcessClick(leftFingerInScreen, screen, leftData, leftValid, rightValid);
+				ProcessCursor(leftFingerInScreen, screen);
+				ProcessRay(leftFingerInScreen, screen, leftData, leftValid, rightValid);
 				break;
 			}
 
@@ -137,14 +137,14 @@ public class CustomInputModule : StandaloneInputModule {
 		return m_MouseState;
 	}
 
-	private void ProcessHover(Vector3 fingerInScreen, Transform screen) {
+	private void ProcessCursor(Vector3 fingerInScreen, Transform screen) {
 		var fingerInScreen0Z = fingerInScreen;
 		fingerInScreen0Z.z = 0;
 		m_Cursor.SetCursorStartDest(screen.TransformPoint(fingerInScreen),
 		                            screen.TransformPoint(fingerInScreen0Z), -Vector3.forward);
 	}
 
-	private void ProcessClick(Vector3 fingerInScreen, Transform screen, OVRPointerEventData leftData, bool leftValid,
+	private void ProcessRay(Vector3 fingerInScreen, Transform screen, OVRPointerEventData leftData, bool leftValid,
 	                          bool rightValid) {
 		var screenHit = screen.TransformPoint(
 			new Vector3(fingerInScreen.x, fingerInScreen.y, 0)
