@@ -242,6 +242,7 @@ public class Browser : MonoBehaviour {
 		public static readonly string NavToMenu = PushPath("/menu");
 		public static readonly string NavHome = PushPath("/home");
 		public static readonly string NavKeyboard = PushPath("/keyboard");
+		public static readonly string NavWebNav = PushPath("/webnav");
 
 		private static string PushPath(string path) {
 			return "{" +

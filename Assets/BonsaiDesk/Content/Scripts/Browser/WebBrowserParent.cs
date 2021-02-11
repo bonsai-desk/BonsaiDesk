@@ -1,56 +1,58 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public class WebBrowserParent : MonoBehaviour {
-	public TableBrowser _web;
-	public TableBrowser _keyboard;
-	public KeyboardBrowserController _KeyboardBrowserController;
-	public WebBrowserController _WebBrowserController;
+	public TableBrowser webBrowser;
+	public TableBrowser keyboardBrowser;
+	public TableBrowser webNavBrowser;
+	public KeyboardBrowserController keyboardBrowserController;
+	public WebBrowserController webBrowserController;
+	public WebNavBrowserController webNavBrowserController;
 
 	// Start is called before the first frame update
 	private void Start() {
-		_web.BrowserReady        += SetupWeb;
-		_keyboard.ListenersReady += SetupKeyboard;
+		keyboardBrowser.ListenersReady += SetupKeyboardBrowser;
+		webNavBrowser.BrowserReady     += SetupWebWebNavBrowser;
 	}
 
 	// Update is called once per frame
 	private void Update() { }
 
-	private void SetupKeyboard() {
-		Debug.Log("[BONSAI] Browser Keyboard Ready");
-		_keyboard.KeyPress                         += HandleKeyPress;
-		_KeyboardBrowserController.NavBack         += HandleGoBack;
-		_KeyboardBrowserController.NavForward      += HandleGoForward;
-		_KeyboardBrowserController.SpawnKeyboard   += HandleSpawnKeyboard;
-		_KeyboardBrowserController.DismissKeyboard += HandleDismissKeyboard;
-		_keyboard.PostMessage(Browser.BrowserMessage.NavKeyboard);
-		_keyboard.SetHidden(false);
+	private void SetupWebWebNavBrowser() {
+		webNavBrowserController.GoBack          += HandleGoBack;
+		webNavBrowserController.GoForward       += HandleGoForward;
+		webNavBrowserController.SpawnKeyboard   += HandleSpawnKeyboard;
+		webNavBrowserController.DismissKeyboard += HandleDismissKeyboard;
+		webNavBrowserController.CloseWeb        += HandleCloseWeb;
 	}
 
-	public void HandleGoBack() {
-		_web.GoBack();
-		
+	private void SetupKeyboardBrowser() {
+		keyboardBrowser.KeyPress += HandleKeyPress;
 	}
 
-	public void HandleGoForward() {
-		_web.GoForward();
+	private void HandleGoBack() {
+		webBrowser.GoBack();
 	}
 
-	public void HandleSpawnKeyboard() {
-		_WebBrowserController.SetRaised(true);
-		_KeyboardBrowserController.SetAlt(false);
+	private void HandleGoForward() {
+		webBrowser.GoForward();
 	}
 
-	public void HandleDismissKeyboard() {
-		_WebBrowserController.SetRaised(false);
-		_KeyboardBrowserController.SetAlt(true);
+	private void HandleCloseWeb() {
+		throw new NotImplementedException();
 	}
 
-	private void SetupWeb() {
-		Debug.Log("[BONSAI] Web Ready");
-		_web.SetHidden(false);
+	private void HandleSpawnKeyboard() {
+		webBrowserController.SetRaised(true);
+		keyboardBrowserController.SetActive(true);
+	}
+
+	private void HandleDismissKeyboard() {
+		webBrowserController.SetRaised(false);
+		keyboardBrowserController.SetActive(false);
 	}
 
 	private void HandleKeyPress(string key) {
-		_web.HandleKeyboardInput(key);
+		webBrowser.HandleKeyboardInput(key);
 	}
 }

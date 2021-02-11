@@ -6,10 +6,6 @@ import CaretSquareUp from '../static/caret-square-up.svg';
 import BackSpaceImg from '../static/backspace.svg';
 import BackSpaceImgHollow from '../static/backspace-hollow.svg';
 import KeyBoardDismissImg from '../static/keyboard-dismiss.svg';
-import KeyBoardImg from '../static/keyboard.svg';
-import BackImg from '../static/back.svg';
-import CloseImg from '../static/close.svg';
-import ForwardImg from '../static/forward.svg';
 
 const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 const stretchButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded p-4 cursor-pointer h-20 flex flex-wrap content-center';
@@ -175,28 +171,6 @@ function Space(props) {
     </span>
         </div>
       </Button>);
-}
-
-function KeySVG(props) {
-  let {imgSrc, className} = props;
-
-  let buttonClass;
-  if (className) {
-    buttonClass = className;
-  } else {
-    buttonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer w-20 h-20 flex flex-wrap content-center';
-  }
-
-  const imgVisible = 'h-10 w-10 absolute -bottom-5 left-5';
-
-  return (
-      <div className={buttonClass}>
-        <div className={'relative w-full flex justify-center'}>
-          <img className={imgVisible}
-               src={imgSrc} alt={''}/>
-        </div>
-      </div>
-  );
 }
 
 function Enter() {
@@ -379,58 +353,4 @@ function Keyboard(props) {
   );
 }
 
-function WebNav(props) {
-  let {handleMenu} = props;
-
-  let closeButtonClass = 'bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer w-20 h-20 flex flex-wrap content-center';
-
-  let handleClose = () => {
-    postCommand('closeWeb');
-  };
-
-  return (
-      <div
-          className={'w-full h-screen bg-black flex flex-wrap content-center justify-center'}>
-        <div className={'space-y-2 mb-2'}>
-          <Button className={'w-full flex justify-center'}
-                  handleClick={handleClose}>
-            <KeySVG className={closeButtonClass} imgSrc={CloseImg}/>
-          </Button>
-          <div className={'flex space-x-2'}>
-            <Button handleClick={() => {
-              postCommand('navBack');
-            }}>
-              <KeySVG imgSrc={BackImg}/>
-            </Button>
-            <Button handleClick={() => {
-              postCommand('navForward');
-            }}>
-              <KeySVG imgSrc={ForwardImg}/>
-            </Button>
-          </div>
-          <Button className={'w-full flex justify-center'}
-                  handleClick={()=>{
-                    postCommand("spawnKeyboard")
-                    handleMenu()
-                  }}>
-            <KeySVG imgSrc={KeyBoardImg}/>
-          </Button>
-        </div>
-      </div>
-  );
-}
-
-function Input() {
-  let [small, setSmall] = useState(true);
-  if (small) {
-    return <WebNav handleMenu={() => {
-      setSmall(false);
-    }}/>;
-  } else {
-    return <Keyboard handleDismiss={() => {
-      setSmall(true);
-    }}/>;
-  }
-}
-
-export default Input;
+export default Keyboard;

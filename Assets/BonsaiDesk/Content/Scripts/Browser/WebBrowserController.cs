@@ -4,15 +4,22 @@
 public class WebBrowserController : MonoBehaviour {
 	public Transform screen;
 	public Transform raisedTransform;
+	private TableBrowser _browser;
 	private bool _raised;
 
 	// Start is called before the first frame update
 	private void Start() {
-		SetRaised(false);
+		_browser              =  GetComponent<TableBrowser>();
+		_browser.BrowserReady += SetupBrowser;
 	}
 
 	// Update is called once per frame
 	private void Update() { }
+
+	private void SetupBrowser() {
+		_browser.SetHidden(false);
+		SetRaised(false);
+	}
 
 	public void SetRaised(bool raised) {
 		_raised = raised;
@@ -29,5 +36,4 @@ public class WebBrowserController : MonoBehaviour {
 	public void ToggleRaised() {
 		SetRaised(!_raised);
 	}
-	
 }
