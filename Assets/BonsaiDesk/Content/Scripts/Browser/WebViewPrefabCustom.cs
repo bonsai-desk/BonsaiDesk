@@ -669,6 +669,12 @@ namespace Vuplex.WebView {
 				return;
 			}
 
+			if (_options.clickWithoutStealingFocus) {
+				_webView.Click(eventArgs.Point, _options.clickWithoutStealingFocus);
+				_pointerIsDown = false;
+				return;
+			}
+
 			var webViewWithPointerDown = _webView as IWithPointerDownAndUp;
 			webViewWithPointerDown?.PointerDown(eventArgs.Point, eventArgs.ToPointerOptions());
 
@@ -715,6 +721,7 @@ namespace Vuplex.WebView {
 				_clickIsPending = false;
 				// PointerDown() and PointerUp() don't support the preventStealingFocus parameter.
 				if (webViewWithPointerDownAndUp == null || _options.clickWithoutStealingFocus) {
+					// todo this never gets called when for clickWithoutStealingFocus since _clickIsPending is not set for that case
 					_webView.Click(eventArgs.Point, _options.clickWithoutStealingFocus);
 				}
 				else {

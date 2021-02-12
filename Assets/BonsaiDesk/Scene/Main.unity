@@ -11116,7 +11116,12 @@ PrefabInstance:
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
       propertyPath: initialUrl
-      value: http://localhost:3000
+      value: http://192.168.0.166:3000
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: disableVideo
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
@@ -11125,9 +11130,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
+      propertyPath: hoveringDisabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
       propertyPath: customInputModule
       value: 
       objectReference: {fileID: 744943659}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: clickWithoutStealingFocus
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141497, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
       propertyPath: m_Name
@@ -12686,6 +12701,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
+      propertyPath: disableVideo
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
       propertyPath: useBuiltHtml
       value: 0
       objectReference: {fileID: 0}
@@ -12694,6 +12714,11 @@ PrefabInstance:
       propertyPath: customInputModule
       value: 
       objectReference: {fileID: 744943659}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: clickWithoutStealingFocus
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141497, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
       propertyPath: m_Name
@@ -14990,8 +15015,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
+      propertyPath: disableVideo
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
       propertyPath: useBuiltHtml
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: clickWithoutStealingFocus
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141497, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}

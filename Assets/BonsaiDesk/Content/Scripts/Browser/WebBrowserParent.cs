@@ -29,7 +29,8 @@ public class WebBrowserParent : MonoBehaviour {
 
 	private void SetupKeyboardBrowser() {
 		Debug.Log("[BONSAI] SetupKeyboardBrowser");
-		keyboardBrowser.KeyPress += HandleKeyPress;
+		//keyboardBrowser.KeyPress      += HandleKeyPress;
+		keyboardBrowser.InputRecieved += (sender, e) => webBrowser.HandleKeyboardInput(e.Value);
 	}
 
 	private void HandleGoBack() {

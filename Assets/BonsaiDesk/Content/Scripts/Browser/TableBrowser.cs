@@ -9,6 +9,10 @@ public class TableBrowser : Browser {
 	public SoundFXRef mouseDownSound;
 	public SoundFXRef mouseUpSound;
 
+	public bool disableVideo;
+	public bool clickWithoutStealingFocus;
+	public bool hoveringDisabled;
+
 	protected override void Start() {
 		base.Start();
 
@@ -23,7 +27,7 @@ public class TableBrowser : Browser {
 		ListenersReady += () => { Debug.Log("[BONSAI] TableBrowser listeners ready"); };
 	}
 
-	public event Action<string> KeyPress;
+	public event EventHandler<EventArgs<string>> InputRecieved;
 
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
@@ -41,7 +45,9 @@ public class TableBrowser : Browser {
 						mouseUpSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
 						break;
 					case "keyPress":
-						KeyPress?.Invoke(message.Data);
+						if (InputRecieved != null) {
+							InputRecieved(this, new EventArgs<string>(message.Data));
+						}
 						break;
 				}
 
@@ -77,7 +83,12 @@ public class TableBrowser : Browser {
 	}
 
 	protected override void SetupWebViewPrefab() {
-		WebViewPrefab = WebViewPrefabCustom.Instantiate(Bounds.x, Bounds.y);
+		WebViewPrefab = WebViewPrefabCustom.Instantiate(Bounds.x, Bounds.y, new WebViewOptions {
+				clickWithoutStealingFocus = clickWithoutStealingFocus,
+				disableVideo              = disableVideo
+			}
+		);
+
 		Destroy(WebViewPrefab.Collider);
 
 		WebViewPrefab.transform.localPosition = Vector3.zero;
@@ -96,6 +107,7 @@ public class TableBrowser : Browser {
 
 		WebViewPrefab.Initialized += (sender, eventArgs) =>
 		{
+			WebViewPrefab.HoveringEnabled = !hoveringDisabled;
 			ChangeRes(Bounds);
 			//todo ChangeRes(Bounds);
 			//ChangeSize(0.3f, 0.3f);

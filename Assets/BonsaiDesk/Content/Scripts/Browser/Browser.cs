@@ -156,7 +156,6 @@ public class Browser : MonoBehaviour {
 
 		WebViewPrefab.ClickingEnabled  = _renderEnabled;
 		WebViewPrefab.ScrollingEnabled = _renderEnabled;
-		WebViewPrefab.HoveringEnabled  = _renderEnabled;
 
 	#if UNITY_ANDROID && !UNITY_EDITOR
         holePuncherTransform.GetComponent<MeshRenderer>().enabled = _renderEnabled;
