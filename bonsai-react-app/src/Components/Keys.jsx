@@ -7,10 +7,11 @@ import BackSpaceImgHollow from '../static/backspace-hollow.svg';
 export function KeyFrames(props) {
   let {handleClick, width} = props;
   const [state, toggle] = useState(false);
+  const level = 150;
   const {color} = useSpring(
       {
         reset: true,
-        from: {color: 'rgba(38,38,38,0.5)'},
+        from: {color: `rgba(${level},${level},${level},1)`},
         color: 'rgba(38,38,38,1)',
         config: {duration: 400},
       });
@@ -85,8 +86,6 @@ function KeySVG(props) {
 
 }
 
-export function Space () {
-  return <KeyFrames handleClick={postChar("space")} width={"24rem"}/>
+export function Space() {
+  return <KeyFrames handleClick={postChar('space')} width={'24rem'}/>;
 }
-
-

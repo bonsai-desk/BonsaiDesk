@@ -75,7 +75,7 @@ function Keyboard() {
   let level0 = (
       <React.Fragment>
         <div className={'flex space-x-2 justify-center'}>
-          <KeyChar shift={shift} char={'w'}/>
+          <KeyChar shift={shift} char={'q'}/>
           <KeyChar shift={shift} char={'w'}/>
           <KeyChar shift={shift} char={'e'}/>
           <KeyChar shift={shift} char={'r'}/>
