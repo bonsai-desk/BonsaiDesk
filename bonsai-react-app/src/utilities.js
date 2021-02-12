@@ -1,9 +1,7 @@
 let postJson = (json) => {
     if (window.vuplex != null) {
-        console.log("post json===")
-        console.log(json)
+        console.log("post json " + JSON.stringify(json))
         window.vuplex.postMessage(json);
-        console.log("post json==")
     }
 }
 

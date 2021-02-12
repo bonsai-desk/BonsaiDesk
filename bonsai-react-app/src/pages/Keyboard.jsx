@@ -10,7 +10,6 @@ const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 round
 const stretchButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded p-4 cursor-pointer h-20 flex flex-wrap content-center';
 
 function postChar(char) {
-  console.log(char);
   postJson({Type: 'event', Message: 'keyPress', Data: char});
 }
 
