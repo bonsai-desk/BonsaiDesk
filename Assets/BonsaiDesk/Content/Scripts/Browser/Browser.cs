@@ -24,6 +24,7 @@ public class Browser : MonoBehaviour {
 	protected Transform Resizer;
 	protected WebViewPrefabCustom WebViewPrefab;
 	protected Transform WebViewView;
+	public DragMode dragMode;
 
 	protected virtual void Start() {
 		Debug.Log("browser start");
@@ -84,6 +85,7 @@ public class Browser : MonoBehaviour {
 		{
 			Debug.Log("[BONSAI] Browser Initialized");
 			WebViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
+			WebViewPrefab.DragMode       =  dragMode;
 			BrowserReady?.Invoke();
 		};
 	#if UNITY_EDITOR || DEVELOPMENT_BUILD

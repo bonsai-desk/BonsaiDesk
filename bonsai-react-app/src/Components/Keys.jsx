@@ -87,5 +87,7 @@ function KeySVG(props) {
 }
 
 export function Space() {
-  return <KeyFrames handleClick={postChar('Space')} width={'24rem'}/>;
+  return <KeyFrames handleClick={() => {
+    postChar(' ');
+  }} width={'24rem'}/>;
 }

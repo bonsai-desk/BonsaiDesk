@@ -11116,6 +11116,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
+      propertyPath: dragMode
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
       propertyPath: initialUrl
       value: http://localhost:3000
       objectReference: {fileID: 0}
@@ -12700,6 +12705,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 328235780}
     m_Modifications:
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: dragMode
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
       propertyPath: initialUrl
@@ -15018,6 +15028,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: dragMode
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
@@ -18569,6 +18584,7 @@ MonoBehaviour:
   initialUrl: http://localhost:3000
   useBuiltHtml: 1
   Bounds: {x: 0, y: 0}
+  dragMode: 0
   screenRigidBody: {fileID: 878527641}
 --- !u!54 &1382784200
 Rigidbody:
