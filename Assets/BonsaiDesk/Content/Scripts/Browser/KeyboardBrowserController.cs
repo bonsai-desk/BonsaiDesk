@@ -4,6 +4,8 @@
 public class KeyboardBrowserController : MonoBehaviour {
 	public Transform screen;
 	private TableBrowser _browser;
+	public Transform altTransform;
+	private bool _alt;
 
 	// Start is called before the first frame update
 	private void Start() {
@@ -21,5 +23,18 @@ public class KeyboardBrowserController : MonoBehaviour {
 
 	public void SetActive(bool active) {
 		_browser.SetHidden(!active);
+		SetAlt(!active);
+	}
+
+	public void SetAlt(bool alt) {
+		_alt = alt;
+		if (_alt) {
+			screen.localPosition    = altTransform.localPosition;
+			screen.localEulerAngles = altTransform.localEulerAngles;
+		}
+		else {
+			screen.localPosition    = Vector3.zero;
+			screen.localEulerAngles = Vector3.zero;
+		}
 	}
 }
