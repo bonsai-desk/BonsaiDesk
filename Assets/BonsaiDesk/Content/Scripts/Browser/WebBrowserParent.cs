@@ -8,15 +8,36 @@ public class WebBrowserParent : MonoBehaviour {
 	public KeyboardBrowserController keyboardBrowserController;
 	public WebBrowserController webBrowserController;
 	public WebNavBrowserController webNavBrowserController;
+	private Vector3 _startTransform;
+	private Vector3 _altTransform;
 
 	// Start is called before the first frame update
 	private void Start() {
 		keyboardBrowser.ListenersReady += SetupKeyboardBrowser;
 		webNavBrowser.BrowserReady     += SetupWebWebNavBrowser;
+
+		_startTransform = transform.localPosition;
+		_altTransform = new Vector3(0f, -10f, 0f);
+		transform.localPosition = _altTransform;
+
 	}
 
 	// Update is called once per frame
 	private void Update() { }
+
+	public event EventHandler CloseWeb;
+
+	public void SetActive(bool active) {
+		// hide and disable interaction with kb/nav
+		// move webbrowser to about:blank and disable
+		if (active) {
+			transform.localPosition = _startTransform;
+		}
+		else {
+			LoadUrl("about:blank");
+			transform.localPosition = _altTransform;
+		}
+	}
 
 	private void SetupWebWebNavBrowser() {
 		Debug.Log("[BONSAI] SetupWebWebNavBrowser");
@@ -29,7 +50,6 @@ public class WebBrowserParent : MonoBehaviour {
 
 	private void SetupKeyboardBrowser() {
 		Debug.Log("[BONSAI] SetupKeyboardBrowser");
-		//keyboardBrowser.KeyPress      += HandleKeyPress;
 		keyboardBrowser.InputRecieved += (sender, e) => webBrowser.HandleKeyboardInput(e.Value);
 	}
 
@@ -42,7 +62,9 @@ public class WebBrowserParent : MonoBehaviour {
 	}
 
 	private void HandleCloseWeb() {
-		throw new NotImplementedException();
+		if (CloseWeb != null) {
+			CloseWeb(this, new EventArgs());
+		}
 	}
 
 	private void HandleSpawnKeyboard() {
@@ -55,7 +77,7 @@ public class WebBrowserParent : MonoBehaviour {
 		keyboardBrowserController.SetActive(false);
 	}
 
-	private void HandleKeyPress(string key) {
-		webBrowser.HandleKeyboardInput(key);
+	public void LoadUrl(string url) {
+		webBrowser.LoadUrl(url);
 	}
 }

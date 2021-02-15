@@ -24,15 +24,18 @@ export function Button(props) {
   } = props;
   return (
       <div onPointerEnter={shouldPostHover ? postHover : null}
-           onPointerDown={shouldPostDown ? postMouseDown : null}
+           onPointerDown={() => {
+             handleClick();
+             if (shouldPostDown) {
+               postMouseDown();
+             }
+           }}
            onPointerUp={shouldPostUp ? postMouseUp : null}
-           className={className}
       >
-        <div className={className} onPointerDown={handleClick}>
+        <div className={className}>
           {props.children}
         </div>
       </div>
-
   );
 }
 

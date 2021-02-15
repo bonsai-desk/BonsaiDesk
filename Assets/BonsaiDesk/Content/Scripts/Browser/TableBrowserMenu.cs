@@ -46,6 +46,12 @@ public class TableBrowserMenu : MonoBehaviour {
 					case "closeRoom":
 						CloseRoom?.Invoke();
 						break;
+					case "browseYouTube":
+						if (BrowseSite != null) {
+							BrowseSite(this, "https://m.youtube.com");
+						}
+
+						break;
 					case "kickConnectionId":
 						// todo what happens when this fails?
 						var id = JsonConvert.DeserializeObject<int>(message.Data);
@@ -106,6 +112,8 @@ public class TableBrowserMenu : MonoBehaviour {
 	public event Action OpenRoom;
 	public event Action CloseRoom;
 	public event Action<int> KickConnectionId;
+
+	public event EventHandler<string> BrowseSite;
 
 	private class CsMessageKeyType<T> {
 		public KeyType<T> Data;

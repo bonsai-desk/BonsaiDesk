@@ -5,6 +5,7 @@ import {Button} from '../Components/Button';
 import axios from 'axios';
 import DoorOpen from '../static/door-open.svg';
 import LinkImg from '../static/link.svg';
+import YtImg from '../static/yt-small.png';
 import ThinkingFace from '../static/thinking-face.svg';
 import {useStore} from '../DataProvider';
 import {BeatLoader, BounceLoader} from 'react-spinners';
@@ -18,6 +19,10 @@ const redButtonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:b
 const greenButtonClass = 'py-4 px-8 font-bold bg-green-800 active:bg-green-700 hover:bg-green-600 rounded cursor-pointer flex flex-wrap content-center';
 const grayButtonClass = 'py-4 px-8 font-bold bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
 const grayButtonClassInert = 'py-4 px-8 font-bold bg-gray-800 rounded flex flex-wrap content-center';
+
+function postBrowseYouTube() {
+  postJson({Type: 'command', Message: 'browseYouTube'});
+}
 
 function postOpenRoom() {
   postJson({Type: 'command', Message: 'openRoom'});
@@ -103,23 +108,23 @@ function ConnectedClient(props) {
 
 }
 
-function InfoItem(props) {
+function InfoItem({imgSrc, title, slug, children}) {
   return (
       <div className={'flex w-full justify-between'}>
         <div className={'flex w-auto'}>
           <div className={'flex flex-wrap content-center  p-2 mr-2'}>
-            <img className={'h-9 w-9'} src={props.imgSrc} alt={''}/>
+            <img className={'h-9 w-9'} src={imgSrc} alt={''}/>
           </div>
           <div className={'my-auto'}>
             <div className={'text-xl'}>
-              {props.title}
+              {title}
             </div>
             <div className={'text-gray-400'}>
-              {props.slug}
+              {slug}
             </div>
           </div>
         </div>
-        {props.children}
+        {children}
       </div>
   );
 }
@@ -287,7 +292,6 @@ function JoinDeskPage(props) {
   }, [loading, code, navHome]);
 
   function handleClick(char) {
-    console.log('handleclick');
     setMessage('');
     switch (code.length) {
       case 4:
@@ -354,6 +358,17 @@ function JoinDeskPage(props) {
 
 function ContactsPage() {
   return <MenuContent name={'Contacts'}>
+  </MenuContent>;
+}
+
+function VideosPage() {
+  return <MenuContent name={'Videos'}>
+    <InfoItem imgSrc={YtImg} title={'YouTube'}
+              slug={'Find videos to watch on the big screen'}>
+      <Button className={greenButtonClass} handleClick={postBrowseYouTube}>
+        Browse
+      </Button>
+    </InfoItem>
   </MenuContent>;
 }
 
@@ -447,6 +462,7 @@ let SettingsPage = observer(() => {
 const pages = [
   {name: 'Home', component: HomePage},
   {name: 'Join Desk', component: JoinDeskPage},
+  {name: 'Videos', component: VideosPage},
   {name: 'Contacts', component: ContactsPage},
   {name: 'Settings', component: SettingsPage},
 ];
