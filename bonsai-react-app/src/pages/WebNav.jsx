@@ -6,7 +6,7 @@ import ForwardImg from '../static/forward.svg';
 import KeyBoardImg from '../static/keyboard.svg';
 import KeyBoardDismissImg from '../static/keyboard-dismiss.svg';
 import {postJson} from '../utilities';
-import KeySVG from '../Components/KeySVG';
+import {KeySVG} from '../Components/Keys';
 
 function postCommand(message) {
   console.log(message);

@@ -73,7 +73,7 @@ export function Backspace() {
 
 }
 
-function KeySVG(props) {
+export function KeySVG(props) {
   let {imgSrc, handleClick} = props;
   return (
       <KeyFrames handleClick={handleClick}>
@@ -83,7 +83,6 @@ function KeySVG(props) {
         </div>
       </KeyFrames>
   );
-
 }
 
 export function Space() {
