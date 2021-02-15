@@ -5,10 +5,13 @@ using UnityEngine;
 using Vuplex.WebView;
 
 public class TableBrowser : Browser {
-
 	public SoundFXRef hoverSound;
 	public SoundFXRef mouseDownSound;
 	public SoundFXRef mouseUpSound;
+
+	public bool disableVideo;
+	public bool clickWithoutStealingFocus;
+	public bool hoveringDisabled;
 
 	protected override void Start() {
 		base.Start();
@@ -19,11 +22,17 @@ public class TableBrowser : Browser {
 		{
 			var view = WebViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView");
 			CustomInputModule.Singleton.screens.Add(view);
+			CustomInputModule.Singleton.Click += HandleClickSound;
 			OnMessageEmitted(HandleJavascriptMessage);
 		};
+		ListenersReady += () => { Debug.Log("[BONSAI] TableBrowser listeners ready"); };
 	}
 
-	public event Action<string> KeyPress;
+	private void HandleClickSound(object sender, EventArgs e) {
+		mouseDownSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
+	}
+
+	public event EventHandler<EventArgs<string>> InputRecieved;
 
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
@@ -35,13 +44,16 @@ public class TableBrowser : Browser {
 						hoverSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
 						break;
 					case "mouseDown":
-						mouseDownSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
+						//mouseDownSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
 						break;
 					case "mouseUp":
 						mouseUpSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
 						break;
 					case "keyPress":
-						KeyPress?.Invoke(message.Data);
+						if (InputRecieved != null) {
+							InputRecieved(this, new EventArgs<string>(message.Data));
+						}
+
 						break;
 				}
 
@@ -77,7 +89,12 @@ public class TableBrowser : Browser {
 	}
 
 	protected override void SetupWebViewPrefab() {
-		WebViewPrefab = WebViewPrefabCustom.Instantiate(Bounds.x, Bounds.y);
+		WebViewPrefab = WebViewPrefabCustom.Instantiate(Bounds.x, Bounds.y, new WebViewOptions {
+				clickWithoutStealingFocus = clickWithoutStealingFocus,
+				disableVideo              = disableVideo
+			}
+		);
+
 		Destroy(WebViewPrefab.Collider);
 
 		WebViewPrefab.transform.localPosition = Vector3.zero;
@@ -96,12 +113,20 @@ public class TableBrowser : Browser {
 
 		WebViewPrefab.Initialized += (sender, eventArgs) =>
 		{
-			const int ppuu = 2000;
-			WebViewPrefab.WebView.SetResolution(ppuu);
-			var res = new Vector2Int((int) (ppuu * Bounds.x), (int) (ppuu * Bounds.y));
-			RebuildOverlay(res);
-			ToggleHidden();
+			WebViewPrefab.HoveringEnabled = !hoveringDisabled;
+			ChangeRes(Bounds);
+			//todo ChangeRes(Bounds);
+			//ChangeSize(0.3f, 0.3f);
 		};
 		base.SetupWebViewPrefab();
+	}
+
+	public void ChangeRes(Vector2 bounds, int ppu = 2000) {
+		WebViewPrefab.WebView.SetResolution(ppu);
+		WebViewPrefab.Resize(bounds.x, bounds.y);
+		var res = new Vector2Int((int) (ppu * bounds.x), (int) (ppu * bounds.y));
+	#if UNITY_ANDROID && !UNITY_EDITOR
+		RebuildOverlay(res);
+	#endif
 	}
 }

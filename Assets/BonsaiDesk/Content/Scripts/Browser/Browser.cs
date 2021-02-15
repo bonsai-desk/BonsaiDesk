@@ -18,18 +18,20 @@ public class Browser : MonoBehaviour {
 	public bool useBuiltHtml;
 	private GameObject _boundsObject;
 	private OVROverlay _overlay;
+	private bool _postedListenersReady;
 	private bool _renderEnabled = true;
-	protected Vector2 Bounds;
+	public Vector2 Bounds;
 	protected Transform Resizer;
 	protected WebViewPrefabCustom WebViewPrefab;
 	protected Transform WebViewView;
+	public DragMode dragMode;
 
 	protected virtual void Start() {
 		Debug.Log("browser start");
 
 		CacheTransforms();
-
-		PreConfigureWebView();
+		
+		// WebView preconfiguring is done once in the BrowserSetup class
 
 		SetupWebViewPrefab();
 
@@ -81,7 +83,9 @@ public class Browser : MonoBehaviour {
 	protected virtual void SetupWebViewPrefab() {
 		WebViewPrefab.Initialized += (sender, eventArgs) =>
 		{
+			Debug.Log("[BONSAI] Browser Initialized");
 			WebViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
+			WebViewPrefab.DragMode       =  dragMode;
 			BrowserReady?.Invoke();
 		};
 	#if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -97,11 +101,28 @@ public class Browser : MonoBehaviour {
 
 	private void HandleJavaScriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
+
 		switch (message.Type) {
 			case "event":
 				switch (message.Message) {
 					case "listenersReady":
-						ListenersReady?.Invoke();
+						Debug.Log($"[BONSAI] invoke listeners ready ... {_postedListenersReady}");
+						if (!useBuiltHtml) {
+							// todo: for some reason when using a hot reload url
+							// the app posts listeners-ready twice so we just check it here
+							if (!_postedListenersReady) {
+								ListenersReady?.Invoke();
+							}
+							else {
+								Debug.LogWarning("[BONSAI] Browser trying to post listeners twice, ignoring");
+							}
+						}
+						else {
+							ListenersReady?.Invoke();
+						}
+
+						_postedListenersReady = true;
+
 						break;
 				}
 
@@ -123,23 +144,31 @@ public class Browser : MonoBehaviour {
             user_pref('media.autoplay.default', 0);
             user_pref('media.geckoview.autoplay.request', false);
         ");
+		AndroidGeckoWebView.EnsureBuiltInExtension(
+			"resource://android/assets/ublock/",
+			"uBlock0@raymondhill.net"
+		);
 	#elif UNITY_EDITOR
 		StandaloneWebView.SetCommandLineArguments("--autoplay-policy=no-user-gesture-required");
 	#endif
 	}
 
-	public void ToggleHidden() {
-		_renderEnabled = !_renderEnabled;
+	public void SetHidden(bool hidden) {
+		_renderEnabled = !hidden;
 
 		WebViewPrefab.ClickingEnabled  = _renderEnabled;
 		WebViewPrefab.ScrollingEnabled = _renderEnabled;
-		WebViewPrefab.HoveringEnabled  = _renderEnabled;
 
 	#if UNITY_ANDROID && !UNITY_EDITOR
         holePuncherTransform.GetComponent<MeshRenderer>().enabled = _renderEnabled;
 	#else
 		WebViewView.GetComponent<MeshRenderer>().enabled = _renderEnabled;
 	#endif
+		
+	}
+
+	public void ToggleHidden() {
+		SetHidden(_renderEnabled);
 	}
 
 	public void LoadUrl(string url) {
@@ -155,7 +184,16 @@ public class Browser : MonoBehaviour {
 		WebViewPrefab.WebView.PostMessage(data);
 	}
 
+	public void GoBack() {
+		WebViewPrefab.WebView.GoBack();
+	}
+	
+	public void GoForward() {
+		WebViewPrefab.WebView.GoForward();
+	}
+
 	public void HandleKeyboardInput(string key) {
+		Debug.Log($"[BONSAI] HandleKeyboardInput {key} {WebViewPrefab.WebView}");
 		WebViewPrefab.WebView.HandleKeyboardInput(key);
 	}
 
@@ -206,6 +244,7 @@ public class Browser : MonoBehaviour {
 		public static readonly string NavToMenu = PushPath("/menu");
 		public static readonly string NavHome = PushPath("/home");
 		public static readonly string NavKeyboard = PushPath("/keyboard");
+		public static readonly string NavWebNav = PushPath("/webnav");
 
 		private static string PushPath(string path) {
 			return "{" +

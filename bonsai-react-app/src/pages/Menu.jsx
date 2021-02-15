@@ -1,15 +1,16 @@
 import React, {useEffect, useState} from 'react';
 import './Menu.css';
 import {postJson} from '../utilities';
+import {Button} from '../Components/Button';
 import axios from 'axios';
 import DoorOpen from '../static/door-open.svg';
 import LinkImg from '../static/link.svg';
+import YtImg from '../static/yt-small.png';
 import ThinkingFace from '../static/thinking-face.svg';
 import {useStore} from '../DataProvider';
 import {BeatLoader, BounceLoader} from 'react-spinners';
 import {observer} from 'mobx-react-lite';
 import {action, autorun} from 'mobx';
-import Button from '../Components/Button';
 
 let API_BASE = 'https://api.desk.link';
 
@@ -18,6 +19,10 @@ const redButtonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:b
 const greenButtonClass = 'py-4 px-8 font-bold bg-green-800 active:bg-green-700 hover:bg-green-600 rounded cursor-pointer flex flex-wrap content-center';
 const grayButtonClass = 'py-4 px-8 font-bold bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
 const grayButtonClassInert = 'py-4 px-8 font-bold bg-gray-800 rounded flex flex-wrap content-center';
+
+function postBrowseYouTube() {
+  postJson({Type: 'command', Message: 'browseYouTube'});
+}
 
 function postOpenRoom() {
   postJson({Type: 'command', Message: 'openRoom'});
@@ -48,10 +53,8 @@ function ListItem(props) {
 
   let className = selected ? buttonClassSelected : buttonClass;
   return (
-      <Button>
-        <div className={className} onClick={handleClick}>
-          {props.children}
-        </div>
+      <Button className={className} handleClick={handleClick}>
+        {props.children}
       </Button>
   );
 }
@@ -70,26 +73,15 @@ function SettingsTitle(props) {
 }
 
 function JoinDeskButton(props) {
-  let {handleClick, char, triggerMouseDown = false} = props;
+  let {handleClick, char} = props;
 
   return (
-      <Button>
-        <div
-            onPointerDown={() => {
-              if (triggerMouseDown) {
-                handleClick(char);
-              }
-            }}
-            onPointerUp={() => {
-              if (!triggerMouseDown) {
-                handleClick(char);
-              }
-            }}
-            className={roundButtonClass}>
+      <Button className={roundButtonClass} handleClick={() => {
+        handleClick(char);
+      }}>
             <span className={'w-full text-center'}>
                 {char}
             </span>
-        </div>
       </Button>
   );
 }
@@ -107,34 +99,32 @@ function ConnectedClient(props) {
     return (
         <InfoItem title={Name} slug={ConnectionId}
                   imgSrc={ThinkingFace}>
-          <Button>
-            <div onClick={() => {
-              postKickConnectionId(ConnectionId);
-            }} className={redButtonClass}>Kick
-            </div>
+          <Button handleClick={() => {
+            postKickConnectionId(ConnectionId);
+          }} className={redButtonClass}>Kick
           </Button>
         </InfoItem>);
   }
 
 }
 
-function InfoItem(props) {
+function InfoItem({imgSrc, title, slug, children}) {
   return (
       <div className={'flex w-full justify-between'}>
         <div className={'flex w-auto'}>
           <div className={'flex flex-wrap content-center  p-2 mr-2'}>
-            <img className={'h-9 w-9'} src={props.imgSrc} alt={''}/>
+            <img className={'h-9 w-9'} src={imgSrc} alt={''}/>
           </div>
           <div className={'my-auto'}>
             <div className={'text-xl'}>
-              {props.title}
+              {title}
             </div>
             <div className={'text-gray-400'}>
-              {props.slug}
+              {slug}
             </div>
           </div>
         </div>
-        {props.children}
+        {children}
       </div>
   );
 }
@@ -162,9 +152,8 @@ let ClientHomePage = () => {
       <div className={'flex'}>
         <InfoItem title={'Connected'} slug={'You are connected to a host'}
                   imgSrc={LinkImg}>
-          <Button>
-            <div onClick={postLeaveRoom} className={redButtonClass}>Exit</div>
-          </Button>
+          <Button handleClick={postLeaveRoom}
+                  className={redButtonClass}>Exit</Button>
         </InfoItem>
       </div>
   );
@@ -175,20 +164,16 @@ let RoomInfo = observer(() => {
 
   let OpenRoom =
       <InfoItem title={'Room'} slug={'Invite others'} imgSrc={DoorOpen}>
-        <Button>
-          <div className={greenButtonClass} onClick={postOpenRoom}>
-            Open Up
-          </div>
+        <Button className={greenButtonClass} handleClick={postOpenRoom}>
+          Open Up
         </Button>
       </InfoItem>;
 
   let CloseRoom =
       <InfoItem title={'Room'} slug={'Ready to accept connections'}
                 imgSrc={DoorOpen}>
-        <Button>
-          <div className={redButtonClass} onClick={postCloseRoom}>
-            Close
-          </div>
+        <Button className={redButtonClass} handleClick={postCloseRoom}>
+          Close
         </Button>
       </InfoItem>;
 
@@ -307,7 +292,6 @@ function JoinDeskPage(props) {
   }, [loading, code, navHome]);
 
   function handleClick(char) {
-    console.log('handleclick');
     setMessage('');
     switch (code.length) {
       case 4:
@@ -339,32 +323,32 @@ function JoinDeskPage(props) {
           </div>
           <div className={'p-2 rounded space-y-4 text-2xl'}>
             <div className={'flex space-x-4'}>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+              <JoinDeskButton handleClick={handleClick}
                               char={'L'}/>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+              <JoinDeskButton handleClick={handleClick}
                               char={'R'}/>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+              <JoinDeskButton handleClick={handleClick}
                               char={'C'}/>
             </div>
             <div className={'flex space-x-4'}>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+              <JoinDeskButton handleClick={handleClick}
                               char={'D'}/>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+              <JoinDeskButton handleClick={handleClick}
                               char={'E'}/>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+              <JoinDeskButton handleClick={handleClick}
                               char={'F'}/>
             </div>
             <div className={'flex space-x-4'}>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+              <JoinDeskButton handleClick={handleClick}
                               char={'G'}/>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+              <JoinDeskButton handleClick={handleClick}
                               char={'H'}/>
-              <JoinDeskButton triggerMouseDown={true} handleClick={handleClick}
+              <JoinDeskButton handleClick={handleClick}
                               char={'I'}/>
             </div>
             <div className={'flex flex-wrap w-full justify-around'}>
-              <JoinDeskButton triggerMouseDown={true}
-                              handleClick={handleBackspace} char={'<'}/>
+              <JoinDeskButton
+                  handleClick={handleBackspace} char={'<'}/>
             </div>
           </div>
         </div>
@@ -374,6 +358,17 @@ function JoinDeskPage(props) {
 
 function ContactsPage() {
   return <MenuContent name={'Contacts'}>
+  </MenuContent>;
+}
+
+function VideosPage() {
+  return <MenuContent name={'Videos'}>
+    <InfoItem imgSrc={YtImg} title={'YouTube'}
+              slug={'Find videos to watch on the big screen'}>
+      <Button className={greenButtonClass} handleClick={postBrowseYouTube}>
+        Browse
+      </Button>
+    </InfoItem>
   </MenuContent>;
 }
 
@@ -411,65 +406,47 @@ let SettingsPage = observer(() => {
   return (
       <MenuContent name={'Settings'}>
         <div className={'flex space-x-2'}>
-          <Button>
-            <div onClick={() => {
-              setNetState(store, 'Neutral');
-            }} className={grayButtonClass}>Neutral
-            </div>
+          <Button handleClick={() => {
+            setNetState(store, 'Neutral');
+          }} className={grayButtonClass}>Neutral
           </Button>
-          <Button>
-            <div onClick={() => {
-              setNetState(store, 'HostWaiting');
-            }} className={grayButtonClass}>HostWaiting
-            </div>
+          <Button handleClick={() => {
+            setNetState(store, 'HostWaiting');
+          }} className={grayButtonClass}>HostWaiting
           </Button>
-          <Button>
-            <div onClick={() => {
-              setNetState(store, 'Hosting');
-            }} className={grayButtonClass}>Hosting
-            </div>
+          <Button handleClick={() => {
+            setNetState(store, 'Hosting');
+          }} className={grayButtonClass}>Hosting
           </Button>
-          <Button>
-            <div onClick={() => {
-              setNetState(store, 'ClientConnected');
-            }} className={grayButtonClass}>ClientConnected
-            </div>
+          <Button handleClick={() => {
+            setNetState(store, 'ClientConnected');
+          }} className={grayButtonClass}>ClientConnected
           </Button>
 
 
         </div>
         <div className={'flex space-x-2'}>
-          <Button>
-            <div className={grayButtonClass} onClick={() => {
-              addFakeIpPort(store);
-            }}>+ fake ip/port
-            </div>
+          <Button className={grayButtonClass} handleClick={() => {
+            addFakeIpPort(store);
+          }}>+ fake ip/port
           </Button>
-          <Button>
-            <div className={grayButtonClass} onClick={() => {
-              rmFakeIpPort(store);
-            }}>- fake ip/port
-            </div>
+          <Button className={grayButtonClass} handleClick={() => {
+            rmFakeIpPort(store);
+          }}>- fake ip/port
           </Button>
-          <Button>
-            <div onClick={() => {
-              addFakeClient(store);
-            }} className={grayButtonClass}>+ fake client
-            </div>
+          <Button handleClick={() => {
+            addFakeClient(store);
+          }} className={grayButtonClass}>+ fake client
           </Button>
-          <Button>
-            <div onClick={() => {
-              rmFakeClient(store);
-            }} className={grayButtonClass}>- fake client
-            </div>
+          <Button handleClick={() => {
+            rmFakeClient(store);
+          }} className={grayButtonClass}>- fake client
           </Button>
         </div>
-        <Button>
-          <div onClick={() => {
-            toggleRoomOpen(store);
-          }} className={grayButtonClass}>
-            toggle room open
-          </div>
+        <Button handleClick={() => {
+          toggleRoomOpen(store);
+        }} className={grayButtonClass}>
+          toggle room open
         </Button>
         <div className={'flex space-x-2'}>
         </div>
@@ -485,6 +462,7 @@ let SettingsPage = observer(() => {
 const pages = [
   {name: 'Home', component: HomePage},
   {name: 'Join Desk', component: JoinDeskPage},
+  {name: 'Videos', component: VideosPage},
   {name: 'Contacts', component: ContactsPage},
   {name: 'Settings', component: SettingsPage},
 ];

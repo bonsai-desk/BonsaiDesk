@@ -14,17 +14,28 @@ function postHover() {
   postJson({Type: 'event', Message: 'hover'});
 }
 
-function Button(props) {
-  let {className=""} = props
+export function Button(props) {
+  let {
+    handleClick,
+    className = '',
+    shouldPostDown = true,
+    shouldPostHover = true,
+    shouldPostUp = true,
+  } = props;
   return (
-      <div onPointerEnter={postHover}
-           onPointerDown={postMouseDown}
-           onPointerUp={postMouseUp}
-           className={className}
+      <div onPointerEnter={shouldPostHover ? postHover : null}
+           onPointerDown={() => {
+             handleClick();
+             if (shouldPostDown) {
+               postMouseDown();
+             }
+           }}
+           onPointerUp={shouldPostUp ? postMouseUp : null}
       >
-        {props.children}
+        <div className={className}>
+          {props.children}
+        </div>
       </div>
   );
 }
 
-export default Button;
