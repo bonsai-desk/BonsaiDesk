@@ -15046,8 +15046,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
+      propertyPath: hoveringDisabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
       propertyPath: clickWithoutStealingFocus
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141497, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}

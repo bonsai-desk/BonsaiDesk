@@ -3,9 +3,26 @@ import {animated, useSpring} from 'react-spring';
 import {Button} from './Button';
 import {postJson} from '../utilities';
 import BackSpaceImgHollow from '../static/backspace-hollow.svg';
+import CaretSquareUp from '../static/caret-square-up.svg';
+import CaretSquareUpHollow from '../static/caret-square-up-hollow.svg';
 
-export function KeyFrames(props) {
-  let {handleClick, width} = props;
+export function Shift(props) {
+  let {shift, toggleShift} = props;
+
+  const imgHidden = 'hidden h-10 w-10 absolute bottom-0 left-0';
+  const imgVisible = 'h-10 w-10 absolute -bottom-5 left-1';
+
+  return <KeyFrames handleClick={toggleShift}>
+    <div className={'relative w-full flex justify-center'}>
+      <img className={shift ? imgVisible : imgHidden} src={CaretSquareUp}
+           alt={''}/>
+      <img className={shift ? imgHidden : imgVisible}
+           src={shift ? CaretSquareUp : CaretSquareUpHollow} alt={''}/>
+    </div>
+  </KeyFrames>;
+}
+
+export function KeyFrames({handleClick, width, children}) {
   const [state, toggle] = useState(false);
   const level = 150;
   const {color} = useSpring(
@@ -16,7 +33,8 @@ export function KeyFrames(props) {
         config: {duration: 400},
       });
   return (
-      <Button handleClick={handleClick}>
+      <Button handleClick={handleClick} shouldPostDown={false}
+              shouldPostUp={false} shouldPostHover={false}>
         <div onClick={() => toggle(!state)} className={''}>
           <animated.div
               style={{
@@ -33,12 +51,36 @@ export function KeyFrames(props) {
           >
             <div
                 className={'w-full text-center text-white text-3xl'}>
-              {props.children}
+              {children}
             </div>
           </animated.div>
         </div>
       </Button>
   );
+}
+
+export function NumsOrChar(props) {
+  let {handleClick, level} = props;
+
+  let shift;
+  shift = level === 0;
+
+  return <KeyFrames handleClick={handleClick} width={'7em'}>
+    {shift ? '.?123' : 'ABC'}
+  </KeyFrames>;
+}
+
+export function SymbolsOrNum(props) {
+  let {handleClick, level} = props;
+
+  let shift;
+  shift = level !== 1;
+
+  return <KeyFrames handleClick={handleClick} width={'5em'}>
+    <span className={'w-full -m-1'}>
+    {shift ? '123' : '#+='}
+    </span>
+  </KeyFrames>;
 }
 
 function postChar(char) {

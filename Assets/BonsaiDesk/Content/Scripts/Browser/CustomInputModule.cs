@@ -32,6 +32,8 @@ public class CustomInputModule : StandaloneInputModule {
 		ProcessMouseEvent(GetGazePointerData());
 	}
 
+	public event EventHandler Click;
+
 	private void ProcessMouseEvent(MouseState mouseData) {
 		var leftButtonData = mouseData.GetButtonState(PointerEventData.InputButton.Left).eventData;
 
@@ -89,6 +91,10 @@ public class CustomInputModule : StandaloneInputModule {
 			var leftClick  = leftInClick && !rightInClick;
 			var rightClick = !leftInClick && rightInClick;
 			if (leftClick || rightClick) {
+				if (!prevInClickRegion && Click != null) {
+					Click(this, new EventArgs());
+				}
+				
 				inClickRegion = true;
 			}
 

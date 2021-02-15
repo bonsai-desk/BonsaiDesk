@@ -1,5 +1,4 @@
-import React, {useState} from "react"
-import {Button} from '../Components/Button';
+import React, {useState} from 'react';
 import CloseImg from '../static/close.svg';
 import BackImg from '../static/back.svg';
 import ForwardImg from '../static/forward.svg';
@@ -17,10 +16,10 @@ function KeyboardButton(props) {
   let {kbActive, handleClick} = props;
 
   return (
-      <Button className={'w-full flex justify-center'}
-              handleClick={handleClick}>
-        <KeySVG imgSrc={kbActive ? KeyBoardDismissImg : KeyBoardImg}/>
-      </Button>
+      <div className={'w-full flex justify-center'}>
+        <KeySVG handleClick={handleClick}
+                imgSrc={kbActive ? KeyBoardDismissImg : KeyBoardImg}/>
+      </div>
 
   );
 
@@ -45,21 +44,19 @@ function WebNav() {
       <div
           className={'w-full h-screen bg-black flex flex-wrap content-center justify-center'}>
         <div className={'space-y-2 mb-2'}>
-          <Button className={'w-full flex justify-center'}
-                  handleClick={handleClose}>
-            <KeySVG className={closeButtonClass} imgSrc={CloseImg}/>
-          </Button>
+          <div className={'w-full flex justify-center'}>
+            <KeySVG handleClick={handleClose} className={closeButtonClass}
+                    imgSrc={CloseImg}/>
+          </div>
           <div className={'flex space-x-2'}>
-            <Button handleClick={() => {
-              postCommand('navBack');
-            }}>
-              <KeySVG imgSrc={BackImg}/>
-            </Button>
-            <Button handleClick={() => {
+            <KeySVG imgSrc={BackImg} handleClick={
+              () => {
+                postCommand('navBack');
+              }
+            }/>
+            <KeySVG imgSrc={ForwardImg} handleClick={() => {
               postCommand('navForward');
-            }}>
-              <KeySVG imgSrc={ForwardImg}/>
-            </Button>
+            }}/>
           </div>
           <KeyboardButton kbActive={kbActive}
                           handleClick={handleKeyboardButtonClick}/>

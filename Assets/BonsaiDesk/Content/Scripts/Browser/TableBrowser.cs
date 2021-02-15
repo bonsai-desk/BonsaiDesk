@@ -22,9 +22,14 @@ public class TableBrowser : Browser {
 		{
 			var view = WebViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView");
 			CustomInputModule.Singleton.screens.Add(view);
+			CustomInputModule.Singleton.Click += HandleClickSound;
 			OnMessageEmitted(HandleJavascriptMessage);
 		};
 		ListenersReady += () => { Debug.Log("[BONSAI] TableBrowser listeners ready"); };
+	}
+
+	private void HandleClickSound(object sender, EventArgs e) {
+		mouseDownSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
 	}
 
 	public event EventHandler<EventArgs<string>> InputRecieved;
@@ -39,7 +44,7 @@ public class TableBrowser : Browser {
 						hoverSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
 						break;
 					case "mouseDown":
-						mouseDownSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
+						//mouseDownSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
 						break;
 					case "mouseUp":
 						mouseUpSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
@@ -48,6 +53,7 @@ public class TableBrowser : Browser {
 						if (InputRecieved != null) {
 							InputRecieved(this, new EventArgs<string>(message.Data));
 						}
+
 						break;
 				}
 

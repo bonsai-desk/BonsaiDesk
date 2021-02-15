@@ -14,27 +14,24 @@ function postHover() {
   postJson({Type: 'event', Message: 'hover'});
 }
 
-function SoundButton(props) {
-  let {className = ''} = props;
+export function Button(props) {
+  let {
+    handleClick,
+    className = '',
+    shouldPostDown = true,
+    shouldPostHover = true,
+    shouldPostUp = true,
+  } = props;
   return (
-      <div onPointerEnter={postHover}
-           onPointerDown={postMouseDown}
-           onPointerUp={postMouseUp}
+      <div onPointerEnter={shouldPostHover ? postHover : null}
+           onPointerDown={shouldPostDown ? postMouseDown : null}
+           onPointerUp={shouldPostUp ? postMouseUp : null}
            className={className}
       >
-        {props.children}
-      </div>
-  );
-}
-
-export function Button(props) {
-  let {handleClick, className = ''} = props;
-  return (
-      <SoundButton>
         <div className={className} onPointerDown={handleClick}>
           {props.children}
         </div>
-      </SoundButton>
+      </div>
 
   );
 }
