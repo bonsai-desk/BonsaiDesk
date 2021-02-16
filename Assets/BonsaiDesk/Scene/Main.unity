@@ -10429,7 +10429,7 @@ MonoBehaviour:
   hoverDistance: 0.1
   clickDistance: 0.015
   mainCamera: {fileID: 1365805663}
-  angleDragThreshold: 2
+  angleDragThreshold: 3.5
 --- !u!1 &752779473
 GameObject:
   m_ObjectHideFlags: 0
