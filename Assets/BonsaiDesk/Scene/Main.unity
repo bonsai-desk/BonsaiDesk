@@ -2407,7 +2407,7 @@ MonoBehaviour:
   maxRelayRefreshAttempts: 3
   relayLifetime: 30
   isDisconnecting: 0
-  serverOnlyIfEditor: 0
+  serverOnlyIfEditor: 1
   visualizeAuthority: 0
   browserReady: 0
   tableBrowser: {fileID: 1361515864}
