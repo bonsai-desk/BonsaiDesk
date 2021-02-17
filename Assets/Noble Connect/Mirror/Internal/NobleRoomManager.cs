@@ -6,8 +6,9 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
+using Mirror;
 
-namespace Mirror
+namespace NobleConnect.Mirror
 {
     /// <summary>
     /// This is a specialized NetworkManager that includes a networked room.

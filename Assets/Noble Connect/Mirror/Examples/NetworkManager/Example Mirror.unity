@@ -94,8 +94,8 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaDirect: 0.5
     m_PVRFilteringAtrousPositionSigmaIndirect: 2
     m_PVRFilteringAtrousPositionSigmaAO: 1
-    m_ShowResolutionOverlay: 1
     m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
   m_LightingDataAsset: {fileID: 0}
   m_UseShadowmask: 1
 --- !u!196 &4
@@ -166,14 +166,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dontDestroyOnLoad: 1
   runInBackground: 1
-  startOnHeadless: 1
-  serverTickRate: 30
+  autoStartServerBuild: 1
   showDebugMessages: 0
+  serverTickRate: 30
   offlineScene: 
   onlineScene: 
   transport: {fileID: 437631053}
   networkAddress: localhost
   maxConnections: 4
+  disconnectInactiveConnections: 0
+  disconnectInactiveTimeout: 60
+  authenticator: {fileID: 0}
   playerPrefab: {fileID: 1536319450925060, guid: 96488b71cfa1ba94a915a4d474677d76,
     type: 3}
   autoCreatePlayer: 1
@@ -183,6 +186,10 @@ MonoBehaviour:
   region: 0
   forceRelayConnection: 0
   logLevel: 2
+  relayRefreshTime: 30
+  relayRefreshTimeout: 0.1
+  maxRelayRefreshAttempts: 3
+  relayLifetime: 30
   isDisconnecting: 0
 --- !u!4 &437631052
 Transform:
@@ -207,7 +214,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 437631049}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c7424c1070fad4ba2a7a96b02fbeb4bb, type: 3}
+  m_Script: {fileID: 11500000, guid: 6b0fecffa3f624585964b0d0eb21b18e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   OnClientConnected:
@@ -218,7 +225,7 @@ MonoBehaviour:
   OnClientDataReceived:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: Mirror.UnityEventArraySegment, Mirror, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: Mirror.ClientDataReceivedEvent, Mirror, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   OnClientError:
     m_PersistentCalls:
@@ -237,7 +244,7 @@ MonoBehaviour:
   OnServerDataReceived:
     m_PersistentCalls:
       m_Calls: []
-    m_TypeName: Mirror.UnityEventIntArraySegment, Mirror, Version=0.0.0.0, Culture=neutral,
+    m_TypeName: Mirror.ServerDataReceivedEvent, Mirror, Version=0.0.0.0, Culture=neutral,
       PublicKeyToken=null
   OnServerError:
     m_PersistentCalls:
@@ -248,10 +255,14 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
     m_TypeName: Mirror.UnityEventInt, Mirror, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-  port: 7777
+  Port: 7777
   NoDelay: 1
-  serverMaxMessageSize: 16384
-  clientMaxMessageSize: 16384
+  Interval: 10
+  FastResend: 0
+  CongestionWindow: 1
+  SendWindowSize: 128
+  ReceiveWindowSize: 128
+  debugGUI: 0
 --- !u!114 &437631054
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,6 +1,7 @@
 using UnityEngine;
+using Mirror;
 
-namespace Mirror
+namespace NobleConnect.Mirror
 {
     /// <summary>
     /// This component works in conjunction with the NetworkRoomManager to make up the multiplayer room system.
