@@ -152,7 +152,7 @@ namespace Dissonance.Audio.Playback
                 _awaitingActivation.Dequeue();
 
             // If this is no active session, discard the last one too.
-            if (_active == null)
+            if (_active == null && _awaitingActivation.Count > 0)
                 _awaitingActivation.Dequeue();
 
             // Empty all readings from the jitter meter

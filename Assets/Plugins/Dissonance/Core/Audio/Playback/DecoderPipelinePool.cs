@@ -7,8 +7,6 @@ namespace Dissonance.Audio.Playback
 {
     internal static class DecoderPipelinePool
     {
-        private static readonly Log Log = Logs.Create(LogCategory.Playback, typeof(SpeechSessionStream).Name);
-
         private static readonly Dictionary<FrameFormat, ConcurrentPool<DecoderPipeline>> Pools = new Dictionary<FrameFormat, ConcurrentPool<DecoderPipeline>>();
 
         private static int _nextPipelineId;

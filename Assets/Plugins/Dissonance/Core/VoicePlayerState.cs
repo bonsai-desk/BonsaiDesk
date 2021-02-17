@@ -276,7 +276,7 @@ namespace Dissonance
                     Log.Error(Log.UserErrorMessage(
                         "Attempted to Locally UnMute the local player",
                         "Setting `IsLocallyMuted = false` on the local player",
-                        "https://dissonance.readthedocs.io/en/latest/Reference/Other/VoicePlayerState/",
+                        "https://placeholder-software.co.uk/dissonance/docs/Reference/Other/VoicePlayerState.html",
                         "BEF78918-1805-4D59-A071-74E7B38D13C8"
                     ));
                 }
@@ -313,7 +313,7 @@ namespace Dissonance
                 Log.Error(Log.UserErrorMessage(
                     "Attempted to set playback volume of local player",
                     "Setting `Volume = value` on the local player",
-                    "https://dissonance.readthedocs.io/en/latest/Reference/Other/VoicePlayerState/",
+                    "https://placeholder-software.co.uk/dissonance/docs/Reference/Other/VoicePlayerState.html",
                     "9822EFB8-1A4A-4F54-9A32-5F183AE8D4DE"
                 ));
             }

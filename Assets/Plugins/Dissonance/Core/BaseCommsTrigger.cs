@@ -273,7 +273,7 @@ namespace Dissonance
                 Log.Error(Log.UserErrorMessage(
                     "Cannot find DissonanceComms component in scene",
                     "Created a Dissonance trigger component without putting a DissonanceComms component into the scene first",
-                    "https://dissonance.readthedocs.io/en/latest/Basics/Getting-Started/",
+                    "https://placeholder-software.co.uk/dissonance/docs/Basics/Getting-Started.html",
                     "FFB753E0-AC31-40AF-848B-234932B2155B"
                 ));
             }
