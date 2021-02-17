@@ -36,7 +36,7 @@ namespace Dissonance.Editor.Windows.Welcome
             EditorGUILayout.LabelField("", LabelFieldStyle);
 
             if (GUILayout.Button("Before you can use Dissonance you will need to choose which network backend to use. Learn more about these options and which one you should choose <b><color=#aaaaff>here</color></b>.", LabelFieldStyle))
-                Application.OpenURL("https://dissonance.readthedocs.io/en/latest/Basics/Choosing-A-Network/");
+                Application.OpenURL("https://placeholder-software.co.uk/dissonance/docs/Basics/Choosing-A-Network.html");
 
             NetworkIntegrationButton("UNet HLAPI",                "https://assetstore.unity.com/packages/slug/143285");
             NetworkIntegrationButton("Mirror Networking",         "https://assetstore.unity.com/packages/slug/143290");
@@ -48,7 +48,7 @@ namespace Dissonance.Editor.Windows.Welcome
             NetworkIntegrationButton("Steamworks.NET (P2P)",      "https://assetstore.unity.com/packages/slug/143292");
             NetworkIntegrationButton("WebRTC Network",            "https://assetstore.unity.com/packages/slug/143294");
             NetworkIntegrationButton("TNet3",                     "https://assetstore.unity.com/packages/slug/154374");
-            NetworkIntegrationButton("Custom Network Backend",    "https://dissonance.readthedocs.io/en/latest/Tutorials/Custom-Networking/");
+            NetworkIntegrationButton("Custom Network Backend",    "https://placeholder-software.co.uk/dissonance/docs/Tutorials/Custom-Networking.html");
 
             EditorGUILayout.LabelField("", LabelFieldStyle);
 

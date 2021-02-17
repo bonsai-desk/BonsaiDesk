@@ -99,16 +99,15 @@ namespace Dissonance.Editor
                 {
                     var roomList = new List<string>(roomNames);
                     var roomIndex = roomList.IndexOf(transmitter.RoomName);
-                    var deadRoom = false;
 
                     using (new EditorGUILayout.HorizontalScope())
                     {
-                        //Detect if the room name is not null, and is also not in the list. This implies the room has been deleted from the room list. In this case 
+                        // Detect if the room name is not null, and is also not in the list. This implies the room has been deleted from the room list.
+                        // If this is the case insert it into our temporary copy of the room names list
                         if (roomIndex == -1 && !string.IsNullOrEmpty(transmitter.RoomName))
                         {
                             roomList.Insert(0, transmitter.RoomName);
                             roomIndex = 0;
-                            deadRoom = true;
                         }
 
                         transmitter.ChangeWithUndo(
@@ -122,9 +121,7 @@ namespace Dissonance.Editor
                             ChatRoomSettingsEditor.GoToSettings();
                     }
 
-                    if (deadRoom)
-                        EditorGUILayout.HelpBox(string.Format("Room '{0}' is no longer defined in the chat room configuration! \nRe-create the '{0}' room, or select a different room.", transmitter.RoomName), MessageType.Warning);
-                    else if (string.IsNullOrEmpty(transmitter.RoomName))
+                    if (string.IsNullOrEmpty(transmitter.RoomName))
                         EditorGUILayout.HelpBox("No chat room selected", MessageType.Error);
                 }
                 else
@@ -164,9 +161,8 @@ namespace Dissonance.Editor
                     if (Application.isPlaying && player.Type == NetworkPlayerType.Local)
                     {
                         EditorGUILayout.HelpBox(
-                            "This is the local player.\n" +
-                            "Are you sure you mean to broadcast to the local player?",
-                            MessageType.Warning
+                            "This trigger is disabled because the player tracker script represents the local player (cannot send voice to yourself).",
+                            MessageType.Info
                         );
                     }
                 }

@@ -175,21 +175,18 @@ namespace Dissonance.Audio.Capture
 
             lock (_inputWriteLock)
             {
-                //Write data into input buffer
+                // Write as much data into the buffer as possible
                 var written = _resamplerInput.Write(data);
+
+                // If not everything was written it means the input buffer is full! The only thing to do is throw
+                // away the excess audio and to keep track of exactly how much was lost. The lost samples will be injected
+                // as silence, to keep everything in sync.
                 if (written < data.Count)
                 {
-                    //We didn't write everything, so try to write out as much as possible (fill buffer) and then count the rest of the samples as lost
-                    var written2 = _resamplerInput.Write(new ArraySegment<float>(data.Array, data.Offset + written, Math.Min(data.Count - written, _resamplerInput.Capacity - _resamplerInput.Capacity)));
+                    var lost = data.Count - written;
 
-                    //Increase the count of lost samples, so we can inject the appropriate amount of silence to compensate later
-                    var totalWritten = written + written2;
-                    var lost = data.Count - totalWritten;
-                    if (lost > 0)
-                    {
-                        Interlocked.Add(ref _droppedSamples, lost);
-                        Log.Warn("Lost {0} samples in the preprocessor (buffer full), injecting silence to compensate", lost);
-                    }
+                    Interlocked.Add(ref _droppedSamples, lost);
+                    Log.Warn("Lost {0} samples in the preprocessor (buffer full), injecting silence to compensate", lost);
                 }
             }
 

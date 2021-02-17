@@ -303,7 +303,7 @@ namespace NobleConnect.Mirror
             }, requireAuthentication);
         }
 
-        static public void UnregisterHandler<T>() where T : NetworkMessage, new()
+        static public void UnregisterHandler<T>() where T : struct, NetworkMessage
         {
             NetworkServer.UnregisterHandler<T>();
         }
@@ -417,20 +417,20 @@ namespace NobleConnect.Mirror
         public static bool active { get { return NetworkServer.active; } }
         public static bool localClientActive { get { return NetworkServer.localClientActive; } }
         public static void Shutdown() { NetworkServer.Shutdown(); }
-        public static void SendToAll<T>(T msg, int channelId = Channels.DefaultReliable, bool sendToReadyOnly = false) where T : NetworkMessage
+        public static void SendToAll<T>(T msg, int channelId = Channels.DefaultReliable, bool sendToReadyOnly = false) where T : struct, NetworkMessage
         {
             NetworkServer.SendToAll<T>(msg, channelId, sendToReadyOnly);
         }
-        public static void SendToReady<T>(NetworkIdentity identity, T msg, bool includeSelf = true, int channelId = Channels.DefaultReliable) where T : NetworkMessage
+        public static void SendToReady<T>(NetworkIdentity identity, T msg, bool includeSelf = true, int channelId = Channels.DefaultReliable) where T : struct, NetworkMessage
         {
             NetworkServer.SendToReady<T>(identity, msg, includeSelf, channelId);
         }
-        public static void SendToReady<T>(NetworkIdentity identity, T msg, int channelId = Channels.DefaultReliable) where T : NetworkMessage
+        public static void SendToReady<T>(NetworkIdentity identity, T msg, int channelId = Channels.DefaultReliable) where T : struct, NetworkMessage
         {
             SendToReady(identity, msg, true, channelId);
         }
         static public void DisconnectAll() { NetworkServer.DisconnectAll(); }
-        static public void SendToClientOfPlayer<T>(NetworkIdentity player, T msg) where T : NetworkMessage, new()
+        static public void SendToClientOfPlayer<T>(NetworkIdentity player, T msg) where T : struct, NetworkMessage
         { 
             NetworkServer.SendToClientOfPlayer<T>(player, msg);
         }

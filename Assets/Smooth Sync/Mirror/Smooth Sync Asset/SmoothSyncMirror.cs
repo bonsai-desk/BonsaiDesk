@@ -242,7 +242,7 @@ namespace Smooth
         /// when receiving an update. 
         /// Generally keep at default unless you have a very low send rate and expect large variance in your latencies.
         /// </remarks>
-        public float snapTimeThreshold = 3.0f;
+        public float snapTimeThreshold = .3f;
 
         /// <summary>Position sync mode</summary>
         /// <remarks>
@@ -686,6 +686,11 @@ namespace Smooth
             sendingTempState.state = new StateMirror();
 
             NetworkIdentity.clientAuthorityCallback += AssignAuthorityCallback;
+        }
+
+        public void OnDestroy()
+        {
+            NetworkIdentity.clientAuthorityCallback -= AssignAuthorityCallback;
         }
 
         public void SetObjectToSync(GameObject childObjectToSync)
@@ -1845,14 +1850,14 @@ namespace Smooth
             var target = NetworkIdentity.spawned[theNetID.netId];
             if (target == null)
             {
-                Debug.LogWarning("Smooth Sync: Cannot find target for authority change");
+                Debug.LogWarning("Smooth Sync: Cannot find target for authority change.");
                 return;
             }
 
             var smoothSyncComponent = target.GetComponent<SmoothSyncMirror>();
             if (smoothSyncComponent == null)
             {
-                Debug.LogWarning("Smooth Sync: Cannot find target for authority change");
+                Debug.LogWarning("Smooth Sync: Cannot find target for authority change.");
                 return;
             }
 

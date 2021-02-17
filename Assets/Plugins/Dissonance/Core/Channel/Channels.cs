@@ -75,7 +75,7 @@ namespace Dissonance
                 throw Log.CreateUserErrorException(
                     "Attempted to open 65535 channels",
                     "Opening too many speech channels without closing them",
-                    "https://dissonance.readthedocs.io/en/latest/Tutorials/Script-Controlled-Speech/",
+                    "https://placeholder-software.co.uk/dissonance/docs/Tutorials/Script-Controlled-Speech.html",
                     "7564ECCA-73C2-4720-B4C0-B873E63216AD"
                 );
             }

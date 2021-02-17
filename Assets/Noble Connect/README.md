@@ -1,10 +1,18 @@
-Website - https://noblewhale.com
-Dashboard - https://noblewhale.com/dashboard
-Docs - https://noblewhale.com/docs
-FAQ - https://noblewhale.com/faq
-
 # README
-Adds relays and punchthrough to UNet or Mirror
+[
+[**Website**](https://noblewhale.com)
+|
+[**Dashboard**](https://noblewhale.com/dashboard)
+|
+[**Docs**](https://noblewhale.com/docs)
+|
+[**FAQ**](https://noblewhale.com/faq)
+|
+[**Asset Store**](https://assetstore.unity.com/packages/tools/network/noble-connect-140535)
+]
+
+Adds relays and punchthrough to UNet or Mirror.
+
 Guarantees your players can connect while reducing latency and saving you money by connecting players directly whenever possible.
 Your players won't need to worry about forwarding ports or fiddling with router settings, they can just sit back, relax, and enjoy your beautiful game.
 
@@ -23,12 +31,13 @@ In order to raise the limits you will either need to purchase the Starter Pack o
 	2. Enter your email address to sign up, or enter your Game ID if you already have an account.
 		* You can get your Game ID any time from the dashboard at https://noblewhale.com/dashboard
 	3. Import the package for your networking system:
-		* If you are using Mirror, make sure you have the correct version of Mirror imported first, and then import the "Mirror Noble Connect.unitypackage"
-		* If you are using UNet in 2019.1 or later you must first install the "Multiplayer HLAPI" package from the Unity Package Manager and then import the "UNet Noble Connect.unitypackage"
-		* If you are using UNet in an earlier version you don't need to import anything. Examples and code will already be in the UNet folder
-	4. [Mirror Only] The default transport provided with Mirror is not supported by Noble Connect because it is TCP only and Noble Connect requires UDP.
-	You will need to pick a transport to use that supports UDP. I recommend Ingorance or LiteNetLib. In the example scenes you will need to
-	remove the default transport and add your selected UDP transport or they will not work and you will receive an error message telling you to do this.
+		* If you are using Mirror, import the "Mirror Noble Connect.unitypackage"
+			* Make sure you have the correct version of Mirror imported first. Usually this means the latest from the Asset Store, but you can check the description on the [Noble Connect](https://assetstore.unity.com/packages/tools/network/noble-connect-140535) page to confirm.
+			* The default transport provided with Mirror is not supported by Noble Connect because it is TCP only and Noble Connect requires UDP.
+			You will need to pick a transport to use that supports UDP. I recommend Ingorance or LiteNetLib. In the example scenes you will need to
+			remove the default transport and add your selected UDP transport or they will not work and you will receive an error message telling you to do this.
+		* If you are using UNet, import the "UNet Noble Connect.unitypackage"
+			* In 2019.1 or later you must first install the "Multiplayer HLAPI" package from the Unity Package Manager
 
 ## Step 2 - Test it
 	1. Add the "Noble Connect/[UNet or Mirror]/Examples/Network Manager/Network Manager Example.unity" scene to the build settings.

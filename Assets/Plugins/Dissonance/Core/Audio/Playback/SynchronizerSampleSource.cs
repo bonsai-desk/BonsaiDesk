@@ -16,6 +16,8 @@ namespace Dissonance.Audio.Playback
         private readonly IDecoderPipeline _pipeline;
         private readonly Stopwatch _timer = new Stopwatch();
 
+        private TimeSpan _aheadWarningLastSent = TimeSpan.MinValue;
+
         public TimeSpan IdealPlaybackPosition
         {
             get
@@ -72,6 +74,7 @@ namespace Dissonance.Audio.Playback
             _desync = new DesyncCalculator();
             PlaybackRate = 1;
             _totalSamplesRead = 0;
+            _aheadWarningLastSent = TimeSpan.FromSeconds(0);
 
             _upstream.Prepare(context);
         }
@@ -94,11 +97,6 @@ namespace Dissonance.Audio.Playback
 
             // We always read the amount of requested data, update the count of total data read now
             _totalSamplesRead += samples.Count;
-
-            // If the buffer is too small slighty increase the count of samples read (by 0.1ms) Desync compensation will think it is ahead of
-            // where it should be and will slow down playback, which will cause the buffer to grow.
-            if (_pipeline.BufferCount < 1)
-                _totalSamplesRead += WaveFormat.SampleRate / 10000;
 
             // Calculate how out of sync playback is (based on actual samples read vs time passed)
             _desync.Update(IdealPlaybackPosition, PlaybackPosition);
@@ -163,7 +161,11 @@ namespace Dissonance.Audio.Playback
             // Silence could be inserted to make up the time if this becomes an issue, but it should be very rare.
             if (desyncMilliseconds < -_resetDesyncTime.TotalMilliseconds)
             {
-                Log.Error("Playback desync ({0}ms) AHEAD beyond recoverable threshold", desyncMilliseconds);
+                if (PlaybackPosition - _aheadWarningLastSent > TimeSpan.FromSeconds(1))
+                {
+                    _aheadWarningLastSent = PlaybackPosition;
+                    Log.Error("Playback desync ({0}ms) AHEAD beyond recoverable threshold", desyncMilliseconds);
+                }
             }
 
             deltaSamples = 0;

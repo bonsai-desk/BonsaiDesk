@@ -1,5 +1,29 @@
 # Release Notes
 
+## v7.2.1 (2021-02-12)
+
+**features**
+ - Added Open activation mode to VoiceBroadcastTrigger
+ - Added ToggleMute method to VoiceBroadcastTrigger which can be triggered by a UI 'push-to-talk' button
+ - Improved Automatic Gain Control handling of long periods of silence on Windows UWP platforms (e.g. Hololens)
+
+**Bugfixes**
+ - Fixed an overflow in the dynamic audio playback synchronisation system
+ - Fixed documentation links which were broken by migrating documentation to a new host
+
+## v7.2.0 (2021-01-05)
+
+**Features**
+ - Added Dissonance.Audio.AecDiagnostics script which exposes realtime statistics about the Acoustic Echo Cancellation (AEC).
+ - Added a warning when a script domain reload is detected (Dissonance does not support this).
+
+**Bugfixes**
+ - Fixed the preprocessor failing to start on Magic Leap. Regression introduced in 7.1.0.
+ - Fixed forced resetting (e.g. after app suspension) failing in some circumstances.
+ - Fixed Cannot associate preprocessor with Playback filter error happening when a script domain reload happens.
+ - Removed dynamic buffer size correction as it wasn't very effective.
+ - Removed some warnings which confused people by warning about very minor things.
+
 ## v7.1.5 (2020-12-01)
 
 **Features**

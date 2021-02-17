@@ -131,7 +131,7 @@ namespace Dissonance.Audio.Capture
             [DllImport(ImportString, CallingConvention = Convention)]
             private static extern void Dissonance_GetAecMetrics(IntPtr floatBuffer, int bufferLength);
 
-#if (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || UNITY_ANDROID || UNITY_LUMIN || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX)
+#if (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX || UNITY_ANDROID || UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX || UNITY_WSA)
             [DllImport(ImportString, CallingConvention = Convention)]
             private static extern void Dissonance_SetAgcIsOutputMutedState(IntPtr handle, bool isMuted);
 #else
@@ -412,7 +412,7 @@ namespace Dissonance.Audio.Capture
                 using (var handle = _handle.Lock())
                 {
                     if (handle.Value == IntPtr.Zero)
-                        throw Log.CreatePossibleBugException("Attempted  to access a null WebRtc Preprocessor encoder", "2DBC7779-F1B9-45F2-9372-3268FD8D7EBA");
+                        throw Log.CreatePossibleBugException("Attempted to access a null WebRtc Preprocessor encoder", "2DBC7779-F1B9-45F2-9372-3268FD8D7EBA");
 
                     Log.Debug("Clearing preprocessor instance in playback filter...");
 
@@ -420,9 +420,9 @@ namespace Dissonance.Audio.Capture
                     if (!Dissonance_PreprocessorExchangeInstance(handle.Value, IntPtr.Zero))
                     {
                         if (throwOnError)
-                            throw Log.CreatePossibleBugException("Cannot clear preprocessor from Playback filter", "6323106A-04BD-4217-9ECA-6FD49BF04FF0");
+                            throw Log.CreatePossibleBugException("Cannot clear preprocessor from Playback filter. Editor restart required!", "6323106A-04BD-4217-9ECA-6FD49BF04FF0");
                         else
-                            Log.Error("Failed to clear preprocessor from playback filter", "CBC6D727-BE07-4073-AA5A-F750A0CC023D");
+                            Log.Error("Failed to clear preprocessor from playback filter. Editor restart required!", "CBC6D727-BE07-4073-AA5A-F750A0CC023D");
 
                         return false;
                     }
