@@ -187,7 +187,7 @@ public partial class BlockObject : NetworkBehaviour
     private void CmdAddBlock(byte id, Vector3Int coord, Quaternion rotation, bool updateTheMesh,
         NetworkIdentity blockToDestroy)
     {
-        NetworkServer.Destroy(blockToDestroy.gameObject);
+        blockToDestroy.GetComponent<AutoAuthority>().ServerStripOwnerAndDestroy();
 
         if (Blocks.ContainsKey(coord))
         {
@@ -245,7 +245,7 @@ public partial class BlockObject : NetworkBehaviour
 
         if (Blocks.Count <= 1)
         {
-            NetworkServer.Destroy(gameObject);
+            _autoAuthority.ServerStripOwnerAndDestroy();
         }
         else
         {
@@ -308,6 +308,14 @@ public partial class BlockObject : NetworkBehaviour
         _meshBlocks.Remove(coord);
 
         UpdateMesh(UpdateType.RemoveBlock);
+    }
+
+    private void DamageBlock(Vector3Int coord)
+    {
+        if (Blocks.ContainsKey(coord))
+        {
+            CmdRemoveBlock(coord);
+        }
     }
 
     enum UpdateType
