@@ -32,6 +32,10 @@ public class BrowserSetup : MonoBehaviour {
 			"resource://android/assets/ublock/",
 			"uBlock0@raymondhill.net"
 		);
+		AndroidGeckoWebView.EnsureBuiltInExtension(
+			"resource://android/assets/bonsai-youtube/",
+			"browser-agent@bonsaidesk.com"
+		);
 	#elif UNITY_EDITOR
 		StandaloneWebView.SetCommandLineArguments("--autoplay-policy=no-user-gesture-required");
 	#endif

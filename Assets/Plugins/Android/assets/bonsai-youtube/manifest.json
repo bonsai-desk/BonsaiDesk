@@ -1,0 +1,27 @@
+{
+  "manifest_version": 2,
+  "name": "bonsaidesk-gecko-extension",
+  "version": "1.0",
+  "description": "Augments the browsing experience for virtual reality",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "browser-agent@bonsaidesk.com"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "index.js"
+      ],
+      "all_frames": true
+    }
+  ],
+  "permissions": [
+    "nativeMessaging",
+    "nativeMessagingFromContent",
+    "geckoViewAddons"
+  ]
+}

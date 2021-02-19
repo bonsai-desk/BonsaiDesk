@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using System;
+using Newtonsoft.Json;
+using UnityEngine;
+using Vuplex.WebView;
 
 [RequireComponent(typeof(TableBrowser))]
 public class WebBrowserController : MonoBehaviour {
@@ -18,6 +21,7 @@ public class WebBrowserController : MonoBehaviour {
 
 	private void SetupBrowser() {
 		_browser.SetHidden(false);
+		_browser.OnMessageEmitted(HandleJavascriptMessage);
 		SetRaised(false);
 	}
 
@@ -35,5 +39,19 @@ public class WebBrowserController : MonoBehaviour {
 
 	public void ToggleRaised() {
 		SetRaised(!_raised);
+	}
+
+	public event EventHandler<EventArgs<string>> SpawnYT;
+
+	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
+		var message = JsonConvert.DeserializeObject<Browser.JsMessageString>(eventArgs.Value);
+		Debug.Log(eventArgs.Value);
+		if (message.Type == "command") {
+			switch (message.Message) {
+				case "spawnYT":
+					SpawnYT?.Invoke(this, new EventArgs<string>(message.Data));
+					break;
+			}
+		}
 	}
 }

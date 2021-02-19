@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using Vuplex.WebView;
 
 public class WebBrowserParent : MonoBehaviour {
 	public TableBrowser webBrowser;
@@ -8,18 +9,17 @@ public class WebBrowserParent : MonoBehaviour {
 	public KeyboardBrowserController keyboardBrowserController;
 	public WebBrowserController webBrowserController;
 	public WebNavBrowserController webNavBrowserController;
-	private Vector3 _startTransform;
 	private Vector3 _altTransform;
+	private Vector3 _startTransform;
 
 	// Start is called before the first frame update
 	private void Start() {
 		keyboardBrowser.ListenersReady += SetupKeyboardBrowser;
 		webNavBrowser.BrowserReady     += SetupWebWebNavBrowser;
 
-		_startTransform = transform.localPosition;
-		_altTransform = new Vector3(0f, -10f, 0f);
+		_startTransform         = transform.localPosition;
+		_altTransform           = new Vector3(0f, -10f, 0f);
 		transform.localPosition = _altTransform;
-
 	}
 
 	// Update is called once per frame
@@ -46,6 +46,12 @@ public class WebBrowserParent : MonoBehaviour {
 		webNavBrowserController.SpawnKeyboard   += HandleSpawnKeyboard;
 		webNavBrowserController.DismissKeyboard += HandleDismissKeyboard;
 		webNavBrowserController.CloseWeb        += HandleCloseWeb;
+		webBrowserController.SpawnYT            += HandleSpawnYT;
+	}
+
+	private void HandleSpawnYT(object sender, EventArgs<string> e) {
+		Debug.Log($"[BONSAI] Spawn YT {e.Value}");
+		throw new NotImplementedException();
 	}
 
 	private void SetupKeyboardBrowser() {
