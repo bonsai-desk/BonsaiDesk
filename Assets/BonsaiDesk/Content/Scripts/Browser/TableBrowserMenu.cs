@@ -14,6 +14,7 @@ public class TableBrowserMenu : MonoBehaviour {
 		_browser                =  GetComponent<TableBrowser>();
 		_browser.BrowserReady   += SetupBrowser;
 		_browser.ListenersReady += NavToMenu;
+		OVRManager.HMDUnmounted += () => { _browser.SetHidden(true); };
 	}
 
 	private void SetupBrowser() {
@@ -21,13 +22,12 @@ public class TableBrowserMenu : MonoBehaviour {
 	}
 
 	private void NavToMenu() {
+		Debug.Log("[BONSAI] nav to menu");
 		_browser.PostMessage(Browser.BrowserMessage.NavToMenu);
 	}
 
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<Browser.JsMessageString>(eventArgs.Value);
-
-		Debug.Log($"[BONSAI] JS Message: {message.Type} {message.Message}");
 
 		switch (message.Type) {
 			case "command":
@@ -45,6 +45,12 @@ public class TableBrowserMenu : MonoBehaviour {
 						break;
 					case "closeRoom":
 						CloseRoom?.Invoke();
+						break;
+					case "browseYouTube":
+						if (BrowseSite != null) {
+							BrowseSite(this, "https://m.youtube.com");
+						}
+
 						break;
 					case "kickConnectionId":
 						// todo what happens when this fails?
@@ -106,6 +112,8 @@ public class TableBrowserMenu : MonoBehaviour {
 	public event Action OpenRoom;
 	public event Action CloseRoom;
 	public event Action<int> KickConnectionId;
+
+	public event EventHandler<string> BrowseSite;
 
 	private class CsMessageKeyType<T> {
 		public KeyType<T> Data;

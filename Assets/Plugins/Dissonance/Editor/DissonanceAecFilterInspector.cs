@@ -56,7 +56,9 @@ namespace Dissonance.Editor
 
                 // `GetFloatBuffer` (a built in Unity method) causes a null reference exception when called. This bug seems to be limited to Unity 2019.3 on MacOS.
                 // See tracking issue: https://github.com/Placeholder-Software/Dissonance/issues/177
-#if !(UNITY_EDITOR_OSX && UNITY_2019_3_OR_NEWER)
+#if (UNITY_EDITOR_OSX && UNITY_2019_3)
+                EditorGUILayout.HelpBox("Cannot show detailed statistics in Unity 2019.3 due to an editor bug. Please update to Unity 2019.4 or newer!", MessageType.Error);
+#else
                 float[] data;
                 if (plugin.GetFloatBuffer("AecMetrics", out data, 10))
                 {

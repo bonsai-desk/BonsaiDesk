@@ -74,14 +74,14 @@ namespace Dissonance.Datastructures
                 // copy the data into the buffer
                 // ReSharper disable once AssignNullToNotNullAttribute (Justification: Array segment cannot be null)
                 Array.Copy(data.Array, data.Offset, _buffer, _writeHead, data.Count);
+
+                // ReSharper disable once NonAtomicCompoundOperator
+                // Justification: _writeHead is only accessed in write methods, which are not allowed to be called concurrently
+                // so this doesn't need to be atomic
                 _writeHead += data.Count;
             }
 
-#pragma warning disable 420
-            // Justification: It's Interlocked, so volatile isn't important (See: http://stackoverflow.com/a/425150/108234 )
             Interlocked.Add(ref _unread, data.Count);
-#pragma warning restore 420
-
             return true;
         }
 
@@ -153,14 +153,14 @@ namespace Dissonance.Datastructures
                 // copy the data out of the buffer
                 // ReSharper disable once AssignNullToNotNullAttribute (Justification: Array segment cannot be null)
                 Array.Copy(_buffer, _readHead, data.Array, data.Offset, data.Count);
+
+                // ReSharper disable once NonAtomicCompoundOperator
+                // Justification: _readHead is only accessed in read methods, which are not allowed to be called concurrently
+                // so this doesn't need to be atomic
                 _readHead += data.Count;
             }
 
-#pragma warning disable 420
-            // Justification: It's Interlocked, so volatile isn't important (See: http://stackoverflow.com/a/425150/108234 )
             Interlocked.Add(ref _unread, -data.Count);
-#pragma warning restore 420
-
             return true;
         }
         #endregion

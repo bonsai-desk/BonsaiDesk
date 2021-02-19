@@ -61,11 +61,20 @@ public class AutoBrowserController : NetworkBehaviour {
 		TLog("On Start Server");
 		base.OnStartServer();
 		_contentInfo                                  =  new ContentInfo(false, "", new Vector2(1, 1));
+		
+		NetworkManagerGame.Singleton.ServerAddPlayer  -= HandleServerAddPlayer;
+		NetworkManagerGame.Singleton.ServerDisconnect -= HandleServerDisconnect;
+		togglePause.CmdSetPausedServer                -= HandleCmdSetPausedServer;
+		
 		NetworkManagerGame.Singleton.ServerAddPlayer  += HandleServerAddPlayer;
 		NetworkManagerGame.Singleton.ServerDisconnect += HandleServerDisconnect;
 		togglePause.CmdSetPausedServer                += HandleCmdSetPausedServer;
 
 		if (tabletSpot != null) {
+			tabletSpot.SetNewVideo -= HandleSetNewVideo;
+			tabletSpot.PlayVideo   -= HandlePlayVideo;
+			tabletSpot.StopVideo   -= HandleStopVideo;
+			
 			tabletSpot.SetNewVideo += HandleSetNewVideo;
 			tabletSpot.PlayVideo   += HandlePlayVideo;
 			tabletSpot.StopVideo   += HandleStopVideo;
@@ -75,15 +84,6 @@ public class AutoBrowserController : NetworkBehaviour {
 	public override void OnStopServer() {
 		TLog("On Stop Server");
 		base.OnStopServer();
-		NetworkManagerGame.Singleton.ServerAddPlayer  -= HandleServerAddPlayer;
-		NetworkManagerGame.Singleton.ServerDisconnect -= HandleServerDisconnect;
-		togglePause.CmdSetPausedServer                -= HandleCmdSetPausedServer;
-
-		if (tabletSpot != null) {
-			tabletSpot.SetNewVideo -= HandleSetNewVideo;
-			tabletSpot.PlayVideo   -= HandlePlayVideo;
-			tabletSpot.StopVideo   -= HandleStopVideo;
-		}
 	}
 
 	private void HandleSetNewVideo(string id) {

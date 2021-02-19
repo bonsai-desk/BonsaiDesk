@@ -324,7 +324,7 @@ namespace NobleConnect.Mirror
         /// <typeparam name="T">The message type to unregister.</typeparam>
         /// <param name="msg">The message object to process.</param>
         /// <returns>Returns true if the handler was successfully invoked</returns>
-        public bool InvokeHandler<T>(T msg, int channelId) where T : NetworkMessage
+        public bool InvokeHandler<T>(T msg, int channelId) where T : struct, NetworkMessage
         {
             using (PooledNetworkWriter writer = NetworkWriterPool.GetWriter())
             {
@@ -332,7 +332,7 @@ namespace NobleConnect.Mirror
                 // this works because value types cannot be derived
                 // if it is a reference type (for example NetworkMessage),
                 // ask the message for the real type
-                int msgType = MessagePacker.GetId(default(T) != null ? typeof(T) : msg.GetType());
+                int msgType = MessagePacker.GetId<T>();
 
                 MessagePacker.Pack(msg, writer);
                 ArraySegment<byte> segment = writer.ToArraySegment();
@@ -501,7 +501,7 @@ namespace NobleConnect.Mirror
         /// <typeparam name="T">The message type to unregister.</typeparam>
         /// <param name="message"></param>
         /// <param name="channelId"></param>
-        public void Send<T>(T message, int channelId = Channels.DefaultReliable) where T : NetworkMessage
+        public void Send<T>(T message, int channelId = Channels.DefaultReliable) where T : struct, NetworkMessage
         {
             NetworkClient.Send<T>(message, channelId);
         }
@@ -513,7 +513,7 @@ namespace NobleConnect.Mirror
         /// <typeparam name="T">Message type</typeparam>
         /// <param name="handler">Function handler which will be invoked when this message type is received.</param>
         /// <param name="requireAuthentication">True if the message requires an authenticated connection</param>
-        public void RegisterHandler<T>(Action<NetworkConnection, T> handler, bool requireAuthentication = true) where T : NetworkMessage
+        public void RegisterHandler<T>(Action<NetworkConnection, T> handler, bool requireAuthentication = true) where T : struct, NetworkMessage
         {
             int msgType = MessagePacker.GetId<T>();
             if (typeof(T) == typeof(ConnectMessage))
@@ -547,7 +547,7 @@ namespace NobleConnect.Mirror
         /// <typeparam name="T">Message type</typeparam>
         /// <param name="handler">Function handler which will be invoked when this message type is received.</param>
         /// <param name="requireAuthentication">True if the message requires an authenticated connection</param>
-        public void RegisterHandler<T>(Action<T> handler, bool requireAuthentication = true) where T : NetworkMessage
+        public void RegisterHandler<T>(Action<T> handler, bool requireAuthentication = true) where T : struct, NetworkMessage
         {
             int msgType = MessagePacker.GetId<T>();
             if (typeof(T) == typeof(ConnectMessage))
@@ -581,7 +581,7 @@ namespace NobleConnect.Mirror
         /// <typeparam name="T">Message type</typeparam>
         /// <param name="handler">Function handler which will be invoked when this message type is received.</param>
         /// <param name="requireAuthentication">True if the message requires an authenticated connection</param>
-        public void ReplaceHandler<T>(Action<NetworkConnection, T> handler, bool requireAuthentication = true) where T : NetworkMessage
+        public void ReplaceHandler<T>(Action<NetworkConnection, T> handler, bool requireAuthentication = true) where T : struct, NetworkMessage
         {
             int msgType = MessagePacker.GetId<T>();
             if (typeof(T) == typeof(ConnectMessage))
@@ -615,7 +615,7 @@ namespace NobleConnect.Mirror
         /// <typeparam name="T">Message type</typeparam>
         /// <param name="handler">Function handler which will be invoked when this message type is received.</param>
         /// <param name="requireAuthentication">True if the message requires an authenticated connection</param>
-        public void ReplaceHandler<T>(Action<T> handler, bool requireAuthentication = true) where T : NetworkMessage
+        public void ReplaceHandler<T>(Action<T> handler, bool requireAuthentication = true) where T : struct, NetworkMessage
         {
             int msgType = MessagePacker.GetId<T>();
             if (typeof(T) == typeof(ConnectMessage))
@@ -646,7 +646,7 @@ namespace NobleConnect.Mirror
         /// Unregisters a network message handler.
         /// </summary>
         /// <typeparam name="T">The message type to unregister.</typeparam>
-        public bool UnregisterHandler<T>() where T : NetworkMessage
+        public bool UnregisterHandler<T>() where T : struct, NetworkMessage
         {
             return NetworkClient.UnregisterHandler<T>();
         }

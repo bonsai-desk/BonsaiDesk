@@ -17,9 +17,9 @@ namespace Dissonance
         /// </summary>
         PushToTalk,
 
-        ///// <summary>
-        /////     The transmitter will constantly transmit.
-        ///// </summary>
-        //Open
+        /// <summary>
+        ///     The transmitter will constantly transmit.
+        /// </summary>
+        Open
     }
 }

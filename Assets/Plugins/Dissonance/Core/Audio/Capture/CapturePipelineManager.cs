@@ -463,9 +463,9 @@ namespace Dissonance.Audio.Capture
             StopTransmissionPipeline();
         }
 
-        internal void Resume()
+        internal void Resume([CanBeNull] string reason = null)
         {
-            RestartTransmissionPipeline("Editor resumed from pause");
+            RestartTransmissionPipeline(reason ?? "Editor resumed from pause");
         }
         //ncrunch: no coverage end
 

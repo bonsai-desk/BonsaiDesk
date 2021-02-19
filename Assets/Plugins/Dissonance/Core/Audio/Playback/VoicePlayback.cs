@@ -208,7 +208,8 @@ namespace Dissonance.Audio.Playback
             //Sanity check that the AudioSource has not been muted. Doing this will stop the playback pipeline from running, causing encoded audio to backup as it waits for playback.
             if (AudioSource.mute)
             {
-                Log.Warn("Voice AudioSource was muted, unmuting source. To mute a specific Dissonance player see: https://dissonance.readthedocs.io/en/latest/Reference/Other/VoicePlayerState/#islocallymuted-bool");
+                Log.Warn("Voice AudioSource was muted, unmuting source. " +
+                         "To mute a specific Dissonance player see: https://placeholder-software.co.uk/dissonance/docs/Reference/Other/VoicePlayerState.html#islocallymuted-bool");
                 AudioSource.mute = false;
             }
 
