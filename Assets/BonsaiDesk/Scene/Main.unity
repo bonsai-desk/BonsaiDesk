@@ -9437,12 +9437,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 630641728}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c727d5f2c38087a49b72fc38cec98062, type: 3}
+  m_Script: {fileID: 11500000, guid: de7a88e7c906a1943b15bb16ccbdc598, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveToDesk: {fileID: 1212259449}
   angleToHead: {fileID: 1189444693556535356}
   head: {fileID: 89707680}
+  action:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &630641732
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10334,6 +10336,7 @@ GameObject:
   - component: {fileID: 744943658}
   - component: {fileID: 744943659}
   - component: {fileID: 744943657}
+  - component: {fileID: 744943660}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -10445,6 +10448,35 @@ MonoBehaviour:
   clickDistance: 0.015
   mainCamera: {fileID: 1365805663}
   angleDragThreshold: 3.5
+--- !u!114 &744943660
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 744943655}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9022ed85d80300489552219bfed1fc8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  angleToHeadLeft: {fileID: 834136993}
+  angleToHeadRight: {fileID: 1189444693556535356}
+  head: {fileID: 89707680}
+  action:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1212259449}
+        m_MethodName: ResetIfOriented
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &752779473
 GameObject:
   m_ObjectHideFlags: 0
@@ -12466,12 +12498,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 946290003}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c727d5f2c38087a49b72fc38cec98062, type: 3}
+  m_Script: {fileID: 11500000, guid: de7a88e7c906a1943b15bb16ccbdc598, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveToDesk: {fileID: 1212259449}
   angleToHead: {fileID: 834136993}
   head: {fileID: 89707680}
+  action:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 955373203}
+        m_MethodName: ToggleAwake
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &946290007
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12588,7 +12633,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1361515862}
-  - {fileID: 1152186615}
   m_Father: {fileID: 877365330}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -14373,126 +14417,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
     type: 3}
   m_PrefabInstance: {fileID: 1149884542}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &1152186614
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 955373202}
-    m_Modifications:
-    - target: {fileID: 2537125333151980844, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 603d46f684b90b04ca792aee3839c794, type: 2}
-    - target: {fileID: 2537125333393509692, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: activeMaterial
-      value: 
-      objectReference: {fileID: 2100000, guid: 894d6728bf3b37140a6fb3ba368946ca, type: 2}
-    - target: {fileID: 2537125333393509692, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: action.m_PersistentCalls.m_Calls.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509692, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: action.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509692, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: action.m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
-      objectReference: {fileID: 955373203}
-    - target: {fileID: 2537125333393509692, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: action.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509692, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: action.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: ToggleAwake
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509692, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: action.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
-      value: UnityEngine.Object, UnityEngine
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: m_RootOrder
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.328
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0.068
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509694, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: m_Name
-      value: SleepButton
-      objectReference: {fileID: 0}
-    - target: {fileID: 2537125333393509694, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: aaadf37bd9caf9b49887b49e34b9b6b3, type: 3}
---- !u!4 &1152186615 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2537125333393509693, guid: aaadf37bd9caf9b49887b49e34b9b6b3,
-    type: 3}
-  m_PrefabInstance: {fileID: 1152186614}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1169519823
 GameObject:
