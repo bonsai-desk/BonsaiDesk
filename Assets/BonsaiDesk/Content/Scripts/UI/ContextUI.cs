@@ -27,10 +27,14 @@ public class ContextUI : MonoBehaviour
     public void OpenUI()
     {
         uiObject.SetActive(true);
+        InputManager.Hands.Left.ZTestOverlay();
+        InputManager.Hands.Right.ZTestOverlay();
     }
 
     public void CloseUI()
     {
         uiObject.SetActive(false);
+        InputManager.Hands.Left.ZTestRegular();
+        InputManager.Hands.Right.ZTestRegular();
     }
 }

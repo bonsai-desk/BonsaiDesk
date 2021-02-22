@@ -31,6 +31,7 @@ public class HandComponents
     private SkinnedMeshRenderer _physicsRenderer;
     private Material _handMaterial;
     private float _handAlpha = 1f;
+    private bool _zTestOverlay = false;
 
     public HandComponents(PlayerHand playerHand, Transform handAnchor, Transform handObject)
     {
@@ -175,6 +176,29 @@ public class HandComponents
         }
     }
 
+    public void ZTestRegular()
+    {
+        _zTestOverlay = false;
+
+        bool isTransparent =
+            _handMaterial.GetInt("_DstBlend") == (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
+        
+        if (isTransparent)
+        {
+            _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Transparent;
+        }
+        else
+        {
+            _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Geometry;
+        }
+    }
+
+    public void ZTestOverlay()
+    {
+        _zTestOverlay = true;
+        _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Overlay + 2;
+    }
+
     private void MakeMaterialTransparent()
     {
         _handMaterial.SetInt("_SrcBlend", (int) UnityEngine.Rendering.BlendMode.One);
@@ -182,7 +206,8 @@ public class HandComponents
         _handMaterial.DisableKeyword("_ALPHATEST_ON");
         _handMaterial.DisableKeyword("_ALPHABLEND_ON");
         _handMaterial.EnableKeyword("_ALPHAPREMULTIPLY_ON");
-        _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Transparent;
+        if (!_zTestOverlay)
+            _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Transparent;
     }
 
     private void MakeMaterialOpaque()
@@ -192,7 +217,8 @@ public class HandComponents
         _handMaterial.DisableKeyword("_ALPHATEST_ON");
         _handMaterial.DisableKeyword("_ALPHABLEND_ON");
         _handMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-        _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Geometry;
+        if (!_zTestOverlay)
+            _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Geometry;
 
         _handMaterial.color = new Color(1, 1, 1, 1);
     }
