@@ -1,16 +1,20 @@
 ﻿using System;
+using Mirror;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Vuplex.WebView;
 
-public class WebBrowserParent : MonoBehaviour {
+public class WebBrowserParent : NetworkBehaviour {
 	public TableBrowser webBrowser;
 	public TableBrowser keyboardBrowser;
 	public TableBrowser webNavBrowser;
 	public KeyboardBrowserController keyboardBrowserController;
 	public WebBrowserController webBrowserController;
 	public WebNavBrowserController webNavBrowserController;
+	public GameObject VideoPrefab;
 	private Vector3 _altTransform;
 	private Vector3 _startTransform;
+	public Transform videoSpawnLocation;
 
 	// Start is called before the first frame update
 	private void Start() {
@@ -51,6 +55,7 @@ public class WebBrowserParent : MonoBehaviour {
 
 	private void HandleSpawnYT(object sender, EventArgs<string> e) {
 		Debug.Log($"[BONSAI] Spawn YT {e.Value}");
+		CmdSpawnYT(videoSpawnLocation.localPosition, e.Value);
 	}
 
 	private void SetupKeyboardBrowser() {
@@ -84,5 +89,16 @@ public class WebBrowserParent : MonoBehaviour {
 
 	public void LoadUrl(string url) {
 		webBrowser.LoadUrl(url);
+	}
+
+	[Command(ignoreAuthority = true)]
+	private void CmdSpawnYT(Vector3 position, string id) {
+		var spawnedObject = Instantiate(VideoPrefab, position, Quaternion.identity);
+		NetworkServer.Spawn(spawnedObject);
+		spawnedObject.GetComponent<TabletControl>().videoId = id;
+	}
+
+	public void DummySpawn() {
+		CmdSpawnYT(videoSpawnLocation.localPosition, "niS_Fpy_2-U");
 	}
 }
