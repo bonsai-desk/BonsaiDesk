@@ -264,6 +264,14 @@ public class AutoAuthority : NetworkBehaviour
         _inUse = inUse;
     }
 
+    [Server]
+    public void ServerStripOwnerAndDestroy()
+    {
+        ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true);
+        gameObject.SetActive(false);
+        NetworkServer.Destroy(gameObject);
+    }
+
     private void HandleRecursiveAuthority(Collision collision)
     {
         if (!HasAuthority())

@@ -189,6 +189,7 @@ public partial class BlockObject
     private void OnCollisionStay(Collision collision)
     {
         HandleCollision(collision);
+        BlockBreakCollision(collision);
     }
 
     private void HandleCollision(Collision collision)
@@ -196,6 +197,40 @@ public partial class BlockObject
         if (MaskIsValid(collision.gameObject.layer))
         {
             _touchingHand = true;
+        }
+    }
+
+    private void BlockBreakCollision(Collision collision)
+    {
+        if (collision.gameObject.layer != PlayerHand.IndexTipLayer || collision.contactCount <= 0)
+        {
+            return;
+        }
+
+        var physicsHandController = collision.gameObject.GetComponentInParent<PhysicsHandController>();
+        if (!physicsHandController)
+        {
+            return;
+        }
+
+        var skeletonType = physicsHandController.skeletonType;
+        var breakMoveActive = InputManager.Hands.GetHand(skeletonType).PlayerHand.GetIHandTick<BlockBreakHand>()
+            .BreakModeActive;
+
+        if (!breakMoveActive)
+        {
+            return;
+        }
+        
+        ContactPoint contact = collision.GetContact(0);
+        Vector3 blockPosition = contact.point;
+        blockPosition += contact.normal * (BlockArea.cubeScale / 2f);
+        Vector3 positionLocalToCubeArea = transform.InverseTransformPoint(blockPosition);
+        Vector3Int blockCoord = Vector3Int.RoundToInt(positionLocalToCubeArea);
+
+        if (_meshBlocks.ContainsKey(blockCoord))
+        {
+            DamageBlock(blockCoord);
         }
     }
 

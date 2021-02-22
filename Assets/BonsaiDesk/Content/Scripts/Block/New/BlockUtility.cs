@@ -420,4 +420,23 @@ public static partial class BlockUtility
         //+ or - 1 degree
         return Mathf.Abs(Quaternion.Dot(q1, q2)) > 0.98888889f;
     }
+    
+    // public static Vector3Int GetBlockCoord(Vector3 positionLocalToCubeArea)
+    // {
+    //     Vector3 offset = new Vector3(0.5f, 0.5f, 0.5f);
+    //     Vector3 localPosition = SnapPosition(positionLocalToCubeArea - offset) + offset;
+    //     return Vector3Int.RoundToInt(localPosition);
+    // }
+    //
+    // private static Vector3 SnapPosition(Vector3 currentPosition)
+    // {
+    //     currentPosition = new Vector3(
+    //         Mathf.Floor(currentPosition.x * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale),
+    //         Mathf.Floor(currentPosition.y * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale),
+    //         Mathf.Floor(currentPosition.z * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale));
+    //     currentPosition.x += BlockArea.cubeScale / 2f;
+    //     currentPosition.y += BlockArea.cubeScale / 2f;
+    //     currentPosition.z += BlockArea.cubeScale / 2f;
+    //     return currentPosition;
+    // }
 }
