@@ -100,14 +100,29 @@ public class HoleButton : MonoBehaviour
         int index = 0;
 
         float closeHeightLerp = 0;
-        for (int i = 0; i < InputManager.Hands.physicsFingerTipPositions.Length; i++)
+        int numFingers = InputManager.Hands.physicsFingerTipPositions.Length;
+        for (int i = 0; i < numFingers + 2; i++)
         {
+            Vector3 checkPosition;
+            if (i == numFingers)
+            {
+                checkPosition = InputManager.Hands.Left.PlayerHand.palm.position;
+            }
+            else if (i == numFingers + 1)
+            {
+                checkPosition = InputManager.Hands.Right.PlayerHand.palm.position;
+            }
+            else
+            {
+                checkPosition = InputManager.Hands.physicsFingerTipPositions[i];
+            }
+            
             float activationRadius = 0.1f;
 
-            float heightDistance = (InputManager.Hands.physicsFingerTipPositions[i].y - 0.025f) - transform.position.y;
+            float heightDistance = (checkPosition.y - 0.025f) - transform.position.y;
             float heightLerp = (heightDistance - 0.005f) / activationRadius;
 
-            float sideDistance = Vector2.Distance(new Vector2(InputManager.Hands.physicsFingerTipPositions[i].x, InputManager.Hands.physicsFingerTipPositions[i].z), new Vector2(transform.position.x, transform.position.z));
+            float sideDistance = Vector2.Distance(new Vector2(checkPosition.x, checkPosition.z), new Vector2(transform.position.x, transform.position.z));
             float sideLerp = (sideDistance - 0.04f) / activationRadius;
 
             float newT = Mathf.Max(heightLerp, sideLerp);

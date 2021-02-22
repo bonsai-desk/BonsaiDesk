@@ -58,6 +58,11 @@ public class InputManager : MonoBehaviour
     private void Start()
     {
         _handsTicks = GetComponentsInChildren<IHandsTick>();
+        foreach (var handTick in _handsTicks)
+        {
+            handTick.leftPlayerHand = leftPlayerHand;
+            handTick.rightPlayerHand = rightPlayerHand;
+        }
 
         Transform leftHandObject = Instantiate(Resources.Load<GameObject>("Left_Hand"), transform).transform;
         leftHandObject.name = "Left_Hand";
@@ -88,7 +93,7 @@ public class InputManager : MonoBehaviour
 
         for (var i = 0; i < _handsTicks.Length; i++)
         {
-            _handsTicks[i].Tick(Left.PlayerHand, Right.PlayerHand);
+            _handsTicks[i].Tick();
         }
 
         Left.PlayerHand.UpdateLastGestures();

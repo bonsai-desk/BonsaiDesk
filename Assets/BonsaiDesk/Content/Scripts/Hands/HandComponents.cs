@@ -23,14 +23,17 @@ public class HandComponents
     public bool Tracking { get; private set; } = false;
     public bool TrackingRecently { get; private set; } = false;
 
-    public int physicsLayer;
-    private int _touchScreenSurfaceLayer;
+    private readonly int _physicsLayer;
+    private readonly int _indexPhysicsLayer;
+    private readonly int _onlyScreenLayer;
+    private readonly int _touchScreenSurfaceLayer;
 
     private float _lastTrackingTime;
     private const float RecentTrackingThreshold = 0.35f;
     private SkinnedMeshRenderer _physicsRenderer;
     private Material _handMaterial;
     private float _handAlpha = 1f;
+    private bool _zTestOverlay = false;
 
     public HandComponents(PlayerHand playerHand, Transform handAnchor, Transform handObject)
     {
@@ -64,10 +67,11 @@ public class HandComponents
 
         OVRSkeleton = handAnchor.GetComponentInChildren<OVRSkeleton>();
         PlayerHand.skeletonType = OVRSkeleton.GetSkeletonType();
-        physicsLayer = OVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft
+        _physicsLayer = OVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft
             ? LayerMask.NameToLayer("LeftHand")
             : LayerMask.NameToLayer("RightHand");
-        SetLayerRecursive(PhysicsHand, physicsLayer);
+        _indexPhysicsLayer = LayerMask.NameToLayer("IndexTip");
+        _onlyScreenLayer = LayerMask.NameToLayer("OnlyTouchScreenSurface");
         OVRHand = handAnchor.GetComponentInChildren<OVRHand>();
 
         PhysicsFingerTips = GetFingerTips(PhysicsMapper);
@@ -75,8 +79,6 @@ public class HandComponents
 
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Thumb3], "FingerTip");
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Index3], "IndexTip");
-        SetLayerRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Index3],
-            LayerMask.NameToLayer("IndexTip"));
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Middle3], "FingerTip");
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Ring3], "FingerTip");
         SetTagRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Pinky3], "FingerTip");
@@ -88,6 +90,17 @@ public class HandComponents
         }
 
         _touchScreenSurfaceLayer = LayerMask.NameToLayer("TouchScreenSurface");
+    }
+
+    public void SetPhysicsLayerRegular()
+    {
+        SetLayerRecursive(PhysicsHand, _physicsLayer);
+        SetLayerRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Index3], _indexPhysicsLayer);
+    }
+
+    public void SetPhysicsLayerForTouchScreen()
+    {
+        SetLayerRecursive(PhysicsHand, _onlyScreenLayer);
     }
 
     private static Transform[] GetFingerTips(OVRHandTransformMapper mapper)
@@ -175,6 +188,29 @@ public class HandComponents
         }
     }
 
+    public void ZTestRegular()
+    {
+        _zTestOverlay = false;
+
+        bool isTransparent =
+            _handMaterial.GetInt("_DstBlend") == (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
+
+        if (isTransparent)
+        {
+            _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Transparent;
+        }
+        else
+        {
+            _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Geometry;
+        }
+    }
+
+    public void ZTestOverlay()
+    {
+        _zTestOverlay = true;
+        _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Overlay + 2;
+    }
+
     private void MakeMaterialTransparent()
     {
         _handMaterial.SetInt("_SrcBlend", (int) UnityEngine.Rendering.BlendMode.One);
@@ -182,7 +218,8 @@ public class HandComponents
         _handMaterial.DisableKeyword("_ALPHATEST_ON");
         _handMaterial.DisableKeyword("_ALPHABLEND_ON");
         _handMaterial.EnableKeyword("_ALPHAPREMULTIPLY_ON");
-        _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Transparent;
+        if (!_zTestOverlay)
+            _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Transparent;
     }
 
     private void MakeMaterialOpaque()
@@ -192,7 +229,8 @@ public class HandComponents
         _handMaterial.DisableKeyword("_ALPHATEST_ON");
         _handMaterial.DisableKeyword("_ALPHABLEND_ON");
         _handMaterial.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-        _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Geometry;
+        if (!_zTestOverlay)
+            _handMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Geometry;
 
         _handMaterial.color = new Color(1, 1, 1, 1);
     }
@@ -204,7 +242,7 @@ public class HandComponents
     /// <param name="active"></param>
     public void SetHandColliderActiveForScreen(bool active)
     {
-        Physics.IgnoreLayerCollision(_touchScreenSurfaceLayer, physicsLayer, !active);
+        Physics.IgnoreLayerCollision(_touchScreenSurfaceLayer, _physicsLayer, !active);
     }
 
     private static void SetLayerRecursive(Transform go, int layer)
