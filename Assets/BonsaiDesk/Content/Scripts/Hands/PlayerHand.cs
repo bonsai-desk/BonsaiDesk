@@ -24,6 +24,7 @@ public class PlayerHand : MonoBehaviour
 
     public static int AllButHandsMask;
     public static int HandsMask;
+    public static int IndexTipLayer;
 
     public enum Gesture
     {
@@ -39,6 +40,7 @@ public class PlayerHand : MonoBehaviour
     {
         HandsMask = LayerMask.GetMask("LeftHand", "RightHand", "IndexTip");
         AllButHandsMask = ~HandsMask;
+        IndexTipLayer = LayerMask.NameToLayer("IndexTip");
 
         _handTicks = GetComponentsInChildren<IHandTick>();
         _handTicksDictionary = new Dictionary<Type, IHandTick>();

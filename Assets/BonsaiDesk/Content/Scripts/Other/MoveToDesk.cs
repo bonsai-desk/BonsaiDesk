@@ -376,6 +376,14 @@ public class MoveToDesk : MonoBehaviour
 
         ApplyCalculatedTableOrientation(false);
     }
+    
+    public void ResetIfOriented()
+    {
+        if (oriented)
+        {
+            ResetPosition();
+        }
+    }
 
     public void ResetPosition()
     {
