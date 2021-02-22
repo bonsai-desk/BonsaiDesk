@@ -38,6 +38,7 @@ public class WebBrowserParent : NetworkBehaviour {
 			transform.localPosition = _startTransform;
 		}
 		else {
+			Debug.Log("[BONSAI] SetActive");
 			LoadUrl("about:blank");
 			transform.localPosition = _altTransform;
 		}
