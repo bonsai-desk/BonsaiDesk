@@ -42,6 +42,7 @@ public class WebBrowserController : MonoBehaviour {
 	}
 
 	public event EventHandler<EventArgs<string>> SpawnYT;
+	public event EventHandler<EventArgs<bool>> InputFocus;
 
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<Browser.JsMessageString>(eventArgs.Value);
@@ -50,6 +51,16 @@ public class WebBrowserController : MonoBehaviour {
 			switch (message.Message) {
 				case "spawnYT":
 					SpawnYT?.Invoke(this, new EventArgs<string>(message.Data));
+					break;
+			}
+		}
+		else if (message.Type == "event") {
+			switch (message.Message) {
+				case "focusInput":
+					InputFocus?.Invoke(this, new EventArgs<bool>(true));
+					break;
+				case "blurInput":
+					InputFocus?.Invoke(this, new EventArgs<bool>(false));
 					break;
 			}
 		}

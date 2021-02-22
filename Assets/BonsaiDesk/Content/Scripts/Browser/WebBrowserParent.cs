@@ -1,14 +1,17 @@
 ﻿using System;
+using Mirror;
 using UnityEngine;
 using Vuplex.WebView;
 
-public class WebBrowserParent : MonoBehaviour {
+public class WebBrowserParent : NetworkBehaviour {
 	public TableBrowser webBrowser;
 	public TableBrowser keyboardBrowser;
 	public TableBrowser webNavBrowser;
 	public KeyboardBrowserController keyboardBrowserController;
 	public WebBrowserController webBrowserController;
 	public WebNavBrowserController webNavBrowserController;
+	public GameObject VideoPrefab;
+	public Transform videoSpawnLocation;
 	private Vector3 _altTransform;
 	private Vector3 _startTransform;
 
@@ -34,6 +37,7 @@ public class WebBrowserParent : MonoBehaviour {
 			transform.localPosition = _startTransform;
 		}
 		else {
+			Debug.Log("[BONSAI] SetActive");
 			LoadUrl("about:blank");
 			transform.localPosition = _altTransform;
 		}
@@ -46,11 +50,24 @@ public class WebBrowserParent : MonoBehaviour {
 		webNavBrowserController.SpawnKeyboard   += HandleSpawnKeyboard;
 		webNavBrowserController.DismissKeyboard += HandleDismissKeyboard;
 		webNavBrowserController.CloseWeb        += HandleCloseWeb;
-		webBrowserController.SpawnYT            += HandleSpawnYT;
+		webBrowserController.SpawnYT            += HandleSpawnYt;
+		webBrowserController.InputFocus         += HandleInputFocus;
 	}
 
-	private void HandleSpawnYT(object sender, EventArgs<string> e) {
+	private void HandleInputFocus(object sender, EventArgs<bool> e) {
+		if (e.Value) {
+			HandleSpawnKeyboard();
+		}
+		else {
+			HandleDismissKeyboard();
+		}
+
+		throw new NotImplementedException();
+	}
+
+	private void HandleSpawnYt(object sender, EventArgs<string> e) {
 		Debug.Log($"[BONSAI] Spawn YT {e.Value}");
+		CmdSpawnYT(videoSpawnLocation.localPosition, e.Value);
 	}
 
 	private void SetupKeyboardBrowser() {
@@ -84,5 +101,16 @@ public class WebBrowserParent : MonoBehaviour {
 
 	public void LoadUrl(string url) {
 		webBrowser.LoadUrl(url);
+	}
+
+	[Command(ignoreAuthority = true)]
+	private void CmdSpawnYT(Vector3 position, string id) {
+		var spawnedObject = Instantiate(VideoPrefab, position, Quaternion.identity);
+		NetworkServer.Spawn(spawnedObject);
+		spawnedObject.GetComponent<TabletControl>().videoId = id;
+	}
+
+	public void DummySpawn() {
+		CmdSpawnYT(videoSpawnLocation.localPosition, "niS_Fpy_2-U");
 	}
 }

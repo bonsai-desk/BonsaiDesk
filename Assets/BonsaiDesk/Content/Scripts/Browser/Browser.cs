@@ -16,21 +16,21 @@ public class Browser : MonoBehaviour {
 	public Transform screenTransform;
 	public string initialUrl;
 	public bool useBuiltHtml;
+	public Vector2 Bounds;
+	public DragMode dragMode;
 	private GameObject _boundsObject;
 	private OVROverlay _overlay;
 	private bool _postedListenersReady;
 	private bool _renderEnabled = true;
-	public Vector2 Bounds;
 	protected Transform Resizer;
 	protected WebViewPrefabCustom WebViewPrefab;
 	protected Transform WebViewView;
-	public DragMode dragMode;
 
 	protected virtual void Start() {
 		Debug.Log("browser start");
 
 		CacheTransforms();
-		
+
 		// WebView preconfiguring is done once in the BrowserSetup class
 
 		SetupWebViewPrefab();
@@ -85,7 +85,7 @@ public class Browser : MonoBehaviour {
 		{
 			Debug.Log("[BONSAI] Browser Initialized");
 			WebViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
-			WebViewPrefab.DragMode       =  dragMode;
+			WebViewPrefab.DragMode               =  dragMode;
 			BrowserReady?.Invoke();
 		};
 	#if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -164,7 +164,6 @@ public class Browser : MonoBehaviour {
 	#else
 		WebViewView.GetComponent<MeshRenderer>().enabled = _renderEnabled;
 	#endif
-		
 	}
 
 	public void ToggleHidden() {
@@ -172,7 +171,12 @@ public class Browser : MonoBehaviour {
 	}
 
 	public void LoadUrl(string url) {
-		WebViewPrefab.WebView.LoadUrl(url);
+		if (WebViewPrefab.WebView != null) {
+			WebViewPrefab.WebView.LoadUrl(url);
+		}
+		else {
+			Debug.LogWarning("[BONSAI] Tried to load url when WebView is null");
+		}
 	}
 
 	public void LoadHtml(string html) {
@@ -187,7 +191,7 @@ public class Browser : MonoBehaviour {
 	public void GoBack() {
 		WebViewPrefab.WebView.GoBack();
 	}
-	
+
 	public void GoForward() {
 		WebViewPrefab.WebView.GoForward();
 	}
