@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using Vuplex.WebView;
 
-public class AutoBrowser : Browser {
+public class AutoBrowser : Browser
+{
 	public Rigidbody screenRigidBody;
 	private Vector3 _belowTableLocalPosition;
 	private Vector3 _defaultLocalPosition;

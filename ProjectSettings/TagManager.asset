@@ -29,7 +29,7 @@ TagManager:
   - IndexTip
   - TouchScreenSurface
   - Browser
-  - 
+  - OnlyTouchScreenSurface
   - 
   - block
   - blockArea
