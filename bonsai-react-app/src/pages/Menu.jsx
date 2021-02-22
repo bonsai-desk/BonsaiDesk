@@ -90,20 +90,40 @@ function ConnectedClient(props) {
   let {info} = props;
   let {Name, ConnectionId} = info;
 
+  const hostClass = 'bg-gray-800 rounded-full p-4 h-20 flex flex-wrap content-center';
+  const clientClass = 'bg-gray-800 active:bg-red-700 hover:bg-red-600 rounded-full p-4 cursor-pointer h-20 flex flex-wrap content-center';
+
   if (ConnectionId === 0) {
     return (
-        <InfoItem title={'You'} slug={`${ConnectionId}`}
-                  imgSrc={ThinkingFace}>
-        </InfoItem>);
+        <div className={hostClass}>
+          <div
+              className={'flex content-center p-2 space-x-4'}>
+            <div>
+              <img className={'h-9 w-9'} src={ThinkingFace} alt={''}/>
+            </div>
+            <div>
+              {Name}
+            </div>
+          </div>
+        </div>
+    );
   } else {
     return (
-        <InfoItem title={Name} slug={ConnectionId}
-                  imgSrc={ThinkingFace}>
-          <Button handleClick={() => {
-            postKickConnectionId(ConnectionId);
-          }} className={redButtonClass}>Kick
-          </Button>
-        </InfoItem>);
+        <Button className={clientClass} handleClick={() => {
+          postKickConnectionId(ConnectionId);
+        }}>
+          <div
+              className={'flex content-center p-2 space-x-4'}>
+            <div>
+              <img className={'h-9 w-9'} src={ThinkingFace} alt={''}/>
+            </div>
+            <div>
+              {Name}
+            </div>
+          </div>
+        </Button>
+    );
+
   }
 
 }
@@ -219,7 +239,9 @@ let HostHomePage = observer(() => {
         {store.player_info.length > 0 && store.room_open ?
             <React.Fragment>
               <div className={'text-xl'}>People in Your Room</div>
-              {store.player_info.map(info => <ConnectedClient info={info}/>)}
+              <div className={'flex space-x-2'}>
+                {store.player_info.map(info => <ConnectedClient info={info}/>)}
+              </div>
             </React.Fragment>
             :
             ''}
@@ -392,7 +414,7 @@ let SettingsPage = observer(() => {
     if (store.player_info.length > 0) {
       store.player_info.push({Name: 'cam', ConnectionId: 1});
     } else {
-      store.player_info.push({Name: 'cam', ConnectionId: 0});
+      store.player_info.push({Name: 'loremIpsumLoremIpsumLorem', ConnectionId: 0});
     }
   });
   let rmFakeClient = action(store => {
