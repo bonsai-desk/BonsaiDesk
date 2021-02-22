@@ -1,7 +1,6 @@
 ﻿using System;
 using Mirror;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Vuplex.WebView;
 
 public class WebBrowserParent : NetworkBehaviour {
@@ -12,9 +11,9 @@ public class WebBrowserParent : NetworkBehaviour {
 	public WebBrowserController webBrowserController;
 	public WebNavBrowserController webNavBrowserController;
 	public GameObject VideoPrefab;
+	public Transform videoSpawnLocation;
 	private Vector3 _altTransform;
 	private Vector3 _startTransform;
-	public Transform videoSpawnLocation;
 
 	// Start is called before the first frame update
 	private void Start() {
@@ -51,10 +50,22 @@ public class WebBrowserParent : NetworkBehaviour {
 		webNavBrowserController.SpawnKeyboard   += HandleSpawnKeyboard;
 		webNavBrowserController.DismissKeyboard += HandleDismissKeyboard;
 		webNavBrowserController.CloseWeb        += HandleCloseWeb;
-		webBrowserController.SpawnYT            += HandleSpawnYT;
+		webBrowserController.SpawnYT            += HandleSpawnYt;
+		webBrowserController.InputFocus         += HandleInputFocus;
 	}
 
-	private void HandleSpawnYT(object sender, EventArgs<string> e) {
+	private void HandleInputFocus(object sender, EventArgs<bool> e) {
+		if (e.Value) {
+			HandleSpawnKeyboard();
+		}
+		else {
+			HandleDismissKeyboard();
+		}
+
+		throw new NotImplementedException();
+	}
+
+	private void HandleSpawnYt(object sender, EventArgs<string> e) {
 		Debug.Log($"[BONSAI] Spawn YT {e.Value}");
 		CmdSpawnYT(videoSpawnLocation.localPosition, e.Value);
 	}

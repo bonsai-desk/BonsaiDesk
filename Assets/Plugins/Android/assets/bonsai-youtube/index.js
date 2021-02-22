@@ -9,7 +9,7 @@ function injectScript (func) {
 injectScript (() => {
   let lastTag;
 
-  function postMessage (json) {
+  function postJson (json) {
     if (window.vuplex) {
       console.log ('post json ' + JSON.stringify (json));
       window.vuplex.postMessage (json);
@@ -22,11 +22,11 @@ injectScript (() => {
     let tag = document.activeElement.tagName;
 
     if (tag === 'INPUT' && tag !== lastTag) {
-      postMessage ({Type: 'event', Message: 'focusInput'});
+      postJson ({Type: 'event', Message: 'focusInput'});
     }
 
     if (lastTag === 'INPUT' && tag !== lastTag) {
-      postMessage ({Type: 'event', Message: 'blurInput'});
+      postJson ({Type: 'event', Message: 'blurInput'});
     }
 
     lastTag = tag;
@@ -39,7 +39,7 @@ injectScript (() => {
         const id = params.get ('v');
         if (id) {
           link.onclick = () => {
-            postMessage ({Type: 'command', Message: 'spawnYT', Data: id});
+            postJson ({Type: 'command', Message: 'spawnYT', Data: id});
           };
         }
         link.removeAttribute ('href');
