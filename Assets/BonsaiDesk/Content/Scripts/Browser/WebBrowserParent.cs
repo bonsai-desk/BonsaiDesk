@@ -51,7 +51,6 @@ public class WebBrowserParent : MonoBehaviour {
 
 	private void HandleSpawnYT(object sender, EventArgs<string> e) {
 		Debug.Log($"[BONSAI] Spawn YT {e.Value}");
-		throw new NotImplementedException();
 	}
 
 	private void SetupKeyboardBrowser() {
