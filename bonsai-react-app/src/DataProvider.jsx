@@ -14,6 +14,7 @@ class Store {
   network_state = null;
   loading_room_code = false;
   _refresh_room_code_handler = null;
+  user_info = {};
   player_info = [];
 
   constructor() {

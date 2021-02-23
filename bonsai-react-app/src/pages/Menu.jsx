@@ -493,6 +493,8 @@ function showInfo(info) {
   switch (info[0]) {
     case 'player_info':
       return showPlayerInfo(info[1]);
+    case 'user_info':
+      return JSON.stringify(info);
     default:
       return info[1] ? info[1].toString() : '';
   }

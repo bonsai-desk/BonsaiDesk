@@ -117,6 +117,13 @@ public class TableBrowserMenu : MonoBehaviour {
 		_browser.PostMessage(message);
 	}
 
+	public void PostUserInfo(UserInfo userInfo) {
+		var data = new KeyType<UserInfo> {Key = "user_info", Val = userInfo};
+		var csMessage = new CsMessageKeyType<UserInfo> {Data = data};
+		var message   = JsonConvert.SerializeObject(csMessage);
+		_browser.PostMessage(message);
+	}
+
 	public event Action<RoomData> JoinRoom;
 	public event Action LeaveRoom;
 	public event Action OpenRoom;
@@ -158,5 +165,8 @@ public class TableBrowserMenu : MonoBehaviour {
 		public int pinged;
 		public int port;
 	}
-	
+
+	public struct UserInfo {
+		public string UserName;
+	}
 }

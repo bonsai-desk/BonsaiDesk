@@ -2407,7 +2407,7 @@ MonoBehaviour:
   maxRelayRefreshAttempts: 3
   relayLifetime: 30
   isDisconnecting: 0
-  serverOnlyIfEditor: 0
+  serverOnlyIfEditor: 1
   visualizeAuthority: 0
   browserReady: 0
   tableBrowser: {fileID: 1361515864}
@@ -25221,6 +25221,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
+  BrowserMenu: {fileID: 1361515863}
+  postUserInfoEvery: 0.1
 --- !u!4 &1991551688
 Transform:
   m_ObjectHideFlags: 0

@@ -6,9 +6,13 @@ using Application = UnityEngine.Application;
 
 public class SocialManager : NetworkBehaviour {
 	public static SocialManager Singleton;
+	public TableBrowserMenu BrowserMenu;
+	public float postUserInfoEvery = 0.1f;
 	private float _postInfoLast;
+	private float postedUserInfoLast;
 	private bool reportWhenReady;
 	public User User;
+	private (bool, TableBrowserMenu.UserInfo) userInfo;
 
 	// Start is called before the first frame update
 	private void Start() {
@@ -24,6 +28,8 @@ public class SocialManager : NetworkBehaviour {
 
 	// Update is called once per frame
 	private void Update() {
+		MaybePostInfo();
+
 		if (reportWhenReady && User != null) {
 			Users.GetLoggedInUser().OnComplete(msg =>
 			{
@@ -32,9 +38,19 @@ public class SocialManager : NetworkBehaviour {
 					return;
 				}
 
+				Debug.Log($"[BONSAI] Report as user : {msg.Data.OculusID}");
 				CmdSetUserInfo(new NetworkManagerGame.UserInfo(msg.Data.OculusID));
 			});
 			reportWhenReady = false;
+		}
+	}
+
+	private void MaybePostInfo() {
+		if (Time.time - postedUserInfoLast > postUserInfoEvery) {
+			if (userInfo.Item1) {
+				BrowserMenu.PostUserInfo(userInfo.Item2);
+				postedUserInfoLast = Time.time;
+			}
 		}
 	}
 
@@ -45,7 +61,9 @@ public class SocialManager : NetworkBehaviour {
 			return;
 		}
 
-		User = msg.Data;
+		User          = msg.Data;
+		var userInfoClass = new TableBrowserMenu.UserInfo {UserName = "testname"};
+		userInfo = (true, userInfoClass);
 	}
 
 	private void InitCallback(Message<PlatformInitialize> msg) {
@@ -66,7 +84,8 @@ public class SocialManager : NetworkBehaviour {
 	private void TargetReportUserInfo(NetworkConnection conn) {
 		var id = NetworkClient.connection.identity.netId;
 		if (User != null) {
-			CmdSetUserInfo(new NetworkManagerGame.UserInfo(User.DisplayName));
+			Debug.Log($"[BONSAI] Report as user : {User.OculusID}");
+			CmdSetUserInfo(new NetworkManagerGame.UserInfo(User.OculusID));
 		}
 		else {
 			reportWhenReady = true;
@@ -83,4 +102,5 @@ public class SocialManager : NetworkBehaviour {
 	private void HandleServerAddPlayer(NetworkConnection conn) {
 		TargetReportUserInfo(conn);
 	}
+
 }
