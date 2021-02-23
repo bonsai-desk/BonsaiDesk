@@ -88,13 +88,10 @@ public class Browser : MonoBehaviour {
 			WebViewPrefab.DragMode               =  dragMode;
 			BrowserReady?.Invoke();
 		};
-	#if UNITY_EDITOR || DEVELOPMENT_BUILD
+		
 		if (useBuiltHtml) {
 			initialUrl = "streaming-assets://build/index.html";
 		}
-	#else
-		initialUrl = "streaming-assets://build/index.html";
-	#endif
 
 		WebViewPrefab.InitialUrl = initialUrl;
 	}
@@ -128,29 +125,6 @@ public class Browser : MonoBehaviour {
 
 				break;
 		}
-	}
-
-	private static void PreConfigureWebView() {
-	#if UNITY_EDITOR || DEVELOPMENT_BUILD
-	#if UNITY_ANDROID && !UNITY_EDITOR
-        AndroidGeckoWebView.EnableRemoteDebugging();
-	#elif UNITY_EDITOR
-		StandaloneWebView.EnableRemoteDebugging(8080);
-	#endif
-	#endif
-
-	#if UNITY_ANDROID && !UNITY_EDITOR
-        AndroidGeckoWebView.SetUserPreferences(@"
-            user_pref('media.autoplay.default', 0);
-            user_pref('media.geckoview.autoplay.request', false);
-        ");
-		AndroidGeckoWebView.EnsureBuiltInExtension(
-			"resource://android/assets/ublock/",
-			"uBlock0@raymondhill.net"
-		);
-	#elif UNITY_EDITOR
-		StandaloneWebView.SetCommandLineArguments("--autoplay-policy=no-user-gesture-required");
-	#endif
 	}
 
 	public void SetHidden(bool hidden) {

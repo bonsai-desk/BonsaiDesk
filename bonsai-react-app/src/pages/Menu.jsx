@@ -46,10 +46,19 @@ function postKickConnectionId(id) {
 }
 
 function ListItem(props) {
-  let {selected, handleClick} = props;
+  let {selected, handleClick, inactive = false} = props;
 
   const buttonClassSelected = 'py-4 px-8 bg-blue-700 text-white rounded cursor-pointer flex flex-wrap content-center';
   const buttonClass = 'py-4 px-8 hover:bg-gray-800 active:bg-gray-900 hover:text-white rounded cursor-pointer flex flex-wrap content-center';
+  const buttonClassInactive = 'py-4 px-8 bg-gray-800 rounded cursor-pointer flex flex-wrap content-center';
+
+  if (inactive) {
+    return (
+        <div className={buttonClassInactive}>
+          {props.children}
+        </div>
+    )
+  }
 
   let className = selected ? buttonClassSelected : buttonClass;
   return (
@@ -378,11 +387,6 @@ function JoinDeskPage(props) {
   );
 }
 
-function ContactsPage() {
-  return <MenuContent name={'Contacts'}>
-  </MenuContent>;
-}
-
 function VideosPage() {
   return <MenuContent name={'Videos'}>
     <InfoItem imgSrc={YtImg} title={'YouTube'}
@@ -414,7 +418,8 @@ let SettingsPage = observer(() => {
     if (store.player_info.length > 0) {
       store.player_info.push({Name: 'cam', ConnectionId: 1});
     } else {
-      store.player_info.push({Name: 'loremIpsumLoremIpsumLorem', ConnectionId: 0});
+      store.player_info.push(
+          {Name: 'loremIpsumLoremIpsumLorem', ConnectionId: 0});
     }
   });
   let rmFakeClient = action(store => {
@@ -481,14 +486,6 @@ let SettingsPage = observer(() => {
   );
 });
 
-const pages = [
-  {name: 'Home', component: HomePage},
-  {name: 'Join Desk', component: JoinDeskPage},
-  {name: 'Videos', component: VideosPage},
-  {name: 'Contacts', component: ContactsPage},
-  {name: 'Settings', component: SettingsPage},
-];
-
 function showInfo(info) {
   switch (info[0]) {
     case 'player_info':
@@ -506,13 +503,11 @@ function showPlayerInfo(playerInfo) {
   }).join(' ') + ']';
 }
 
-let Menu = () => {
+let Menu = observer(() => {
 
   let {store, pushStore} = useStore();
 
   let [active, setActive] = useState(0);
-
-  let SelectedPage = pages[active].component;
 
   let navHome = () => {
     setActive(0);
@@ -521,6 +516,7 @@ let Menu = () => {
   useEffect(() => {
     autorun(() => {
       // remove room code if
+      // DEVELOPMENT || PRODUCTION
       if (store.room_code &&
           (!store.ip_address || !store.port || !store.room_open)) {
         console.log('rm room code');
@@ -559,6 +555,20 @@ let Menu = () => {
     };
   }, [pushStore]);
 
+  const pages = [
+    {name: 'Home', component: HomePage},
+    {name: 'Join Desk', component: JoinDeskPage},
+    {name: 'Videos', component: VideosPage}
+  ];
+
+  if (store.build === 'DEVELOPMENT') {
+    pages.push({name: 'Settings', component: SettingsPage})
+  }
+
+  let SelectedPage = pages[active].component;
+
+  let joinDeskActive = store.network_state === "Hosting" && !store._room_open
+
   return (
       <div className={'flex text-lg text-gray-500 h-full'}>
         <div className={'w-4/12 bg-black overflow-auto scrollhost static'}>
@@ -570,6 +580,9 @@ let Menu = () => {
           <div className={'h-16'}/>
           <SettingsList>
             {pages.map((info, i) => {
+              if (info.name.toLowerCase() === "join desk" && !joinDeskActive) {
+                return <ListItem key={info.name} inactive={true} >{info.name}</ListItem>;
+              }
               return <ListItem key={info.name} handleClick={() => {
                 setActive(i);
               }} selected={active === i}>{info.name}</ListItem>;
@@ -581,6 +594,6 @@ let Menu = () => {
         </div>
       </div>
   );
-};
+});
 
 export default Menu;

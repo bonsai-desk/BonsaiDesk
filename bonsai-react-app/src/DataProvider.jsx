@@ -16,6 +16,7 @@ class Store {
   _refresh_room_code_handler = null;
   user_info = {};
   player_info = [];
+  build = "DEVELOPMENT";
 
   constructor() {
     makeAutoObservable(this);

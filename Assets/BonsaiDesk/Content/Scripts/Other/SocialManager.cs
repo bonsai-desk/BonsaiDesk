@@ -29,6 +29,7 @@ public class SocialManager : NetworkBehaviour {
 	// Update is called once per frame
 	private void Update() {
 		MaybePostInfo();
+		var info = Notifications.GetRoomInviteNotifications();
 
 		if (reportWhenReady && User != null) {
 			Users.GetLoggedInUser().OnComplete(msg =>

@@ -145,6 +145,15 @@ public class NetworkManagerGame : NobleNetworkManager {
 	private void PostInfo() {
 		if (browserReady) {
 			_postRoomInfoLast = Time.time;
+			#if UNITY_EDITOR || DEVELOPMENT_BUILD
+				var build = "DEVELOPMENT";
+			#else
+				var build = "PRODUCTION";
+			#endif
+			
+			tableBrowserMenu.PostKvs(new[] {
+				new TableBrowserMenu.KeyVal {Key = "build", Val = build}
+			});
 			tableBrowserMenu.PostNetworkState(State.ToString());
 			tableBrowserMenu.PostPlayerInfo(PlayerInfos);
 			tableBrowserMenu.PostRoomOpen(roomOpen);
