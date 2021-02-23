@@ -29,8 +29,6 @@ public class SocialManager : NetworkBehaviour {
 	// Update is called once per frame
 	private void Update() {
 		MaybePostInfo();
-		var info = Notifications.GetRoomInviteNotifications();
-
 		if (reportWhenReady && User != null) {
 			Users.GetLoggedInUser().OnComplete(msg =>
 			{
@@ -62,7 +60,7 @@ public class SocialManager : NetworkBehaviour {
 			return;
 		}
 
-		User          = msg.Data;
+		User = msg.Data;
 		var userInfoClass = new TableBrowserMenu.UserInfo {UserName = "testname"};
 		userInfo = (true, userInfoClass);
 	}
@@ -103,5 +101,4 @@ public class SocialManager : NetworkBehaviour {
 	private void HandleServerAddPlayer(NetworkConnection conn) {
 		TargetReportUserInfo(conn);
 	}
-
 }
