@@ -9,11 +9,13 @@ public class ContextUI : MonoBehaviour
 
     private void Start()
     {
-        CloseUI();
+        // CloseUI();
     }
 
     public void ToggleUI()
     {
+        return;
+        
         if (uiObject.activeSelf)
         {
             CloseUI();

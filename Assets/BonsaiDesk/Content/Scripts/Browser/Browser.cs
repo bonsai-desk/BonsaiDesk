@@ -23,7 +23,7 @@ public class Browser : MonoBehaviour {
 	private bool _postedListenersReady;
 	private bool _renderEnabled = true;
 	protected Transform Resizer;
-	protected WebViewPrefabCustom WebViewPrefab;
+	public WebViewPrefabCustom WebViewPrefab;
 	protected Transform WebViewView;
 
 	protected virtual void Start() {
@@ -41,6 +41,22 @@ public class Browser : MonoBehaviour {
 	public event Action BrowserReady;
 
 	public event Action ListenersReady;
+	
+	public void SetMaterialOnTop()
+	{
+		if (WebViewPrefab)
+		{
+			WebViewPrefab.SetMaterialOnTop();
+		}
+	}
+
+	public void SetMaterialRegular()
+	{
+		if (WebViewPrefab)
+		{
+			WebViewPrefab.SetMaterialRegular();
+		}
+	}
 
 	private void SetupHolePuncher() {
 	#if UNITY_ANDROID && !UNITY_EDITOR
