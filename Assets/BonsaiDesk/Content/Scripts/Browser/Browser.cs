@@ -30,7 +30,7 @@ public class Browser : MonoBehaviour {
 	{
 		Debug.Log("browser start");
 
-		holePuncherMaterial = Resources.Load<Material>("OnTopUnderlay");
+		holePuncherMaterial = new Material(Resources.Load<Material>("OnTopUnderlay"));
 
 		CacheTransforms();
 
