@@ -52,11 +52,21 @@ public class TableBrowserParent : MonoBehaviour {
 		sleeped = true;
 		SetAlt(true);
 		WebBrowserParent.SetActive(false);
+		
+		InputManager.Hands.Left.ZTestRegular();
+		InputManager.Hands.Right.ZTestRegular();
+		InputManager.Hands.Left.SetPhysicsLayerRegular();
+		InputManager.Hands.Right.SetPhysicsLayerRegular();
 	}
 
 	public void Wake() {
 		sleeped = false;
 		SetAlt(false);
+		
+		InputManager.Hands.Left.ZTestOverlay();
+		InputManager.Hands.Right.ZTestOverlay();
+		InputManager.Hands.Left.SetPhysicsLayerForTouchScreen();
+		InputManager.Hands.Right.SetPhysicsLayerForTouchScreen();
 	}
 
 	public void ToggleAwake() {
