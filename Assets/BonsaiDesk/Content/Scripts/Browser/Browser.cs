@@ -7,7 +7,7 @@ using Vuplex.WebView;
 
 public class Browser : MonoBehaviour {
 	public Vector2 startingAspect = new Vector2(16, 9);
-	public Material holePuncherMaterial;
+	private Material holePuncherMaterial;
 	public float distanceEstimate = 1;
 	public int pixelPerDegree = 16;
 	public Transform boundsTransform;
@@ -26,8 +26,11 @@ public class Browser : MonoBehaviour {
 	public WebViewPrefabCustom WebViewPrefab;
 	protected Transform WebViewView;
 
-	protected virtual void Start() {
+	protected virtual void Start()
+	{
 		Debug.Log("browser start");
+
+		holePuncherMaterial = Resources.Load<Material>("OnTopUnderlay");
 
 		CacheTransforms();
 
@@ -48,6 +51,9 @@ public class Browser : MonoBehaviour {
 		{
 			WebViewPrefab.SetMaterialOnTop();
 		}
+		
+		holePuncherMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Overlay;
+		holePuncherMaterial.SetInt("_ZTest", (int) UnityEngine.Rendering.CompareFunction.Always);
 	}
 
 	public void SetMaterialRegular()
@@ -56,6 +62,9 @@ public class Browser : MonoBehaviour {
 		{
 			WebViewPrefab.SetMaterialRegular();
 		}
+		
+		holePuncherMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Geometry + 1;
+		holePuncherMaterial.SetInt("_ZTest", (int) UnityEngine.Rendering.CompareFunction.LessEqual);
 	}
 
 	private void SetupHolePuncher() {

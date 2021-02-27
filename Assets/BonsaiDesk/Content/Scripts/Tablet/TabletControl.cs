@@ -88,6 +88,7 @@ public class TabletControl : NetworkBehaviour {
 
 				//generate new texture with mipmaps
 				var newTexture = new Texture2D(texture.width, texture.height);
+				newTexture.filterMode = FilterMode.Trilinear;
 				newTexture.SetPixels(texture.GetPixels(0));
 				newTexture.Apply();
 
