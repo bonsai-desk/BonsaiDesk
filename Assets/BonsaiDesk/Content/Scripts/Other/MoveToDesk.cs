@@ -190,7 +190,8 @@ public class MoveToDesk : MonoBehaviour
             }
             else
             {
-                tableGhost.position = tablePosition;
+                tableGhost.position = tablePosition + Vector3.down * 0.175f + tableRotation * Vector3.forward * 0.1f;
+                // tableGhost.position = tablePosition;
                 tableGhost.rotation = tableRotation;
             }
         }
@@ -376,7 +377,7 @@ public class MoveToDesk : MonoBehaviour
 
         ApplyCalculatedTableOrientation(false);
     }
-    
+
     public void ResetIfOriented()
     {
         if (oriented)
