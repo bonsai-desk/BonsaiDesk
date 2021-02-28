@@ -6,14 +6,14 @@ public class CubicBezier
 {
     //https://cubic-bezier.com/
     //https://easings.net/
-    
+
     public static readonly CubicBezier EaseInOut = new CubicBezier(0.42f, 0, 0.58f, 1);
     public static readonly CubicBezier EaseIn = new CubicBezier(0.42f, 0, 1, 1);
     public static readonly CubicBezier EaseOut = new CubicBezier(0, 0, 0.58f, 1);
     public static readonly CubicBezier LateStart = new CubicBezier(0.73f, 0.21f, 0.87f, 0.31f);
 
     private readonly int _numSamples;
-    
+
     private readonly Vector2[] _samples;
     private readonly Vector2[] _inverseSamples;
 
@@ -22,7 +22,7 @@ public class CubicBezier
         _numSamples = 25;
         var p1 = new Vector2(p1X, p1Y);
         var p2 = new Vector2(p2X, p2Y);
-        
+
         _samples = new Vector2[_numSamples + 1];
         _inverseSamples = new Vector2[_numSamples + 1];
         for (var i = 0; i <= _numSamples; i++)
@@ -35,6 +35,7 @@ public class CubicBezier
                 _inverseSamples = null;
                 return;
             }
+
             _samples[i] = value;
             _inverseSamples[i] = new Vector2(value.y, value.x);
         }
@@ -50,6 +51,21 @@ public class CubicBezier
         return Sample(t, _inverseSamples, _numSamples);
     }
 
+    /// <summary>
+    /// Move a time value to 0 or 1. Uses Sample and SampleInverse internally so the move direction (0 to 1, or 1 to 0) can change at any time without jumping
+    /// </summary>
+    /// <param name="tCurrent">Current time from 0 to 1. This is the actual value put into the lerp function, not the time passed into the cubic bezier</param>
+    /// <param name="animationTime">Time it should take to go from 0 to 1 or 1 to 0. Time.deltaTime is used internally</param>
+    /// <param name="increase">True to move time towards 1, False to move time towards 0</param>
+    /// <returns>The updated t value</returns>
+    public float MoveTowards01(float tCurrent, float animationTime, bool increase)
+    {
+        float t = SampleInverse(tCurrent);
+        float step = (1f / animationTime) * Time.deltaTime;
+        t = Mathf.MoveTowards(t, increase ? 1f : 0f, step);
+        return Sample(t);
+    }
+
     private static float Sample(float t, Vector2[] samples, int numSamples)
     {
         if (samples == null)
@@ -57,11 +73,12 @@ public class CubicBezier
             Debug.Log("No samples.");
             return 0f;
         }
+
         if (t <= 0f)
             return 0f;
         if (t >= 1f)
             return 1f;
-        
+
         var l = 0;
         var r = numSamples - 1;
         var i = 0;
@@ -73,6 +90,7 @@ public class CubicBezier
                 Debug.LogError("Binary search failed to find search within 100 iterations.");
                 return 0f;
             }
+
             var m = l + (r - l) / 2;
             if (t >= samples[m].x && t <= samples[m + 1].x)
             {
