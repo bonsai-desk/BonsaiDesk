@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Mirror;
 using TMPro;
 using UnityEditor;
@@ -134,9 +135,10 @@ public class MoveToDesk : MonoBehaviour
         return handsValid;
     }
 
-    private const float TableLerpTime = 0.5f;
+    private const float TableLerpTime = 0.35f;
     private float _tableLerp = 0;
     private Vector3 _tableStartPosition;
+    private Vector3 _tableEndPosition;
 
     private void MoveTableGhost()
     {
@@ -193,10 +195,10 @@ public class MoveToDesk : MonoBehaviour
 
             if (_lastHandsOnEdge)
             {
-                _tableLerp += Time.deltaTime * (1f / TableLerpTime);
+                // _tableLerp += Time.deltaTime * (1f / TableLerpTime);
 
-                float t = CubicBezier.EaseOut.Sample(_tableLerp);
-                tableGhost.position = Vector3.Lerp(_tableStartPosition, tablePosition, t);
+                _tableLerp = CubicBezier.EaseOut.MoveTowards01(_tableLerp, TableLerpTime, true);
+                tableGhost.position = Vector3.Lerp(_tableStartPosition, tablePosition, _tableLerp);
 
                 // float tablePositionDifference = Vector3.Distance(tableGhost.position, tablePosition);
                 // tableGhost.position = Vector3.MoveTowards(tableGhost.position, tablePosition,
@@ -207,11 +209,11 @@ public class MoveToDesk : MonoBehaviour
             }
             else
             {
-                tableGhost.position = tablePosition + Vector3.down * 0.35f + tableRotation * Vector3.forward * 0.0f;
+                tableGhost.position = tablePosition + Vector3.down * 0.25f + tableRotation * Vector3.forward * 0.0f;
                 // tableGhost.position = tablePosition;
                 tableGhost.rotation = tableRotation;
 
-                _tableLerp = 0;
+                // _tableLerp = 0;
                 _tableStartPosition = tableGhost.position;
             }
         }
@@ -219,9 +221,17 @@ public class MoveToDesk : MonoBehaviour
         {
             UpdateState(0);
 
-            _tableAlpha = 0f;
+            _tableAlpha = Mathf.MoveTowards(_tableAlpha, 0f, Time.deltaTime * (1f / TableLerpTime));
 
-            tableGhost.gameObject.SetActive(false);
+            if (_lastHandsOnEdge)
+            {
+                _tableEndPosition = tableGhost.position;
+            }
+            
+            _tableLerp = CubicBezier.EaseOut.MoveTowards01(_tableLerp, TableLerpTime, false);
+            tableGhost.position = Vector3.Lerp(_tableStartPosition, _tableEndPosition, _tableLerp);
+
+            // tableGhost.gameObject.SetActive(false);
             tableGhostText.text = "Place your thumbs on the\n edge of your <i><b>real</b></i> desk";
         }
 
