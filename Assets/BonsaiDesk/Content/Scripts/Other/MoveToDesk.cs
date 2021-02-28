@@ -134,6 +134,10 @@ public class MoveToDesk : MonoBehaviour
         return handsValid;
     }
 
+    private const float TableLerpTime = 0.5f;
+    private float _tableLerp = 0;
+    private Vector3 _tableStartPosition;
+
     private void MoveTableGhost()
     {
         //set instructions active
@@ -152,7 +156,15 @@ public class MoveToDesk : MonoBehaviour
 
         handDemo.rotation =
             Quaternion.RotateTowards(handDemo.rotation, handDemoTargetRotation, angle * 1.75f * Time.deltaTime);
-        handDemo.position = centerEyeAnchor.position;
+        // handDemo.position = centerEyeAnchor.position;
+        var handDemoPositionDifference = Vector3.Distance(handDemo.position, centerEyeAnchor.position);
+        if (handDemoPositionDifference > 1f)
+        {
+            handDemo.position = centerEyeAnchor.position;
+        }
+
+        handDemo.position = Vector3.MoveTowards(handDemo.position, centerEyeAnchor.position,
+            handDemoPositionDifference * 3f * Time.deltaTime);
 
         //if hands are on edge of real table
         bool handOnEdge = HandsOnEdge();
@@ -160,7 +172,7 @@ public class MoveToDesk : MonoBehaviour
         {
             UpdateState(1);
 
-            _tableAlpha = Mathf.MoveTowards(_tableAlpha, 1f, Time.deltaTime * (1f / 0.35f));
+            _tableAlpha = Mathf.MoveTowards(_tableAlpha, 1f, Time.deltaTime * (1f / TableLerpTime));
 
             tableGhost.gameObject.SetActive(true);
             tableGhostText.text = "<--- swipe apart --->";
@@ -181,18 +193,26 @@ public class MoveToDesk : MonoBehaviour
 
             if (_lastHandsOnEdge)
             {
-                float tablePositionDifference = Vector3.Distance(tableGhost.position, tablePosition);
-                tableGhost.position = Vector3.MoveTowards(tableGhost.position, tablePosition,
-                    tablePositionDifference * 3f * Time.deltaTime);
+                _tableLerp += Time.deltaTime * (1f / TableLerpTime);
+
+                float t = CubicBezier.EaseOut.Sample(_tableLerp);
+                tableGhost.position = Vector3.Lerp(_tableStartPosition, tablePosition, t);
+
+                // float tablePositionDifference = Vector3.Distance(tableGhost.position, tablePosition);
+                // tableGhost.position = Vector3.MoveTowards(tableGhost.position, tablePosition,
+                //     tablePositionDifference * 3f * Time.deltaTime);
                 float tableAngleDifference = Quaternion.Angle(tableGhost.rotation, tableRotation);
                 tableGhost.rotation = Quaternion.RotateTowards(tableGhost.rotation, tableRotation,
                     tableAngleDifference * 3f * Time.deltaTime);
             }
             else
             {
-                tableGhost.position = tablePosition + Vector3.down * 0.175f + tableRotation * Vector3.forward * 0.1f;
+                tableGhost.position = tablePosition + Vector3.down * 0.35f + tableRotation * Vector3.forward * 0.0f;
                 // tableGhost.position = tablePosition;
                 tableGhost.rotation = tableRotation;
+
+                _tableLerp = 0;
+                _tableStartPosition = tableGhost.position;
             }
         }
         else
