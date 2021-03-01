@@ -27,6 +27,14 @@ Material:
         m_Texture: {fileID: 2800000, guid: 1af0b6aff08ad5f41adfea4a1310d1a7, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - Lights:
+        m_Texture: {fileID: 18700000, guid: 223358fd09c49de47abf55f2b0eaa7b4, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - Sky:
+        m_Texture: {fileID: 2800000, guid: 9b482ef940acb4d48b19550789bdff6d, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - T1:
         m_Texture: {fileID: 2800000, guid: 9b482ef940acb4d48b19550789bdff6d, type: 3}
         m_Scale: {x: 1, y: 1}

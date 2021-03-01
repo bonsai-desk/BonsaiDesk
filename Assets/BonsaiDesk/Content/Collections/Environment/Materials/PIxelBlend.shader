@@ -3,9 +3,7 @@
     Properties
     {
         Albedo ("Albedo", 2D) = "white" {}
-        T1 ("Texture", 2D) = "white" {}
-        T2 ("Texture", 2D) = "white" {}
-        _TimeScale ("TimeScale", Range(0, 1)) = 0
+        Lights ("Lights", 2DArray) = "" {}
     }
     SubShader
     {
@@ -30,13 +28,8 @@
             sampler2D Albedo;
             float4 Albedo_ST;
 
-            sampler2D T1;
-            float4 T1_ST;
-
-            sampler2D T2;
-            float4 T2_ST;
-
-            float _TimeScale;
+            int numLights;
+            float lightLevels[64];
 
             v2f vert (v2f v)
             {
@@ -47,16 +40,21 @@
                 return o;
             }
 
-            fixed4 frag (v2f i) : SV_Target
+            UNITY_DECLARE_TEX2DARRAY(Lights);
+
+            fixed4 frag (v2f IN) : SV_Target
             {
-                // sample the texture
-                float4 fullbright = tex2D(Albedo, i.uv);
-                float4 t1 = tex2D(T1, i.uv2);
-                float4 t2 = tex2D(T2, i.uv2);
-                float _Blend = 0.5 * sin(_Time.y * _TimeScale) + 0.5;
-                //fixed4 col =  t1 * _Blend + t2 * (1 - _Blend);
-                fixed4 col = fullbright * t1;
-                return col;
+                float4 albedo = tex2D(Albedo, IN.uv);
+                if (numLights == 0)
+                {
+                    return albedo;
+                }
+                fixed4 col = 0;
+                for(int i=0; i<numLights; i++)
+                {
+                    col += UNITY_SAMPLE_TEX2DARRAY(Lights, float3(IN.uv2, i));
+                }
+                return albedo * (col / numLights);
             }
             ENDCG
         }

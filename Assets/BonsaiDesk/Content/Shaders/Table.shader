@@ -65,7 +65,9 @@
 				o.Alpha = c.a;
 
 				for (int i = 0; i < numHoles; i++)
+				{
 					o.Alpha *= distance(holePositions[i], IN.worldPos.xz) + 0.0005f >= holeRadii[i];
+				}
 
 				clip(o.Alpha - 1);
 			}
