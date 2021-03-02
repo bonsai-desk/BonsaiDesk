@@ -9,11 +9,17 @@ public class LightManager : MonoBehaviour {
 	public TextureWrapMode wrapMode = TextureWrapMode.Clamp;
 	public TextureFormat textureFormat = TextureFormat.RGBA32;
 	public bool mipChain;
+
+	[Header("ring")]
+	public float ringScale = 1f;
+	public float ringFloor;
+	public float ringSpeed = 1;
 	private readonly float[] lightLevels = new float[64];
 	
-	public float ringScale = 1f;
-	public float ringFloor = 0f;
-	public float ringSpeed = 1;
+	[Header("desk")]
+	public float deskScale = 1f;
+	public float deskFloor;
+	public float deskSpeed = 1;
 
 	// Start is called before the first frame update
 	private void Start() {
@@ -41,19 +47,28 @@ public class LightManager : MonoBehaviour {
 
 	// Update is called once per frame
 	private void Update() {
-		var idxs = new [] {2,3,4};
+		var idxs = new[] {2, 3, 4};
 		ring(idxs);
+		desk();
 		Garden.SetFloatArray("lightLevels", lightLevels);
 	}
 
+	private static float gauss(float ringScale, float ringFloor, float ringSpeed, float x, float shift=0) {
+		return (float) (ringFloor + (1 - ringFloor) * Math.Exp(
+			-ringScale * Math.Pow(
+				Math.Sin(ringSpeed * x - shift), 2f
+			)));
+	}
+
 	private void ring(int[] idxs) {
-		var numLights   = idxs.Length;
-		var twoPi = 2 * Math.PI;
+		var numLights = idxs.Length;
+		var twoPi     = 2 * Math.PI;
 		for (var i = 0; i < idxs.Length; i++) {
-			lightLevels[idxs[i]] = (float) (ringFloor + (1-ringFloor) * Math.Exp(
-				-ringScale * Math.Pow(
-					Math.Sin(ringSpeed * Time.time - twoPi * (i + 1) / numLights),
-					2f)));
+			lightLevels[idxs[i]] = gauss(ringScale, ringFloor, ringSpeed, Time.time, (float) twoPi * (i + 1) / numLights);
 		}
+	}
+
+	private void desk() {
+		lightLevels[1] = gauss(deskScale, deskFloor, deskSpeed, Time.time);
 	}
 }
