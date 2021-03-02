@@ -53,7 +53,7 @@
             {
                 // sample the texture
                 float4 mainTex = tex2D(_MainTex, i.uv);
-                float4 sky = tex2D(_Sky, i.uv);
+                float4 sky = tex2D(_Sky, i.uv2);
                 fixed4 col = mainTex * sky;
                 return col;
             }
