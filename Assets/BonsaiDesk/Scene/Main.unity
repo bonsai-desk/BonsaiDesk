@@ -22195,6 +22195,9 @@ MonoBehaviour:
   wrapMode: 1
   textureFormat: 4
   mipChain: 1
+  ringScale: 35
+  ringFloor: 0
+  ringSpeed: 0.1
 --- !u!4 &1676074348
 Transform:
   m_ObjectHideFlags: 0

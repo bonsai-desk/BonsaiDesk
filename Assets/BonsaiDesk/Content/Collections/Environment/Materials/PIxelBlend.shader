@@ -52,7 +52,7 @@
                 fixed4 col = 0;
                 for(int i=0; i<numLights; i++)
                 {
-                    col += UNITY_SAMPLE_TEX2DARRAY(Lights, float3(IN.uv2, i));
+                    col += lightLevels[i] * UNITY_SAMPLE_TEX2DARRAY(Lights, float3(IN.uv2, i));
                 }
                 return albedo * col;
             }
