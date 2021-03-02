@@ -54,7 +54,7 @@
                 {
                     col += UNITY_SAMPLE_TEX2DARRAY(Lights, float3(IN.uv2, i));
                 }
-                return albedo * (col / numLights);
+                return albedo * col;
             }
             ENDCG
         }
