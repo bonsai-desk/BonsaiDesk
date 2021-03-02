@@ -17,7 +17,7 @@ public class LightManager : MonoBehaviour {
             arr.SetPixels(Lights[i].GetPixels(), i);
         }
         arr.Apply();
-        AssetDatabase.CreateAsset(arr, "Assets/LightsArr.tarr");
+        //AssetDatabase.CreateAsset(arr, "Assets/LightsArr.tarr");
         lightLevels[0] = 1;
         lightLevels[1] = 1;
         Garden.SetInt("numLights", Lights.Length);
