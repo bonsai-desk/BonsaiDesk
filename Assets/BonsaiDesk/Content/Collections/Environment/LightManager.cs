@@ -20,6 +20,9 @@ public class LightManager : MonoBehaviour {
         //AssetDatabase.CreateAsset(arr, "Assets/LightsArr.tarr");
         lightLevels[0] = 1;
         lightLevels[1] = 1;
+        lightLevels[2] = 1;
+        lightLevels[3] = 1;
+        lightLevels[4] = 1;
         Garden.SetInt("numLights", Lights.Length);
         Garden.SetFloatArray("lightLevels", lightLevels);
         Garden.SetTexture("Lights", arr);
