@@ -10756,6 +10756,11 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -3541641895097729568, guid: 4a2b95cadd2e2de41b195f8e0fd8b89f,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 4c5da457d0203894d8e7e6e2254e2fea, type: 2}
     - target: {fileID: -1461304994638716399, guid: 4a2b95cadd2e2de41b195f8e0fd8b89f,
         type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -10765,6 +10770,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -45920412305755021, guid: 4a2b95cadd2e2de41b195f8e0fd8b89f,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 329111104556720423, guid: 4a2b95cadd2e2de41b195f8e0fd8b89f,
         type: 3}
@@ -22349,18 +22359,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Lights:
-  - {fileID: 2800000, guid: 9b482ef940acb4d48b19550789bdff6d, type: 3}
-  - {fileID: 2800000, guid: d33f8bea7369da64cadd80dfc8ec7f39, type: 3}
-  - {fileID: 2800000, guid: a6f828d2bb019ab4abcb35f144e368a1, type: 3}
-  - {fileID: 2800000, guid: 9fa05e675e12c8a40af0865b2a01f6f9, type: 3}
-  - {fileID: 2800000, guid: a3c7664cf11288145ad604e7f621b9a1, type: 3}
-  Garden: {fileID: 2100000, guid: 6122d75ded4d3d643bcdebac2442b9ba, type: 2}
+  - {fileID: 2800000, guid: 675138c882dad72428fd64643e2aec1b, type: 3}
+  - {fileID: 2800000, guid: c880a1a3e6096d348b3a89c5dc356cb2, type: 3}
+  - {fileID: 2800000, guid: 20dd00a6c5adce246818f0c121ba9845, type: 3}
+  - {fileID: 2800000, guid: e96dfadb75a7a3e4385c4c7e390b72b1, type: 3}
+  - {fileID: 2800000, guid: 00393e7db1b52db4ba462f14d1273f62, type: 3}
+  - {fileID: 2800000, guid: 1d4b78d822d019644996ef0dbe99b6d4, type: 3}
+  Garden: {fileID: 2100000, guid: 4c5da457d0203894d8e7e6e2254e2fea, type: 2}
   filterMode: 2
   wrapMode: 1
   textureFormat: 4
   mipChain: 1
   ringScale: 6
-  ringFloor: 0
+  ringFloor: 0.8
   ringSpeed: 0.4
   deskScale: 3
   deskFloor: 0

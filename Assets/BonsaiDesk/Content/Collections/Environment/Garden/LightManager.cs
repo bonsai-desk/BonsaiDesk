@@ -37,9 +37,10 @@ public class LightManager : MonoBehaviour {
 		//AssetDatabase.CreateAsset(arr, "Assets/LightsArr.tarr");
 		lightLevels[0] = 1;
 		lightLevels[1] = 1;
-		lightLevels[2] = 1;
-		lightLevels[3] = 1;
-		lightLevels[4] = 1;
+		lightLevels[2] = 0;
+		lightLevels[3] = 0;
+		lightLevels[4] = 0;
+		lightLevels[5] = 0;
 		Garden.SetInt("numLights", Lights.Length);
 		Garden.SetFloatArray("lightLevels", lightLevels);
 		Garden.SetTexture("Lights", arr);
@@ -47,7 +48,7 @@ public class LightManager : MonoBehaviour {
 
 	// Update is called once per frame
 	private void Update() {
-		var idxs = new[] {2, 3, 4};
+		var idxs = new[] {5};
 		ring(idxs);
 		desk();
 		Garden.SetFloatArray("lightLevels", lightLevels);
