@@ -7,8 +7,9 @@
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
-        LOD 100
+        Blend SrcAlpha OneMinusSrcAlpha
+        Tags{ "RenderType" = "TransparentCutout" "Queue" = "AlphaTest"}
+        LOD 200
 
         Pass
         {
@@ -18,9 +19,16 @@
 
             #include "UnityCG.cginc"
 
-            struct v2f
+            struct appdata
             {
                 float4 vertex : POSITION;
+                float2 uv : TEXCOORD0;
+                float2 uv2 : TEXCOORD1;
+            };
+
+            struct v2f
+            {
+                float4 vertex : SV_POSITION;
                 float2 uv : TEXCOORD0;
                 float2 uv2 : TEXCOORD1;
             };
@@ -30,8 +38,12 @@
 
             int numLights;
             float lightLevels[64];
+            
+			int numHoles;
+			float2 holePositions[100];
+			float holeRadii[100];
 
-            v2f vert (v2f v)
+            v2f vert (appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
@@ -59,7 +71,15 @@
                     
                     col += lightLevels[i] * tex;
                 }
-                return albedo * col;
+                fixed4 ret = albedo * col;
+
+                for (int j = 0; j < numHoles; j++)
+                {
+                    float4 worldPos = mul( unity_ObjectToWorld, IN.vertex); 
+					ret.a *= distance(holePositions[j], worldPos.xz) + 0.0005f >= holeRadii[j];
+                }
+                
+                return ret;
             }
             ENDCG
         }
