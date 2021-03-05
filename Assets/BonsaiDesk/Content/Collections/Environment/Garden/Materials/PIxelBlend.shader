@@ -16,12 +16,11 @@
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-
             #include "UnityCG.cginc"
 
             struct appdata
             {
-                float4 vertex : POSITION;
+                float4 position : POSITION;
                 float2 uv : TEXCOORD0;
                 float2 uv2 : TEXCOORD1;
             };
@@ -31,6 +30,7 @@
                 float4 vertex : SV_POSITION;
                 float2 uv : TEXCOORD0;
                 float2 uv2 : TEXCOORD1;
+                float4 worldSpacePos : TEXCOORD2;
             };
             
             sampler2D Albedo;
@@ -46,7 +46,8 @@
             v2f vert (appdata v)
             {
                 v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.vertex = UnityObjectToClipPos(v.position);
+			    o.worldSpacePos = mul(unity_ObjectToWorld, v.position);
                 o.uv = v.uv;
                 o.uv2 = v.uv2;
                 return o;
@@ -73,11 +74,12 @@
                 }
                 fixed4 ret = albedo * col;
 
-                for (int j = 0; j < numHoles; j++)
-                {
-                    float4 worldPos = mul( unity_ObjectToWorld, IN.vertex); 
-					ret.a *= distance(holePositions[j], worldPos.xz) + 0.0005f >= holeRadii[j];
-                }
+				for (int i = 0; i < numHoles; i++)
+				{
+					ret.a *= distance(holePositions[i], IN.worldSpacePos.xz) + 0.0005f >= holeRadii[i];
+				}
+                
+				clip(albedo.a - 1);
                 
                 return ret;
             }
