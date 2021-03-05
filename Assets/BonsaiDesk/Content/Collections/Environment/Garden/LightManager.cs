@@ -10,16 +10,15 @@ public class LightManager : MonoBehaviour {
 	public TextureFormat textureFormat = TextureFormat.RGBA32;
 	public bool mipChain;
 
-	[Header("ring")]
-	public float ringScale = 1f;
+	[Header("ring")] public float ringScale = 1f;
+
 	public float ringFloor;
 	public float ringSpeed = 1;
+
+	[Header("Pulse Data (scale, floor, speed)")]
+	public Vector3[] PulseData;
+
 	private readonly float[] lightLevels = new float[64];
-	
-	[Header("desk")]
-	public float deskScale = 1f;
-	public float deskFloor;
-	public float deskSpeed = 1;
 
 	// Start is called before the first frame update
 	private void Start() {
@@ -37,7 +36,7 @@ public class LightManager : MonoBehaviour {
 		//AssetDatabase.CreateAsset(arr, "Assets/LightsArr.tarr");
 		lightLevels[0] = 1;
 		lightLevels[1] = 1;
-		lightLevels[2] = 0;
+		lightLevels[2] = 1;
 		lightLevels[3] = 0;
 		lightLevels[4] = 0;
 		lightLevels[5] = 0;
@@ -48,13 +47,13 @@ public class LightManager : MonoBehaviour {
 
 	// Update is called once per frame
 	private void Update() {
-		var idxs = new[] {5};
-		ring(idxs);
-		desk();
+		//var idxs = new[] {5};
+		Pulse(1, PulseData[0], 0);
+		Pulse(2, PulseData[1], 0);
 		Garden.SetFloatArray("lightLevels", lightLevels);
 	}
 
-	private static float gauss(float ringScale, float ringFloor, float ringSpeed, float x, float shift=0) {
+	private static float gauss(float ringScale, float ringFloor, float ringSpeed, float x, float shift = 0) {
 		return (float) (ringFloor + (1 - ringFloor) * Math.Exp(
 			-ringScale * Math.Pow(
 				Math.Sin(ringSpeed * x - shift), 2f
@@ -65,11 +64,13 @@ public class LightManager : MonoBehaviour {
 		var numLights = idxs.Length;
 		var twoPi     = 2 * Math.PI;
 		for (var i = 0; i < idxs.Length; i++) {
-			lightLevels[idxs[i]] = gauss(ringScale, ringFloor, ringSpeed, Time.time, (float) twoPi * (i + 1) / numLights);
+			lightLevels[idxs[i]] =
+				gauss(ringScale, ringFloor, ringSpeed, Time.time, (float) twoPi * (i + 1) / numLights);
 		}
 	}
 
-	private void desk() {
-		lightLevels[1] = gauss(deskScale, deskFloor, deskSpeed, Time.time);
+	private void Pulse(int idx, Vector3 pulseData, float offset) {
+		lightLevels[idx] = gauss(pulseData[0], pulseData[1], pulseData[2], 
+		                         Time.time + offset);
 	}
 }

@@ -58,10 +58,6 @@
             fixed4 frag (v2f IN) : SV_Target
             {
                 float4 albedo = tex2D(Albedo, IN.uv);
-                if (numLights == 0)
-                {
-                    return albedo;
-                }
                 fixed4 col = 0;
                 for(int i=0; i<numLights; i++)
                 {
