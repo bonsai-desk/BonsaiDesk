@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 
 public class LightManager : MonoBehaviour {
@@ -36,13 +37,22 @@ public class LightManager : MonoBehaviour {
 		//AssetDatabase.CreateAsset(arr, "Assets/LightsArr.tarr");
 		lightLevels[0] = 1;
 		lightLevels[1] = 1;
-		lightLevels[2] = 1;
+		lightLevels[2] = 0;
 		lightLevels[3] = 0;
 		lightLevels[4] = 0;
 		lightLevels[5] = 0;
 		Garden.SetInt("numLights", Lights.Length);
 		Garden.SetFloatArray("lightLevels", lightLevels);
 		Garden.SetTexture("Lights", arr);
+
+		MoveToDesk.OrientationChanged += HandleOrient;
+		
+	}
+
+	private void HandleOrient(bool oriented) {
+		if (oriented) {
+			StartCoroutine(FadeOnMain());
+		}
 	}
 
 	// Update is called once per frame
@@ -50,6 +60,18 @@ public class LightManager : MonoBehaviour {
 		//var idxs = new[] {5};
 		Pulse(1, PulseData[0], 0);
 		Garden.SetFloatArray("lightLevels", lightLevels);
+	}
+
+	private IEnumerator FadeOnMain() {
+		float x = 0;
+		
+		while (x < 1) {
+			x              += 0.02f;
+			lightLevels[2] =  CubicBezier.EaseIn.Sample(x);
+			yield return null;
+		}
+		lightLevels[2] =  1f;
+		
 	}
 
 	private static float gauss(float ringScale, float ringFloor, float ringSpeed, float x, float shift = 0) {

@@ -20,6 +20,8 @@ public class TableBrowser : Browser
 
         WebViewPrefab.DragMode = DragMode.DragToScroll;
 
+        SetMaterialOnTop();
+
         BrowserReady += () =>
         {
             var view = WebViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView");

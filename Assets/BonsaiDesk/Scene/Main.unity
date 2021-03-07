@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 6.16
   m_AmbientMode: 3
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 0}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 4df56ca43c6b45f49964e8bc400f0a26, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -2064,7 +2064,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: caa31cf29325ae94b89f544169344742, type: 2}
+  - {fileID: 2100000, guid: 6ca20abfc1c53a94d9415d3985fce2b0, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -9626,7 +9626,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 2d168c46e228bba4f9fcd0d08fe70fa0, type: 2}
+  - {fileID: 2100000, guid: 1442eec7a61a2094ea3b10b9bf38f38c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -18880,7 +18880,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1368517017
 Transform:
   m_ObjectHideFlags: 0
@@ -18944,7 +18944,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startingAspect: {x: 2, y: 1}
-  holePuncherMaterial: {fileID: 2100000, guid: 13c0664d10ae3514ea9d893740bf2046, type: 2}
   distanceEstimate: 1
   pixelPerDegree: 16
   boundsTransform: {fileID: 89527845}
@@ -18955,6 +18954,7 @@ MonoBehaviour:
   useBuiltHtml: 1
   Bounds: {x: 0, y: 0}
   dragMode: 0
+  WebViewPrefab: {fileID: 0}
   screenRigidBody: {fileID: 878527641}
 --- !u!54 &1382784200
 Rigidbody:
@@ -22346,7 +22346,7 @@ MonoBehaviour:
   ringFloor: 0.8
   ringSpeed: 0.4
   PulseData:
-  - {x: 1, y: 0.8, z: 2}
+  - {x: 1, y: 0, z: 1}
 --- !u!4 &1676074348
 Transform:
   m_ObjectHideFlags: 0

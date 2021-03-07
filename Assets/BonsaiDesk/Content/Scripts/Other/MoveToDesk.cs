@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Mirror;
 using TMPro;
 using UnityEditor;
@@ -134,6 +135,11 @@ public class MoveToDesk : MonoBehaviour
         return handsValid;
     }
 
+    private const float TableLerpTime = 0.35f;
+    private float _tableLerp = 0;
+    private Vector3 _tableStartPosition;
+    private Vector3 _tableEndPosition;
+
     private void MoveTableGhost()
     {
         //set instructions active
@@ -152,7 +158,15 @@ public class MoveToDesk : MonoBehaviour
 
         handDemo.rotation =
             Quaternion.RotateTowards(handDemo.rotation, handDemoTargetRotation, angle * 1.75f * Time.deltaTime);
-        handDemo.position = centerEyeAnchor.position;
+        // handDemo.position = centerEyeAnchor.position;
+        var handDemoPositionDifference = Vector3.Distance(handDemo.position, centerEyeAnchor.position);
+        if (handDemoPositionDifference > 1f)
+        {
+            handDemo.position = centerEyeAnchor.position;
+        }
+
+        handDemo.position = Vector3.MoveTowards(handDemo.position, centerEyeAnchor.position,
+            handDemoPositionDifference * 3f * Time.deltaTime);
 
         //if hands are on edge of real table
         bool handOnEdge = HandsOnEdge();
@@ -160,7 +174,7 @@ public class MoveToDesk : MonoBehaviour
         {
             UpdateState(1);
 
-            _tableAlpha = Mathf.MoveTowards(_tableAlpha, 1f, Time.deltaTime * (1f / 0.35f));
+            _tableAlpha = Mathf.MoveTowards(_tableAlpha, 1f, Time.deltaTime * (1f / TableLerpTime));
 
             tableGhost.gameObject.SetActive(true);
             tableGhostText.text = "<--- swipe apart --->";
@@ -181,26 +195,43 @@ public class MoveToDesk : MonoBehaviour
 
             if (_lastHandsOnEdge)
             {
-                float tablePositionDifference = Vector3.Distance(tableGhost.position, tablePosition);
-                tableGhost.position = Vector3.MoveTowards(tableGhost.position, tablePosition,
-                    tablePositionDifference * 3f * Time.deltaTime);
+                // _tableLerp += Time.deltaTime * (1f / TableLerpTime);
+
+                _tableLerp = CubicBezier.EaseOut.MoveTowards01(_tableLerp, TableLerpTime, true);
+                tableGhost.position = Vector3.Lerp(_tableStartPosition, tablePosition, _tableLerp);
+
+                // float tablePositionDifference = Vector3.Distance(tableGhost.position, tablePosition);
+                // tableGhost.position = Vector3.MoveTowards(tableGhost.position, tablePosition,
+                //     tablePositionDifference * 3f * Time.deltaTime);
                 float tableAngleDifference = Quaternion.Angle(tableGhost.rotation, tableRotation);
                 tableGhost.rotation = Quaternion.RotateTowards(tableGhost.rotation, tableRotation,
                     tableAngleDifference * 3f * Time.deltaTime);
             }
             else
             {
-                tableGhost.position = tablePosition;
+                tableGhost.position = tablePosition + Vector3.down * 0.25f + tableRotation * Vector3.forward * 0.0f;
+                // tableGhost.position = tablePosition;
                 tableGhost.rotation = tableRotation;
+
+                // _tableLerp = 0;
+                _tableStartPosition = tableGhost.position;
             }
         }
         else
         {
             UpdateState(0);
 
-            _tableAlpha = 0f;
+            _tableAlpha = Mathf.MoveTowards(_tableAlpha, 0f, Time.deltaTime * (1f / TableLerpTime));
 
-            tableGhost.gameObject.SetActive(false);
+            if (_lastHandsOnEdge)
+            {
+                _tableEndPosition = tableGhost.position;
+            }
+            
+            _tableLerp = CubicBezier.EaseOut.MoveTowards01(_tableLerp, TableLerpTime, false);
+            tableGhost.position = Vector3.Lerp(_tableStartPosition, _tableEndPosition, _tableLerp);
+
+            // tableGhost.gameObject.SetActive(false);
             tableGhostText.text = "Place your thumbs on the\n edge of your <i><b>real</b></i> desk";
         }
 
@@ -376,7 +407,7 @@ public class MoveToDesk : MonoBehaviour
 
         ApplyCalculatedTableOrientation(false);
     }
-    
+
     public void ResetIfOriented()
     {
         if (oriented)

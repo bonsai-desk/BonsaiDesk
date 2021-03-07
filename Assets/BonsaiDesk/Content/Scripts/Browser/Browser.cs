@@ -7,7 +7,7 @@ using Vuplex.WebView;
 
 public class Browser : MonoBehaviour {
 	public Vector2 startingAspect = new Vector2(16, 9);
-	public Material holePuncherMaterial;
+	private Material holePuncherMaterial;
 	public float distanceEstimate = 1;
 	public int pixelPerDegree = 16;
 	public Transform boundsTransform;
@@ -23,11 +23,14 @@ public class Browser : MonoBehaviour {
 	private bool _postedListenersReady;
 	private bool _renderEnabled = true;
 	protected Transform Resizer;
-	protected WebViewPrefabCustom WebViewPrefab;
+	public WebViewPrefabCustom WebViewPrefab;
 	protected Transform WebViewView;
 
-	protected virtual void Start() {
+	protected virtual void Start()
+	{
 		Debug.Log("browser start");
+
+		holePuncherMaterial = new Material(Resources.Load<Material>("OnTopUnderlay"));
 
 		CacheTransforms();
 
@@ -41,6 +44,28 @@ public class Browser : MonoBehaviour {
 	public event Action BrowserReady;
 
 	public event Action ListenersReady;
+	
+	public void SetMaterialOnTop()
+	{
+		if (WebViewPrefab)
+		{
+			WebViewPrefab.SetMaterialOnTop();
+		}
+		
+		holePuncherMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Overlay;
+		holePuncherMaterial.SetInt("_ZTest", (int) UnityEngine.Rendering.CompareFunction.Always);
+	}
+
+	public void SetMaterialRegular()
+	{
+		if (WebViewPrefab)
+		{
+			WebViewPrefab.SetMaterialRegular();
+		}
+		
+		holePuncherMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Geometry + 1;
+		holePuncherMaterial.SetInt("_ZTest", (int) UnityEngine.Rendering.CompareFunction.LessEqual);
+	}
 
 	private void SetupHolePuncher() {
 	#if UNITY_ANDROID && !UNITY_EDITOR

@@ -15,6 +15,7 @@
 */
 
 using System;
+using System.Collections;
 using UnityEngine;
 using Object = UnityEngine.Object;
 #if NET_4_6 || NET_STANDARD_2_0
@@ -494,12 +495,24 @@ namespace Vuplex.WebView {
 			_viewResizer = transform.GetChild(0);
 			_setViewSize(width, height);
 			_initView();
-			Web.CreateMaterial(viewMaterial =>
+			
+			var material = new Material(Resources.Load<Material>("OnTopViewportMaterial"));
+			// var material = new Material(Resources.Load<Material>("DefaultViewportMaterial"));
+			Web.CreateTexture(1, 1, texture =>
 			{
-				_viewMaterial  = viewMaterial;
-				_view.Material = viewMaterial;
+				material.mainTexture = texture;
+				_viewMaterial = material;
+				_view.Material = material;
 				_initWebViewIfReady(webView);
 			});
+
+			// Web.CreateMaterial(viewMaterial =>
+			// {
+			// 	_viewMaterial  = viewMaterial;
+			// 	_view.Material = viewMaterial;
+			// 	_initWebViewIfReady(webView);
+			// });
+			
 			_videoRectPositioner = _getVideoRectPositioner();
 			_initVideoLayer();
 			if (options.disableVideo) {
@@ -523,6 +536,38 @@ namespace Vuplex.WebView {
 					_initWebViewIfReady(webView);
 				});
 			}
+		}
+
+		public void SetMaterialOnTop()
+		{
+			StartCoroutine(SetMaterialOnTopAsync());
+		}
+
+		private IEnumerator SetMaterialOnTopAsync()
+		{
+			while (!_viewMaterial)
+			{
+				yield return null;
+			}
+			
+			_viewMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Overlay;
+			_viewMaterial.SetInt("_ZTest", (int) UnityEngine.Rendering.CompareFunction.Always);
+		}
+
+		public void SetMaterialRegular()
+		{
+			StartCoroutine(SetMaterialRegularAsync());
+		}
+		
+		private IEnumerator SetMaterialRegularAsync()
+		{
+			while (!_viewMaterial)
+			{
+				yield return null;
+			}
+			
+			_viewMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Geometry;
+			_viewMaterial.SetInt("_ZTest", (int) UnityEngine.Rendering.CompareFunction.LessEqual);
 		}
 
 		private void _initPointerInputDetector(IWebView webView,
