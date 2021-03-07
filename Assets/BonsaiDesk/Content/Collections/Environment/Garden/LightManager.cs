@@ -49,7 +49,6 @@ public class LightManager : MonoBehaviour {
 	private void Update() {
 		//var idxs = new[] {5};
 		Pulse(1, PulseData[0], 0);
-		Pulse(2, PulseData[1], 0);
 		Garden.SetFloatArray("lightLevels", lightLevels);
 	}
 

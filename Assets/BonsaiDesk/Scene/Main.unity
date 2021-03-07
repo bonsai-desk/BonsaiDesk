@@ -22346,8 +22346,7 @@ MonoBehaviour:
   ringFloor: 0.8
   ringSpeed: 0.4
   PulseData:
-  - {x: 1, y: 0.5, z: 5}
-  - {x: 1, y: 0.4, z: 0.25}
+  - {x: 1, y: 0.8, z: 2}
 --- !u!4 &1676074348
 Transform:
   m_ObjectHideFlags: 0
