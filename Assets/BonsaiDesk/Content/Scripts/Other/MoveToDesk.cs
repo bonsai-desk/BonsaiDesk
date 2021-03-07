@@ -466,7 +466,9 @@ public class MoveToDesk : MonoBehaviour
         if (tableEdge != null)
         {
             oVRCameraRig.RotateAround(Vector3.zero, Vector3.up, tableEdge.eulerAngles.y);
-            oVRCameraRig.position += tableEdge.position;
+            var tableEdgePosition = tableEdge.position;
+            tableEdgePosition.y = 0;
+            oVRCameraRig.position += tableEdgePosition;
         }
         else
         {
