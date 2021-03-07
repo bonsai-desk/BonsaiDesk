@@ -61,8 +61,6 @@ public class WebBrowserParent : NetworkBehaviour {
 		else {
 			HandleDismissKeyboard();
 		}
-
-		throw new NotImplementedException();
 	}
 
 	private void HandleSpawnYt(object sender, EventArgs<string> e) {

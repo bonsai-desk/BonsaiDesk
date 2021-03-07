@@ -46,10 +46,19 @@ function postKickConnectionId(id) {
 }
 
 function ListItem(props) {
-  let {selected, handleClick} = props;
+  let {selected, handleClick, inactive = false} = props;
 
   const buttonClassSelected = 'py-4 px-8 bg-blue-700 text-white rounded cursor-pointer flex flex-wrap content-center';
   const buttonClass = 'py-4 px-8 hover:bg-gray-800 active:bg-gray-900 hover:text-white rounded cursor-pointer flex flex-wrap content-center';
+  const buttonClassInactive = 'py-4 px-8 bg-gray-800 rounded cursor-pointer flex flex-wrap content-center';
+
+  if (inactive) {
+    return (
+        <div className={buttonClassInactive}>
+          {props.children}
+        </div>
+    )
+  }
 
   let className = selected ? buttonClassSelected : buttonClass;
   return (
@@ -90,20 +99,40 @@ function ConnectedClient(props) {
   let {info} = props;
   let {Name, ConnectionId} = info;
 
+  const hostClass = 'bg-gray-800 rounded-full p-4 h-20 flex flex-wrap content-center';
+  const clientClass = 'bg-gray-800 active:bg-red-700 hover:bg-red-600 rounded-full p-4 cursor-pointer h-20 flex flex-wrap content-center';
+
   if (ConnectionId === 0) {
     return (
-        <InfoItem title={'You'} slug={`${ConnectionId}`}
-                  imgSrc={ThinkingFace}>
-        </InfoItem>);
+        <div className={hostClass}>
+          <div
+              className={'flex content-center p-2 space-x-4'}>
+            <div>
+              <img className={'h-9 w-9'} src={ThinkingFace} alt={''}/>
+            </div>
+            <div>
+              {Name}
+            </div>
+          </div>
+        </div>
+    );
   } else {
     return (
-        <InfoItem title={Name} slug={ConnectionId}
-                  imgSrc={ThinkingFace}>
-          <Button handleClick={() => {
-            postKickConnectionId(ConnectionId);
-          }} className={redButtonClass}>Kick
-          </Button>
-        </InfoItem>);
+        <Button className={clientClass} handleClick={() => {
+          postKickConnectionId(ConnectionId);
+        }}>
+          <div
+              className={'flex content-center p-2 space-x-4'}>
+            <div>
+              <img className={'h-9 w-9'} src={ThinkingFace} alt={''}/>
+            </div>
+            <div>
+              {Name}
+            </div>
+          </div>
+        </Button>
+    );
+
   }
 
 }
@@ -219,7 +248,9 @@ let HostHomePage = observer(() => {
         {store.player_info.length > 0 && store.room_open ?
             <React.Fragment>
               <div className={'text-xl'}>People in Your Room</div>
-              {store.player_info.map(info => <ConnectedClient info={info}/>)}
+              <div className={'flex space-x-2'}>
+                {store.player_info.map(info => <ConnectedClient info={info}/>)}
+              </div>
             </React.Fragment>
             :
             ''}
@@ -356,11 +387,6 @@ function JoinDeskPage(props) {
   );
 }
 
-function ContactsPage() {
-  return <MenuContent name={'Contacts'}>
-  </MenuContent>;
-}
-
 function VideosPage() {
   return <MenuContent name={'Videos'}>
     <InfoItem imgSrc={YtImg} title={'YouTube'}
@@ -392,7 +418,8 @@ let SettingsPage = observer(() => {
     if (store.player_info.length > 0) {
       store.player_info.push({Name: 'cam', ConnectionId: 1});
     } else {
-      store.player_info.push({Name: 'cam', ConnectionId: 0});
+      store.player_info.push(
+          {Name: 'loremIpsumLoremIpsumLorem', ConnectionId: 0});
     }
   });
   let rmFakeClient = action(store => {
@@ -459,18 +486,12 @@ let SettingsPage = observer(() => {
   );
 });
 
-const pages = [
-  {name: 'Home', component: HomePage},
-  {name: 'Join Desk', component: JoinDeskPage},
-  {name: 'Videos', component: VideosPage},
-  {name: 'Contacts', component: ContactsPage},
-  {name: 'Settings', component: SettingsPage},
-];
-
 function showInfo(info) {
   switch (info[0]) {
     case 'player_info':
       return showPlayerInfo(info[1]);
+    case 'user_info':
+      return JSON.stringify(info);
     default:
       return info[1] ? info[1].toString() : '';
   }
@@ -482,13 +503,11 @@ function showPlayerInfo(playerInfo) {
   }).join(' ') + ']';
 }
 
-let Menu = () => {
+let Menu = observer(() => {
 
   let {store, pushStore} = useStore();
 
   let [active, setActive] = useState(0);
-
-  let SelectedPage = pages[active].component;
 
   let navHome = () => {
     setActive(0);
@@ -497,6 +516,7 @@ let Menu = () => {
   useEffect(() => {
     autorun(() => {
       // remove room code if
+      // DEVELOPMENT || PRODUCTION
       if (store.room_code &&
           (!store.ip_address || !store.port || !store.room_open)) {
         console.log('rm room code');
@@ -535,6 +555,20 @@ let Menu = () => {
     };
   }, [pushStore]);
 
+  const pages = [
+    {name: 'Home', component: HomePage},
+    {name: 'Join Desk', component: JoinDeskPage},
+    {name: 'Videos', component: VideosPage}
+  ];
+
+  if (store.build === 'DEVELOPMENT') {
+    pages.push({name: 'Settings', component: SettingsPage})
+  }
+
+  let SelectedPage = pages[active].component;
+
+  let joinDeskActive = store.network_state === "Hosting" && !store._room_open
+
   return (
       <div className={'flex text-lg text-gray-500 h-full'}>
         <div className={'w-4/12 bg-black overflow-auto scrollhost static'}>
@@ -546,6 +580,9 @@ let Menu = () => {
           <div className={'h-16'}/>
           <SettingsList>
             {pages.map((info, i) => {
+              if (info.name.toLowerCase() === "join desk" && !joinDeskActive) {
+                return <ListItem key={info.name} inactive={true} >{info.name}</ListItem>;
+              }
               return <ListItem key={info.name} handleClick={() => {
                 setActive(i);
               }} selected={active === i}>{info.name}</ListItem>;
@@ -557,6 +594,6 @@ let Menu = () => {
         </div>
       </div>
   );
-};
+});
 
 export default Menu;

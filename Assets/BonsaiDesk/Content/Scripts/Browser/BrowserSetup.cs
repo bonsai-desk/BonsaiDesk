@@ -2,6 +2,7 @@
 using Vuplex.WebView;
 
 public class BrowserSetup : MonoBehaviour {
+	public bool forceEnableDebugging;
 	private void Awake() {
 		PreConfigureWebView();
 	}
@@ -12,9 +13,17 @@ public class BrowserSetup : MonoBehaviour {
 	// Update is called once per frame
 	private void Update() { }
 
-	private static void PreConfigureWebView() {
+	private void PreConfigureWebView() {
 		Debug.Log("[BONSAI] Preconfigure WebView");
 		Web.SetUserAgent(true);
+		if (forceEnableDebugging) {
+	#if UNITY_ANDROID && !UNITY_EDITOR
+        AndroidGeckoWebView.EnableRemoteDebugging();
+	#elif UNITY_EDITOR
+		StandaloneWebView.EnableRemoteDebugging(8080);
+	#endif
+		}
+		else {
 	#if UNITY_EDITOR || DEVELOPMENT_BUILD
 	#if UNITY_ANDROID && !UNITY_EDITOR
         AndroidGeckoWebView.EnableRemoteDebugging();
@@ -22,6 +31,7 @@ public class BrowserSetup : MonoBehaviour {
 		StandaloneWebView.EnableRemoteDebugging(8080);
 	#endif
 	#endif
+		}
 
 	#if UNITY_ANDROID && !UNITY_EDITOR
         AndroidGeckoWebView.SetUserPreferences(@"
