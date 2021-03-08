@@ -66,6 +66,9 @@ public class WebBrowserParent : NetworkBehaviour {
 	private void HandleSpawnYt(object sender, EventArgs<string> e) {
 		Debug.Log($"[BONSAI] Spawn YT {e.Value}");
 		CmdSpawnYT(videoSpawnLocation.localPosition, e.Value);
+		
+		//TODO remove this or at least don't use a global search
+		FindObjectOfType<TableBrowserParent>().Sleep();
 	}
 
 	private void SetupKeyboardBrowser() {
