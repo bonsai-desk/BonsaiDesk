@@ -49,6 +49,7 @@ public class HandComponents
         }
 
         _handMaterial = _physicsRenderer.material;
+        _handMaterial.mainTexture = Resources.Load<Texture>("Green-Square");
         _handMaterial.SetInt("_ZWrite", 1);
         MakeMaterialOpaque();
         PhysicsHandController = PhysicsHand.GetComponent<PhysicsHandController>();
