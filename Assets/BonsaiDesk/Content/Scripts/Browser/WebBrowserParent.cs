@@ -14,6 +14,7 @@ public class WebBrowserParent : NetworkBehaviour {
 	public Transform videoSpawnLocation;
 	private Vector3 _altTransform;
 	private Vector3 _startTransform;
+	public TableBrowserParent tableBrowserParent;
 
 	// Start is called before the first frame update
 	private void Start() {
@@ -66,9 +67,7 @@ public class WebBrowserParent : NetworkBehaviour {
 	private void HandleSpawnYt(object sender, EventArgs<string> e) {
 		Debug.Log($"[BONSAI] Spawn YT {e.Value}");
 		CmdSpawnYT(videoSpawnLocation.localPosition, e.Value);
-		
-		//TODO remove this or at least don't use a global search
-		FindObjectOfType<TableBrowserParent>().Sleep();
+		tableBrowserParent.Sleep();
 	}
 
 	private void SetupKeyboardBrowser() {

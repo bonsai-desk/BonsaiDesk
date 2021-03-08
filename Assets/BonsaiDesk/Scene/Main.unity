@@ -3171,6 +3171,7 @@ MonoBehaviour:
   VideoPrefab: {fileID: 6876464847205822899, guid: 58577b8f94ebfd842a65f7340cee4843,
     type: 3}
   videoSpawnLocation: {fileID: 841277315}
+  tableBrowserParent: {fileID: 955373203}
 --- !u!114 &328235782
 MonoBehaviour:
   m_ObjectHideFlags: 0
