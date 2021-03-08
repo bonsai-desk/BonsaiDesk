@@ -103,12 +103,12 @@ public class WebBrowserParent : NetworkBehaviour {
 
 	[Command(ignoreAuthority = true)]
 	private void CmdSpawnYT(Vector3 position, string id) {
-		var spawnedObject = Instantiate(VideoPrefab, position, Quaternion.identity);
+		var spawnedObject = Instantiate(VideoPrefab, position, Quaternion.AngleAxis(-90, Vector3.up));
 		NetworkServer.Spawn(spawnedObject);
 		spawnedObject.GetComponent<TabletControl>().videoId = id;
 	}
 
 	public void DummySpawn() {
-		CmdSpawnYT(videoSpawnLocation.localPosition, "niS_Fpy_2-U");
+		CmdSpawnYT(videoSpawnLocation.position, "niS_Fpy_2-U");
 	}
 }
