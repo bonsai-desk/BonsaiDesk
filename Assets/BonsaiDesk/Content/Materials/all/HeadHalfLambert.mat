@@ -24,7 +24,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RampTex:
-        m_Texture: {fileID: 2800000, guid: c8e54e1db9e3c894681ee9230fa017ed, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _k_r_Tex:
@@ -40,12 +40,12 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _Alpha: 0.323
-    - _Beta: 0.663
-    - _Gamma: 1.306
-    - _f_s: 1
+    - _Alpha: 0.5
+    - _Beta: 0.5
+    - _Gamma: 1
+    - _f_s: 0.072
     - _k_rim: 1
-    - _k_s: 0.296
-    - _k_spec: 30.8
+    - _k_s: 0.536
+    - _k_spec: 5.1
     m_Colors:
-    - _MainTexColor: {r: 0.045387268, g: 0.44, b: 0, a: 1}
+    - _MainTexColor: {r: 0.5943396, g: 0.23796585, b: 0, a: 1}
