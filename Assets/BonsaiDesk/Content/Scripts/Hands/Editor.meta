@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD
 guid: c0b3bb1ca45ac294aa63e02d234edfce
+=======
+guid: bdafc2fd83575a748933c80f520a2a0b
+>>>>>>> parent of 9479b13... flatten scripts folder
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
