@@ -46,13 +46,12 @@ public class LightManager : MonoBehaviour {
 		Garden.SetTexture("Lights", arr);
 
 		MoveToDesk.OrientationChanged += HandleOrient;
-		
-	}
 
-	private void HandleOrient(bool oriented) {
-		if (oriented) {
+	#if UNITY_EDITOR
+		if (NetworkManagerGame.Singleton.serverOnlyIfEditor) {
 			StartCoroutine(FadeOnMain());
 		}
+	#endif
 	}
 
 	// Update is called once per frame
@@ -62,16 +61,22 @@ public class LightManager : MonoBehaviour {
 		Garden.SetFloatArray("lightLevels", lightLevels);
 	}
 
+	private void HandleOrient(bool oriented) {
+		if (oriented) {
+			StartCoroutine(FadeOnMain());
+		}
+	}
+
 	private IEnumerator FadeOnMain() {
 		float x = 0;
-		
+
 		while (x < 1) {
 			x              += 0.02f;
 			lightLevels[2] =  CubicBezier.EaseIn.Sample(x);
 			yield return null;
 		}
-		lightLevels[2] =  1f;
-		
+
+		lightLevels[2] = 1f;
 	}
 
 	private static float gauss(float ringScale, float ringFloor, float ringSpeed, float x, float shift = 0) {
@@ -91,7 +96,7 @@ public class LightManager : MonoBehaviour {
 	}
 
 	private void Pulse(int idx, Vector3 pulseData, float offset) {
-		lightLevels[idx] = gauss(pulseData[0], pulseData[1], pulseData[2], 
+		lightLevels[idx] = gauss(pulseData[0], pulseData[1], pulseData[2],
 		                         Time.time + offset);
 	}
 }
