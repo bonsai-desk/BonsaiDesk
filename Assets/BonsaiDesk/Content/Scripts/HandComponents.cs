@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System;
+using UnityEditor;
 using UnityEngine;
 
 public class HandComponents
@@ -49,7 +50,7 @@ public class HandComponents
         }
 
         _handMaterial = _physicsRenderer.material;
-        _handMaterial.mainTexture = Resources.Load<Texture>("Green-Square");
+        SetColor(Colors.Orange);
         _handMaterial.SetInt("_ZWrite", 1);
         MakeMaterialOpaque();
         PhysicsHandController = PhysicsHand.GetComponent<PhysicsHandController>();
@@ -262,5 +263,22 @@ public class HandComponents
         {
             SetTagRecursive(child, tag);
         }
+    }
+
+    public void SetColor(Colors color) {
+        switch (color) {
+            case Colors.Green:
+                _handMaterial.mainTexture = Resources.Load<Texture>("BonsaiGreenWhite");
+                break;
+            case Colors.Orange:
+                _handMaterial.mainTexture = Resources.Load<Texture>("BonsaiOrangeWhite");
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(color), color, null);
+        }
+    }
+
+    public enum Colors {
+        Green, Orange
     }
 }
