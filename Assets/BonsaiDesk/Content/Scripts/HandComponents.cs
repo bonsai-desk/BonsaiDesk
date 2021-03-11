@@ -50,7 +50,7 @@ public class HandComponents
         }
 
         _handMaterial = _physicsRenderer.material;
-        SetColor(Colors.Orange);
+        SetColor(Colors.Green);
         _handMaterial.SetInt("_ZWrite", 1);
         MakeMaterialOpaque();
         PhysicsHandController = PhysicsHand.GetComponent<PhysicsHandController>();
@@ -268,10 +268,10 @@ public class HandComponents
     public void SetColor(Colors color) {
         switch (color) {
             case Colors.Green:
-                _handMaterial.mainTexture = Resources.Load<Texture>("BonsaiGreenWhite");
+                _handMaterial.mainTexture = Resources.Load<Texture>("BonsaiGreenPixel");
                 break;
             case Colors.Orange:
-                _handMaterial.mainTexture = Resources.Load<Texture>("BonsaiOrangeWhite");
+                _handMaterial.mainTexture = Resources.Load<Texture>("BonsaiOrangePixel");
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(color), color, null);
