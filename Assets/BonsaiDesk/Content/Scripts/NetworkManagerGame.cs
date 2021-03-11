@@ -20,7 +20,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	public static NetworkManagerGame Singleton;
-	public static int AssignedColorIndex;
 
 	[Header("Bonsai Network Manager")] public bool serverOnlyIfEditor;
 	public bool visualizeAuthority;
@@ -552,7 +551,16 @@ public class NetworkManagerGame : NobleNetworkManager {
 				break;
 		}
 
-		AssignedColorIndex = msg.ColorIndex;
+		switch (msg.ColorIndex) {
+			case 0:
+				InputManager.Hands.Left.SetColor(HandComponents.Colors.Green);
+				InputManager.Hands.Right.SetColor(HandComponents.Colors.Green);
+				break;
+			case 1:
+				InputManager.Hands.Left.SetColor(HandComponents.Colors.Orange);
+				InputManager.Hands.Right.SetColor(HandComponents.Colors.Orange);
+				break;
+		}
 	}
 
 	public void UpdateUserInfo(uint netId, UserInfo userInfo) {
