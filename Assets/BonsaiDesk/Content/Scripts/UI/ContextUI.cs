@@ -16,14 +16,14 @@ public class ContextUI : MonoBehaviour
     {
         return;
         
-        if (uiObject.activeSelf)
-        {
-            CloseUI();
-        }
-        else
-        {
-            OpenUI();
-        }
+       //if (uiObject.activeSelf)
+       //{
+       //    CloseUI();
+       //}
+       //else
+       //{
+       //    OpenUI();
+       //}
     }
 
     public void OpenUI()
