@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import './Menu.css';
 import {postJson} from '../utilities';
 import {Button} from '../components/Button';
@@ -56,7 +56,7 @@ function showInfo(info) {
     case 'user_info':
       return JSON.stringify(info);
     default:
-      return info[1] ? JSON.stringify(info[1]) : '';
+      return info[1] ? JSON.stringify(info[1], null, 2) : '';
   }
 }
 
@@ -290,6 +290,42 @@ const HostHomePage = observer(() => {
 
 //
 
+const PlayerPage = observer(() => {
+  const {store} = useStore();
+  const ref = useRef(null);
+
+  //let media = {
+  //  Active: false,
+  //  Name: "None",
+  //  Paused: true,
+  //  Scrub: 0,
+  //  Duration: 1
+  //}
+
+  let media = store.media_info;
+
+  const pct = 100 * media.Scrub / media.Duration;
+
+  console.log(pct)
+
+  if (!store.media_info.Active) {
+    return '';
+  }
+
+  function handleClick(e) {
+    let pct = (e.clientX - ref.current.offsetLeft) / ref.current.offsetWidth;
+    console.log(pct);
+  }
+
+  return <MenuContent name={'Player'}>
+    <div ref={ref} onPointerDown={handleClick}
+         className={'relative h-16 bg-gray-600'}>
+      <div style={{width: pct + '%'}} className={'h-full bg-gray-400'}/>
+    </div>
+  </MenuContent>;
+
+});
+
 const HomePage = observer(() => {
 
   let {store} = useStore();
@@ -455,58 +491,80 @@ const DebugPage = observer(() => {
     store.room_open = !store.room_open;
   });
 
+  let containerClass = 'flex flex-wrap';
+
   return (
       <MenuContent name={'Debug'}>
-        <div className={'flex space-x-2'}>
-          <Button handleClick={() => {
-            setNetState(store, 'Neutral');
-          }} className={grayButtonClass}>Neutral
-          </Button>
-          <Button handleClick={() => {
-            setNetState(store, 'HostWaiting');
-          }} className={grayButtonClass}>HostWaiting
-          </Button>
-          <Button handleClick={() => {
-            setNetState(store, 'Hosting');
-          }} className={grayButtonClass}>Hosting
-          </Button>
-          <Button handleClick={() => {
-            setNetState(store, 'ClientConnected');
-          }} className={grayButtonClass}>ClientConnected
-          </Button>
+        <div className={'flex'}>
+
+          <div className={'w-1/2'}>
+            <ul>
+              {Object.entries(store).map(info => {
+                return <li className={'mb-2'} key={info[0]}>
+                  <span className={'font-bold'}>{info[0]}</span>{': '}<span
+                    className={'text-gray-400'}>{showInfo(info)}</span>
+                </li>;
+              })}
+            </ul>
+          </div>
+
+          <div className={'w-1/2'}>
+
+            <div>Host State</div>
+            <div className={containerClass}>
+              <Button handleClick={() => {
+                setNetState(store, 'Neutral');
+              }} className={grayButtonClass}>Neutral
+              </Button>
+              <Button handleClick={() => {
+                setNetState(store, 'HostWaiting');
+              }} className={grayButtonClass}>HostWaiting
+              </Button>
+              <Button handleClick={() => {
+                setNetState(store, 'Hosting');
+              }} className={grayButtonClass}>Hosting
+              </Button>
+              <Button handleClick={() => {
+                setNetState(store, 'ClientConnected');
+              }} className={grayButtonClass}>ClientConnected
+              </Button>
 
 
+            </div>
+
+            <div>Connection</div>
+            <div className={containerClass}>
+              <Button className={grayButtonClass} handleClick={() => {
+                addFakeIpPort(store);
+              }}>+ fake ip/port
+              </Button>
+              <Button className={grayButtonClass} handleClick={() => {
+                rmFakeIpPort(store);
+              }}>- fake ip/port
+              </Button>
+              <Button handleClick={() => {
+                addFakeClient(store);
+              }} className={grayButtonClass}>+ fake client
+              </Button>
+              <Button handleClick={() => {
+                rmFakeClient(store);
+              }} className={grayButtonClass}>- fake client
+              </Button>
+            </div>
+
+            <div>Room Status</div>
+
+            <div className={containerClass}>
+              <Button handleClick={() => {
+                toggleRoomOpen(store);
+              }} className={grayButtonClass}>
+                toggle room open
+              </Button>
+            </div>
+
+          </div>
+
         </div>
-        <div className={'flex space-x-2'}>
-          <Button className={grayButtonClass} handleClick={() => {
-            addFakeIpPort(store);
-          }}>+ fake ip/port
-          </Button>
-          <Button className={grayButtonClass} handleClick={() => {
-            rmFakeIpPort(store);
-          }}>- fake ip/port
-          </Button>
-          <Button handleClick={() => {
-            addFakeClient(store);
-          }} className={grayButtonClass}>+ fake client
-          </Button>
-          <Button handleClick={() => {
-            rmFakeClient(store);
-          }} className={grayButtonClass}>- fake client
-          </Button>
-        </div>
-        <Button handleClick={() => {
-          toggleRoomOpen(store);
-        }} className={grayButtonClass}>
-          toggle room open
-        </Button>
-        <div className={'flex space-x-2'}>
-        </div>
-        <ul>
-          {Object.entries(store).map(info => {
-            return <li key={info[0]}>{info[0]}{': '}{showInfo(info)}</li>;
-          })}
-        </ul>
       </MenuContent>
   );
 });
@@ -569,6 +627,7 @@ let Menu = observer(() => {
     {name: 'Home', component: HomePage},
     {name: 'Join Desk', component: JoinDeskPage},
     {name: 'Videos', component: VideosPage},
+    {name: 'Player', component: PlayerPage},
   ];
 
   if (store.build === 'DEVELOPMENT') {
