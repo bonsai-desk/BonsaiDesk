@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import './Menu.css';
 import {postJson} from '../utilities';
-import {Button} from '../Components/Button';
+import {Button} from '../components/Button';
 import axios from 'axios';
 import DoorOpen from '../static/door-open.svg';
 import LinkImg from '../static/link.svg';
@@ -57,7 +57,7 @@ function ListItem(props) {
         <div className={buttonClassInactive}>
           {props.children}
         </div>
-    )
+    );
   }
 
   let className = selected ? buttonClassSelected : buttonClass;
@@ -176,6 +176,29 @@ function MenuContent(props) {
 
 }
 
+function showInfo(info) {
+  switch (info[0]) {
+    case 'player_info':
+      return showPlayerInfo(info[1]);
+    case 'user_info':
+      return JSON.stringify(info);
+    default:
+      return info[1] ? info[1].toString() : '';
+  }
+}
+
+function showPlayerInfo(playerInfo) {
+  return '[' + playerInfo.map(info => {
+    return `(${info.Name}, ${info.ConnectionId})`;
+  }).join(' ') + ']';
+}
+
+function LoadingHomePage() {
+  return <div className={'flex justify-center w-full flex-wrap'}>
+    <BounceLoader size={200} color={'#737373'}/>
+  </div>;
+}
+
 let ClientHomePage = () => {
   return (
       <div className={'flex'}>
@@ -187,110 +210,6 @@ let ClientHomePage = () => {
       </div>
   );
 };
-
-let RoomInfo = observer(() => {
-  let {store} = useStore();
-
-  let OpenRoom =
-      <InfoItem title={'Room'} slug={'Invite others'} imgSrc={DoorOpen}>
-        <Button className={greenButtonClass} handleClick={postOpenRoom}>
-          Open Up
-        </Button>
-      </InfoItem>;
-
-  let CloseRoom =
-      <InfoItem title={'Room'} slug={'Ready to accept connections'}
-                imgSrc={DoorOpen}>
-        <Button className={redButtonClass} handleClick={postCloseRoom}>
-          Close
-        </Button>
-      </InfoItem>;
-
-  const roomCodeCLass = 'text-5xl ';
-
-  if (store.room_open) {
-    return (
-        <React.Fragment>
-          {CloseRoom}
-          <InfoItem title={'Desk Code'}
-                    slug={'People who have this can join you'}
-                    imgSrc={LinkImg}>
-            <div className={'h-20 flex flex-wrap content-center'}>
-              {store.room_code ?
-                  <div className={roomCodeCLass}>{store.room_code}</div>
-
-                  :
-                  <div className={grayButtonClassInert}><BeatLoader size={8}
-                                                                    color={'#737373'}/>
-                  </div>
-              }
-            </div>
-          </InfoItem>
-        </React.Fragment>
-    );
-  } else {
-    return (
-        <React.Fragment>
-          {OpenRoom}
-        </React.Fragment>
-    );
-  }
-
-});
-
-let HostHomePage = observer(() => {
-
-  let {store} = useStore();
-
-  return (
-      <React.Fragment>
-        <RoomInfo/>
-        {store.player_info.length > 0 && store.room_open ?
-            <React.Fragment>
-              <div className={'text-xl'}>People in Your Room</div>
-              <div className={'flex space-x-2'}>
-                {store.player_info.map(info => <ConnectedClient info={info}/>)}
-              </div>
-            </React.Fragment>
-            :
-            ''}
-      </React.Fragment>
-  );
-
-});
-
-let LoadingHomePage = () => {
-  return <div className={'flex justify-center w-full flex-wrap'}>
-    <BounceLoader size={200} color={'#737373'}/>
-  </div>;
-};
-
-let HomePage = observer(() => {
-
-  let {store} = useStore();
-
-  let Inner;
-
-  switch (store.network_state) {
-    case 'Neutral':
-    case 'HostWaiting':
-    case 'Hosting':
-      Inner = <HostHomePage/>;
-      break;
-    case 'ClientConnected':
-      Inner = <ClientHomePage/>;
-      break;
-    default:
-      Inner = <LoadingHomePage/>;
-      break;
-  }
-
-  return (
-      <MenuContent name={'Home'}>
-        {Inner}
-      </MenuContent>
-  );
-});
 
 function JoinDeskPage(props) {
   let {navHome} = props;
@@ -398,6 +317,104 @@ function VideosPage() {
   </MenuContent>;
 }
 
+let RoomInfo = observer(() => {
+  let {store} = useStore();
+
+  let OpenRoom =
+      <InfoItem title={'Room'} slug={'Invite others'} imgSrc={DoorOpen}>
+        <Button className={greenButtonClass} handleClick={postOpenRoom}>
+          Open Up
+        </Button>
+      </InfoItem>;
+
+  let CloseRoom =
+      <InfoItem title={'Room'} slug={'Ready to accept connections'}
+                imgSrc={DoorOpen}>
+        <Button className={redButtonClass} handleClick={postCloseRoom}>
+          Close
+        </Button>
+      </InfoItem>;
+
+  const roomCodeCLass = 'text-5xl ';
+
+  if (store.room_open) {
+    return (
+        <React.Fragment>
+          {CloseRoom}
+          <InfoItem title={'Desk Code'}
+                    slug={'People who have this can join you'}
+                    imgSrc={LinkImg}>
+            <div className={'h-20 flex flex-wrap content-center'}>
+              {store.room_code ?
+                  <div className={roomCodeCLass}>{store.room_code}</div>
+
+                  :
+                  <div className={grayButtonClassInert}><BeatLoader size={8}
+                                                                    color={'#737373'}/>
+                  </div>
+              }
+            </div>
+          </InfoItem>
+        </React.Fragment>
+    );
+  } else {
+    return (
+        <React.Fragment>
+          {OpenRoom}
+        </React.Fragment>
+    );
+  }
+
+});
+
+let HostHomePage = observer(() => {
+
+  let {store} = useStore();
+
+  return (
+      <React.Fragment>
+        <RoomInfo/>
+        {store.player_info.length > 0 && store.room_open ?
+            <React.Fragment>
+              <div className={'text-xl'}>People in Your Room</div>
+              <div className={'flex space-x-2'}>
+                {store.player_info.map(info => <ConnectedClient info={info}/>)}
+              </div>
+            </React.Fragment>
+            :
+            ''}
+      </React.Fragment>
+  );
+
+});
+
+let HomePage = observer(() => {
+
+  let {store} = useStore();
+
+  let Inner;
+
+  switch (store.network_state) {
+    case 'Neutral':
+    case 'HostWaiting':
+    case 'Hosting':
+      Inner = <HostHomePage/>;
+      break;
+    case 'ClientConnected':
+      Inner = <ClientHomePage/>;
+      break;
+    default:
+      Inner = <LoadingHomePage/>;
+      break;
+  }
+
+  return (
+      <MenuContent name={'Home'}>
+        {Inner}
+      </MenuContent>
+  );
+});
+
 let DebugPage = observer(() => {
   let {store} = useStore();
 
@@ -486,23 +503,6 @@ let DebugPage = observer(() => {
   );
 });
 
-function showInfo(info) {
-  switch (info[0]) {
-    case 'player_info':
-      return showPlayerInfo(info[1]);
-    case 'user_info':
-      return JSON.stringify(info);
-    default:
-      return info[1] ? info[1].toString() : '';
-  }
-}
-
-function showPlayerInfo(playerInfo) {
-  return '[' + playerInfo.map(info => {
-    return `(${info.Name}, ${info.ConnectionId})`;
-  }).join(' ') + ']';
-}
-
 let Menu = observer(() => {
 
   let {store, pushStore} = useStore();
@@ -558,20 +558,20 @@ let Menu = observer(() => {
   const pages = [
     {name: 'Home', component: HomePage},
     {name: 'Join Desk', component: JoinDeskPage},
-    {name: 'Videos', component: VideosPage}
+    {name: 'Videos', component: VideosPage},
   ];
 
   if (store.build === 'DEVELOPMENT') {
-    pages.push({name: 'Debug', component: DebugPage})
+    pages.push({name: 'Debug', component: DebugPage});
   }
 
   let SelectedPage = pages[active].component;
 
-  let joinDeskActive = store.network_state === "Hosting" && !store._room_open
+  let joinDeskActive = store.network_state === 'Hosting' && !store._room_open;
 
   return (
       <div className={'flex text-lg text-gray-500 h-full'}>
-        <div className={'w-4/12 bg-black overflow-auto scrollhost static'}>
+        <div className={'w-4/12 bg-black overflow-auto scroll-host static'}>
           <div className={'w-4/12 bg-black fixed'}>
             <SettingsTitle>
               Menu
@@ -580,8 +580,9 @@ let Menu = observer(() => {
           <div className={'h-16'}/>
           <SettingsList>
             {pages.map((info, i) => {
-              if (info.name.toLowerCase() === "join desk" && !joinDeskActive) {
-                return <ListItem key={info.name} inactive={true} >{info.name}</ListItem>;
+              if (info.name.toLowerCase() === 'join desk' && !joinDeskActive) {
+                return <ListItem key={info.name}
+                                 inactive={true}>{info.name}</ListItem>;
               }
               return <ListItem key={info.name} handleClick={() => {
                 setActive(i);
@@ -589,7 +590,7 @@ let Menu = observer(() => {
             })}
           </SettingsList>
         </div>
-        <div className={'bg-gray-900 z-10 w-full overflow-auto scrollhost'}>
+        <div className={'bg-gray-900 z-10 w-full overflow-auto scroll-host'}>
           <SelectedPage navHome={navHome}/>
         </div>
       </div>

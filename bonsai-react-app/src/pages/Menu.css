@@ -1,8 +1,8 @@
-.scrollhost {
+.scroll-host {
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
 
-.scrollhost::-webkit-scrollbar {
+.scroll-host::-webkit-scrollbar {
     display: none;
 }
