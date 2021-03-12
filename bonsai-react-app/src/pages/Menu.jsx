@@ -12,13 +12,15 @@ import {BeatLoader, BounceLoader} from 'react-spinners';
 import {observer} from 'mobx-react-lite';
 import {action, autorun} from 'mobx';
 
-let API_BASE = 'https://api.desk.link';
+const API_BASE = 'https://api.desk.link';
 
 const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 const redButtonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
 const greenButtonClass = 'py-4 px-8 font-bold bg-green-800 active:bg-green-700 hover:bg-green-600 rounded cursor-pointer flex flex-wrap content-center';
 const grayButtonClass = 'py-4 px-8 font-bold bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
 const grayButtonClassInert = 'py-4 px-8 font-bold bg-gray-800 rounded flex flex-wrap content-center';
+
+// post data
 
 function postBrowseYouTube() {
   postJson({Type: 'command', Message: 'browseYouTube'});
@@ -44,6 +46,27 @@ function postLeaveRoom() {
 function postKickConnectionId(id) {
   postJson({Type: 'command', Message: 'kickConnectionId', Data: id});
 }
+
+// utils
+
+function showInfo(info) {
+  switch (info[0]) {
+    case 'player_info':
+      return showPlayerInfo(info[1]);
+    case 'user_info':
+      return JSON.stringify(info);
+    default:
+      return info[1] ? info[1].toString() : '';
+  }
+}
+
+function showPlayerInfo(playerInfo) {
+  return '[' + playerInfo.map(info => {
+    return `(${info.Name}, ${info.ConnectionId})`;
+  }).join(' ') + ']';
+}
+
+//
 
 function ListItem(props) {
   let {selected, handleClick, inactive = false} = props;
@@ -176,30 +199,13 @@ function MenuContent(props) {
 
 }
 
-function showInfo(info) {
-  switch (info[0]) {
-    case 'player_info':
-      return showPlayerInfo(info[1]);
-    case 'user_info':
-      return JSON.stringify(info);
-    default:
-      return info[1] ? info[1].toString() : '';
-  }
-}
-
-function showPlayerInfo(playerInfo) {
-  return '[' + playerInfo.map(info => {
-    return `(${info.Name}, ${info.ConnectionId})`;
-  }).join(' ') + ']';
-}
-
 function LoadingHomePage() {
   return <div className={'flex justify-center w-full flex-wrap'}>
     <BounceLoader size={200} color={'#737373'}/>
   </div>;
 }
 
-let ClientHomePage = () => {
+function ClientHomePage() {
   return (
       <div className={'flex'}>
         <InfoItem title={'Connected'} slug={'You are connected to a host'}
@@ -209,7 +215,107 @@ let ClientHomePage = () => {
         </InfoItem>
       </div>
   );
-};
+}
+
+const RoomInfo = observer(() => {
+  let {store} = useStore();
+
+  let OpenRoom =
+      <InfoItem title={'Room'} slug={'Invite others'} imgSrc={DoorOpen}>
+        <Button className={greenButtonClass} handleClick={postOpenRoom}>
+          Open Up
+        </Button>
+      </InfoItem>;
+
+  let CloseRoom =
+      <InfoItem title={'Room'} slug={'Ready to accept connections'}
+                imgSrc={DoorOpen}>
+        <Button className={redButtonClass} handleClick={postCloseRoom}>
+          Close
+        </Button>
+      </InfoItem>;
+
+  const roomCodeCLass = 'text-5xl ';
+
+  if (store.room_open) {
+    return (
+        <React.Fragment>
+          {CloseRoom}
+          <InfoItem title={'Desk Code'}
+                    slug={'People who have this can join you'}
+                    imgSrc={LinkImg}>
+            <div className={'h-20 flex flex-wrap content-center'}>
+              {store.room_code ?
+                  <div className={roomCodeCLass}>{store.room_code}</div>
+
+                  :
+                  <div className={grayButtonClassInert}><BeatLoader size={8}
+                                                                    color={'#737373'}/>
+                  </div>
+              }
+            </div>
+          </InfoItem>
+        </React.Fragment>
+    );
+  } else {
+    return (
+        <React.Fragment>
+          {OpenRoom}
+        </React.Fragment>
+    );
+  }
+
+});
+
+const HostHomePage = observer(() => {
+
+  let {store} = useStore();
+
+  return (
+      <React.Fragment>
+        <RoomInfo/>
+        {store.player_info.length > 0 && store.room_open ?
+            <React.Fragment>
+              <div className={'text-xl'}>People in Your Room</div>
+              <div className={'flex space-x-2'}>
+                {store.player_info.map(info => <ConnectedClient info={info}/>)}
+              </div>
+            </React.Fragment>
+            :
+            ''}
+      </React.Fragment>
+  );
+
+});
+
+//
+
+const HomePage = observer(() => {
+
+  let {store} = useStore();
+
+  let Inner;
+
+  switch (store.network_state) {
+    case 'Neutral':
+    case 'HostWaiting':
+    case 'Hosting':
+      Inner = <HostHomePage/>;
+      break;
+    case 'ClientConnected':
+      Inner = <ClientHomePage/>;
+      break;
+    default:
+      Inner = <LoadingHomePage/>;
+      break;
+  }
+
+  return (
+      <MenuContent name={'Home'}>
+        {Inner}
+      </MenuContent>
+  );
+});
 
 function JoinDeskPage(props) {
   let {navHome} = props;
@@ -317,105 +423,7 @@ function VideosPage() {
   </MenuContent>;
 }
 
-let RoomInfo = observer(() => {
-  let {store} = useStore();
-
-  let OpenRoom =
-      <InfoItem title={'Room'} slug={'Invite others'} imgSrc={DoorOpen}>
-        <Button className={greenButtonClass} handleClick={postOpenRoom}>
-          Open Up
-        </Button>
-      </InfoItem>;
-
-  let CloseRoom =
-      <InfoItem title={'Room'} slug={'Ready to accept connections'}
-                imgSrc={DoorOpen}>
-        <Button className={redButtonClass} handleClick={postCloseRoom}>
-          Close
-        </Button>
-      </InfoItem>;
-
-  const roomCodeCLass = 'text-5xl ';
-
-  if (store.room_open) {
-    return (
-        <React.Fragment>
-          {CloseRoom}
-          <InfoItem title={'Desk Code'}
-                    slug={'People who have this can join you'}
-                    imgSrc={LinkImg}>
-            <div className={'h-20 flex flex-wrap content-center'}>
-              {store.room_code ?
-                  <div className={roomCodeCLass}>{store.room_code}</div>
-
-                  :
-                  <div className={grayButtonClassInert}><BeatLoader size={8}
-                                                                    color={'#737373'}/>
-                  </div>
-              }
-            </div>
-          </InfoItem>
-        </React.Fragment>
-    );
-  } else {
-    return (
-        <React.Fragment>
-          {OpenRoom}
-        </React.Fragment>
-    );
-  }
-
-});
-
-let HostHomePage = observer(() => {
-
-  let {store} = useStore();
-
-  return (
-      <React.Fragment>
-        <RoomInfo/>
-        {store.player_info.length > 0 && store.room_open ?
-            <React.Fragment>
-              <div className={'text-xl'}>People in Your Room</div>
-              <div className={'flex space-x-2'}>
-                {store.player_info.map(info => <ConnectedClient info={info}/>)}
-              </div>
-            </React.Fragment>
-            :
-            ''}
-      </React.Fragment>
-  );
-
-});
-
-let HomePage = observer(() => {
-
-  let {store} = useStore();
-
-  let Inner;
-
-  switch (store.network_state) {
-    case 'Neutral':
-    case 'HostWaiting':
-    case 'Hosting':
-      Inner = <HostHomePage/>;
-      break;
-    case 'ClientConnected':
-      Inner = <ClientHomePage/>;
-      break;
-    default:
-      Inner = <LoadingHomePage/>;
-      break;
-  }
-
-  return (
-      <MenuContent name={'Home'}>
-        {Inner}
-      </MenuContent>
-  );
-});
-
-let DebugPage = observer(() => {
+const DebugPage = observer(() => {
   let {store} = useStore();
 
   let addFakeIpPort = action((store) => {
@@ -502,6 +510,8 @@ let DebugPage = observer(() => {
       </MenuContent>
   );
 });
+
+//
 
 let Menu = observer(() => {
 
