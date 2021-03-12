@@ -355,9 +355,9 @@ function JoinDeskPage(props) {
           <div className={'p-2 rounded space-y-4 text-2xl'}>
             <div className={'flex space-x-4'}>
               <JoinDeskButton handleClick={handleClick}
-                              char={'L'}/>
+                              char={'A'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'R'}/>
+                              char={'B'}/>
               <JoinDeskButton handleClick={handleClick}
                               char={'C'}/>
             </div>
