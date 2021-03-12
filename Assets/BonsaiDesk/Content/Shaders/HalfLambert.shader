@@ -12,7 +12,7 @@
         _k_spec ("[ k_spec ] Exponent", Range(0,255)) = 20
         _k_spec_Tex ("[ k_spec ] Exponent Texture", 2D) = "white" {}
 
-        // "f_r" rim Fresnel term (1 - (n.v))^4
+        // "f_r" rim Fresnel term (1 - (n.v))^4 generated below
         _k_r_Tex ("[ k_r ] Rim Mask for Problems", 2D) = "white" {}
         _k_rim ("[ k_rim ] Broad, Constant Exponent", Range(0,5000)) = 1
 
