@@ -585,4 +585,35 @@ public class AutoBrowserController : NetworkBehaviour {
 			return Active && networkTime > NetworkTimeActivated;
 		}
 	}
+
+	public class MediaInfo {
+		public bool Active;
+		public string Name;
+		public bool Paused;
+		public double Scrub;
+		public double NetworkTimeActivated;
+
+		public MediaInfo() {
+			Active               = false;
+			Name                 = "None";
+			Paused               = true;
+			Scrub                = 0f;
+			NetworkTimeActivated = 0f;
+		}
+	}
+
+	public MediaInfo mediaInfo () {
+		if (_contentInfo.Active) {
+			return new MediaInfo {
+				Active=true, 
+				Name = "youtube." + _contentInfo.ID, 
+				Paused = _idealScrub.Active, 
+				Scrub = _idealScrub.Scrub,
+				NetworkTimeActivated = _idealScrub.NetworkTimeActivated
+			};
+
+		}
+		return new MediaInfo();
+	}
+	
 }
