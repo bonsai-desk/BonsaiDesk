@@ -64,6 +64,12 @@ public class TableBrowserMenu : MonoBehaviour {
 						}
 
 						break;
+					case "seekPlayer":
+						var ts = float.Parse(message.Data);
+						Debug.Log($"seekPlayer {ts}");
+						autoBrowserController.CmdReadyUp(ts);
+
+						break;
 					case "kickConnectionId":
 						// todo what happens when this fails?
 						var id = JsonConvert.DeserializeObject<int>(message.Data);
@@ -152,6 +158,8 @@ public class TableBrowserMenu : MonoBehaviour {
 	public event Action<int> KickConnectionId;
 
 	public event EventHandler<string> BrowseSite;
+
+	public event EventHandler<float> SeekPlayer;
 
 	private class CsMessageKeyType<T> {
 		public KeyType<T> Data;

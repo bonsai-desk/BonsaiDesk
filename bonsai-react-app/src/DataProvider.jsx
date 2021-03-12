@@ -17,7 +17,13 @@ class Store {
   user_info = {};
   player_info = [];
   build = "DEVELOPMENT";
-  media_info = {};
+  media_info = {
+    Active: false,
+    Name: "None",
+    Paused: true,
+    Scrub: 0,
+    Duration: 1
+  };
 
   constructor() {
     makeAutoObservable(this);
