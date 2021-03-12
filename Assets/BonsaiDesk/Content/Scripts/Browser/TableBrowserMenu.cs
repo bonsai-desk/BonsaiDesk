@@ -96,14 +96,31 @@ public class TableBrowserMenu : MonoBehaviour {
 		_browser.PostMessage(message);
 	}
 
+	public void PostKvs(KeyVal[] kvs) {
+		var jsMessage = new CsMessageKeyVals {
+			Data = kvs
+		};
+		var message = JsonConvert.SerializeObject(jsMessage);
+		_browser.PostMessage(message);
+	}
+
 	public void PostPlayerInfo(Dictionary<NetworkConnection, NetworkManagerGame.PlayerInfo> playerInfos) {
-		var data = playerInfos.Select(entry => new PlayerData {Name = "Player", ConnectionId = entry.Key.connectionId})
-		                      .ToArray();
+		var data = playerInfos
+		           .Select(entry => new PlayerData
+			                   {Name = entry.Value.userInfo.DisplayName, ConnectionId = entry.Key.connectionId})
+		           .ToArray();
 
 		var csMessage = new CsMessageKeyType<PlayerData[]>
 			{Data = new KeyType<PlayerData[]> {Key = "player_info", Val = data}};
 
 		var message = JsonConvert.SerializeObject(csMessage);
+		_browser.PostMessage(message);
+	}
+
+	public void PostUserInfo(UserInfo userInfo) {
+		var data = new KeyType<UserInfo> {Key = "user_info", Val = userInfo};
+		var csMessage = new CsMessageKeyType<UserInfo> {Data = data};
+		var message   = JsonConvert.SerializeObject(csMessage);
 		_browser.PostMessage(message);
 	}
 
@@ -137,7 +154,7 @@ public class TableBrowserMenu : MonoBehaviour {
 		public string Type = "command";
 	}
 
-	private struct KeyVal {
+	public struct KeyVal {
 		public string Key;
 		public string Val;
 	}
@@ -147,5 +164,9 @@ public class TableBrowserMenu : MonoBehaviour {
 		public string ip_address;
 		public int pinged;
 		public int port;
+	}
+
+	public struct UserInfo {
+		public string UserName;
 	}
 }

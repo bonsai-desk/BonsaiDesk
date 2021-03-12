@@ -54,7 +54,6 @@
             float _Beta;
             float _Gamma;
 
-
             struct VertexData {
                 float4 position : POSITION;
                 float3 normal : NORMAL;

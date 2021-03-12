@@ -14,6 +14,7 @@ public class WebBrowserParent : NetworkBehaviour {
 	public Transform videoSpawnLocation;
 	private Vector3 _altTransform;
 	private Vector3 _startTransform;
+	public TableBrowserParent tableBrowserParent;
 
 	// Start is called before the first frame update
 	private void Start() {
@@ -61,13 +62,12 @@ public class WebBrowserParent : NetworkBehaviour {
 		else {
 			HandleDismissKeyboard();
 		}
-
-		throw new NotImplementedException();
 	}
 
 	private void HandleSpawnYt(object sender, EventArgs<string> e) {
 		Debug.Log($"[BONSAI] Spawn YT {e.Value}");
 		CmdSpawnYT(videoSpawnLocation.localPosition, e.Value);
+		tableBrowserParent.Sleep();
 	}
 
 	private void SetupKeyboardBrowser() {
@@ -105,12 +105,12 @@ public class WebBrowserParent : NetworkBehaviour {
 
 	[Command(ignoreAuthority = true)]
 	private void CmdSpawnYT(Vector3 position, string id) {
-		var spawnedObject = Instantiate(VideoPrefab, position, Quaternion.identity);
+		var spawnedObject = Instantiate(VideoPrefab, position, Quaternion.AngleAxis(-90, Vector3.up));
 		NetworkServer.Spawn(spawnedObject);
 		spawnedObject.GetComponent<TabletControl>().videoId = id;
 	}
 
 	public void DummySpawn() {
-		CmdSpawnYT(videoSpawnLocation.localPosition, "niS_Fpy_2-U");
+		CmdSpawnYT(videoSpawnLocation.position, "niS_Fpy_2-U");
 	}
 }
