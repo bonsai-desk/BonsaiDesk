@@ -47,6 +47,10 @@ function postKickConnectionId(id) {
   postJson({Type: 'command', Message: 'kickConnectionId', Data: id});
 }
 
+function postSeekPlayer(ts) {
+  postJson({Type: 'command', Message: 'seekPlayer', Data: ts});
+}
+
 // utils
 
 function showInfo(info) {
@@ -314,7 +318,8 @@ const PlayerPage = observer(() => {
 
   function handleClick(e) {
     let pct = (e.clientX - ref.current.offsetLeft) / ref.current.offsetWidth;
-    console.log(pct);
+    let ts = pct * store.media_info.Duration
+    postSeekPlayer(ts)
   }
 
   return <MenuContent name={'Player'}>

@@ -406,6 +406,13 @@ public class AutoBrowserController : NetworkBehaviour {
 		CloseVideo();
 	}
 
+	[Command(ignoreAuthority = true)]
+	public void CmdReadyUp(double timestamp) {
+		_idealScrub = ScrubData.PausedAtScrub(timestamp);
+		BeginSync("CmdReadyUp");
+		RpcReadyUp(_idealScrub.CurrentTimeStamp(NetworkTime.time));
+	}
+
 	[Server]
 	private void CloseVideo() {
 		// todo set paused
