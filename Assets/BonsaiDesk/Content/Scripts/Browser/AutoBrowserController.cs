@@ -26,6 +26,7 @@ public class AutoBrowserController : NetworkBehaviour {
 	private double _clientLastSentPing;
 	private PlayerState _clientPlayerStatus;
 	private float _clientPlayerTimeStamp;
+	private float _clientPlayerDuration;
 	private ContentInfo _contentInfo;
 	private double _contentInfoAtTime;
 	private Coroutine _fetchAndReadyUp;
@@ -260,7 +261,8 @@ public class AutoBrowserController : NetworkBehaviour {
 		}
 
 		if (json?["current_time"] != null) {
-			_clientPlayerTimeStamp = json["current_time"];
+			_clientPlayerTimeStamp      = json["current_time"];
+			_clientPlayerDuration = json["duration"];
 		}
 
 		switch (json?["type"].Value) {
@@ -585,4 +587,35 @@ public class AutoBrowserController : NetworkBehaviour {
 			return Active && networkTime > NetworkTimeActivated;
 		}
 	}
+
+	public class MediaInfo {
+		public bool Active;
+		public string Name;
+		public bool Paused;
+		public float Scrub;
+		public float Duration;
+
+		public MediaInfo() {
+			Active               = false;
+			Name                 = "None";
+			Paused               = true;
+			Scrub                = 0f;
+			Duration             = 1f;
+		}
+	}
+
+	public MediaInfo GetMediaInfo () {
+		if (_contentInfo.Active) {
+			return new MediaInfo {
+				Active=true, 
+				Name = "youtube." + _contentInfo.ID, 
+				Paused = !_idealScrub.Active, 
+				Scrub = _clientPlayerTimeStamp,
+				Duration = _clientPlayerDuration
+			};
+
+		}
+		return new MediaInfo();
+	}
+	
 }

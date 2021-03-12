@@ -4,17 +4,29 @@ using System.Linq;
 using Mirror;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Vuplex.WebView;
 
 [RequireComponent(typeof(TableBrowser))]
 public class TableBrowserMenu : MonoBehaviour {
+	public AutoBrowserController autoBrowserController;
+	public float postMediaInfoEvery = 0.5f;
+	private float _postMediaInfoLast;
 	private TableBrowser _browser;
+	
 
 	private void Start() {
 		_browser                =  GetComponent<TableBrowser>();
 		_browser.BrowserReady   += SetupBrowser;
 		_browser.ListenersReady += NavToMenu;
 		OVRManager.HMDUnmounted += () => { _browser.SetHidden(true); };
+	}
+
+	public void Update() {
+		if (Time.time - _postMediaInfoLast > postMediaInfoEvery) {
+			PostMediaInfo(autoBrowserController.GetMediaInfo());
+			_postMediaInfoLast = Time.time;
+		}
 	}
 
 	private void SetupBrowser() {
@@ -72,6 +84,15 @@ public class TableBrowserMenu : MonoBehaviour {
 		};
 		var jsMessage = new CsMessageKeyVals {
 			Type = "command", Message = "pushStore", Data = kvs
+		};
+		var message = JsonConvert.SerializeObject(jsMessage);
+		_browser.PostMessage(message);
+	}
+
+	private void PostMediaInfo(AutoBrowserController.MediaInfo mediaInfo) {
+		var kv = new KeyType<AutoBrowserController.MediaInfo> {Key = "media_info", Val = mediaInfo};
+		var jsMessage = new CsMessageKeyType<AutoBrowserController.MediaInfo>() {
+			Data = kv
 		};
 		var message = JsonConvert.SerializeObject(jsMessage);
 		_browser.PostMessage(message);

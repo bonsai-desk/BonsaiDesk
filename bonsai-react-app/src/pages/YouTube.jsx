@@ -248,8 +248,10 @@ let Video = (props) => {
     console.log('bonsai: add ping interval');
     let pingPlayerTime = setInterval(() => {
       let current_time = 0;
-      if (player != null && player.getCurrentTime() != null) {
+      let duration = 1;
+      if (player != null && player.getCurrentTime() != null && player.getDuration() != null) {
         current_time = player.getCurrentTime();
+        duration = player.getDuration();
       }
       if (dev_mode) {
         return;
@@ -257,6 +259,7 @@ let Video = (props) => {
       window.vuplex.postMessage({
         type: 'infoCurrentTime',
         current_time: current_time,
+        duration: duration
       });
     }, 100);
     return () => {

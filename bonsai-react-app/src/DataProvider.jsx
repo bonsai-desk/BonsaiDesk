@@ -17,6 +17,7 @@ class Store {
   user_info = {};
   player_info = [];
   build = "DEVELOPMENT";
+  media_info = {};
 
   constructor() {
     makeAutoObservable(this);
@@ -60,8 +61,6 @@ class Store {
     axios({
       method: 'post',
       url: API_BASE + `/rooms/${store.room_code}/refresh`,
-    }).then(response => {
-      //console.log('refresh ' + store.room_code);
     }).catch(err => {
       console.log(err);
       this.room_code = null;

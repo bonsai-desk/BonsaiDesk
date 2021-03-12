@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import './Menu.css';
 import {postJson} from '../utilities';
-import {Button} from '../Components/Button';
+import {Button} from '../components/Button';
 import axios from 'axios';
 import DoorOpen from '../static/door-open.svg';
 import LinkImg from '../static/link.svg';
@@ -12,13 +12,15 @@ import {BeatLoader, BounceLoader} from 'react-spinners';
 import {observer} from 'mobx-react-lite';
 import {action, autorun} from 'mobx';
 
-let API_BASE = 'https://api.desk.link';
+const API_BASE = 'https://api.desk.link';
 
 const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 const redButtonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
 const greenButtonClass = 'py-4 px-8 font-bold bg-green-800 active:bg-green-700 hover:bg-green-600 rounded cursor-pointer flex flex-wrap content-center';
 const grayButtonClass = 'py-4 px-8 font-bold bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
 const grayButtonClassInert = 'py-4 px-8 font-bold bg-gray-800 rounded flex flex-wrap content-center';
+
+// post data
 
 function postBrowseYouTube() {
   postJson({Type: 'command', Message: 'browseYouTube'});
@@ -45,6 +47,27 @@ function postKickConnectionId(id) {
   postJson({Type: 'command', Message: 'kickConnectionId', Data: id});
 }
 
+// utils
+
+function showInfo(info) {
+  switch (info[0]) {
+    case 'player_info':
+      return showPlayerInfo(info[1]);
+    case 'user_info':
+      return JSON.stringify(info);
+    default:
+      return info[1] ? JSON.stringify(info[1]) : '';
+  }
+}
+
+function showPlayerInfo(playerInfo) {
+  return '[' + playerInfo.map(info => {
+    return `(${info.Name}, ${info.ConnectionId})`;
+  }).join(' ') + ']';
+}
+
+//
+
 function ListItem(props) {
   let {selected, handleClick, inactive = false} = props;
 
@@ -57,7 +80,7 @@ function ListItem(props) {
         <div className={buttonClassInactive}>
           {props.children}
         </div>
-    )
+    );
   }
 
   let className = selected ? buttonClassSelected : buttonClass;
@@ -176,7 +199,13 @@ function MenuContent(props) {
 
 }
 
-let ClientHomePage = () => {
+function LoadingHomePage() {
+  return <div className={'flex justify-center w-full flex-wrap'}>
+    <BounceLoader size={200} color={'#737373'}/>
+  </div>;
+}
+
+function ClientHomePage() {
   return (
       <div className={'flex'}>
         <InfoItem title={'Connected'} slug={'You are connected to a host'}
@@ -186,9 +215,9 @@ let ClientHomePage = () => {
         </InfoItem>
       </div>
   );
-};
+}
 
-let RoomInfo = observer(() => {
+const RoomInfo = observer(() => {
   let {store} = useStore();
 
   let OpenRoom =
@@ -238,7 +267,7 @@ let RoomInfo = observer(() => {
 
 });
 
-let HostHomePage = observer(() => {
+const HostHomePage = observer(() => {
 
   let {store} = useStore();
 
@@ -259,13 +288,9 @@ let HostHomePage = observer(() => {
 
 });
 
-let LoadingHomePage = () => {
-  return <div className={'flex justify-center w-full flex-wrap'}>
-    <BounceLoader size={200} color={'#737373'}/>
-  </div>;
-};
+//
 
-let HomePage = observer(() => {
+const HomePage = observer(() => {
 
   let {store} = useStore();
 
@@ -355,9 +380,9 @@ function JoinDeskPage(props) {
           <div className={'p-2 rounded space-y-4 text-2xl'}>
             <div className={'flex space-x-4'}>
               <JoinDeskButton handleClick={handleClick}
-                              char={'L'}/>
+                              char={'A'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'R'}/>
+                              char={'B'}/>
               <JoinDeskButton handleClick={handleClick}
                               char={'C'}/>
             </div>
@@ -398,7 +423,7 @@ function VideosPage() {
   </MenuContent>;
 }
 
-let SettingsPage = observer(() => {
+const DebugPage = observer(() => {
   let {store} = useStore();
 
   let addFakeIpPort = action((store) => {
@@ -431,7 +456,7 @@ let SettingsPage = observer(() => {
   });
 
   return (
-      <MenuContent name={'Settings'}>
+      <MenuContent name={'Debug'}>
         <div className={'flex space-x-2'}>
           <Button handleClick={() => {
             setNetState(store, 'Neutral');
@@ -486,22 +511,7 @@ let SettingsPage = observer(() => {
   );
 });
 
-function showInfo(info) {
-  switch (info[0]) {
-    case 'player_info':
-      return showPlayerInfo(info[1]);
-    case 'user_info':
-      return JSON.stringify(info);
-    default:
-      return info[1] ? info[1].toString() : '';
-  }
-}
-
-function showPlayerInfo(playerInfo) {
-  return '[' + playerInfo.map(info => {
-    return `(${info.Name}, ${info.ConnectionId})`;
-  }).join(' ') + ']';
-}
+//
 
 let Menu = observer(() => {
 
@@ -558,20 +568,20 @@ let Menu = observer(() => {
   const pages = [
     {name: 'Home', component: HomePage},
     {name: 'Join Desk', component: JoinDeskPage},
-    {name: 'Videos', component: VideosPage}
+    {name: 'Videos', component: VideosPage},
   ];
 
   if (store.build === 'DEVELOPMENT') {
-    pages.push({name: 'Settings', component: SettingsPage})
+    pages.push({name: 'Debug', component: DebugPage});
   }
 
   let SelectedPage = pages[active].component;
 
-  let joinDeskActive = store.network_state === "Hosting" && !store._room_open
+  let joinDeskActive = store.network_state === 'Hosting' && !store._room_open;
 
   return (
       <div className={'flex text-lg text-gray-500 h-full'}>
-        <div className={'w-4/12 bg-black overflow-auto scrollhost static'}>
+        <div className={'w-4/12 bg-black overflow-auto scroll-host static'}>
           <div className={'w-4/12 bg-black fixed'}>
             <SettingsTitle>
               Menu
@@ -580,8 +590,9 @@ let Menu = observer(() => {
           <div className={'h-16'}/>
           <SettingsList>
             {pages.map((info, i) => {
-              if (info.name.toLowerCase() === "join desk" && !joinDeskActive) {
-                return <ListItem key={info.name} inactive={true} >{info.name}</ListItem>;
+              if (info.name.toLowerCase() === 'join desk' && !joinDeskActive) {
+                return <ListItem key={info.name}
+                                 inactive={true}>{info.name}</ListItem>;
               }
               return <ListItem key={info.name} handleClick={() => {
                 setActive(i);
@@ -589,7 +600,7 @@ let Menu = observer(() => {
             })}
           </SettingsList>
         </div>
-        <div className={'bg-gray-900 z-10 w-full overflow-auto scrollhost'}>
+        <div className={'bg-gray-900 z-10 w-full overflow-auto scroll-host'}>
           <SelectedPage navHome={navHome}/>
         </div>
       </div>
