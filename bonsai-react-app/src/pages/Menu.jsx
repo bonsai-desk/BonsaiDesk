@@ -56,7 +56,7 @@ function showInfo(info) {
     case 'user_info':
       return JSON.stringify(info);
     default:
-      return info[1] ? info[1].toString() : '';
+      return info[1] ? JSON.stringify(info[1]) : '';
   }
 }
 

@@ -17,6 +17,7 @@ class Store {
   user_info = {};
   player_info = [];
   build = "DEVELOPMENT";
+  media_info = {};
 
   constructor() {
     makeAutoObservable(this);
