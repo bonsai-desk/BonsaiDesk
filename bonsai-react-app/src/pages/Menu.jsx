@@ -398,7 +398,7 @@ function VideosPage() {
   </MenuContent>;
 }
 
-let SettingsPage = observer(() => {
+let DebugPage = observer(() => {
   let {store} = useStore();
 
   let addFakeIpPort = action((store) => {
@@ -431,7 +431,7 @@ let SettingsPage = observer(() => {
   });
 
   return (
-      <MenuContent name={'Settings'}>
+      <MenuContent name={'Debug'}>
         <div className={'flex space-x-2'}>
           <Button handleClick={() => {
             setNetState(store, 'Neutral');
@@ -562,7 +562,7 @@ let Menu = observer(() => {
   ];
 
   if (store.build === 'DEVELOPMENT') {
-    pages.push({name: 'Settings', component: SettingsPage})
+    pages.push({name: 'Debug', component: DebugPage})
   }
 
   let SelectedPage = pages[active].component;
