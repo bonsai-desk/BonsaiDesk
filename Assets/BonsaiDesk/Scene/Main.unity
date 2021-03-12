@@ -2298,7 +2298,7 @@ MonoBehaviour:
   maxRelayRefreshAttempts: 3
   relayLifetime: 30
   isDisconnecting: 0
-  serverOnlyIfEditor: 1
+  serverOnlyIfEditor: 0
   visualizeAuthority: 0
   browserReady: 0
   tableBrowser: {fileID: 1361515864}
@@ -2906,6 +2906,12 @@ PrefabInstance:
       propertyPath: useBuiltHtml
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: WebViewPrefab
+      value: 
+      objectReference: {fileID: 8407010167014793134, guid: b72ed8811772bbb43afb57872c8906df,
+        type: 3}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
       propertyPath: screenMaterial
@@ -11207,6 +11213,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
+      propertyPath: WebViewPrefab
+      value: 
+      objectReference: {fileID: 8407010167014793134, guid: b72ed8811772bbb43afb57872c8906df,
+        type: 3}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
       propertyPath: hoveringDisabled
       value: 1
       objectReference: {fileID: 0}
@@ -12855,6 +12867,12 @@ PrefabInstance:
       propertyPath: useBuiltHtml
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: WebViewPrefab
+      value: 
+      objectReference: {fileID: 8407010167014793134, guid: b72ed8811772bbb43afb57872c8906df,
+        type: 3}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
       propertyPath: screenMaterial
@@ -15343,6 +15361,12 @@ PrefabInstance:
       propertyPath: useBuiltHtml
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: WebViewPrefab
+      value: 
+      objectReference: {fileID: 8407010167014793134, guid: b72ed8811772bbb43afb57872c8906df,
+        type: 3}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
       propertyPath: hoveringDisabled
@@ -25950,7 +25974,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!81 &2027055832
 AudioListener:
   m_ObjectHideFlags: 0
