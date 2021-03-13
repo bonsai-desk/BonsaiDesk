@@ -9,6 +9,7 @@ public class CustomInputModule : StandaloneInputModule {
 
 	public Vector3 cursorRoot;
 	public OVRCursor m_Cursor;
+	public bool drawcursor;
 	public List<Transform> screens;
 	public float hoverDistance = 0.1f;
 	public float clickDistance = 0.075f / 2;
@@ -123,7 +124,9 @@ public class CustomInputModule : StandaloneInputModule {
 				break;
 			}
 
-			m_Cursor.SetCursorStartDest(Vector3.zero, Vector3.zero, Vector3.zero);
+			if (drawcursor) {
+				m_Cursor.SetCursorStartDest(Vector3.zero, Vector3.zero, Vector3.zero);
+			}
 		}
 
 		if (!foundScreen) {
@@ -146,8 +149,10 @@ public class CustomInputModule : StandaloneInputModule {
 	private void ProcessCursor(Vector3 fingerInScreen, Transform screen) {
 		var fingerInScreen0Z = fingerInScreen;
 		fingerInScreen0Z.z = 0;
-		m_Cursor.SetCursorStartDest(screen.TransformPoint(fingerInScreen),
-		                            screen.TransformPoint(fingerInScreen0Z), -Vector3.forward);
+		if (drawcursor) {
+			m_Cursor.SetCursorStartDest(screen.TransformPoint(fingerInScreen),
+										screen.TransformPoint(fingerInScreen0Z), -Vector3.forward);
+		}
 	}
 
 	private void ProcessRay(Vector3 fingerInScreen, Transform screen, OVRPointerEventData leftData, bool leftValid,
