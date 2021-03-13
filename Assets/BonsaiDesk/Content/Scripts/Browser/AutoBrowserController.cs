@@ -33,7 +33,7 @@ public class AutoBrowserController : NetworkBehaviour {
 
 	[SyncVar] private float _height;
 	[SyncVar] private ScrubData _idealScrub;
-	[SyncVar] private float _volumeLevel = 0.1f;
+	[SyncVar] private float _volumeLevel = 1.0f;
 	private float _setVolumeLevelEvery = 0.5f;
 	private float _setVolumeLevelLast;
 
@@ -69,11 +69,12 @@ public class AutoBrowserController : NetworkBehaviour {
 		NetworkManagerGame.Singleton.ServerAddPlayer  -= HandleServerAddPlayer;
 		NetworkManagerGame.Singleton.ServerDisconnect -= HandleServerDisconnect;
 		togglePause.CmdSetPausedServer                -= HandleCmdSetPausedServer;
-		TableBrowserMenu.Singleton.VolumeChange       += HandleVolumeChange;
+		TableBrowserMenu.Singleton.VolumeChange       -= HandleVolumeChange;
 		
 		NetworkManagerGame.Singleton.ServerAddPlayer  += HandleServerAddPlayer;
 		NetworkManagerGame.Singleton.ServerDisconnect += HandleServerDisconnect;
 		togglePause.CmdSetPausedServer                += HandleCmdSetPausedServer;
+		TableBrowserMenu.Singleton.VolumeChange       += HandleVolumeChange;
 
 		if (tabletSpot != null) {
 			tabletSpot.SetNewVideo -= HandleSetNewVideo;
@@ -304,8 +305,8 @@ public class AutoBrowserController : NetworkBehaviour {
 		}
 	}
 
-	private void HandleVolumeChange(object _, float level) {
-		CmdSetVolume(level);
+	private void HandleVolumeChange(object _, float delta) {
+		CmdChangeVolumeLevel(delta);
 	}
 
 	private bool ClientInGracePeriod(uint id) {
@@ -427,8 +428,8 @@ public class AutoBrowserController : NetworkBehaviour {
 	}
 
 	[Command(ignoreAuthority = true)]
-	public void CmdSetVolume(float level) {
-		_volumeLevel = Mathf.Clamp(level, 0, 1);
+	public void CmdChangeVolumeLevel(float delta) {
+		_volumeLevel = Mathf.Clamp(_volumeLevel + delta, 0, 1);
 	}
 
 	[Server]
@@ -627,6 +628,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		public bool Paused;
 		public float Scrub;
 		public float Duration;
+		public float VolumeLevel;
 
 		public MediaInfo() {
 			Active               = false;
@@ -634,6 +636,7 @@ public class AutoBrowserController : NetworkBehaviour {
 			Paused               = true;
 			Scrub                = 0f;
 			Duration             = 1f;
+			VolumeLevel  = 0f;
 		}
 	}
 
@@ -644,7 +647,8 @@ public class AutoBrowserController : NetworkBehaviour {
 				Name = "youtube." + _contentInfo.ID, 
 				Paused = !_idealScrub.Active, 
 				Scrub = _clientPlayerTimeStamp,
-				Duration = _clientPlayerDuration
+				Duration = _clientPlayerDuration,
+				VolumeLevel = _volumeLevel
 			};
 
 		}

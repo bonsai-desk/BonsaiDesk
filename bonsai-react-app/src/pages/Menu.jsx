@@ -303,8 +303,8 @@ const HostHomePage = observer(() => {
 //
 
 const PlayerPage = observer(() => {
-  //const {store} = useStore();
-  const store = {media_info: {Active:true, Scrub: 10, Duration: 33}}
+  const {store} = useStore();
+  //const store = {media_info: {Active:true, Scrub: 10, Duration: 33}}
   const ref = useRef(null);
 
   let media = store.media_info;
@@ -335,7 +335,7 @@ const PlayerPage = observer(() => {
          className={'relative h-16 bg-gray-600'}>
       <div style={{width: pct + '%'}} className={'h-full bg-gray-400'}/>
     </div>
-    <div>Volume</div>
+    <div>Volume {parseInt(100 * media.VolumeLevel)}</div>
     <div className={"flex space-x-2"}>
       <Button handleClick={VolumeDecrement} className={grayButtonClass}>-</Button>
       <Button handleClick={VolumeIncrement} className={grayButtonClass}>+</Button>

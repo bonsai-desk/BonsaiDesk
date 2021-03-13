@@ -22,7 +22,8 @@ class Store {
     Name: "None",
     Paused: true,
     Scrub: 0,
-    Duration: 1
+    Duration: 1,
+    VolumeLevel: 0
   };
 
   constructor() {
