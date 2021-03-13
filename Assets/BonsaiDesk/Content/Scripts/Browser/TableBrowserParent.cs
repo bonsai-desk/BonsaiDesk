@@ -6,7 +6,7 @@ public class TableBrowserParent : MonoBehaviour {
 	public TableBrowserMenu TableBrowserMenu;
 	public WebBrowserParent WebBrowserParent;
 	private Vector3 _startTransform;
-	private bool sleeped;
+	public bool sleeped { get; private set; }
 
 	// Start is called before the first frame update
 	private void Start() {

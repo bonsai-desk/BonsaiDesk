@@ -50,7 +50,6 @@ public class HandComponents
         }
 
         _handMaterial = _physicsRenderer.material;
-        SetColor(Colors.Green);
         _handMaterial.SetInt("_ZWrite", 1);
         MakeMaterialOpaque();
         PhysicsHandController = PhysicsHand.GetComponent<PhysicsHandController>();
@@ -249,7 +248,11 @@ public class HandComponents
 
     private static void SetLayerRecursive(Transform go, int layer)
     {
-        go.gameObject.layer = layer;
+        if (!go.CompareTag("KeepLayer"))
+        {
+            go.gameObject.layer = layer;
+        }
+
         foreach (Transform child in go)
         {
             SetLayerRecursive(child, layer);
@@ -265,20 +268,9 @@ public class HandComponents
         }
     }
 
-    public void SetColor(Colors color) {
-        switch (color) {
-            case Colors.Green:
-                _handMaterial.mainTexture = Resources.Load<Texture>("BonsaiGreenPixel");
-                break;
-            case Colors.Orange:
-                _handMaterial.mainTexture = Resources.Load<Texture>("BonsaiOrangePixel");
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(color), color, null);
-        }
-    }
-
-    public enum Colors {
-        Green, Orange
+    public enum Colors
+    {
+        Green,
+        Orange
     }
 }

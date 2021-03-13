@@ -15,6 +15,7 @@ TagManager:
   - KeepOnDisconnect
   - FingerTip
   - IndexTip
+  - KeepLayer
   layers:
   - Default
   - TransparentFX
