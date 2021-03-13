@@ -51,6 +51,14 @@ function postSeekPlayer(ts) {
   postJson({Type: 'command', Message: 'seekPlayer', Data: ts});
 }
 
+function postVolumeIncrement() {
+  postJson({Type: 'command', Message: 'volumeIncrement'});
+}
+
+function postVolumeDecrement() {
+  postJson({Type: 'command', Message: 'volumeDecrement'});
+}
+
 // utils
 
 function showInfo(info) {
@@ -295,22 +303,13 @@ const HostHomePage = observer(() => {
 //
 
 const PlayerPage = observer(() => {
-  const {store} = useStore();
+  //const {store} = useStore();
+  const store = {media_info: {Active:true, Scrub: 10, Duration: 33}}
   const ref = useRef(null);
-
-  //let media = {
-  //  Active: false,
-  //  Name: "None",
-  //  Paused: true,
-  //  Scrub: 0,
-  //  Duration: 1
-  //}
 
   let media = store.media_info;
 
   const pct = 100 * media.Scrub / media.Duration;
-
-  console.log(pct)
 
   if (!store.media_info.Active) {
     return '';
@@ -322,10 +321,24 @@ const PlayerPage = observer(() => {
     postSeekPlayer(ts)
   }
 
+  function VolumeDecrement () {
+    postVolumeDecrement()
+  }
+
+  function VolumeIncrement () {
+    postVolumeIncrement()
+  }
+
   return <MenuContent name={'Player'}>
+    <div>Video Scrub</div>
     <div ref={ref} onPointerDown={handleClick}
          className={'relative h-16 bg-gray-600'}>
       <div style={{width: pct + '%'}} className={'h-full bg-gray-400'}/>
+    </div>
+    <div>Volume</div>
+    <div className={"flex space-x-2"}>
+      <Button handleClick={VolumeDecrement} className={grayButtonClass}>-</Button>
+      <Button handleClick={VolumeIncrement} className={grayButtonClass}>+</Button>
     </div>
   </MenuContent>;
 

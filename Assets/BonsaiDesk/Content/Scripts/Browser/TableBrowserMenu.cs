@@ -9,11 +9,17 @@ using Vuplex.WebView;
 
 [RequireComponent(typeof(TableBrowser))]
 public class TableBrowserMenu : MonoBehaviour {
+	public static TableBrowserMenu Singleton;
 	public AutoBrowserController autoBrowserController;
 	public float postMediaInfoEvery = 0.5f;
 	private float _postMediaInfoLast;
 	private TableBrowser _browser;
-	
+
+	private void Awake() {
+		if (Singleton == null) {
+			Singleton = this;
+		}
+	}
 
 	private void Start() {
 		_browser                =  GetComponent<TableBrowser>();
@@ -75,6 +81,19 @@ public class TableBrowserMenu : MonoBehaviour {
 						var id = JsonConvert.DeserializeObject<int>(message.Data);
 						KickConnectionId?.Invoke(id);
 						break;
+					case "volumeIncrement":
+						if (VolumeChange != null) {
+							VolumeChange.Invoke(this, 0.25f);
+						}
+
+						break;
+					case "volumeDecrement":
+						if (VolumeChange != null) {
+							VolumeChange.Invoke(this, -0.25f);
+						}
+
+						break;
+						
 				}
 
 				break;
@@ -160,6 +179,8 @@ public class TableBrowserMenu : MonoBehaviour {
 	public event EventHandler<string> BrowseSite;
 
 	public event EventHandler<float> SeekPlayer;
+
+	public event EventHandler<float> VolumeChange;
 
 	private class CsMessageKeyType<T> {
 		public KeyType<T> Data;

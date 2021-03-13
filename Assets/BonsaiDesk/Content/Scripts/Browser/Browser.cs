@@ -263,4 +263,11 @@ public class Browser : MonoBehaviour {
 		public string Message;
 		public string Type;
 	}
+
+	public void SetVolume(float level) {
+		level = Mathf.Clamp(level, 0, 1);
+		var js = $"document.querySelectorAll('video, audio').forEach(mediaElement => mediaElement.volume = {level})";
+		WebViewPrefab.WebView?.ExecuteJavaScript(js);
+
+	}
 }

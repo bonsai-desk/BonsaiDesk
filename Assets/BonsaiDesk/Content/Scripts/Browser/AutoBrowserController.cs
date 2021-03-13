@@ -33,6 +33,9 @@ public class AutoBrowserController : NetworkBehaviour {
 
 	[SyncVar] private float _height;
 	[SyncVar] private ScrubData _idealScrub;
+	[SyncVar] private float _volumeLevel = 0.1f;
+	private float _setVolumeLevelEvery = 0.5f;
+	private float _setVolumeLevelLast;
 
 	private void Start() {
 		// so the server runs a browser but does not sync it yet
@@ -66,6 +69,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		NetworkManagerGame.Singleton.ServerAddPlayer  -= HandleServerAddPlayer;
 		NetworkManagerGame.Singleton.ServerDisconnect -= HandleServerDisconnect;
 		togglePause.CmdSetPausedServer                -= HandleCmdSetPausedServer;
+		TableBrowserMenu.Singleton.VolumeChange       += HandleVolumeChange;
 		
 		NetworkManagerGame.Singleton.ServerAddPlayer  += HandleServerAddPlayer;
 		NetworkManagerGame.Singleton.ServerDisconnect += HandleServerDisconnect;
@@ -149,6 +153,11 @@ public class AutoBrowserController : NetworkBehaviour {
 	}
 
 	private void HandlePlayerClient() {
+		if (Time.time - _setVolumeLevelLast > _setVolumeLevelEvery) {
+			_autoBrowser.PostMessage(YouTubeMessage.SetVolume(_volumeLevel));
+			_setVolumeLevelLast = Time.time;
+		}
+		
 		// post play message if paused/ready and player is behind ideal scrub
 		if (_clientPlayerStatus == PlayerState.Ready && _idealScrub.IsStarted(NetworkTime.time)) {
 			_autoBrowser.PostMessage(YouTubeMessage.Play);
@@ -295,6 +304,10 @@ public class AutoBrowserController : NetworkBehaviour {
 		}
 	}
 
+	private void HandleVolumeChange(object _, float level) {
+		CmdSetVolume(level);
+	}
+
 	private bool ClientInGracePeriod(uint id) {
 		return ClientJoinGracePeriod > NetworkTime.time - _clientsJoinedNetworkTime[id];
 	}
@@ -411,6 +424,11 @@ public class AutoBrowserController : NetworkBehaviour {
 		_idealScrub = ScrubData.PausedAtScrub(timestamp);
 		BeginSync("CmdReadyUp");
 		RpcReadyUp(_idealScrub.CurrentTimeStamp(NetworkTime.time));
+	}
+
+	[Command(ignoreAuthority = true)]
+	public void CmdSetVolume(float level) {
+		_volumeLevel = Mathf.Clamp(level, 0, 1);
 	}
 
 	[Server]
@@ -539,6 +557,14 @@ public class AutoBrowserController : NetworkBehaviour {
 			       $"\"timeStamp\": {timeStamp}" +
 			       "}";
 		}
+		
+		public static string SetVolume(double level) {
+			return "{" +
+			       "\"type\": \"video\", " +
+			       "\"command\": \"setVolume\", " +
+			       $"\"level\": {level}" +
+			       "}";
+		}
 	}
 
 	private readonly struct ContentInfo {
@@ -624,5 +650,4 @@ public class AutoBrowserController : NetworkBehaviour {
 		}
 		return new MediaInfo();
 	}
-	
 }
