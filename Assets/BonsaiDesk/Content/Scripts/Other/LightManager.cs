@@ -61,6 +61,11 @@ public class LightManager : MonoBehaviour {
 		Garden.SetFloatArray("lightLevels", lightLevels);
 	}
 
+	private void OnApplicationQuit()
+	{
+		Garden.SetInt("numLights", 0);
+	}
+
 	private void HandleOrient(bool oriented) {
 		if (oriented) {
 			StartCoroutine(FadeOnMain());

@@ -400,6 +400,7 @@ public class MoveToDesk : MonoBehaviour
         this.tableEdge = tableEdge;
         if (tableEdge != null && tableControls != null)
         {
+            Debug.LogError(tableEdge.position);
             tableControls.position = tableEdge.position;
             tableControls.rotation = tableEdge.rotation;
             GetComponent<DeskController>().UpdateHolePositionsInShader();
