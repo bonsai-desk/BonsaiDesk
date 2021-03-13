@@ -1,7 +1,7 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import './Menu.css';
 import {postJson} from '../utilities';
-import {Button} from '../Components/Button';
+import {Button} from '../components/Button';
 import axios from 'axios';
 import DoorOpen from '../static/door-open.svg';
 import LinkImg from '../static/link.svg';
@@ -12,13 +12,15 @@ import {BeatLoader, BounceLoader} from 'react-spinners';
 import {observer} from 'mobx-react-lite';
 import {action, autorun} from 'mobx';
 
-let API_BASE = 'https://api.desk.link';
+const API_BASE = 'https://api.desk.link';
 
 const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 const redButtonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
 const greenButtonClass = 'py-4 px-8 font-bold bg-green-800 active:bg-green-700 hover:bg-green-600 rounded cursor-pointer flex flex-wrap content-center';
 const grayButtonClass = 'py-4 px-8 font-bold bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
 const grayButtonClassInert = 'py-4 px-8 font-bold bg-gray-800 rounded flex flex-wrap content-center';
+
+// post data
 
 function postBrowseYouTube() {
   postJson({Type: 'command', Message: 'browseYouTube'});
@@ -45,6 +47,31 @@ function postKickConnectionId(id) {
   postJson({Type: 'command', Message: 'kickConnectionId', Data: id});
 }
 
+function postSeekPlayer(ts) {
+  postJson({Type: 'command', Message: 'seekPlayer', Data: ts});
+}
+
+// utils
+
+function showInfo(info) {
+  switch (info[0]) {
+    case 'player_info':
+      return showPlayerInfo(info[1]);
+    case 'user_info':
+      return JSON.stringify(info);
+    default:
+      return info[1] ? JSON.stringify(info[1], null, 2) : '';
+  }
+}
+
+function showPlayerInfo(playerInfo) {
+  return '[' + playerInfo.map(info => {
+    return `(${info.Name}, ${info.ConnectionId})`;
+  }).join(' ') + ']';
+}
+
+//
+
 function ListItem(props) {
   let {selected, handleClick, inactive = false} = props;
 
@@ -57,7 +84,7 @@ function ListItem(props) {
         <div className={buttonClassInactive}>
           {props.children}
         </div>
-    )
+    );
   }
 
   let className = selected ? buttonClassSelected : buttonClass;
@@ -176,7 +203,13 @@ function MenuContent(props) {
 
 }
 
-let ClientHomePage = () => {
+function LoadingHomePage() {
+  return <div className={'flex justify-center w-full flex-wrap'}>
+    <BounceLoader size={200} color={'#737373'}/>
+  </div>;
+}
+
+function ClientHomePage() {
   return (
       <div className={'flex'}>
         <InfoItem title={'Connected'} slug={'You are connected to a host'}
@@ -186,9 +219,9 @@ let ClientHomePage = () => {
         </InfoItem>
       </div>
   );
-};
+}
 
-let RoomInfo = observer(() => {
+const RoomInfo = observer(() => {
   let {store} = useStore();
 
   let OpenRoom =
@@ -238,7 +271,7 @@ let RoomInfo = observer(() => {
 
 });
 
-let HostHomePage = observer(() => {
+const HostHomePage = observer(() => {
 
   let {store} = useStore();
 
@@ -259,13 +292,46 @@ let HostHomePage = observer(() => {
 
 });
 
-let LoadingHomePage = () => {
-  return <div className={'flex justify-center w-full flex-wrap'}>
-    <BounceLoader size={200} color={'#737373'}/>
-  </div>;
-};
+//
 
-let HomePage = observer(() => {
+const PlayerPage = observer(() => {
+  const {store} = useStore();
+  const ref = useRef(null);
+
+  //let media = {
+  //  Active: false,
+  //  Name: "None",
+  //  Paused: true,
+  //  Scrub: 0,
+  //  Duration: 1
+  //}
+
+  let media = store.media_info;
+
+  const pct = 100 * media.Scrub / media.Duration;
+
+  console.log(pct)
+
+  if (!store.media_info.Active) {
+    return '';
+  }
+
+  function handleClick(e) {
+    let pct = (e.clientX - ref.current.offsetLeft) / ref.current.offsetWidth;
+    let ts = pct * store.media_info.Duration
+    postSeekPlayer(ts)
+  }
+
+  return <MenuContent name={'Player'}>
+    <div ref={ref} onPointerDown={handleClick}
+         className={'relative h-16 bg-gray-600'}>
+      <div style={{width: pct + '%'}} className={'h-full bg-gray-400'}/>
+    </div>
+  </MenuContent>;
+
+});
+
+const HomePage = observer(() => {
 
   let {store} = useStore();
 
@@ -355,9 +421,9 @@ function JoinDeskPage(props) {
           <div className={'p-2 rounded space-y-4 text-2xl'}>
             <div className={'flex space-x-4'}>
               <JoinDeskButton handleClick={handleClick}
-                              char={'L'}/>
+                              char={'A'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'R'}/>
+                              char={'B'}/>
               <JoinDeskButton handleClick={handleClick}
                               char={'C'}/>
             </div>
@@ -398,7 +464,7 @@ function VideosPage() {
   </MenuContent>;
 }
 
-let SettingsPage = observer(() => {
+const DebugPage = observer(() => {
   let {store} = useStore();
 
   let addFakeIpPort = action((store) => {
@@ -430,78 +496,85 @@ let SettingsPage = observer(() => {
     store.room_open = !store.room_open;
   });
 
+  let containerClass = 'flex flex-wrap';
+
   return (
-      <MenuContent name={'Settings'}>
-        <div className={'flex space-x-2'}>
-          <Button handleClick={() => {
-            setNetState(store, 'Neutral');
-          }} className={grayButtonClass}>Neutral
-          </Button>
-          <Button handleClick={() => {
-            setNetState(store, 'HostWaiting');
-          }} className={grayButtonClass}>HostWaiting
-          </Button>
-          <Button handleClick={() => {
-            setNetState(store, 'Hosting');
-          }} className={grayButtonClass}>Hosting
-          </Button>
-          <Button handleClick={() => {
-            setNetState(store, 'ClientConnected');
-          }} className={grayButtonClass}>ClientConnected
-          </Button>
+      <MenuContent name={'Debug'}>
+        <div className={'flex'}>
+
+          <div className={'w-1/2'}>
+            <ul>
+              {Object.entries(store).map(info => {
+                return <li className={'mb-2'} key={info[0]}>
+                  <span className={'font-bold'}>{info[0]}</span>{': '}<span
+                    className={'text-gray-400'}>{showInfo(info)}</span>
+                </li>;
+              })}
+            </ul>
+          </div>
+
+          <div className={'w-1/2'}>
+
+            <div>Host State</div>
+            <div className={containerClass}>
+              <Button handleClick={() => {
+                setNetState(store, 'Neutral');
+              }} className={grayButtonClass}>Neutral
+              </Button>
+              <Button handleClick={() => {
+                setNetState(store, 'HostWaiting');
+              }} className={grayButtonClass}>HostWaiting
+              </Button>
+              <Button handleClick={() => {
+                setNetState(store, 'Hosting');
+              }} className={grayButtonClass}>Hosting
+              </Button>
+              <Button handleClick={() => {
+                setNetState(store, 'ClientConnected');
+              }} className={grayButtonClass}>ClientConnected
+              </Button>
 
 
+            </div>
+
+            <div>Connection</div>
+            <div className={containerClass}>
+              <Button className={grayButtonClass} handleClick={() => {
+                addFakeIpPort(store);
+              }}>+ fake ip/port
+              </Button>
+              <Button className={grayButtonClass} handleClick={() => {
+                rmFakeIpPort(store);
+              }}>- fake ip/port
+              </Button>
+              <Button handleClick={() => {
+                addFakeClient(store);
+              }} className={grayButtonClass}>+ fake client
+              </Button>
+              <Button handleClick={() => {
+                rmFakeClient(store);
+              }} className={grayButtonClass}>- fake client
+              </Button>
+            </div>
+
+            <div>Room Status</div>
+
+            <div className={containerClass}>
+              <Button handleClick={() => {
+                toggleRoomOpen(store);
+              }} className={grayButtonClass}>
+                toggle room open
+              </Button>
+            </div>
+
+          </div>
+
         </div>
-        <div className={'flex space-x-2'}>
-          <Button className={grayButtonClass} handleClick={() => {
-            addFakeIpPort(store);
-          }}>+ fake ip/port
-          </Button>
-          <Button className={grayButtonClass} handleClick={() => {
-            rmFakeIpPort(store);
-          }}>- fake ip/port
-          </Button>
-          <Button handleClick={() => {
-            addFakeClient(store);
-          }} className={grayButtonClass}>+ fake client
-          </Button>
-          <Button handleClick={() => {
-            rmFakeClient(store);
-          }} className={grayButtonClass}>- fake client
-          </Button>
-        </div>
-        <Button handleClick={() => {
-          toggleRoomOpen(store);
-        }} className={grayButtonClass}>
-          toggle room open
-        </Button>
-        <div className={'flex space-x-2'}>
-        </div>
-        <ul>
-          {Object.entries(store).map(info => {
-            return <li key={info[0]}>{info[0]}{': '}{showInfo(info)}</li>;
-          })}
-        </ul>
       </MenuContent>
   );
 });
 
-function showInfo(info) {
-  switch (info[0]) {
-    case 'player_info':
-      return showPlayerInfo(info[1]);
-    case 'user_info':
-      return JSON.stringify(info);
-    default:
-      return info[1] ? info[1].toString() : '';
-  }
-}
-
-function showPlayerInfo(playerInfo) {
-  return '[' + playerInfo.map(info => {
-    return `(${info.Name}, ${info.ConnectionId})`;
-  }).join(' ') + ']';
-}
+//
 
 let Menu = observer(() => {
 
@@ -558,20 +631,21 @@ let Menu = observer(() => {
   const pages = [
     {name: 'Home', component: HomePage},
     {name: 'Join Desk', component: JoinDeskPage},
-    {name: 'Videos', component: VideosPage}
+    {name: 'Videos', component: VideosPage},
+    {name: 'Player', component: PlayerPage},
   ];
 
   if (store.build === 'DEVELOPMENT') {
-    pages.push({name: 'Settings', component: SettingsPage})
+    pages.push({name: 'Debug', component: DebugPage});
   }
 
   let SelectedPage = pages[active].component;
 
-  let joinDeskActive = store.network_state === "Hosting" && !store._room_open
+  let joinDeskActive = store.network_state === 'Hosting' && !store._room_open;
 
   return (
       <div className={'flex text-lg text-gray-500 h-full'}>
-        <div className={'w-4/12 bg-black overflow-auto scrollhost static'}>
+        <div className={'w-4/12 bg-black overflow-auto scroll-host static'}>
           <div className={'w-4/12 bg-black fixed'}>
             <SettingsTitle>
               Menu
@@ -580,8 +654,9 @@ let Menu = observer(() => {
           <div className={'h-16'}/>
           <SettingsList>
             {pages.map((info, i) => {
-              if (info.name.toLowerCase() === "join desk" && !joinDeskActive) {
-                return <ListItem key={info.name} inactive={true} >{info.name}</ListItem>;
+              if (info.name.toLowerCase() === 'join desk' && !joinDeskActive) {
+                return <ListItem key={info.name}
+                                 inactive={true}>{info.name}</ListItem>;
               }
               return <ListItem key={info.name} handleClick={() => {
                 setActive(i);
@@ -589,7 +664,7 @@ let Menu = observer(() => {
             })}
           </SettingsList>
         </div>
-        <div className={'bg-gray-900 z-10 w-full overflow-auto scrollhost'}>
+        <div className={'bg-gray-900 z-10 w-full overflow-auto scroll-host'}>
           <SelectedPage navHome={navHome}/>
         </div>
       </div>

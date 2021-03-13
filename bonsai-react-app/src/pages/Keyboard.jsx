@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {Shift, SymbolsOrNum, NumsOrChar, Backspace, Enter, KeyChar, Space} from '../Components/Keys';
+import {Shift, SymbolsOrNum, NumsOrChar, Backspace, Enter, KeyChar, Space} from '../components/Keys';
 
 function Keyboard() {
   let [shift, setShift] = useState(false);

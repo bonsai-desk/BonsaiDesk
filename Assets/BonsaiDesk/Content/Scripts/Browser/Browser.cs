@@ -184,7 +184,7 @@ public class Browser : MonoBehaviour {
 	}
 
 	public void PostMessage(string data) {
-		WebViewPrefab.WebView.PostMessage(data);
+		WebViewPrefab.WebView?.PostMessage(data);
 	}
 
 	public void GoBack() {
