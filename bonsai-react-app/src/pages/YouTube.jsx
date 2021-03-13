@@ -2,6 +2,15 @@ import YouTube from 'react-youtube';
 import React, {useCallback, useEffect, useState} from 'react';
 import {useHistory} from 'react-router-dom';
 
+function setVol () {
+  console.log(document.getElementsByTagName("iframe"))
+  document.querySelectorAll('video, audio').forEach(mediaElement => {
+    console.log("hit")
+    console.log(mediaElement)
+    mediaElement.volume = 0.25
+  })
+}
+
 const PlayerState = {
   UNSTARTED: -1,
   ENDED: 0,
@@ -234,6 +243,9 @@ let Video = (props) => {
           console.log('COMMAND: readyUp');
           readyUp(json.timeStamp);
           break;
+        case "setVolume":
+          player.setVolume(100 * json.level)
+          break;
         default:
           console.log('command: not handled (video) ' + event.data);
           break;
@@ -247,6 +259,8 @@ let Video = (props) => {
   useEffect(() => {
     console.log('bonsai: add ping interval');
     let pingPlayerTime = setInterval(() => {
+      // todo
+      setVol()
       let current_time = 0;
       let duration = 1;
       if (player != null && player.getCurrentTime() != null && player.getDuration() != null) {

@@ -33,6 +33,9 @@ public class AutoBrowserController : NetworkBehaviour {
 
 	[SyncVar] private float _height;
 	[SyncVar] private ScrubData _idealScrub;
+	[SyncVar] private float _volumeLevel = 1.0f;
+	private float _setVolumeLevelEvery = 0.5f;
+	private float _setVolumeLevelLast;
 
 	private void Start() {
 		// so the server runs a browser but does not sync it yet
@@ -66,10 +69,12 @@ public class AutoBrowserController : NetworkBehaviour {
 		NetworkManagerGame.Singleton.ServerAddPlayer  -= HandleServerAddPlayer;
 		NetworkManagerGame.Singleton.ServerDisconnect -= HandleServerDisconnect;
 		togglePause.CmdSetPausedServer                -= HandleCmdSetPausedServer;
+		TableBrowserMenu.Singleton.VolumeChange       -= HandleVolumeChange;
 		
 		NetworkManagerGame.Singleton.ServerAddPlayer  += HandleServerAddPlayer;
 		NetworkManagerGame.Singleton.ServerDisconnect += HandleServerDisconnect;
 		togglePause.CmdSetPausedServer                += HandleCmdSetPausedServer;
+		TableBrowserMenu.Singleton.VolumeChange       += HandleVolumeChange;
 
 		if (tabletSpot != null) {
 			tabletSpot.SetNewVideo -= HandleSetNewVideo;
@@ -149,6 +154,11 @@ public class AutoBrowserController : NetworkBehaviour {
 	}
 
 	private void HandlePlayerClient() {
+		if (Time.time - _setVolumeLevelLast > _setVolumeLevelEvery) {
+			_autoBrowser.PostMessage(YouTubeMessage.SetVolume(_volumeLevel));
+			_setVolumeLevelLast = Time.time;
+		}
+		
 		// post play message if paused/ready and player is behind ideal scrub
 		if (_clientPlayerStatus == PlayerState.Ready && _idealScrub.IsStarted(NetworkTime.time)) {
 			_autoBrowser.PostMessage(YouTubeMessage.Play);
@@ -295,6 +305,10 @@ public class AutoBrowserController : NetworkBehaviour {
 		}
 	}
 
+	private void HandleVolumeChange(object _, float delta) {
+		CmdChangeVolumeLevel(delta);
+	}
+
 	private bool ClientInGracePeriod(uint id) {
 		return ClientJoinGracePeriod > NetworkTime.time - _clientsJoinedNetworkTime[id];
 	}
@@ -411,6 +425,11 @@ public class AutoBrowserController : NetworkBehaviour {
 		_idealScrub = ScrubData.PausedAtScrub(timestamp);
 		BeginSync("CmdReadyUp");
 		RpcReadyUp(_idealScrub.CurrentTimeStamp(NetworkTime.time));
+	}
+
+	[Command(ignoreAuthority = true)]
+	public void CmdChangeVolumeLevel(float delta) {
+		_volumeLevel = Mathf.Clamp(_volumeLevel + delta, 0, 1);
 	}
 
 	[Server]
@@ -539,6 +558,14 @@ public class AutoBrowserController : NetworkBehaviour {
 			       $"\"timeStamp\": {timeStamp}" +
 			       "}";
 		}
+		
+		public static string SetVolume(double level) {
+			return "{" +
+			       "\"type\": \"video\", " +
+			       "\"command\": \"setVolume\", " +
+			       $"\"level\": {level}" +
+			       "}";
+		}
 	}
 
 	private readonly struct ContentInfo {
@@ -601,6 +628,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		public bool Paused;
 		public float Scrub;
 		public float Duration;
+		public float VolumeLevel;
 
 		public MediaInfo() {
 			Active               = false;
@@ -608,6 +636,7 @@ public class AutoBrowserController : NetworkBehaviour {
 			Paused               = true;
 			Scrub                = 0f;
 			Duration             = 1f;
+			VolumeLevel  = 0f;
 		}
 	}
 
@@ -618,11 +647,11 @@ public class AutoBrowserController : NetworkBehaviour {
 				Name = "youtube." + _contentInfo.ID, 
 				Paused = !_idealScrub.Active, 
 				Scrub = _clientPlayerTimeStamp,
-				Duration = _clientPlayerDuration
+				Duration = _clientPlayerDuration,
+				VolumeLevel = _volumeLevel
 			};
 
 		}
 		return new MediaInfo();
 	}
-	
 }
