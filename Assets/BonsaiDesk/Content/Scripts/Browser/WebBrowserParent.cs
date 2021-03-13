@@ -34,6 +34,9 @@ public class WebBrowserParent : NetworkBehaviour {
 	public void SetActive(bool active) {
 		// hide and disable interaction with kb/nav
 		// move webbrowser to about:blank and disable
+		webBrowser.SetHidden(!active);
+		keyboardBrowser.SetHidden(!active);
+		webNavBrowser.SetHidden(!active);
 		if (active) {
 			transform.localPosition = _startTransform;
 		}
