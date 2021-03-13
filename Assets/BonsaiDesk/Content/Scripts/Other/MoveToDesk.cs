@@ -8,8 +8,8 @@ using UnityEngine.Events;
 
 public delegate void OrientEvent(bool oriented);
 
-public class MoveToDesk : MonoBehaviour
-{
+public class MoveToDesk : MonoBehaviour {
+    public static MoveToDesk Singleton;
     public Transform tableParent;
 
     public static event OrientEvent OrientationChanged;
@@ -59,6 +59,12 @@ public class MoveToDesk : MonoBehaviour
         {
             if (_oriented != value) OrientationChanged?.Invoke(value);
             _oriented = value;
+        }
+    }
+
+    public void Awake() {
+        if (Singleton == null) {
+            Singleton = this;
         }
     }
 

@@ -10,17 +10,19 @@ public class TableBrowserParent : MonoBehaviour {
 
 	// Start is called before the first frame update
 	private void Start() {
-		TableBrowserMenu.BrowseSite += HandleBrowseSite;
-		WebBrowserParent.CloseWeb   += HandleCloseWeb;
-		TableBrowser.BrowserReady += () =>
-		{
-			Sleep();
-		};
-		_startTransform = TableBrowserMenu.transform.localPosition;
+		MoveToDesk.OrientationChanged += HandleOrientationChange;
+		TableBrowserMenu.BrowseSite   += HandleBrowseSite;
+		WebBrowserParent.CloseWeb     += HandleCloseWeb;
+		TableBrowser.BrowserReady     += Sleep;
+		_startTransform               =  TableBrowserMenu.transform.localPosition;
 	}
 
 	// Update is called once per frame
 	private void Update() { }
+
+	private void HandleOrientationChange(bool oriented) {
+		Sleep();
+	}
 
 	private void HandleCloseWeb(object _, EventArgs e) {
 		SetActive(Browser.Table);
@@ -52,7 +54,7 @@ public class TableBrowserParent : MonoBehaviour {
 		sleeped = true;
 		SetAlt(true);
 		WebBrowserParent.SetActive(false);
-		
+
 		InputManager.Hands.Left.ZTestRegular();
 		InputManager.Hands.Right.ZTestRegular();
 		InputManager.Hands.Left.SetPhysicsLayerRegular();
@@ -62,7 +64,7 @@ public class TableBrowserParent : MonoBehaviour {
 	public void Wake() {
 		sleeped = false;
 		SetAlt(false);
-		
+
 		InputManager.Hands.Left.ZTestOverlay();
 		InputManager.Hands.Right.ZTestOverlay();
 		InputManager.Hands.Left.SetPhysicsLayerForTouchScreen();

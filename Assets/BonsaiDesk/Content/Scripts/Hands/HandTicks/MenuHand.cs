@@ -27,8 +27,15 @@ public class MenuHand : MonoBehaviour, IHandTick
             Init();
         }
 
-        var angleBelowThreshold = angleToHead.AngleBelowThreshold();
-        var menuOpen = tableBrowserParent && !tableBrowserParent.sleeped;
-        menuObject.SetActive(angleBelowThreshold && playerHand.HandComponents.TrackingRecently && !menuOpen);
+        if (!MoveToDesk.Singleton.oriented) {
+            menuObject.SetActive(false);
+            
+        }
+        else {
+            var angleBelowThreshold = angleToHead.AngleBelowThreshold();
+            var menuOpen = tableBrowserParent && !tableBrowserParent.sleeped;
+            menuObject.SetActive(angleBelowThreshold && playerHand.HandComponents.TrackingRecently && !menuOpen);
+        }
+
     }
 }
