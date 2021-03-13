@@ -4,7 +4,6 @@ using System.Linq;
 using Mirror;
 using Newtonsoft.Json;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Vuplex.WebView;
 
 [RequireComponent(typeof(TableBrowser))]
@@ -72,7 +71,6 @@ public class TableBrowserMenu : MonoBehaviour {
 						break;
 					case "seekPlayer":
 						var ts = float.Parse(message.Data);
-						Debug.Log($"seekPlayer {ts}");
 						autoBrowserController.CmdReadyUp(ts);
 
 						break;
@@ -177,8 +175,6 @@ public class TableBrowserMenu : MonoBehaviour {
 	public event Action<int> KickConnectionId;
 
 	public event EventHandler<string> BrowseSite;
-
-	public event EventHandler<float> SeekPlayer;
 
 	public event EventHandler<float> VolumeChange;
 
