@@ -106,7 +106,7 @@ public class CustomInputModule : StandaloneInputModule {
 				handActive = Active.Left;
 			}
 
-			if (leftValid || rightValid) {
+			if (leftValid && leftHover || rightValid && rightHover) {
 				foundScreen = true;
 			}
 

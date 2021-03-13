@@ -244,6 +244,7 @@ public class HandComponents
     public void SetHandColliderActiveForScreen(bool active)
     {
         Physics.IgnoreLayerCollision(_touchScreenSurfaceLayer, _physicsLayer, !active);
+        Physics.IgnoreLayerCollision(_touchScreenSurfaceLayer, _onlyScreenLayer, !active);
     }
 
     private static void SetLayerRecursive(Transform go, int layer)
