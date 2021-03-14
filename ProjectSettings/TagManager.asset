@@ -38,7 +38,7 @@ TagManager:
   - bearing
   - onlyHands
   - doNotRender
-  - 
+  - IndexTipForTouchScreenSurface
   - noHand
   - networkPlayer
   - 
