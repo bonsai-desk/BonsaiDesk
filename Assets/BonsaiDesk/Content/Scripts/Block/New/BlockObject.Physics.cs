@@ -118,7 +118,7 @@ public partial class BlockObject
 
                         var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
                         blockObject.CmdAddBlock(Blocks[coord].id, blockCoord,
-                            BlockUtility.SnapToNearestRightAngle(localRotation), true, netIdentity);
+                            BlockUtility.SnapToNearestRightAngle(localRotation), netIdentity);
 
                         return;
                     }

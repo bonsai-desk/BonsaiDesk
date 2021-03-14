@@ -194,8 +194,7 @@ public partial class BlockObject : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdAddBlock(byte id, Vector3Int coord, Quaternion rotation, bool updateTheMesh,
-        NetworkIdentity blockToDestroy)
+    private void CmdAddBlock(byte id, Vector3Int coord, Quaternion rotation, NetworkIdentity blockToDestroy)
     {
         blockToDestroy.GetComponent<AutoAuthority>().ServerStripOwnerAndDestroy();
 
