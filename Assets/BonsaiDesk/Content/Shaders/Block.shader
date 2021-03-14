@@ -80,6 +80,7 @@
             }
 
             fixed2 uv2 = IN.uv2_BreakTex;
+            health = clamp(health, 0, 1);
             health = 1 - health;
             uv2.x += round(health * 10.0) / 11.0;
             fixed4 b = tex2D(_BreakTex, uv2);

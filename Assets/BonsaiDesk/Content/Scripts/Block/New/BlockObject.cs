@@ -38,6 +38,10 @@ public partial class BlockObject : NetworkBehaviour
     //different depending on the order of block add/remove even though the final result looks the same
     private Dictionary<Vector3Int, MeshBlock> _meshBlocks = new Dictionary<Vector3Int, MeshBlock>();
 
+    //contains the keys for entries in _meshBlocks which are damages. This saves having to loop through
+    //the entire _meshBlocks to check for damaged blocks
+    private HashSet<Vector3Int> _damagedBlocks = new HashSet<Vector3Int>();
+
     //mesh stuff
     private MeshFilter _meshFilter;
     private Mesh _mesh;
@@ -70,19 +74,19 @@ public partial class BlockObject : NetworkBehaviour
         Blocks.Add(Vector3Int.zero, new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
         if (debug)
         {
-            // for (int i = 1; i < 6; i++)
-            // {
-            //     Blocks.Add(new Vector3Int(0, 0, i),
-            //         new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            // }
-            Blocks.Add(new Vector3Int(0, 0, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            Blocks.Add(new Vector3Int(1, 0, 0), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            Blocks.Add(new Vector3Int(1, 0, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            for (int i = 1; i < 6; i++)
+            {
+                Blocks.Add(new Vector3Int(0, 0, i),
+                    new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            }
 
-            Blocks.Add(new Vector3Int(0, 1, 0), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            Blocks.Add(new Vector3Int(0, 1, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            Blocks.Add(new Vector3Int(1, 1, 0), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            Blocks.Add(new Vector3Int(1, 1, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            // Blocks.Add(new Vector3Int(0, 0, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            // Blocks.Add(new Vector3Int(1, 0, 0), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            // Blocks.Add(new Vector3Int(1, 0, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            // Blocks.Add(new Vector3Int(0, 1, 0), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            // Blocks.Add(new Vector3Int(0, 1, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            // Blocks.Add(new Vector3Int(1, 1, 0), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            // Blocks.Add(new Vector3Int(1, 1, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
         }
 
         Init();
@@ -106,10 +110,6 @@ public partial class BlockObject : NetworkBehaviour
 
         //make copy of material so material asset is not changed
         blockObjectMaterial = new Material(blockObjectMaterial);
-
-        blockObjectMaterial.SetVectorArray("damagedBlocks",
-            new[] {new Vector4(0, 0, 0, 0.5f), new Vector4(0, 1, 0, 0.8f)});
-        blockObjectMaterial.SetInt("numDamagedBlocks", 2);
 
         PhysicsStart();
 
@@ -135,6 +135,11 @@ public partial class BlockObject : NetworkBehaviour
         CreateInitialMesh();
         Blocks.Callback -= OnBlocksDictionaryChange;
         Blocks.Callback += OnBlocksDictionaryChange;
+    }
+
+    private void Update()
+    {
+        UpdateDamagedBlocks();
     }
 
     private void FixedUpdate()
@@ -173,6 +178,7 @@ public partial class BlockObject : NetworkBehaviour
         meshObject.transform.SetParent(transform, false);
         var meshRenderer = meshObject.AddComponent<MeshRenderer>();
         meshRenderer.sharedMaterial = blockObjectMaterial;
+        _autoAuthority.SetCachedMaterial(blockObjectMaterial);
         _autoAuthority.meshRenderer = meshRenderer;
         _meshFilter = meshObject.AddComponent<MeshFilter>();
 
@@ -336,10 +342,71 @@ public partial class BlockObject : NetworkBehaviour
 
     private void DamageBlock(Vector3Int coord)
     {
-        if (Blocks.ContainsKey(coord))
+        if (!Blocks.ContainsKey(coord) || !_meshBlocks.ContainsKey(coord))
         {
-            CmdRemoveBlock(coord);
+            return;
         }
+
+        var meshBlock = _meshBlocks[coord];
+
+        //if health is already below 0, then we have probably already sent a command to remove the block
+        //we don't want to send a duplicate command, so just return
+        if (meshBlock.health < 0)
+        {
+            return;
+        }
+
+        const float BreakTime = 0.225f;
+        meshBlock.health -= Time.deltaTime / BreakTime;
+        meshBlock.framesSinceLastDamage = 0;
+
+        if (meshBlock.health < 0)
+        {
+            _damagedBlocks.Remove(coord);
+            CmdRemoveBlock(coord);
+            return;
+        }
+
+        if (!_damagedBlocks.Contains(coord))
+        {
+            _damagedBlocks.Add(coord);
+        }
+    }
+
+    private void UpdateDamagedBlocks()
+    {
+        var damagedBlocksForShader = new Vector4[10];
+        var noLongerDamagedBlocks = new Queue<Vector3Int>();
+
+        int i = 0;
+        foreach (var block in _damagedBlocks)
+        {
+            if (i >= damagedBlocksForShader.Length)
+            {
+                break;
+            }
+
+            if (_meshBlocks.TryGetValue(block, out var meshBlock))
+            {
+                meshBlock.framesSinceLastDamage++;
+                if (meshBlock.framesSinceLastDamage >= 3)
+                {
+                    meshBlock.health = 1;
+                    noLongerDamagedBlocks.Enqueue(block);
+                }
+
+                damagedBlocksForShader[i] = new Vector4(block.x, block.y, block.z, meshBlock.health);
+                i++;
+            }
+        }
+
+        while (noLongerDamagedBlocks.Count > 0)
+        {
+            _damagedBlocks.Remove(noLongerDamagedBlocks.Dequeue());
+        }
+
+        blockObjectMaterial.SetVectorArray("damagedBlocks", damagedBlocksForShader);
+        blockObjectMaterial.SetInt("numDamagedBlocks", i);
     }
 
     enum UpdateType
