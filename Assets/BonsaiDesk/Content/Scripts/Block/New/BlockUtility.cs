@@ -415,7 +415,7 @@ public static partial class BlockUtility
     public static bool AboutEquals(Vector3 v1, Vector3 v2)
     {
         //+ or - 1mm
-        float tolerance = 0.001f;
+        const float tolerance = 0.001f;
         float distance = (v2.x - v1.x) * (v2.x - v1.x) + (v2.y - v1.y) * (v2.y - v1.y) + (v2.z - v1.z) * (v2.z - v1.z);
         return distance < tolerance * tolerance;
     }
