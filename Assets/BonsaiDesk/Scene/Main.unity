@@ -13626,7 +13626,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 4a2b95cadd2e2de41b195f8e0fd8b89f,
         type: 3}
       propertyPath: m_RootOrder
-      value: 18
+      value: 17
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 4a2b95cadd2e2de41b195f8e0fd8b89f,
         type: 3}
@@ -23188,7 +23188,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1757354511}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.021, y: 0, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1368517017}
@@ -26297,7 +26297,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2069867538}
   m_Layer: 0
-  m_Name: Table
+  m_Name: AutoBrowserParent
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
