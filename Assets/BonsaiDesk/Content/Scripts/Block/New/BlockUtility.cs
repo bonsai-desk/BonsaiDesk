@@ -426,6 +426,47 @@ public static partial class BlockUtility
         return Mathf.Abs(Quaternion.Dot(q1, q2)) > 0.98888889f;
     }
 
+    //ignoreBlock is the block you are going to remove but haven't removed yet
+    public static Dictionary<Vector3Int, SyncBlock> FloodFill(Vector3Int fillStartPosition, Vector3Int ignoreBlock,
+        SyncDictionary<Vector3Int, SyncBlock> blocks)
+    {
+        Dictionary<Vector3Int, SyncBlock> filledBlocks = new Dictionary<Vector3Int, SyncBlock>();
+        Stack<Vector3Int> blocksToCheck = new Stack<Vector3Int>();
+
+        blocksToCheck.Push(fillStartPosition);
+
+        while (blocksToCheck.Count > 0)
+        {
+            Vector3Int checkPosition = blocksToCheck.Pop();
+            if (!filledBlocks.ContainsKey(checkPosition) && blocks.ContainsKey(checkPosition))
+            {
+                filledBlocks.Add(checkPosition, blocks[checkPosition]);
+                if (Blocks.blocks[blocks[checkPosition].id].blockType == Block.BlockType.normal)
+                    for (int i = 0; i < 6; i++)
+                        if (checkPosition + Directions[i] != ignoreBlock)
+                            blocksToCheck.Push(checkPosition + Directions[i]);
+            }
+        }
+
+        return filledBlocks;
+    }
+
+    public static HashSet<Vector3Int> GetSurroundingBlocks(Vector3Int coord,
+        SyncDictionary<Vector3Int, SyncBlock> blocks)
+    {
+        var surroundingBlocks = new HashSet<Vector3Int>();
+        foreach (var direction in Directions)
+        {
+            Vector3Int testPos = coord + direction;
+            if (blocks.ContainsKey(testPos))
+            {
+                surroundingBlocks.Add(testPos);
+            }
+        }
+
+        return surroundingBlocks;
+    }
+
     // public static Vector3Int GetBlockCoord(Vector3 positionLocalToCubeArea)
     // {
     //     Vector3 offset = new Vector3(0.5f, 0.5f, 0.5f);

@@ -70,10 +70,11 @@ public partial class BlockObject : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
-
-        Blocks.Add(Vector3Int.zero, new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+        
         if (debug)
         {
+            Blocks.Add(Vector3Int.zero, new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            
             for (int i = 1; i < 6; i++)
             {
                 Blocks.Add(new Vector3Int(0, 0, i),
@@ -279,7 +280,50 @@ public partial class BlockObject : NetworkBehaviour
         }
         else
         {
-            Blocks.Remove(coord);
+            var filledBlocksGroups = new List<Dictionary<Vector3Int, SyncBlock>>();
+
+            var surroundingBlocks = BlockUtility.GetSurroundingBlocks(coord, Blocks);
+            foreach (var block in surroundingBlocks)
+            {
+                bool blockAlreadyFilled = false;
+                for (int i = 0; i < filledBlocksGroups.Count; i++)
+                {
+                    if (filledBlocksGroups[i].ContainsKey(block))
+                    {
+                        blockAlreadyFilled = true;
+                        break;
+                    }
+                }
+
+                if (!blockAlreadyFilled)
+                {
+                    filledBlocksGroups.Add(BlockUtility.FloodFill(block, coord, Blocks));
+                }
+            }
+
+            //if there is only one group of filled blocks, just remove the block
+            if (filledBlocksGroups.Count <= 1)
+            {
+                Blocks.Remove(coord);
+            }
+            else //if there are 2 or more groups of filled blocks, we must delete this object and create 2 or more new objects
+            {
+                _autoAuthority.ServerStripOwnerAndDestroy();
+
+                foreach (var filledBlocks in filledBlocksGroups)
+                {
+                    var newBlockObject = Instantiate(StaticPrefabs.instance.blockObjectPrefab, transform.position,
+                        transform.rotation);
+
+                    var newBlockObjectScript = newBlockObject.GetComponent<BlockObject>();
+                    foreach (var pair in filledBlocks)
+                    {
+                        newBlockObjectScript.Blocks.Add(pair.Key, pair.Value);
+                    }
+                    
+                    NetworkServer.Spawn(newBlockObject);
+                }
+            }
         }
     }
 
