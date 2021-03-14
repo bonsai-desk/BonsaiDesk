@@ -9,7 +9,8 @@ public class CustomInputModule : StandaloneInputModule {
 
 	public Vector3 cursorRoot;
 	public OVRCursor m_Cursor;
-	public List<Transform> screens;
+	public bool drawcursor;
+	public List<MeshRenderer> screens;
 	public float hoverDistance = 0.1f;
 	public float clickDistance = 0.075f / 2;
 	public Camera mainCamera;
@@ -65,11 +66,11 @@ public class CustomInputModule : StandaloneInputModule {
 		inClickRegion     = false;
 
 		var foundScreen = false;
-		foreach (var screen in screens) {
-			if (!screen.gameObject.activeInHierarchy)
-			{
+		foreach (var mesh in screens) {
+			if (!mesh.isVisible) {
 				continue;
 			}
+			var screen = mesh.transform;
 			var leftFingerInScreen  = screen.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[1]);
 			var rightFingerInScreen = screen.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[6]);
 
@@ -124,7 +125,9 @@ public class CustomInputModule : StandaloneInputModule {
 				break;
 			}
 
-			m_Cursor.SetCursorStartDest(Vector3.zero, Vector3.zero, Vector3.zero);
+			if (drawcursor) {
+				m_Cursor.SetCursorStartDest(Vector3.zero, Vector3.zero, Vector3.zero);
+			}
 		}
 
 		if (!foundScreen) {
@@ -147,8 +150,10 @@ public class CustomInputModule : StandaloneInputModule {
 	private void ProcessCursor(Vector3 fingerInScreen, Transform screen) {
 		var fingerInScreen0Z = fingerInScreen;
 		fingerInScreen0Z.z = 0;
-		m_Cursor.SetCursorStartDest(screen.TransformPoint(fingerInScreen),
-		                            screen.TransformPoint(fingerInScreen0Z), -Vector3.forward);
+		if (drawcursor) {
+			m_Cursor.SetCursorStartDest(screen.TransformPoint(fingerInScreen),
+										screen.TransformPoint(fingerInScreen0Z), -Vector3.forward);
+		}
 	}
 
 	private void ProcessRay(Vector3 fingerInScreen, Transform screen, OVRPointerEventData leftData, bool leftValid,

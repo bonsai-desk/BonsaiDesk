@@ -8497,6 +8497,7 @@ MonoBehaviour:
   m_ForceModuleActive: 0
   cursorRoot: {x: 0, y: 0, z: 0}
   m_Cursor: {fileID: 1695270410}
+  drawcursor: 0
   screens: []
   hoverDistance: 0.1
   clickDistance: 0.015

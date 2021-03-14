@@ -12,18 +12,12 @@ public class WebBrowserParent : NetworkBehaviour {
 	public WebNavBrowserController webNavBrowserController;
 	public GameObject VideoPrefab;
 	public Transform videoSpawnLocation;
-	private Vector3 _altTransform;
-	private Vector3 _startTransform;
 	public TableBrowserParent tableBrowserParent;
 
 	// Start is called before the first frame update
 	private void Start() {
 		keyboardBrowser.ListenersReady += SetupKeyboardBrowser;
 		webNavBrowser.BrowserReady     += SetupWebWebNavBrowser;
-
-		_startTransform         = transform.localPosition;
-		_altTransform           = new Vector3(0f, -10f, 0f);
-		transform.localPosition = _altTransform;
 	}
 
 	// Update is called once per frame
@@ -31,16 +25,12 @@ public class WebBrowserParent : NetworkBehaviour {
 
 	public event EventHandler CloseWeb;
 
-	public void SetActive(bool active) {
-		// hide and disable interaction with kb/nav
-		// move webbrowser to about:blank and disable
-		if (active) {
-			transform.localPosition = _startTransform;
-		}
-		else {
-			Debug.Log("[BONSAI] SetActive");
+	public void SetAllHidden(bool hidden) {
+		webBrowser.SetHidden(hidden);
+		keyboardBrowser.SetHidden(hidden);
+		webNavBrowser.SetHidden(hidden);
+		if (hidden) {
 			LoadUrl("about:blank");
-			transform.localPosition = _altTransform;
 		}
 	}
 
