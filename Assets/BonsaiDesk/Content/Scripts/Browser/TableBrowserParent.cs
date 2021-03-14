@@ -5,22 +5,22 @@ public class TableBrowserParent : MonoBehaviour {
 	public TableBrowser TableBrowser;
 	public TableBrowserMenu TableBrowserMenu;
 	public WebBrowserParent WebBrowserParent;
-	private Vector3 _startTransform;
 	public bool sleeped { get; private set; }
 
 	// Start is called before the first frame update
 	private void Start() {
-		TableBrowserMenu.BrowseSite += HandleBrowseSite;
-		WebBrowserParent.CloseWeb   += HandleCloseWeb;
-		TableBrowser.BrowserReady += () =>
-		{
-			Sleep();
-		};
-		_startTransform = TableBrowserMenu.transform.localPosition;
+		MoveToDesk.OrientationChanged += HandleOrientationChange;
+		TableBrowserMenu.BrowseSite   += HandleBrowseSite;
+		WebBrowserParent.CloseWeb     += HandleCloseWeb;
+		TableBrowser.BrowserReady     += Sleep;
 	}
 
 	// Update is called once per frame
 	private void Update() { }
+
+	private void HandleOrientationChange(bool oriented) {
+		Sleep();
+	}
 
 	private void HandleCloseWeb(object _, EventArgs e) {
 		SetActive(Browser.Table);
@@ -34,12 +34,12 @@ public class TableBrowserParent : MonoBehaviour {
 	private void SetActive(Browser browser) {
 		switch (browser) {
 			case Browser.Web:
-				SetAlt(true);
-				WebBrowserParent.SetActive(true);
+				TableBrowser.SetHidden(true);
+				WebBrowserParent.SetAllHidden(false);
 				break;
 			case Browser.Table:
-				SetAlt(false);
-				WebBrowserParent.SetActive(false);
+				TableBrowser.SetHidden(false);
+				WebBrowserParent.SetAllHidden(true);
 				break;
 			default:
 				Debug.LogWarning($"[BONSAI] set browser {browser} active not handled");
@@ -50,9 +50,9 @@ public class TableBrowserParent : MonoBehaviour {
 	public void Sleep() {
 		Debug.Log("sleep");
 		sleeped = true;
-		SetAlt(true);
-		WebBrowserParent.SetActive(false);
-		
+		TableBrowser.SetHidden(true);
+		WebBrowserParent.SetAllHidden(true);
+
 		InputManager.Hands.Left.ZTestRegular();
 		InputManager.Hands.Right.ZTestRegular();
 		InputManager.Hands.Left.SetPhysicsLayerRegular();
@@ -61,8 +61,8 @@ public class TableBrowserParent : MonoBehaviour {
 
 	public void Wake() {
 		sleeped = false;
-		SetAlt(false);
-		
+		TableBrowser.SetHidden(false);
+
 		InputManager.Hands.Left.ZTestOverlay();
 		InputManager.Hands.Right.ZTestOverlay();
 		InputManager.Hands.Left.SetPhysicsLayerForTouchScreen();
@@ -75,17 +75,6 @@ public class TableBrowserParent : MonoBehaviour {
 		}
 		else {
 			Sleep();
-		}
-	}
-
-	public void SetAlt(bool alt) {
-		if (alt) {
-			TableBrowser.SetHidden(true);
-			TableBrowserMenu.transform.localPosition = new Vector3(0f, -10f, 0f);
-		}
-		else {
-			TableBrowser.SetHidden(false);
-			TableBrowserMenu.transform.localPosition = _startTransform;
 		}
 	}
 

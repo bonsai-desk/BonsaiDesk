@@ -3,11 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Vuplex.WebView;
 
 public class Browser : MonoBehaviour {
 	public Vector2 startingAspect = new Vector2(16, 9);
-	private Material holePuncherMaterial;
 	public float distanceEstimate = 1;
 	public int pixelPerDegree = 16;
 	public Transform boundsTransform;
@@ -18,16 +18,15 @@ public class Browser : MonoBehaviour {
 	public bool useBuiltHtml;
 	public Vector2 Bounds;
 	public DragMode dragMode;
+	public WebViewPrefabCustom WebViewPrefab;
 	private GameObject _boundsObject;
 	private OVROverlay _overlay;
 	private bool _postedListenersReady;
-	private bool _renderEnabled = true;
+	private Material holePuncherMaterial;
 	protected Transform Resizer;
-	public WebViewPrefabCustom WebViewPrefab;
 	protected Transform WebViewView;
 
-	protected virtual void Start()
-	{
+	protected virtual void Start() {
 		Debug.Log("browser start");
 
 		holePuncherMaterial = new Material(Resources.Load<Material>("OnTopUnderlay"));
@@ -44,27 +43,23 @@ public class Browser : MonoBehaviour {
 	public event Action BrowserReady;
 
 	public event Action ListenersReady;
-	
-	public void SetMaterialOnTop()
-	{
-		if (WebViewPrefab)
-		{
+
+	public void SetMaterialOnTop() {
+		if (WebViewPrefab) {
 			WebViewPrefab.SetMaterialOnTop();
 		}
-		
-		holePuncherMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Overlay;
-		holePuncherMaterial.SetInt("_ZTest", (int) UnityEngine.Rendering.CompareFunction.Always);
+
+		holePuncherMaterial.renderQueue = (int) RenderQueue.Overlay;
+		holePuncherMaterial.SetInt("_ZTest", (int) CompareFunction.Always);
 	}
 
-	public void SetMaterialRegular()
-	{
-		if (WebViewPrefab)
-		{
+	public void SetMaterialRegular() {
+		if (WebViewPrefab) {
 			WebViewPrefab.SetMaterialRegular();
 		}
-		
-		holePuncherMaterial.renderQueue = (int) UnityEngine.Rendering.RenderQueue.Geometry + 1;
-		holePuncherMaterial.SetInt("_ZTest", (int) UnityEngine.Rendering.CompareFunction.LessEqual);
+
+		holePuncherMaterial.renderQueue = (int) RenderQueue.Geometry + 1;
+		holePuncherMaterial.SetInt("_ZTest", (int) CompareFunction.LessEqual);
 	}
 
 	private void SetupHolePuncher() {
@@ -113,7 +108,7 @@ public class Browser : MonoBehaviour {
 			WebViewPrefab.DragMode               =  dragMode;
 			BrowserReady?.Invoke();
 		};
-		
+
 		if (useBuiltHtml) {
 			initialUrl = "streaming-assets://build/index.html";
 		}
@@ -153,20 +148,13 @@ public class Browser : MonoBehaviour {
 	}
 
 	public void SetHidden(bool hidden) {
-		_renderEnabled = !hidden;
-
-		WebViewPrefab.ClickingEnabled  = _renderEnabled;
-		WebViewPrefab.ScrollingEnabled = _renderEnabled;
+		var renderEnabled = !hidden;
 
 	#if UNITY_ANDROID && !UNITY_EDITOR
-        holePuncherTransform.GetComponent<MeshRenderer>().enabled = _renderEnabled;
+        holePuncherTransform.GetComponent<MeshRenderer>().enabled = renderEnabled;
 	#else
-		WebViewView.GetComponent<MeshRenderer>().enabled = _renderEnabled;
+		WebViewView.GetComponent<MeshRenderer>().enabled = renderEnabled;
 	#endif
-	}
-
-	public void ToggleHidden() {
-		SetHidden(_renderEnabled);
 	}
 
 	public void LoadUrl(string url) {
@@ -243,6 +231,12 @@ public class Browser : MonoBehaviour {
 		return new Vector2Int((int) (aspect.x / aspect.y * yResolution), yResolution);
 	}
 
+	public void SetVolume(float level) {
+		level = Mathf.Clamp(level, 0, 1);
+		var js = $"document.querySelectorAll('video, audio').forEach(mediaElement => mediaElement.volume = {level})";
+		WebViewPrefab.WebView?.ExecuteJavaScript(js);
+	}
+
 	public static class BrowserMessage {
 		public static readonly string NavToMenu = PushPath("/menu");
 		public static readonly string NavHome = PushPath("/home");
@@ -262,12 +256,5 @@ public class Browser : MonoBehaviour {
 		public string Data;
 		public string Message;
 		public string Type;
-	}
-
-	public void SetVolume(float level) {
-		level = Mathf.Clamp(level, 0, 1);
-		var js = $"document.querySelectorAll('video, audio').forEach(mediaElement => mediaElement.volume = {level})";
-		WebViewPrefab.WebView?.ExecuteJavaScript(js);
-
 	}
 }

@@ -75,7 +75,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 		tableBrowser.BrowserReady += () =>
 		{
 			browserReady = true;
-			tableBrowser.ToggleHidden();
+			tableBrowser.SetHidden(true);
 		};
 
 		tableBrowserMenu.JoinRoom         += HandleJoinRoom;
