@@ -72,7 +72,9 @@ public class HandComponents
             ? LayerMask.NameToLayer("LeftHand")
             : LayerMask.NameToLayer("RightHand");
         _indexPhysicsLayer = LayerMask.NameToLayer("IndexTip");
-        _onlyScreenLayer = LayerMask.NameToLayer("OnlyTouchScreenSurface");
+        _onlyScreenLayer = OVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft
+            ? LayerMask.NameToLayer("OnlyTouchScreenSurfaceLeft")
+            : LayerMask.NameToLayer("OnlyTouchScreenSurfaceRight");
         OVRHand = handAnchor.GetComponentInChildren<OVRHand>();
 
         PhysicsFingerTips = GetFingerTips(PhysicsMapper);
@@ -102,6 +104,7 @@ public class HandComponents
     public void SetPhysicsLayerForTouchScreen()
     {
         SetLayerRecursive(PhysicsHand, _onlyScreenLayer);
+        SetLayerRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Index3], _indexPhysicsLayer);
     }
 
     private static Transform[] GetFingerTips(OVRHandTransformMapper mapper)

@@ -30,8 +30,8 @@ TagManager:
   - IndexTip
   - TouchScreenSurface
   - Browser
-  - OnlyTouchScreenSurface
-  - 
+  - OnlyTouchScreenSurfaceLeft
+  - OnlyTouchScreenSurfaceRight
   - block
   - blockArea
   - sphere
