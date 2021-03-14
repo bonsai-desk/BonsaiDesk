@@ -70,11 +70,19 @@ public partial class BlockObject : NetworkBehaviour
         Blocks.Add(Vector3Int.zero, new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
         if (debug)
         {
-            for (int i = 1; i < 6; i++)
-            {
-                Blocks.Add(new Vector3Int(0, 0, i),
-                    new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            }
+            // for (int i = 1; i < 6; i++)
+            // {
+            //     Blocks.Add(new Vector3Int(0, 0, i),
+            //         new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            // }
+            Blocks.Add(new Vector3Int(0, 0, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            Blocks.Add(new Vector3Int(1, 0, 0), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            Blocks.Add(new Vector3Int(1, 0, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+
+            Blocks.Add(new Vector3Int(0, 1, 0), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            Blocks.Add(new Vector3Int(0, 1, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            Blocks.Add(new Vector3Int(1, 1, 0), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            Blocks.Add(new Vector3Int(1, 1, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
         }
 
         Init();
@@ -95,6 +103,13 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         _isInit = true;
+
+        //make copy of material so material asset is not changed
+        blockObjectMaterial = new Material(blockObjectMaterial);
+
+        blockObjectMaterial.SetVectorArray("damagedBlocks",
+            new[] {new Vector4(0, 0, 0, 0.5f), new Vector4(0, 1, 0, 0.8f)});
+        blockObjectMaterial.SetInt("numDamagedBlocks", 2);
 
         PhysicsStart();
 

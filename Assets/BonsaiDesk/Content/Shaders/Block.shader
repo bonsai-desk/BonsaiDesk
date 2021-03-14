@@ -1,68 +1,99 @@
 ﻿Shader "Custom/Block"
 {
-	Properties
-	{
-		_Color("Color", Color) = (1,1,1,1)
-		_MainTex("Albedo (RGB)", 2D) = "white" {}
-		_BreakTex("Break Texture", 2D) = "white" {}
-		_Glossiness("Smoothness", Range(0,1)) = 0.5
-		_Metallic("Metallic", Range(0,1)) = 0.0
-		_Health("Health", Range(0, 1)) = 1.0
-	}
-		SubShader
-		{
-			Tags { "RenderType" = "Opaque" }
-			LOD 200
+    Properties
+    {
+        _Color("Color", Color) = (1,1,1,1)
+        _MainTex("Albedo (RGB)", 2D) = "white" {}
+        _BreakTex("Break Texture", 2D) = "white" {}
+        _Glossiness("Smoothness", Range(0,1)) = 0.5
+        _Metallic("Metallic", Range(0,1)) = 0.0
+    }
+    SubShader
+    {
+        Tags
+        {
+            "RenderType" = "Opaque"
+        }
+        LOD 200
 
-			CGPROGRAM
-			// Physically based Standard lighting model, and enable shadows on all light types
-			#pragma surface surf Standard fullforwardshadows
+        CGPROGRAM
+        // Physically based Standard lighting model, and enable shadows on all light types
+        #pragma surface surf Standard fullforwardshadows vertex:vert
 
-			// Use shader model 3.0 target, to get nicer looking lighting
-			#pragma target 3.0
+        // Use shader model 3.0 target, to get nicer looking lighting
+        #pragma target 3.0
 
-			sampler2D _MainTex;
-			sampler2D _BreakTex;
+        sampler2D _MainTex;
+        sampler2D _BreakTex;
 
-			struct Input
-			{
-				float2 uv_MainTex;
-				float2 uv2_BreakTex;
-			};
+        struct Input
+        {
+            float2 uv_MainTex;
+            float2 uv2_BreakTex;
+            float3 blockPos;
+        };
 
-			half _Glossiness;
-			half _Metallic;
-			fixed4 _Color;
-			half _Health;
+        half _Glossiness;
+        half _Metallic;
+        fixed4 _Color;
+        half _Health;
 
-			// Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
-			// See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
-			// #pragma instancing_options assumeuniformscaling
-			UNITY_INSTANCING_BUFFER_START(Props)
-				// put more per-instance properties here
-			UNITY_INSTANCING_BUFFER_END(Props)
+        int numDamagedBlocks;
+        float4 damagedBlocks[10];
 
-			void surf(Input IN, inout SurfaceOutputStandard o)
-			{
-				// Albedo comes from a texture tinted by color
-				fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
+        // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
+        // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
+        // #pragma instancing_options assumeuniformscaling
+        UNITY_INSTANCING_BUFFER_START(Props)
+        // put more per-instance properties here
+        UNITY_INSTANCING_BUFFER_END(Props)
 
-				fixed2 uv2 = IN.uv2_BreakTex;
-				float health = 1 - _Health;
-				uv2.x += round(health * 10.0) / 11.0;
-				fixed4 b = tex2D(_BreakTex, uv2);
+        void vert(inout appdata_full v, out Input o)
+        {
+            UNITY_INITIALIZE_OUTPUT(Input, o);
+            o.blockPos = v.vertex.xyz + float3(0.5, 0.5, 0.5) - (v.normal.xyz * 0.5);
+        }
 
-				//o.Albedo = c.rgb;
-				//o.Albedo = lerp(c.rgb, fixed3(0, 0, 0), 1 - b.r);
-				//o.Albedo = b.rgb;
-				o.Albedo = c.rgb * b.rgb;
+        void surf(Input IN, inout SurfaceOutputStandard o)
+        {
+            const fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
 
-				// Metallic and smoothness come from slider variables
-				o.Metallic = _Metallic;
-				o.Smoothness = _Glossiness;
-				o.Alpha = c.a;
-			}
-			ENDCG
-		}
-			FallBack "Diffuse"
+            const float3 checkBlockPos = IN.blockPos;
+            const int xc = floor(checkBlockPos.x);
+            const int yc = floor(checkBlockPos.y);
+            const int zc = floor(checkBlockPos.z);
+
+            bool blockMatch = false;
+            float health = 1.0;
+
+            for (int i = 0; i < numDamagedBlocks; i++)
+            {
+                const float3 blockDamagePos = damagedBlocks[i].xyz;
+                const int xd = floor(blockDamagePos.x);
+                const int yd = floor(blockDamagePos.y);
+                const int zd = floor(blockDamagePos.z);
+
+                const bool thisBlockMatches = xc == xd && yc == yd && zc == zd;
+                const float thisBlockHealth = damagedBlocks[i].w;
+                health = lerp(health, thisBlockHealth, thisBlockMatches);
+                blockMatch = blockMatch || thisBlockMatches;
+            }
+
+            fixed2 uv2 = IN.uv2_BreakTex;
+            health = 1 - health;
+            uv2.x += round(health * 10.0) / 11.0;
+            fixed4 b = tex2D(_BreakTex, uv2);
+
+            b = lerp(float4(1, 1, 1, 1), b, blockMatch);
+
+            o.Albedo = c.rgb * b.rgb;
+
+            // Metallic and smoothness come from slider variables
+            o.Metallic = _Metallic;
+            o.Smoothness = _Glossiness;
+            o.Alpha = c.a;
+        }
+        ENDCG
+    }
+    FallBack "Diffuse"
 }
