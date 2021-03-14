@@ -22,7 +22,7 @@
         #pragma surface surf Standard fullforwardshadows vertex:vert
 
         // Use shader model 3.0 target, to get nicer looking lighting
-        #pragma target 3.0
+        #pragma target 3.5
 
         sampler2D _MainTex;
         sampler2D _BreakTex;
@@ -31,7 +31,8 @@
         {
             float2 uv_MainTex;
             float2 uv2_BreakTex;
-            float3 blockPos;
+            float3 vertexPos;
+            float3 normal;
         };
 
         half _Glossiness;
@@ -52,14 +53,15 @@
         void vert(inout appdata_full v, out Input o)
         {
             UNITY_INITIALIZE_OUTPUT(Input, o);
-            o.blockPos = v.vertex.xyz + float3(0.5, 0.5, 0.5) - (v.normal.xyz * 0.5);
+            o.vertexPos = v.vertex.xyz;
+            o.normal = v.normal;
         }
 
         void surf(Input IN, inout SurfaceOutputStandard o)
         {
             const fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
 
-            const float3 checkBlockPos = IN.blockPos;
+            const float3 checkBlockPos = IN.vertexPos.xyz + float3(0.5, 0.5, 0.5) - (IN.normal.xyz * 0.5);;
             const int xc = floor(checkBlockPos.x);
             const int yc = floor(checkBlockPos.y);
             const int zc = floor(checkBlockPos.z);
