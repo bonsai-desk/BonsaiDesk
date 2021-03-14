@@ -10,7 +10,7 @@ public class CustomInputModule : StandaloneInputModule {
 	public Vector3 cursorRoot;
 	public OVRCursor m_Cursor;
 	public bool drawcursor;
-	public List<Transform> screens;
+	public List<MeshRenderer> screens;
 	public float hoverDistance = 0.1f;
 	public float clickDistance = 0.075f / 2;
 	public Camera mainCamera;
@@ -66,7 +66,11 @@ public class CustomInputModule : StandaloneInputModule {
 		inClickRegion     = false;
 
 		var foundScreen = false;
-		foreach (var screen in screens) {
+		foreach (var mesh in screens) {
+			if (!mesh.isVisible) {
+				continue;
+			}
+			var screen = mesh.transform;
 			var leftFingerInScreen  = screen.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[1]);
 			var rightFingerInScreen = screen.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[6]);
 
