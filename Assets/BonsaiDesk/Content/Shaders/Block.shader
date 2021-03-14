@@ -7,6 +7,7 @@
         _BreakTex("Break Texture", 2D) = "white" {}
         _Glossiness("Smoothness", Range(0,1)) = 0.5
         _Metallic("Metallic", Range(0,1)) = 0.0
+        _MaxHealth("MaxHealth", Range(0, 1)) = 1.0
     }
     SubShader
     {
@@ -36,7 +37,7 @@
         half _Glossiness;
         half _Metallic;
         fixed4 _Color;
-        half _Health;
+        half _MaxHealth;
 
         int numDamagedBlocks;
         float4 damagedBlocks[10];
@@ -63,7 +64,7 @@
             const int yc = floor(checkBlockPos.y);
             const int zc = floor(checkBlockPos.z);
 
-            bool blockMatch = false;
+            //bool blockMatch = false;
             float health = 1.0;
 
             for (int i = 0; i < numDamagedBlocks; i++)
@@ -76,16 +77,17 @@
                 const bool thisBlockMatches = xc == xd && yc == yd && zc == zd;
                 const float thisBlockHealth = damagedBlocks[i].w;
                 health = lerp(health, thisBlockHealth, thisBlockMatches);
-                blockMatch = blockMatch || thisBlockMatches;
+                //blockMatch = blockMatch || thisBlockMatches;
             }
 
             fixed2 uv2 = IN.uv2_BreakTex;
-            health = clamp(health, 0, 1);
+            health = clamp(health, 0, _MaxHealth);
             health = 1 - health;
             uv2.x += round(health * 10.0) / 11.0;
             fixed4 b = tex2D(_BreakTex, uv2);
+            b = lerp(float4(1, 1, 1, 1), float4(b.rgb, 1), b.a);
 
-            b = lerp(float4(1, 1, 1, 1), b, blockMatch);
+            //b = lerp(float4(1, 1, 1, 1), b, blockMatch);
 
             o.Albedo = c.rgb * b.rgb;
 
