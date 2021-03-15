@@ -160,8 +160,10 @@ public class Browser : MonoBehaviour {
 
 
 		
-		//_overlay.hidden = choice;
 	#if UNITY_ANDROID && !UNITY_EDITOR
+		if (_overlay != null) {
+			_overlay.hidden = choice;
+		}
         holePuncherTransform.GetComponent<MeshRenderer>().enabled = renderEnabled;
 	#else
 		WebViewView.GetComponent<MeshRenderer>().enabled = renderEnabled;
