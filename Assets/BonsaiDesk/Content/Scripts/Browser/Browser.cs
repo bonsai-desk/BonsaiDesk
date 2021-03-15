@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 using Vuplex.WebView;
 
 public class Browser : MonoBehaviour {
@@ -25,6 +26,8 @@ public class Browser : MonoBehaviour {
 	private Material holePuncherMaterial;
 	protected Transform Resizer;
 	protected Transform WebViewView;
+	public bool Hidden;
+	public MeshRenderer meshRenderer;
 
 	protected virtual void Start() {
 		Debug.Log("browser start");
@@ -63,11 +66,14 @@ public class Browser : MonoBehaviour {
 	}
 
 	private void SetupHolePuncher() {
+		meshRenderer = WebViewView.GetComponent<MeshRenderer>();
+		
 	#if UNITY_ANDROID && !UNITY_EDITOR
         holePuncherTransform.GetComponent<Renderer>().sharedMaterial = holePuncherMaterial;
-	#else
-		holePuncherTransform.GetComponent<MeshRenderer>().enabled = false;
 	#endif
+		
+       holePuncherTransform.GetComponent<MeshRenderer>().enabled = false;
+       WebViewView.GetComponent<MeshRenderer>().enabled = false;
 	}
 
 	private void CacheTransforms() {
@@ -148,10 +154,11 @@ public class Browser : MonoBehaviour {
 	}
 
 	public void SetHidden(bool hidden) {
+		Hidden = hidden;
 		var renderEnabled = !hidden;
 
 	#if UNITY_ANDROID && !UNITY_EDITOR
-        holePuncherTransform.GetComponent<MeshRenderer>().enabled = renderEnabled;
+       holePuncherTransform.GetComponent<MeshRenderer>().enabled = renderEnabled;
 	#else
 		WebViewView.GetComponent<MeshRenderer>().enabled = renderEnabled;
 	#endif

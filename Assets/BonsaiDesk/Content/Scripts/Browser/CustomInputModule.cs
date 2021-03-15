@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using Vuplex.WebView;
 
 [RequireComponent(typeof(InputManager))]
 public class CustomInputModule : StandaloneInputModule {
@@ -10,7 +11,7 @@ public class CustomInputModule : StandaloneInputModule {
 	public Vector3 cursorRoot;
 	public OVRCursor m_Cursor;
 	public bool drawcursor;
-	public List<MeshRenderer> screens;
+	public List<Browser> screens;
 	public float hoverDistance = 0.1f;
 	public float clickDistance = 0.075f / 2;
 	public Camera mainCamera;
@@ -66,11 +67,11 @@ public class CustomInputModule : StandaloneInputModule {
 		inClickRegion     = false;
 
 		var foundScreen = false;
-		foreach (var mesh in screens) {
-			if (!mesh.isVisible) {
+		foreach (var browser in screens) {
+			if (browser.Hidden) {
 				continue;
 			}
-			var screen = mesh.transform;
+			var screen = browser.meshRenderer.transform;
 			var leftFingerInScreen  = screen.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[1]);
 			var rightFingerInScreen = screen.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[6]);
 
