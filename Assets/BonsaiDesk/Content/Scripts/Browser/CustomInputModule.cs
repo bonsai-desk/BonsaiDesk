@@ -68,7 +68,7 @@ public class CustomInputModule : StandaloneInputModule {
 
 		var foundScreen = false;
 		foreach (var browser in screens) {
-			if (browser.Hidden) {
+			if (browser.hidden) {
 				continue;
 			}
 			var screen = browser.meshRenderer.transform;
