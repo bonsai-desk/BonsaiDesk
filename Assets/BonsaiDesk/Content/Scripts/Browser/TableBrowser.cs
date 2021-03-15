@@ -24,8 +24,8 @@ public class TableBrowser : Browser
 
         BrowserReady += () =>
         {
-            var view = WebViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView").gameObject.GetComponent<MeshRenderer>();
-            CustomInputModule.Singleton.screens.Add(view);
+            //var view = WebViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView").gameObject.GetComponent<MeshRenderer>();
+            CustomInputModule.Singleton.Browsers.Add(this);
             CustomInputModule.Singleton.Click += HandleClickSound;
             OnMessageEmitted(HandleJavascriptMessage);
         };
