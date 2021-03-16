@@ -40,6 +40,7 @@ public class NetworkBlockSpawn : NetworkBehaviour
     private void CmdSpawnObject(Vector3 position)
     {
         var spawnedObject = Instantiate(spawnObjectPrefab, position, Quaternion.identity);
+        spawnedObject.GetComponent<BlockObject>().Blocks.Add(Vector3Int.zero, new SyncBlock(0, 0));
         NetworkServer.Spawn(spawnedObject);
     }
 }

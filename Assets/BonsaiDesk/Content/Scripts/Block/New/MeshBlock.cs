@@ -5,8 +5,8 @@ using UnityEngine;
 public class MeshBlock
 {
     public int positionInList;
-    // public bool damagedThisFrame;
-    // public int framesSinceLastDamage;
+    public float health;
+    public int framesSinceLastDamage;
     // public GameObject blockObject;
     // public MeshRenderer meshRenderer;
     // public Joint connected;
@@ -14,7 +14,9 @@ public class MeshBlock
     public MeshBlock(int positionInList)
     {
         this.positionInList = positionInList;
-        
+        health = 1;
+        framesSinceLastDamage = 100;
+
         // this.damagedThisFrame = false;
         // this.framesSinceLastDamage = 0;
         // this.blockObject = blockObject;
