@@ -8468,7 +8468,7 @@ MonoBehaviour:
   cursorRoot: {x: 0, y: 0, z: 0}
   m_Cursor: {fileID: 1695270410}
   drawcursor: 0
-  screens: []
+  Browsers: []
   hoverDistance: 0.1
   clickDistance: 0.015
   mainCamera: {fileID: 1365805663}
@@ -15358,6 +15358,8 @@ MonoBehaviour:
   Bounds: {x: 0, y: 0}
   dragMode: 0
   WebViewPrefab: {fileID: 0}
+  hidden: 0
+  WebViewTransform: {fileID: 0}
   screenRigidBody: {fileID: 878527641}
 --- !u!54 &1382784200
 Rigidbody:
@@ -20253,7 +20255,7 @@ PrefabInstance:
     - target: {fileID: 1897995405423690373, guid: 9665c8d8782c7584eb9e16bd36823d22,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.212
+      value: -0.124
       objectReference: {fileID: 0}
     - target: {fileID: 1897995405423690373, guid: 9665c8d8782c7584eb9e16bd36823d22,
         type: 3}
