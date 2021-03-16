@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 using Vuplex.WebView;
 
 public class Browser : MonoBehaviour {
@@ -19,12 +20,14 @@ public class Browser : MonoBehaviour {
 	public Vector2 Bounds;
 	public DragMode dragMode;
 	public WebViewPrefabCustom WebViewPrefab;
+	[FormerlySerializedAs("Hidden")] public bool hidden;
 	private GameObject _boundsObject;
 	private OVROverlay _overlay;
 	private bool _postedListenersReady;
 	private Material holePuncherMaterial;
 	protected Transform Resizer;
 	protected Transform WebViewView;
+	public Transform WebViewTransform;
 
 	protected virtual void Start() {
 		Debug.Log("browser start");
@@ -36,6 +39,8 @@ public class Browser : MonoBehaviour {
 		// WebView preconfiguring is done once in the BrowserSetup class
 
 		SetupWebViewPrefab();
+
+		WebViewTransform = WebViewView.transform;
 
 		SetupHolePuncher();
 	}
@@ -65,9 +70,11 @@ public class Browser : MonoBehaviour {
 	private void SetupHolePuncher() {
 	#if UNITY_ANDROID && !UNITY_EDITOR
         holePuncherTransform.GetComponent<Renderer>().sharedMaterial = holePuncherMaterial;
+		WebViewView.GetComponent<MeshRenderer>().enabled          = false;
 	#else
 		holePuncherTransform.GetComponent<MeshRenderer>().enabled = false;
 	#endif
+
 	}
 
 	private void CacheTransforms() {
@@ -147,10 +154,16 @@ public class Browser : MonoBehaviour {
 		}
 	}
 
-	public void SetHidden(bool hidden) {
-		var renderEnabled = !hidden;
+	public void SetHidden(bool choice) {
+		hidden = choice;
+		var renderEnabled = !choice;
 
+
+		
 	#if UNITY_ANDROID && !UNITY_EDITOR
+		if (_overlay != null) {
+			_overlay.hidden = choice;
+		}
         holePuncherTransform.GetComponent<MeshRenderer>().enabled = renderEnabled;
 	#else
 		WebViewView.GetComponent<MeshRenderer>().enabled = renderEnabled;

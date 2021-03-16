@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Serialization;
+using Vuplex.WebView;
 
 [RequireComponent(typeof(InputManager))]
 public class CustomInputModule : StandaloneInputModule {
@@ -10,7 +12,7 @@ public class CustomInputModule : StandaloneInputModule {
 	public Vector3 cursorRoot;
 	public OVRCursor m_Cursor;
 	public bool drawcursor;
-	public List<MeshRenderer> screens;
+	[FormerlySerializedAs("screens")] public List<Browser> Browsers;
 	public float hoverDistance = 0.1f;
 	public float clickDistance = 0.075f / 2;
 	public Camera mainCamera;
@@ -66,11 +68,11 @@ public class CustomInputModule : StandaloneInputModule {
 		inClickRegion     = false;
 
 		var foundScreen = false;
-		foreach (var mesh in screens) {
-			if (!mesh.isVisible) {
+		foreach (var browser in Browsers) {
+			if (browser.hidden) {
 				continue;
 			}
-			var screen = mesh.transform;
+			var screen = browser.WebViewTransform;
 			var leftFingerInScreen  = screen.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[1]);
 			var rightFingerInScreen = screen.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[6]);
 
@@ -173,7 +175,7 @@ public class CustomInputModule : StandaloneInputModule {
 	}
 
 	private PointerEventData.FramePressState GetGazeButtonState() {
-		foreach (var screen in screens) {
+		foreach (var screen in Browsers) {
 			var pressed  = inClickRegion && !prevInClickRegion;
 			var released = prevInClickRegion && !inClickRegion;
 
