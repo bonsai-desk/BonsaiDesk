@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class LightManager : MonoBehaviour {
 	public Texture2D[] Lights;
@@ -10,6 +11,13 @@ public class LightManager : MonoBehaviour {
 	public TextureWrapMode wrapMode = TextureWrapMode.Clamp;
 	public TextureFormat textureFormat = TextureFormat.RGBA32;
 	public bool mipChain;
+	public float candleLevel = 1;
+	[Range(0.0f, 1f)]
+	public float backRoomLevel=0;
+	[Range(0.0f, 1f)]
+	public float mainRoomLevel=1;
+
+	private LightState LightTarget;
 
 	[Header("ring")] public float ringScale = 1f;
 
@@ -19,6 +27,7 @@ public class LightManager : MonoBehaviour {
 	[Header("Pulse Data (scale, floor, speed)")]
 	public Vector3[] PulseData;
 
+	// ambient, main, area, back
 	private readonly float[] lightLevels = new float[64];
 
 	// Start is called before the first frame update
@@ -36,16 +45,15 @@ public class LightManager : MonoBehaviour {
 		arr.Apply();
 		//AssetDatabase.CreateAsset(arr, "Assets/LightsArr.tarr");
 		lightLevels[0] = 1;
-		lightLevels[1] = 1;
-		lightLevels[2] = 0;
-		lightLevels[3] = 0;
-		lightLevels[4] = 0;
-		lightLevels[5] = 0;
+		lightLevels[1] = mainRoomLevel;
+		lightLevels[2] = 1;
+		lightLevels[3] = backRoomLevel;
 		Garden.SetInt("numLights", Lights.Length);
 		Garden.SetFloatArray("lightLevels", lightLevels);
 		Garden.SetTexture("Lights", arr);
 
-		MoveToDesk.OrientationChanged += HandleOrient;
+		MoveToDesk.OrientationChanged          += HandleOrient;
+		TableBrowserMenu.Singleton.LightChange += HandleLightsChange;
 
 	#if UNITY_EDITOR
 		if (NetworkManagerGame.Singleton.serverOnlyIfEditor) {
@@ -54,15 +62,39 @@ public class LightManager : MonoBehaviour {
 	#endif
 	}
 
+	private void HandleLightsChange(object sender, TableBrowserMenu.LightState e) {
+		Debug.Log(e);
+		switch (e) {
+			case TableBrowserMenu.LightState.Bright:
+				mainRoomLevel = 1;
+				backRoomLevel = 0;
+				break;
+			case TableBrowserMenu.LightState.Vibes:
+				mainRoomLevel = 0.146f;
+				backRoomLevel = 0.507f;
+				break;
+		}
+	}
+
 	// Update is called once per frame
 	private void Update() {
 		//var idxs = new[] {5};
-		Pulse(1, PulseData[0], 0);
+		//Pulse(1, PulseData[0], 0);
+
+		// flicker the area light
+		//lightLevels[2] = StepCandle(lightLevels[2]);
+
+		candleLevel    = Mathf.Clamp(candleLevel + (Random.value - 0.51f) / 50f, 0, 1);
+		lightLevels[2] = Mathf.Clamp(Pulse(PulseData[0], 0) - candleLevel, 0, 1);
+		
+		lightLevels[1] = mainRoomLevel;
+		lightLevels[3] = backRoomLevel;
+
+
 		Garden.SetFloatArray("lightLevels", lightLevels);
 	}
 
-	private void OnApplicationQuit()
-	{
+	private void OnApplicationQuit() {
 		Garden.SetInt("numLights", 0);
 	}
 
@@ -100,8 +132,12 @@ public class LightManager : MonoBehaviour {
 		}
 	}
 
-	private void Pulse(int idx, Vector3 pulseData, float offset) {
-		lightLevels[idx] = gauss(pulseData[0], pulseData[1], pulseData[2],
-		                         Time.time + offset);
+	private float Pulse(Vector3 pulseData, float offset) {
+		return gauss(pulseData[0], pulseData[1], pulseData[2],
+		             Time.time + offset);
+	}
+
+	private enum LightState {
+		Bright, Vibes
 	}
 }

@@ -5,6 +5,7 @@ import {Button} from '../components/Button';
 import axios from 'axios';
 import DoorOpen from '../static/door-open.svg';
 import LinkImg from '../static/link.svg';
+import LightImg from '../static/lightbulb.svg';
 import YtImg from '../static/yt-small.png';
 import ThinkingFace from '../static/thinking-face.svg';
 import {useStore} from '../DataProvider';
@@ -57,6 +58,10 @@ function postVolumeIncrement() {
 
 function postVolumeDecrement() {
   postJson({Type: 'command', Message: 'volumeDecrement'});
+}
+
+function postLightsChange(level) {
+  postJson({Type: 'command', Message: 'lightsChange', Data: level});
 }
 
 // utils
@@ -587,6 +592,29 @@ const DebugPage = observer(() => {
   );
 });
 
+const SettingsPage = observer(()=>{
+  function handleClickVibes () {
+    postLightsChange("vibes")
+  }
+
+  function handleClickBright () {
+    postLightsChange("bright")
+  }
+
+  return <MenuContent name={"Settings"}>
+    <InfoItem title={'Lights'} slug={'Set the mood'}
+              imgSrc={LightImg}>
+      <div className={"flex space-x-2"}>
+        <Button handleClick={handleClickVibes}
+                className={grayButtonClass}>Vibes</Button>
+        <Button handleClick={handleClickBright}
+                className={grayButtonClass}>Bright</Button>
+
+      </div>
+    </InfoItem>
+  </MenuContent>
+})
+
 //
 
 let Menu = observer(() => {
@@ -646,6 +674,7 @@ let Menu = observer(() => {
     {name: 'Join Desk', component: JoinDeskPage},
     {name: 'Videos', component: VideosPage},
     {name: 'Player', component: PlayerPage},
+    {name: 'Settings', component: SettingsPage},
   ];
 
   if (store.build === 'DEVELOPMENT') {
