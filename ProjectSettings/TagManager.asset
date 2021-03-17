@@ -30,15 +30,15 @@ TagManager:
   - IndexTip
   - TouchScreenSurface
   - Browser
-  - OnlyTouchScreenSurface
-  - 
+  - OnlyTouchScreenSurfaceLeft
+  - OnlyTouchScreenSurfaceRight
   - block
   - blockArea
   - sphere
   - bearing
   - onlyHands
   - doNotRender
-  - 
+  - IndexTipForTouchScreenSurface
   - noHand
   - networkPlayer
   - 

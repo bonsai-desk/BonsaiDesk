@@ -76,6 +76,11 @@ public static partial class BlockUtility
     /// <returns></returns>
     public static Quaternion ByteToQuaternion(byte rotationByte)
     {
+        if (rotationByte == 0)
+        {
+            return Quaternion.identity;
+        }
+
         return Quaternion.LookRotation(ByteToDirection[(byte) (rotationByte & 0b_1111)],
             ByteToDirection[(byte) ((rotationByte >> 4) & 0b_1111)]);
     }
@@ -420,7 +425,7 @@ public static partial class BlockUtility
         //+ or - 1 degree
         return Mathf.Abs(Quaternion.Dot(q1, q2)) > 0.98888889f;
     }
-    
+
     // public static Vector3Int GetBlockCoord(Vector3 positionLocalToCubeArea)
     // {
     //     Vector3 offset = new Vector3(0.5f, 0.5f, 0.5f);

@@ -28,6 +28,7 @@ public class HandComponents
     private readonly int _indexPhysicsLayer;
     private readonly int _onlyScreenLayer;
     private readonly int _touchScreenSurfaceLayer;
+    private readonly int _indexForScreenPhysicsLayer;
 
     private float _lastTrackingTime;
     private const float RecentTrackingThreshold = 0.35f;
@@ -72,7 +73,10 @@ public class HandComponents
             ? LayerMask.NameToLayer("LeftHand")
             : LayerMask.NameToLayer("RightHand");
         _indexPhysicsLayer = LayerMask.NameToLayer("IndexTip");
-        _onlyScreenLayer = LayerMask.NameToLayer("OnlyTouchScreenSurface");
+        _onlyScreenLayer = OVRSkeleton.GetSkeletonType() == OVRSkeleton.SkeletonType.HandLeft
+            ? LayerMask.NameToLayer("OnlyTouchScreenSurfaceLeft")
+            : LayerMask.NameToLayer("OnlyTouchScreenSurfaceRight");
+        _indexForScreenPhysicsLayer = LayerMask.NameToLayer("IndexTipForTouchScreenSurface");
         OVRHand = handAnchor.GetComponentInChildren<OVRHand>();
 
         PhysicsFingerTips = GetFingerTips(PhysicsMapper);
@@ -102,6 +106,7 @@ public class HandComponents
     public void SetPhysicsLayerForTouchScreen()
     {
         SetLayerRecursive(PhysicsHand, _onlyScreenLayer);
+        SetLayerRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Index3], _indexForScreenPhysicsLayer);
     }
 
     private static Transform[] GetFingerTips(OVRHandTransformMapper mapper)

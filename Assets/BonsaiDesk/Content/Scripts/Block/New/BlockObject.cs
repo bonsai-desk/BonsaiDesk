@@ -61,11 +61,21 @@ public partial class BlockObject : NetworkBehaviour
     //used to make sure Init is only called once
     private bool _isInit = false;
 
+    public bool debug = false;
+
     public override void OnStartServer()
     {
         base.OnStartServer();
 
         Blocks.Add(Vector3Int.zero, new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+        if (debug)
+        {
+            for (int i = 1; i < 6; i++)
+            {
+                Blocks.Add(new Vector3Int(0, 0, i),
+                    new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+            }
+        }
 
         Init();
     }

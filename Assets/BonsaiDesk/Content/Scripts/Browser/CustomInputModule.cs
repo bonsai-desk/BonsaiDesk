@@ -108,23 +108,20 @@ public class CustomInputModule : StandaloneInputModule {
 			if (!leftValid && rightValid || rightClick) {
 				handActive = Active.Right;
 			}
-
+			
 			if (leftValid && !rightValid || leftClick) {
 				handActive = Active.Left;
 			}
 
-			if (leftValid && leftHover || rightValid && rightHover) {
-				foundScreen = true;
-			}
-
 			if (handActive == Active.Right && rightHover) {
+				foundScreen = true;
 				ProcessCursor(rightFingerInScreen, screen);
 				ProcessRay(rightFingerInScreen, screen, leftData, leftValid, rightValid);
-
 				break;
 			}
-
+			
 			if (handActive == Active.Left && leftHover) {
+				foundScreen = true;
 				ProcessCursor(leftFingerInScreen, screen);
 				ProcessRay(leftFingerInScreen, screen, leftData, leftValid, rightValid);
 				break;
