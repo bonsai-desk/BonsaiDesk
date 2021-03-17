@@ -373,6 +373,7 @@ public class MoveToDesk : MonoBehaviour {
 
                         averagePosition /= numOrientations;
                         averageAverageHeight /= numOrientations;
+                        averageAverageHeight += 0.005f;
 
                         //if (fixedTableHeight)
                         averagePosition += new Vector3(0, -averageAverageHeight + tableParent.position.y, 0);
