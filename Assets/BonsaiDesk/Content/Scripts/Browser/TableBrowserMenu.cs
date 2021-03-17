@@ -91,7 +91,20 @@ public class TableBrowserMenu : MonoBehaviour {
 						}
 
 						break;
-						
+					
+					case "lightsChange":
+						if (LightChange != null) {
+							switch (message.Data) {
+								case "vibes":
+									LightChange.Invoke(this, LightState.Vibes);
+									break;
+								case "bright":
+									LightChange.Invoke(this, LightState.Bright);
+									break;
+							}
+						}
+
+						break;
 				}
 
 				break;
@@ -178,6 +191,8 @@ public class TableBrowserMenu : MonoBehaviour {
 
 	public event EventHandler<float> VolumeChange;
 
+	public event EventHandler<LightState> LightChange;
+
 	private class CsMessageKeyType<T> {
 		public KeyType<T> Data;
 		public string Message = "pushStoreSingle";
@@ -214,5 +229,9 @@ public class TableBrowserMenu : MonoBehaviour {
 
 	public struct UserInfo {
 		public string UserName;
+	}
+	
+	public enum LightState {
+		Bright, Vibes
 	}
 }
