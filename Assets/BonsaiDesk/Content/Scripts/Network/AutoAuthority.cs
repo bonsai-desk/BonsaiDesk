@@ -113,6 +113,11 @@ public class AutoAuthority : NetworkBehaviour
         _keepAwakeTime = Time.time;
     }
 
+    public void SetCachedMaterial(Material mat)
+    {
+        _cachedMaterial = mat;
+    }
+
     private void UpdateColor()
     {
         if (meshRenderer == null)
