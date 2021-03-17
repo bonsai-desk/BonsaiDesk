@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections;
+using Mirror;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class LightManager : MonoBehaviour {
+public class LightManager : NetworkBehaviour {
 	public Texture2D[] Lights;
 	public Material Garden;
 
@@ -12,12 +13,18 @@ public class LightManager : MonoBehaviour {
 	public TextureFormat textureFormat = TextureFormat.RGBA32;
 	public bool mipChain;
 	public float candleLevel = 1;
-	[Range(0.0f, 1f)]
+	
 	public float backRoomLevel=0;
-	[Range(0.0f, 1f)]
-	public float mainRoomLevel=1;
+	
+	[Range(0.0f, 1f), SyncVar]
+	public float backRoomLevelTarget=0;
+	
+	public float mainRoomLevel=0;
+	
+	[Range(0.0f, 1f), SyncVar]
+	public float mainRoomLevelTarget=1;
 
-	private LightState LightTarget;
+	private TableBrowserMenu.LightState LightTarget;
 
 	[Header("ring")] public float ringScale = 1f;
 
@@ -29,6 +36,8 @@ public class LightManager : MonoBehaviour {
 
 	// ambient, main, area, back
 	private readonly float[] lightLevels = new float[64];
+
+	private float t;
 
 	// Start is called before the first frame update
 	private void Start() {
@@ -62,34 +71,42 @@ public class LightManager : MonoBehaviour {
 	#endif
 	}
 
-	private void HandleLightsChange(object sender, TableBrowserMenu.LightState e) {
-		Debug.Log(e);
-		switch (e) {
+	[Command(ignoreAuthority = true)]
+	private void CmdSetLights(TableBrowserMenu.LightState state) {
+		switch (state) {
 			case TableBrowserMenu.LightState.Bright:
-				mainRoomLevel = 1;
-				backRoomLevel = 0;
+				mainRoomLevelTarget = 1;
+				backRoomLevelTarget = 0;
 				break;
 			case TableBrowserMenu.LightState.Vibes:
-				mainRoomLevel = 0.146f;
-				backRoomLevel = 0.507f;
+				mainRoomLevelTarget = 0.146f;
+				backRoomLevelTarget = 0.507f;
 				break;
 		}
 	}
 
+	private void HandleLightsChange(object sender, TableBrowserMenu.LightState e) {
+		CmdSetLights(e);
+	}
+
 	// Update is called once per frame
 	private void Update() {
-		//var idxs = new[] {5};
-		//Pulse(1, PulseData[0], 0);
-
-		// flicker the area light
-		//lightLevels[2] = StepCandle(lightLevels[2]);
 
 		candleLevel    = Mathf.Clamp(candleLevel + (Random.value - 0.51f) / 50f, 0, 1);
 		lightLevels[2] = Mathf.Clamp(Pulse(PulseData[0], 0) - candleLevel, 0, 1);
+
+		const float scale = 1/25f;
+		
+		if (!Mathf.Approximately(mainRoomLevel, mainRoomLevelTarget)) {
+			mainRoomLevel += scale * (mainRoomLevelTarget - mainRoomLevel);
+		}
+		
+		if (!Mathf.Approximately(backRoomLevel, backRoomLevelTarget)) {
+			backRoomLevel += scale * (backRoomLevelTarget - backRoomLevel);
+		}
 		
 		lightLevels[1] = mainRoomLevel;
 		lightLevels[3] = backRoomLevel;
-
 
 		Garden.SetFloatArray("lightLevels", lightLevels);
 	}
@@ -137,7 +154,4 @@ public class LightManager : MonoBehaviour {
 		             Time.time + offset);
 	}
 
-	private enum LightState {
-		Bright, Vibes
-	}
 }
