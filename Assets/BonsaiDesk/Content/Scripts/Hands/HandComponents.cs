@@ -123,12 +123,12 @@ public class HandComponents
     public void SetTracking(bool tracking)
     {
         //if tracking just started this frame
-        if (!Tracking && tracking)
-        {
-            PhysicsHandController.SetCapsulesActiveTarget(false);
-            PhysicsHandController.ResetFingerJoints();
-            PhysicsHandController.SetCapsulesActiveTarget(true);
-        }
+        // if (!Tracking && tracking)
+        // {
+        //     PhysicsHandController.SetCapsulesActiveTarget(false);
+        //     PhysicsHandController.ResetFingerJoints();
+        //     PhysicsHandController.SetCapsulesActiveTarget(true);
+        // }
 
         Tracking = tracking;
 
@@ -152,6 +152,10 @@ public class HandComponents
 
         float handAlphaTarget = Tracking ? 1f : 0f;
         _handAlpha = Mathf.MoveTowards(_handAlpha, handAlphaTarget, Time.deltaTime / RecentTrackingThreshold);
+        if (!Application.isFocused || !Application.isPlaying)
+        {
+            _handAlpha = 0;
+        }
 
         if (Mathf.Approximately(_handAlpha, 1f))
         {
@@ -192,6 +196,11 @@ public class HandComponents
 
             PhysicsHandController.SetCapsulesActiveTarget(true);
         }
+    }
+
+    public void TurnOffHandForPause()
+    {
+        _physicsRenderer.enabled = false;
     }
 
     public void ZTestRegular()
