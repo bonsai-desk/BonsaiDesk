@@ -152,6 +152,10 @@ public class HandComponents
 
         float handAlphaTarget = Tracking ? 1f : 0f;
         _handAlpha = Mathf.MoveTowards(_handAlpha, handAlphaTarget, Time.deltaTime / RecentTrackingThreshold);
+        if (!Application.isFocused || !Application.isPlaying)
+        {
+            _handAlpha = 0;
+        }
 
         if (Mathf.Approximately(_handAlpha, 1f))
         {
@@ -192,6 +196,11 @@ public class HandComponents
 
             PhysicsHandController.SetCapsulesActiveTarget(true);
         }
+    }
+
+    public void TurnOffHandForPause()
+    {
+        _physicsRenderer.enabled = false;
     }
 
     public void ZTestRegular()

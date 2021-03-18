@@ -224,4 +224,32 @@ public class InputManager : MonoBehaviour
         rotation *= Quaternion.AngleAxis(180f, Vector3.forward);
         return rotation;
     }
+
+    private void OnApplicationPause(bool pauseStatus)
+    {
+        if (pauseStatus)
+        {
+            Left.TurnOffHandForPause();
+            Right.TurnOffHandForPause();
+        }
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus)
+        {
+            Left.TurnOffHandForPause();
+            Right.TurnOffHandForPause();
+            var leftMenu = Left.PlayerHand.GetIHandTick<MenuHand>();
+            if (leftMenu)
+            {
+                leftMenu.TurnOffMenu();
+            }
+            var rightMenu = Right.PlayerHand.GetIHandTick<MenuHand>();
+            if (rightMenu)
+            {
+                rightMenu.TurnOffMenu();
+            }
+        }
+    }
 }
