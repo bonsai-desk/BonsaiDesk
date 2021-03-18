@@ -48,7 +48,7 @@ public class TableBrowserParent : MonoBehaviour {
 	}
 
 	public void Sleep() {
-		Debug.Log("sleep");
+		Debug.Log("[BONSAI] Sleep all table browsers");
 		sleeped = true;
 		TableBrowser.SetHidden(true);
 		WebBrowserParent.SetAllHidden(true);

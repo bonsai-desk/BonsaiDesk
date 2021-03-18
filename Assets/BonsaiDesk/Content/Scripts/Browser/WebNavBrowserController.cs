@@ -10,16 +10,20 @@ public class WebNavBrowserController : MonoBehaviour {
 	// Start is called before the first frame update
 	private void Start() {
 		_browser                =  GetComponent<TableBrowser>();
-		_browser.ListenersReady += SetupBrowser;
+		_browser.ListenersReady += SetupListeners;
+		_browser.BrowserReady   += SetupBrowser;
+	}
+
+	private void SetupBrowser() {
+		_browser.SetHidden(true);
 	}
 
 	// Update is called once per frame
 	private void Update() { }
 
-	private void SetupBrowser() {
+	private void SetupListeners() {
 		_browser.PostMessage(Browser.BrowserMessage.NavWebNav);
 		_browser.OnMessageEmitted(HandleJavascriptMessage);
-		_browser.SetHidden(false);
 	}
 
 	public event Action GoBack;

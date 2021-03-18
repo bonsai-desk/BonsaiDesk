@@ -19,6 +19,7 @@ public class KeyboardBrowserController : MonoBehaviour {
 	private void SetupBrowser() {
 		_browser.PostMessage(Browser.BrowserMessage.NavKeyboard);
 		SetActive(false);
+		_browser.SetHidden(true);
 	}
 
 	public void SetActive(bool active) {
