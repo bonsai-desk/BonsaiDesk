@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4081732859467988882}
   - component: {fileID: 8227702852430561669}
-  m_Layer: 21
+  m_Layer: 19
   m_Name: fingerbox
   m_TagString: Untagged
   m_Icon: {fileID: 0}
