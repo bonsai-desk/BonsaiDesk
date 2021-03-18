@@ -20,6 +20,9 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
     public void Tick()
     {
+        //yo, just deal with the unreachable code warning. don't comment out giant blocks
+        return;
+        
         pinchPullJointBody.MovePosition(playerHand.PinchPosition());
 
         //detach if object is inUse by someone else
