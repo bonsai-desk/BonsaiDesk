@@ -23,6 +23,7 @@ public class WebBrowserController : MonoBehaviour {
 		_browser.SetHidden(false);
 		_browser.OnMessageEmitted(HandleJavascriptMessage);
 		SetRaised(false);
+		_browser.SetHidden(true);
 	}
 
 	public void SetRaised(bool raised) {
