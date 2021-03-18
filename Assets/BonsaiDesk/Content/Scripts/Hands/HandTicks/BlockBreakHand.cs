@@ -29,7 +29,8 @@ public class BlockBreakHand : MonoBehaviour, IHandTick
     {
         _particleObject = Instantiate(particlePrefab);
         _particleObject.transform.SetParent(playerHand.HandComponents.PhysicsFingerTips[1], false);
-        SetBreakMode(playerHand.skeletonType == OVRSkeleton.SkeletonType.HandRight);
+        //SetBreakMode(playerHand.skeletonType == OVRSkeleton.SkeletonType.HandRight);
+        SetBreakMode(false);
     }
 
     public void SetBreakMode(bool active)
