@@ -4,16 +4,33 @@ using UnityEngine.SceneManagement;
 using UnityEngine.XR.Management;
 
 public class LaunchManager : MonoBehaviour {
+	public bool debug;
 	// Start is called before the first frame update
 	private void Start() {
 		StartCoroutine(StartXR());
-		StartCoroutine(LoadAsync());
+		if (!debug) {
+			StartCoroutine(LoadAsync());
+		}
 	}
 
 	// Update is called once per frame
 	private void Update() { }
 
 	public void LoadLevel() { }
+	
+	private void OnApplicationQuit() {
+		StopXR();
+	}
+	
+	private void StopXR() {
+		if (XRGeneralSettings.Instance.Manager.isInitializationComplete) {
+			Debug.Log("Stopping XR...");
+
+			XRGeneralSettings.Instance.Manager.StopSubsystems();
+			XRGeneralSettings.Instance.Manager.DeinitializeLoader();
+			Debug.Log("XR stopped completely.");
+		}
+	}
 
 	private IEnumerator LoadAsync() {
 		var op = SceneManager.LoadSceneAsync(1);
