@@ -123,12 +123,12 @@ public class HandComponents
     public void SetTracking(bool tracking)
     {
         //if tracking just started this frame
-        if (!Tracking && tracking)
-        {
-            PhysicsHandController.SetCapsulesActiveTarget(false);
-            PhysicsHandController.ResetFingerJoints();
-            PhysicsHandController.SetCapsulesActiveTarget(true);
-        }
+        // if (!Tracking && tracking)
+        // {
+        //     PhysicsHandController.SetCapsulesActiveTarget(false);
+        //     PhysicsHandController.ResetFingerJoints();
+        //     PhysicsHandController.SetCapsulesActiveTarget(true);
+        // }
 
         Tracking = tracking;
 
