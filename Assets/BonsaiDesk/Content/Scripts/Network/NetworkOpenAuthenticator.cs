@@ -33,7 +33,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 	/// <param name="conn">Connection to client.</param>
 	public override void OnServerAuthenticate(NetworkConnection conn) {
 		Debug.Log("[BONSAI] OnServerAuthenticate");
-		if (NetworkManagerGame.Singleton.roomOpen || 
+		if (NetworkManagerGame.Singleton.roomOpen ||
 		    conn.connectionId == NetworkServer.localConnection.connectionId) {
 			var authResponseMessage = new AuthResponseMessage {
 				code = 100

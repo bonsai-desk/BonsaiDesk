@@ -23,7 +23,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 	[Header("Bonsai Network Manager")] public bool serverOnlyIfEditor;
 	public bool visualizeAuthority;
-	public bool browserReady;
+	private bool browserReady;
 	public TableBrowser tableBrowser;
 	public TableBrowserMenu tableBrowserMenu;
 	public MoveToDesk moveToDesk;
@@ -115,10 +115,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 		if (Time.time - _postRoomInfoLast > postRoomInfoEvery) {
 			PostInfo();
 		}
-
-		// TODO 
-		// StartCoroutine(StopHostFadeReturnToLoading());
-		// i.e. automatically try to reconnect to the relay service if not connected
 	}
 
 	private void OnApplicationFocus(bool focus) {
@@ -144,12 +140,12 @@ public class NetworkManagerGame : NobleNetworkManager {
 	private void PostInfo() {
 		if (browserReady) {
 			_postRoomInfoLast = Time.time;
-			#if UNITY_EDITOR || DEVELOPMENT_BUILD
-				var build = "DEVELOPMENT";
-			#else
-				var build = "PRODUCTION";
-			#endif
-			
+		#if UNITY_EDITOR || DEVELOPMENT_BUILD
+			var build = "DEVELOPMENT";
+		#else
+			var build = "PRODUCTION";
+		#endif
+
 			tableBrowserMenu.PostKvs(new[] {
 				new TableBrowserMenu.KeyVal {Key = "build", Val = build}
 			});
@@ -242,7 +238,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 			// Client connected to a host
 			case ConnectionState.ClientConnected:
 				if (work == Work.Setup) {
-					// todo set fade mask 0
 					SetCommsActive(_comms, true);
 				}
 				else {
@@ -278,12 +273,10 @@ public class NetworkManagerGame : NobleNetworkManager {
 			State = ConnectionState.Hosting;
 		}
 
-		// todo set fade mask 0
 	}
 
 	private IEnumerator SmoothStartClient() {
 		State = ConnectionState.ClientConnecting;
-		// todo set fade mask 1
 		yield return new WaitForSeconds(fader.fadeTime);
 		Debug.Log("[BONSAI] SmoothStartClient StopHost");
 		StopHost();
@@ -297,7 +290,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	private IEnumerator FadeThenReturnToLoading() {
-		// todo set fade mask 1
 		yield return new WaitForSeconds(fader.fadeTime);
 		State = ConnectionState.Loading;
 	}
@@ -525,7 +517,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 				// base method stops client with a delay so it can gracefully disconnct
 				// since the client is getting booted here, we don't need to wait (which introduces bugs)
 
-				// todo set fade mask 1
 				State = ConnectionState.Loading;
 				break;
 			case ConnectionState.ClientConnecting:
