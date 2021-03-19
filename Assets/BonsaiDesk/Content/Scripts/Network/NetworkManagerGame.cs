@@ -23,7 +23,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 	[Header("Bonsai Network Manager")] public bool serverOnlyIfEditor;
 	public bool visualizeAuthority;
-	private bool browserReady;
 	public TableBrowser tableBrowser;
 	public TableBrowserMenu tableBrowserMenu;
 	public MoveToDesk moveToDesk;
@@ -36,6 +35,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 		new Dictionary<NetworkConnection, PlayerInfo>();
 
 	private readonly float postRoomInfoEvery = 1f;
+	private bool _browserReady;
 	private Camera _camera;
 	private DissonanceComms _comms;
 	private ConnectionState _connectionState = ConnectionState.RelayError;
@@ -74,7 +74,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 		tableBrowser.BrowserReady += () =>
 		{
-			browserReady = true;
+			_browserReady = true;
 			tableBrowser.SetHidden(true);
 		};
 
@@ -138,7 +138,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	private void PostInfo() {
-		if (browserReady) {
+		if (_browserReady) {
 			_postRoomInfoLast = Time.time;
 		#if UNITY_EDITOR || DEVELOPMENT_BUILD
 			var build = "DEVELOPMENT";
@@ -272,7 +272,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 		else {
 			State = ConnectionState.Hosting;
 		}
-
 	}
 
 	private IEnumerator SmoothStartClient() {
@@ -308,18 +307,18 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	private IEnumerator KickClient(int id) {
-		NetworkConnectionToClient _conn = null;
+		NetworkConnectionToClient connToKick = null;
 		foreach (var conn in NetworkServer.connections.Values.ToList()) {
 			if (conn.connectionId != NetworkConnection.LocalConnectionId && conn.connectionId == id) {
-				_conn = conn;
+				connToKick = conn;
 				break;
 			}
 		}
 
-		if (_conn != null) {
-			_conn.Send(new ShouldDisconnectMessage());
+		if (connToKick != null) {
+			connToKick.Send(new ShouldDisconnectMessage());
 			yield return new WaitForSeconds(fader.fadeTime + 0.15f);
-			_conn.Disconnect();
+			connToKick.Disconnect();
 		}
 
 		PostInfo();
@@ -423,10 +422,10 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	public override void OnServerAddPlayer(NetworkConnection conn) {
-		Debug.Log($"[BONSAI] OnServerAddPlayer {conn.connectionId} {conn.identity?.netId}");
+		var connNetId = conn.identity ? conn.identity.netId.ToString() : "";
+		Debug.Log($"[BONSAI] OnServerAddPlayer {conn.connectionId} {connNetId}");
 		conn.Send(new SpotMessage {
-			SpotId     = PlayerInfos[conn].spot,
-			ColorIndex = PlayerInfos[conn].spot
+			SpotId = PlayerInfos[conn].spot
 		});
 
 		base.OnServerAddPlayer(conn);
@@ -546,7 +545,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public void UpdateUserInfo(uint netId, UserInfo userInfo) {
 		foreach (var conn in PlayerInfos.Keys.ToList()) {
 			if (netId == conn.identity.netId) {
-				PlayerInfos[conn].userInfo = userInfo;
+				PlayerInfos[conn].User = userInfo;
 			}
 		}
 	}
@@ -554,11 +553,11 @@ public class NetworkManagerGame : NobleNetworkManager {
 	[Serializable]
 	public class PlayerInfo {
 		public int spot;
-		public UserInfo userInfo;
+		public UserInfo User;
 
 		public PlayerInfo(int spot) {
 			this.spot = spot;
-			userInfo  = new UserInfo("User");
+			User  = new UserInfo("User");
 		}
 	}
 
@@ -570,7 +569,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 	private struct ShouldDisconnectMessage : NetworkMessage { }
 
 	private struct SpotMessage : NetworkMessage {
-		public int ColorIndex;
 		public int SpotId;
 	}
 

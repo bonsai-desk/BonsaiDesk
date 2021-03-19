@@ -164,7 +164,7 @@ public class TableBrowserMenu : MonoBehaviour {
 	public void PostPlayerInfo(Dictionary<NetworkConnection, NetworkManagerGame.PlayerInfo> playerInfos) {
 		var data = playerInfos
 		           .Select(entry => new PlayerData
-			                   {Name = entry.Value.userInfo.DisplayName, ConnectionId = entry.Key.connectionId})
+			                   {Name = entry.Value.User.DisplayName, ConnectionId = entry.Key.connectionId})
 		           .ToArray();
 
 		var csMessage = new CsMessageKeyType<PlayerData[]>
