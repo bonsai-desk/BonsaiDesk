@@ -172,6 +172,7 @@ public class AutoBrowserController : NetworkBehaviour {
 			var now       = NetworkTime.time;
 			var timeStamp = _clientPlayerTimeStamp;
 			CmdPingAndCheckTimeStamp(id, now, timeStamp);
+			_clientLastSentPing = NetworkTime.time;
 		}
 	}
 
