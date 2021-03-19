@@ -68,7 +68,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 				break;
 			case 200:
 				Debug.Log("[BONSAI] Authenticator Rejected");
-				// todo ClientReject(conn);
+				ClientReject(conn);
 				NetworkManagerGame.Singleton.State = NetworkManagerGame.ConnectionState.Loading;
 				break;
 		}
