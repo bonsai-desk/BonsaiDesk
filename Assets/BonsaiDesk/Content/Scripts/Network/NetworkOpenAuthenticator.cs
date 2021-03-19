@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Mirror;
+﻿using Mirror;
 using UnityEngine;
 
 /*
@@ -9,16 +8,6 @@ using UnityEngine;
 */
 
 public class NetworkOpenAuthenticator : NetworkAuthenticator {
-	#region Messages
-
-	public struct AuthResponseMessage : NetworkMessage {
-		public byte code;
-	}
-
-	#endregion
-
-	#region Server
-
 	/// <summary>
 	///     Called on server from StartServer to initialize the Authenticator
 	///     <para>Server message handlers should be registered in this method.</para>
@@ -36,7 +25,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 		if (NetworkManagerGame.Singleton.roomOpen ||
 		    conn.connectionId == NetworkServer.localConnection.connectionId) {
 			var authResponseMessage = new AuthResponseMessage {
-				code = 100
+				Code = 100
 			};
 			Debug.Log("[BONSAI] OnServerAuthenticate 100");
 			conn.Send(authResponseMessage);
@@ -44,26 +33,14 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 		}
 		else {
 			var authResponseMessage = new AuthResponseMessage {
-				code = 200
+				Code = 200
 			};
 			Debug.Log("[BONSAI] OnServerAuthenticate 200");
+			conn.Send(authResponseMessage);
 			conn.isAuthenticated = false;
 			ServerReject(conn);
 		}
 	}
-
-	private IEnumerator DelayedDisconnect(NetworkConnection conn, float waitTime) {
-		yield return new WaitForSeconds(waitTime);
-
-		// Reject the unsuccessful authentication
-		// The client should have disconnected by now
-		// This will throw a warning 
-		ServerReject(conn);
-	}
-
-	#endregion
-
-	#region Client
 
 	/// <summary>
 	///     Called on client from StartClient to initialize the Authenticator
@@ -82,21 +59,24 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 		// do nothing just wait for AuthMessageResponse
 	}
 
-	public void OnAuthResponseMessage(NetworkConnection conn, AuthResponseMessage msg) {
-		// Invoke the event to complete a successful authentication
-		if (msg.code == 100) {
-			// Authentication has been accepted
-			Debug.Log("[BONSAI] ClientAccept");
-			ClientAccept(conn);
-		}
-		else if (msg.code == 200) {
-			// Authentication has been rejected
-			Debug.Log("[BONSAI] ClientReject");
-			// TODO try both!
-			//ClientReject(conn);
-			NetworkManagerGame.Singleton.State = NetworkManagerGame.ConnectionState.Loading;
+	private void OnAuthResponseMessage(NetworkConnection conn, AuthResponseMessage msg) {
+		switch (msg.Code) {
+			// Invoke the event to complete a successful authentication
+			case 100:
+				Debug.Log("[BONSAI] Authenticator Accepted");
+				ClientAccept(conn);
+				break;
+			case 200:
+				Debug.Log("[BONSAI] Authenticator Rejected");
+				// todo ClientReject(conn);
+				NetworkManagerGame.Singleton.State = NetworkManagerGame.ConnectionState.Loading;
+				break;
 		}
 	}
 
-	#endregion
+	private struct AuthResponseMessage : NetworkMessage {
+		// 100 : good
+		// 200 : reject
+		public byte Code;
+	}
 }

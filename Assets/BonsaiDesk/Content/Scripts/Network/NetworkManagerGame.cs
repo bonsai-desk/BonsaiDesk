@@ -523,6 +523,12 @@ public class NetworkManagerGame : NobleNetworkManager {
 				StopClient();
 				State = ConnectionState.Loading;
 				break;
+			case ConnectionState.RelayError:
+				break;
+			case ConnectionState.Loading:
+				break;
+			case ConnectionState.Hosting:
+				break;
 			default:
 				base.OnClientDisconnect(conn);
 				break;
