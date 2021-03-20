@@ -9,12 +9,19 @@ using Vuplex.WebView;
 
 [RequireComponent(typeof(TableBrowser))]
 public class TableBrowserMenu : MonoBehaviour {
+	public enum LightState {
+		Bright,
+		Vibes
+	}
+
+	private const float PostRoomInfoEvery = 1f;
 	public static TableBrowserMenu Singleton;
 	public AutoBrowserController autoBrowserController;
 	public float postMediaInfoEvery = 0.5f;
-	private float _postMediaInfoLast;
 	[FormerlySerializedAs("_browser")] public TableBrowser browser;
 	public bool canPost;
+	private float _postMediaInfoLast;
+	private float _postRoomInfoLast;
 
 	private void Awake() {
 		if (Singleton == null) {
@@ -23,9 +30,9 @@ public class TableBrowserMenu : MonoBehaviour {
 	}
 
 	private void Start() {
-		browser                =  GetComponent<TableBrowser>();
-		browser.BrowserReady   += SetupBrowser;
-		browser.ListenersReady += HandleListnersReady;
+		browser                 =  GetComponent<TableBrowser>();
+		browser.BrowserReady    += SetupBrowser;
+		browser.ListenersReady  += HandleListnersReady;
 		OVRManager.HMDUnmounted += () => { browser.SetHidden(true); };
 	}
 
@@ -33,6 +40,39 @@ public class TableBrowserMenu : MonoBehaviour {
 		if (Time.time - _postMediaInfoLast > postMediaInfoEvery) {
 			PostMediaInfo(autoBrowserController.GetMediaInfo());
 			_postMediaInfoLast = Time.time;
+		}
+
+		if (Time.time - _postRoomInfoLast > PostRoomInfoEvery) {
+			PostNetworkInfo();
+		}
+	}
+
+	private void PostNetworkInfo() {
+		var HostEndPoint = NetworkManagerGame.Singleton.HostEndPoint;
+		var State        = NetworkManagerGame.Singleton.State;
+		var PlayerInfos  = NetworkManagerGame.Singleton.PlayerInfos;
+		var roomOpen     = NetworkManagerGame.Singleton.roomOpen;
+
+		if (canPost) {
+			_postRoomInfoLast = Time.time;
+		#if UNITY_EDITOR || DEVELOPMENT_BUILD
+			const string build = "DEVELOPMENT";
+		#else
+			const string build = "PRODUCTION";
+		#endif
+
+			PostKvs(new[] {
+				new KeyVal {Key = "build", Val = build}
+			});
+			PostNetworkState(State.ToString());
+			PostPlayerInfo(PlayerInfos);
+			PostRoomOpen(roomOpen);
+			if (HostEndPoint != null) {
+				PostRoomInfo(HostEndPoint.Address.ToString(), HostEndPoint.Port.ToString());
+			}
+			else {
+				PostRoomInfo("", "");
+			}
 		}
 	}
 
@@ -94,7 +134,7 @@ public class TableBrowserMenu : MonoBehaviour {
 						}
 
 						break;
-					
+
 					case "lightsChange":
 						if (LightChange != null) {
 							switch (message.Data) {
@@ -130,7 +170,7 @@ public class TableBrowserMenu : MonoBehaviour {
 
 	private void PostMediaInfo(AutoBrowserController.MediaInfo mediaInfo) {
 		var kv = new KeyType<AutoBrowserController.MediaInfo> {Key = "media_info", Val = mediaInfo};
-		var jsMessage = new CsMessageKeyType<AutoBrowserController.MediaInfo>() {
+		var jsMessage = new CsMessageKeyType<AutoBrowserController.MediaInfo> {
 			Data = kv
 		};
 		var message = JsonConvert.SerializeObject(jsMessage);
@@ -178,7 +218,7 @@ public class TableBrowserMenu : MonoBehaviour {
 	}
 
 	public void PostUserInfo(UserInfo userInfo) {
-		var data = new KeyType<UserInfo> {Key = "user_info", Val = userInfo};
+		var data      = new KeyType<UserInfo> {Key           = "user_info", Val = userInfo};
 		var csMessage = new CsMessageKeyType<UserInfo> {Data = data};
 		var message   = JsonConvert.SerializeObject(csMessage);
 		browser.PostMessage(message);
@@ -232,9 +272,5 @@ public class TableBrowserMenu : MonoBehaviour {
 
 	public struct UserInfo {
 		public string UserName;
-	}
-	
-	public enum LightState {
-		Bright, Vibes
 	}
 }

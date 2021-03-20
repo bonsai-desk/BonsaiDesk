@@ -18,7 +18,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 		ClientConnected
 	}
 
-	private const float PostRoomInfoEvery = 1f;
 	private const float FadeTime = 2.0f;
 
 	public static NetworkManagerGame Singleton;
@@ -26,7 +25,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public bool serverOnlyIfEditor;
 
 	public bool visualizeAuthority;
-	public TogglePause togglePause;
 
 	[HideInInspector] public bool roomOpen;
 
@@ -38,7 +36,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 	private Camera _camera;
 	private DissonanceComms _comms;
 	private ConnectionState _connectionState = ConnectionState.RelayError;
-	private float _postRoomInfoLast;
 
 	public ConnectionState State {
 		get => _connectionState;
@@ -55,8 +52,13 @@ public class NetworkManagerGame : NobleNetworkManager {
 			Debug.Log("[BONSAI] HandleState Setup " + value);
 			HandleState(value, Work.Setup);
 
-			PostInfo();
+			TriggerInfoChange();
 		}
+	}
+
+	private void TriggerInfoChange () {
+		InfoChange?.Invoke(this, new EventArgs());
+
 	}
 
 	public override void Awake() {
@@ -101,14 +103,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 		}
 	}
 
-	public override void Update() {
-		base.Update();
-
-		if (Time.time - _postRoomInfoLast > PostRoomInfoEvery) {
-			PostInfo();
-		}
-	}
-
 	private void OnApplicationFocus(bool focus) {
 		if (MoveToDesk.Singleton.oriented) {
 			SetCommsActive(_comms, focus);
@@ -129,39 +123,15 @@ public class NetworkManagerGame : NobleNetworkManager {
 		StopXR();
 	}
 
-	private void PostInfo() {
-		if (TableBrowserMenu.Singleton.canPost) {
-			_postRoomInfoLast = Time.time;
-		#if UNITY_EDITOR || DEVELOPMENT_BUILD
-			var build = "DEVELOPMENT";
-		#else
-			var build = "PRODUCTION";
-		#endif
-
-			TableBrowserMenu.Singleton.PostKvs(new[] {
-				new TableBrowserMenu.KeyVal {Key = "build", Val = build}
-			});
-			TableBrowserMenu.Singleton.PostNetworkState(State.ToString());
-			TableBrowserMenu.Singleton.PostPlayerInfo(PlayerInfos);
-			TableBrowserMenu.Singleton.PostRoomOpen(roomOpen);
-			if (HostEndPoint != null) {
-				TableBrowserMenu.Singleton.PostRoomInfo(HostEndPoint.Address.ToString(), HostEndPoint.Port.ToString());
-			}
-			else {
-				TableBrowserMenu.Singleton.PostRoomInfo("", "");
-			}
-		}
-	}
-
 	private void HandleCloseRoom() {
 		roomOpen = false;
 		State    = ConnectionState.Loading;
-		PostInfo();
+		TriggerInfoChange();
 	}
 
 	private void HandleOpenRoom() {
 		roomOpen = true;
-		PostInfo();
+		TriggerInfoChange();
 	}
 
 	private void HandleKickConnectionId(int id) {
@@ -311,9 +281,8 @@ public class NetworkManagerGame : NobleNetworkManager {
 			connToKick.Send(new ShouldDisconnectMessage());
 			yield return new WaitForSeconds(FadeTime + 0.15f);
 			connToKick.Disconnect();
+			TriggerInfoChange();
 		}
-
-		PostInfo();
 	}
 
 	private void VoidAndDeafen() {
@@ -350,6 +319,8 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public event Action<NetworkConnection> ServerAddPlayer;
 
 	public event Action<NetworkConnection> ServerDisconnect;
+
+	public event EventHandler InfoChange;
 
 	private IEnumerator StartXR() {
 		Debug.Log("Initializing XR...");
