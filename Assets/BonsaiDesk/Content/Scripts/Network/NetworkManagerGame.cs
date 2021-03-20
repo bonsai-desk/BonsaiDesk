@@ -465,10 +465,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 			}
 		}
 
-		if (conn.identity != null && togglePause.AuthorityIdentityId == conn.identity.netId) {
-			togglePause.RemoveClientAuthority();
-		}
-
 		base.OnServerDisconnect(conn);
 
 		// triggers when last client leaves

@@ -1510,11 +1510,7 @@ MonoBehaviour:
   isDisconnecting: 0
   serverOnlyIfEditor: 0
   visualizeAuthority: 0
-  tableBrowser: {fileID: 1361515864}
-  tableBrowserMenu: {fileID: 1361515863}
-  moveToDesk: {fileID: 1212259449}
   togglePause: {fileID: 96659938}
-  fader: {fileID: 1129058233}
   roomOpen: 0
 --- !u!4 &217350384
 Transform:
@@ -15229,6 +15225,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoBrowserController: {fileID: 1382784202}
   postMediaInfoEvery: 0.5
+  browser: {fileID: 0}
+  canPost: 0
 --- !u!114 &1361515864 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,

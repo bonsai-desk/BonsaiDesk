@@ -137,9 +137,19 @@ public class TogglePause : NetworkBehaviour
     {
         base.OnStartServer();
 
-        _paused = true;
-        _visibilitySynced = 1;
-        _positionSynced = 0;
+        _paused                                       =  true;
+        _visibilitySynced                             =  1;
+        _positionSynced                               =  0;
+        
+        NetworkManagerGame.Singleton.ServerDisconnect -= HandleServerAddPlayer;
+        
+        NetworkManagerGame.Singleton.ServerDisconnect += HandleServerAddPlayer;
+    }
+
+    private void HandleServerAddPlayer(NetworkConnection conn) {
+		if (conn.identity != null && AuthorityIdentityId == conn.identity.netId) {
+			RemoveClientAuthority();
+		}
     }
 
     public override void OnStartClient()
