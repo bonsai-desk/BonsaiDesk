@@ -17,6 +17,8 @@ public class MoveToDesk : MonoBehaviour {
     public Transform oVRCameraRig;
     public Transform centerEyeAnchor;
 
+    private Camera _camera;
+
     public GameObject blackOverlay;
     public GameObject instructions;
 
@@ -68,10 +70,12 @@ public class MoveToDesk : MonoBehaviour {
         }
     }
 
-    private void Start()
-    {
-        oVRCameraRigStartPosition = oVRCameraRig.position;
-        oVRCameraRigStartRotation = oVRCameraRig.rotation;
+    private void Start() {
+        oVRCameraRigStartPosition =  oVRCameraRig.position;
+        oVRCameraRigStartRotation =  oVRCameraRig.rotation;
+		_camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
+        
+        OrientationChanged        += HandleOrientationChanged;
 
         instructionsTexts = new[]
             {instructionsText.text, "Place hands flat on table\nwith thumbs on the edge", "Move hands apart quickly"};
@@ -91,6 +95,15 @@ public class MoveToDesk : MonoBehaviour {
         playerOrientations = new List<PlayerOrientation>();
 
         ResetPosition();
+    }
+
+    private void HandleOrientationChanged(bool o) {
+		if (o) {
+			_camera.cullingMask |= 1 << LayerMask.NameToLayer("networkPlayer");
+		}
+		else {
+			_camera.cullingMask &= ~(1 << LayerMask.NameToLayer("networkPlayer"));
+		}
     }
 
     private bool WristsPointedOut()
