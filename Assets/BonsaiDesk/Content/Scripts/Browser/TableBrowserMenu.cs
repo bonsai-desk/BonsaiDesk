@@ -4,6 +4,7 @@ using System.Linq;
 using Mirror;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Vuplex.WebView;
 
 [RequireComponent(typeof(TableBrowser))]
@@ -12,7 +13,8 @@ public class TableBrowserMenu : MonoBehaviour {
 	public AutoBrowserController autoBrowserController;
 	public float postMediaInfoEvery = 0.5f;
 	private float _postMediaInfoLast;
-	private TableBrowser _browser;
+	[FormerlySerializedAs("_browser")] public TableBrowser browser;
+	public bool canPost;
 
 	private void Awake() {
 		if (Singleton == null) {
@@ -21,10 +23,10 @@ public class TableBrowserMenu : MonoBehaviour {
 	}
 
 	private void Start() {
-		_browser                =  GetComponent<TableBrowser>();
-		_browser.BrowserReady   += SetupBrowser;
-		_browser.ListenersReady += NavToMenu;
-		OVRManager.HMDUnmounted += () => { _browser.SetHidden(true); };
+		browser                =  GetComponent<TableBrowser>();
+		browser.BrowserReady   += SetupBrowser;
+		browser.ListenersReady += HandleListnersReady;
+		OVRManager.HMDUnmounted += () => { browser.SetHidden(true); };
 	}
 
 	public void Update() {
@@ -35,12 +37,13 @@ public class TableBrowserMenu : MonoBehaviour {
 	}
 
 	private void SetupBrowser() {
-		_browser.OnMessageEmitted(HandleJavascriptMessage);
+		browser.OnMessageEmitted(HandleJavascriptMessage);
 	}
 
-	private void NavToMenu() {
+	private void HandleListnersReady() {
 		Debug.Log("[BONSAI] nav to menu");
-		_browser.PostMessage(Browser.BrowserMessage.NavToMenu);
+		browser.PostMessage(Browser.BrowserMessage.NavToMenu);
+		canPost = true;
 	}
 
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
@@ -122,7 +125,7 @@ public class TableBrowserMenu : MonoBehaviour {
 			Type = "command", Message = "pushStore", Data = kvs
 		};
 		var message = JsonConvert.SerializeObject(jsMessage);
-		_browser.PostMessage(message);
+		browser.PostMessage(message);
 	}
 
 	private void PostMediaInfo(AutoBrowserController.MediaInfo mediaInfo) {
@@ -131,14 +134,14 @@ public class TableBrowserMenu : MonoBehaviour {
 			Data = kv
 		};
 		var message = JsonConvert.SerializeObject(jsMessage);
-		_browser.PostMessage(message);
+		browser.PostMessage(message);
 	}
 
 	public void PostRoomOpen(bool open) {
 		var kv        = new KeyType<bool> {Key           = "room_open", Val = open};
 		var jsMessage = new CsMessageKeyType<bool> {Data = kv};
 		var message   = JsonConvert.SerializeObject(jsMessage);
-		_browser.PostMessage(message);
+		browser.PostMessage(message);
 	}
 
 	public void PostRoomInfo(string ipAddress, string port) {
@@ -150,7 +153,7 @@ public class TableBrowserMenu : MonoBehaviour {
 			Data = kvs
 		};
 		var message = JsonConvert.SerializeObject(jsMessage);
-		_browser.PostMessage(message);
+		browser.PostMessage(message);
 	}
 
 	public void PostKvs(KeyVal[] kvs) {
@@ -158,7 +161,7 @@ public class TableBrowserMenu : MonoBehaviour {
 			Data = kvs
 		};
 		var message = JsonConvert.SerializeObject(jsMessage);
-		_browser.PostMessage(message);
+		browser.PostMessage(message);
 	}
 
 	public void PostPlayerInfo(Dictionary<NetworkConnection, NetworkManagerGame.PlayerInfo> playerInfos) {
@@ -171,14 +174,14 @@ public class TableBrowserMenu : MonoBehaviour {
 			{Data = new KeyType<PlayerData[]> {Key = "player_info", Val = data}};
 
 		var message = JsonConvert.SerializeObject(csMessage);
-		_browser.PostMessage(message);
+		browser.PostMessage(message);
 	}
 
 	public void PostUserInfo(UserInfo userInfo) {
 		var data = new KeyType<UserInfo> {Key = "user_info", Val = userInfo};
 		var csMessage = new CsMessageKeyType<UserInfo> {Data = data};
 		var message   = JsonConvert.SerializeObject(csMessage);
-		_browser.PostMessage(message);
+		browser.PostMessage(message);
 	}
 
 	public event Action<RoomData> JoinRoom;

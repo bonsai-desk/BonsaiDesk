@@ -1510,7 +1510,6 @@ MonoBehaviour:
   isDisconnecting: 0
   serverOnlyIfEditor: 0
   visualizeAuthority: 0
-  browserReady: 0
   tableBrowser: {fileID: 1361515864}
   tableBrowserMenu: {fileID: 1361515863}
   moveToDesk: {fileID: 1212259449}

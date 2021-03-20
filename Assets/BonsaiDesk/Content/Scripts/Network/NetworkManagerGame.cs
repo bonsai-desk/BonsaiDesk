@@ -19,23 +19,23 @@ public class NetworkManagerGame : NobleNetworkManager {
 		ClientConnected
 	}
 
+	private const float PostRoomInfoEvery = 1f;
+	private const float FadeTime = 2.0f;
+
 	public static NetworkManagerGame Singleton;
 
-	[Header("Bonsai Network Manager")] public bool serverOnlyIfEditor;
+	public bool serverOnlyIfEditor;
+
 	public bool visualizeAuthority;
-	public TableBrowser tableBrowser;
-	public TableBrowserMenu tableBrowserMenu;
-	public MoveToDesk moveToDesk;
 	public TogglePause togglePause;
-	public BonsaiScreenFade fader;
-	public bool roomOpen;
+
+	[HideInInspector] public bool roomOpen;
+
 	private readonly bool[] _spotInUse = new bool[2];
 
 	public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos =
 		new Dictionary<NetworkConnection, PlayerInfo>();
 
-	private readonly float postRoomInfoEvery = 1f;
-	private bool _browserReady;
 	private Camera _camera;
 	private DissonanceComms _comms;
 	private ConnectionState _connectionState = ConnectionState.RelayError;
@@ -72,18 +72,12 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public override void Start() {
 		base.Start();
 
-		tableBrowser.BrowserReady += () =>
-		{
-			_browserReady = true;
-			tableBrowser.SetHidden(true);
-		};
+		TableBrowserMenu.Singleton.JoinRoom         += HandleJoinRoom;
+		TableBrowserMenu.Singleton.LeaveRoom        += HandleLeaveRoom;
+		TableBrowserMenu.Singleton.KickConnectionId += HandleKickConnectionId;
 
-		tableBrowserMenu.JoinRoom         += HandleJoinRoom;
-		tableBrowserMenu.LeaveRoom        += HandleLeaveRoom;
-		tableBrowserMenu.KickConnectionId += HandleKickConnectionId;
-
-		tableBrowserMenu.OpenRoom  += HandleOpenRoom;
-		tableBrowserMenu.CloseRoom += HandleCloseRoom;
+		TableBrowserMenu.Singleton.OpenRoom  += HandleOpenRoom;
+		TableBrowserMenu.Singleton.CloseRoom += HandleCloseRoom;
 
 		_camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
 
@@ -112,13 +106,13 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public override void Update() {
 		base.Update();
 
-		if (Time.time - _postRoomInfoLast > postRoomInfoEvery) {
+		if (Time.time - _postRoomInfoLast > PostRoomInfoEvery) {
 			PostInfo();
 		}
 	}
 
 	private void OnApplicationFocus(bool focus) {
-		if (moveToDesk.oriented) {
+		if (MoveToDesk.Singleton.oriented) {
 			SetCommsActive(_comms, focus);
 		}
 	}
@@ -129,7 +123,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 		}
 
 		SetCommsActive(_comms, false);
-		moveToDesk.ResetPosition();
+		MoveToDesk.Singleton.ResetPosition();
 	}
 
 	public override void OnApplicationQuit() {
@@ -138,7 +132,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	private void PostInfo() {
-		if (_browserReady) {
+		if (TableBrowserMenu.Singleton.canPost) {
 			_postRoomInfoLast = Time.time;
 		#if UNITY_EDITOR || DEVELOPMENT_BUILD
 			var build = "DEVELOPMENT";
@@ -146,17 +140,17 @@ public class NetworkManagerGame : NobleNetworkManager {
 			var build = "PRODUCTION";
 		#endif
 
-			tableBrowserMenu.PostKvs(new[] {
+			TableBrowserMenu.Singleton.PostKvs(new[] {
 				new TableBrowserMenu.KeyVal {Key = "build", Val = build}
 			});
-			tableBrowserMenu.PostNetworkState(State.ToString());
-			tableBrowserMenu.PostPlayerInfo(PlayerInfos);
-			tableBrowserMenu.PostRoomOpen(roomOpen);
+			TableBrowserMenu.Singleton.PostNetworkState(State.ToString());
+			TableBrowserMenu.Singleton.PostPlayerInfo(PlayerInfos);
+			TableBrowserMenu.Singleton.PostRoomOpen(roomOpen);
 			if (HostEndPoint != null) {
-				tableBrowserMenu.PostRoomInfo(HostEndPoint.Address.ToString(), HostEndPoint.Port.ToString());
+				TableBrowserMenu.Singleton.PostRoomInfo(HostEndPoint.Address.ToString(), HostEndPoint.Port.ToString());
 			}
 			else {
-				tableBrowserMenu.PostRoomInfo("", "");
+				TableBrowserMenu.Singleton.PostRoomInfo("", "");
 			}
 		}
 	}
@@ -217,7 +211,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 						StopClient();
 					}
 
-					moveToDesk.SetTableEdge(GameObject.Find("DefaultEdge").transform);
+					MoveToDesk.Singleton.SetTableEdge(GameObject.Find("DefaultEdge").transform);
 					SetCommsActive(_comms, false);
 					StartCoroutine(StartHostAfterDisconnect());
 				}
@@ -276,7 +270,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 	private IEnumerator SmoothStartClient() {
 		State = ConnectionState.ClientConnecting;
-		yield return new WaitForSeconds(fader.fadeTime);
+		yield return new WaitForSeconds(FadeTime);
 		Debug.Log("[BONSAI] SmoothStartClient StopHost");
 		StopHost();
 		if (HostEndPoint != null) {
@@ -289,7 +283,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	private IEnumerator FadeThenReturnToLoading() {
-		yield return new WaitForSeconds(fader.fadeTime);
+		yield return new WaitForSeconds(FadeTime);
 		State = ConnectionState.Loading;
 	}
 
@@ -299,7 +293,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 			conn.Send(new ShouldDisconnectMessage());
 		}
 
-		yield return new WaitForSeconds(fader.fadeTime + 0.15f);
+		yield return new WaitForSeconds(FadeTime + 0.15f);
 		foreach (var conn in NetworkServer.connections.Values.ToList()
 		                                  .Where(conn => conn.connectionId != NetworkConnection.LocalConnectionId)) {
 			conn.Disconnect();
@@ -317,7 +311,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 		if (connToKick != null) {
 			connToKick.Send(new ShouldDisconnectMessage());
-			yield return new WaitForSeconds(fader.fadeTime + 0.15f);
+			yield return new WaitForSeconds(FadeTime + 0.15f);
 			connToKick.Disconnect();
 		}
 
@@ -325,7 +319,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	private void VoidAndDeafen() {
-		moveToDesk.ResetPosition();
+		MoveToDesk.Singleton.ResetPosition();
 		SetCommsActive(_comms, false);
 	}
 
@@ -513,7 +507,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 		switch (State) {
 			case ConnectionState.ClientConnected:
 				// this happens on client when the host exits rudely (power off, etc)
-				// base method stops client with a delay so it can gracefully disconnct
+				// base method stops client with a delay so it can gracefully disconnect
 				// since the client is getting booted here, we don't need to wait (which introduces bugs)
 
 				State = ConnectionState.Loading;
@@ -563,7 +557,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 		public PlayerInfo(int spot) {
 			this.spot = spot;
-			User  = new UserInfo("User");
+			User      = new UserInfo("User");
 		}
 	}
 
