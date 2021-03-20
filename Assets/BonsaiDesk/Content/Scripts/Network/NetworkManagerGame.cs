@@ -40,10 +40,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 		// todo make this into EventHandler
 		MoveToDesk.OrientationChanged += HandleOrientationChanged;
-		
-		if (!Permission.HasUserAuthorizedPermission(Permission.Microphone)) {
-			Permission.RequestUserPermission(Permission.Microphone);
-		}
 
 		_comms = GetComponent<DissonanceComms>();
 		SetCommsActive( false);
