@@ -518,4 +518,11 @@ public class MoveToDesk : MonoBehaviour {
         public Quaternion oVRCameraRigRotation;
         public float thumbDistance;
     }
+
+    private void OnApplicationPause(bool pauseStatus) {
+        if (pauseStatus) {
+            Debug.Log("[BONSAI] Resetting position since app paused");
+            ResetPosition();
+        }
+    }
 }
