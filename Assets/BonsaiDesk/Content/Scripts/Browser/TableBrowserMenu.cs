@@ -229,11 +229,11 @@ public class TableBrowserMenu : MonoBehaviour {
 		browser.PostMessage(message);
 	}
 
-	public event Action<RoomData> JoinRoom;
-	public event Action LeaveRoom;
-	public event Action OpenRoom;
-	public event Action CloseRoom;
-	public event Action<int> KickConnectionId;
+	public static event Action<RoomData> JoinRoom;
+	public static event Action LeaveRoom;
+	public static event Action OpenRoom;
+	public static event Action CloseRoom;
+	public static event Action<int> KickConnectionId;
 
 	public event EventHandler<string> BrowseSite;
 
