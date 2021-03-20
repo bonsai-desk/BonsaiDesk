@@ -37,10 +37,6 @@ public class TableBrowserMenu : MonoBehaviour {
 		OVRManager.HMDUnmounted                 += () => { browser.SetHidden(true); };
 	}
 
-	private void HandleNetworkInfoChange(object sender, EventArgs e) {
-		PostNetworkInfo();
-	}
-
 	public void Update() {
 		if (Time.time - _postMediaInfoLast > postMediaInfoEvery) {
 			PostMediaInfo(autoBrowserController.GetMediaInfo());
@@ -52,6 +48,9 @@ public class TableBrowserMenu : MonoBehaviour {
 		}
 	}
 
+	private void HandleNetworkInfoChange(object sender, EventArgs e) {
+		PostNetworkInfo();
+	}
 
 	private void PostNetworkInfo() {
 		var HostEndPoint = NetworkManagerGame.Singleton.HostEndPoint;
