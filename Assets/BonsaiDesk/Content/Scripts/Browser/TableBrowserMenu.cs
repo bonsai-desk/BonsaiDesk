@@ -30,10 +30,15 @@ public class TableBrowserMenu : MonoBehaviour {
 	}
 
 	private void Start() {
-		browser                 =  GetComponent<TableBrowser>();
-		browser.BrowserReady    += SetupBrowser;
-		browser.ListenersReady  += HandleListnersReady;
-		OVRManager.HMDUnmounted += () => { browser.SetHidden(true); };
+		browser                                 =  GetComponent<TableBrowser>();
+		browser.BrowserReady                    += SetupBrowser;
+		browser.ListenersReady                  += HandleListnersReady;
+		NetworkManagerGame.Singleton.InfoChange += HandleNetworkInfoChange;
+		OVRManager.HMDUnmounted                 += () => { browser.SetHidden(true); };
+	}
+
+	private void HandleNetworkInfoChange(object sender, EventArgs e) {
+		PostNetworkInfo();
 	}
 
 	public void Update() {
@@ -46,6 +51,7 @@ public class TableBrowserMenu : MonoBehaviour {
 			PostNetworkInfo();
 		}
 	}
+
 
 	private void PostNetworkInfo() {
 		var HostEndPoint = NetworkManagerGame.Singleton.HostEndPoint;
