@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.Android;
 using UnityEngine.XR.Management;
 
-public class NetworkManagerGame : NobleNetworkManager {
+public class NetworkManagerGameOld : NobleNetworkManager {
 	public enum ConnectionState {
 		RelayError,
 		Loading,
@@ -21,7 +21,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 	private const float PostRoomInfoEvery = 1f;
 	private const float FadeTime = 2.0f;
 
-	public static NetworkManagerGame Singleton;
+	public static NetworkManagerGameOld Singleton;
 
 	public bool serverOnlyIfEditor;
 
@@ -142,7 +142,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 				new TableBrowserMenu.KeyVal {Key = "build", Val = build}
 			});
 			TableBrowserMenu.Singleton.PostNetworkState(State.ToString());
-			TableBrowserMenu.Singleton.PostPlayerInfo(PlayerInfos);
+			// todo TableBrowserMenu.Singleton.PostPlayerInfo(PlayerInfos);
 			TableBrowserMenu.Singleton.PostRoomOpen(roomOpen);
 			if (HostEndPoint != null) {
 				TableBrowserMenu.Singleton.PostRoomInfo(HostEndPoint.Address.ToString(), HostEndPoint.Port.ToString());
