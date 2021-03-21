@@ -146,7 +146,7 @@ public class TogglePause : NetworkBehaviour
         NetworkManagerGame.Singleton.ServerDisconnect += HandleServerAddPlayer;
     }
 
-    private void HandleServerAddPlayer(NetworkConnection conn) {
+    private void HandleServerAddPlayer(object _, NetworkConnection conn) {
 		if (conn.identity != null && AuthorityIdentityId == conn.identity.netId) {
 			RemoveClientAuthority();
 		}

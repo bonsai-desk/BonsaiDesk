@@ -6,20 +6,35 @@ using Dissonance;
 using Mirror;
 using NobleConnect.Mirror;
 using UnityEngine;
-using UnityEngine.Android;
 using UnityEngine.XR.Management;
 
 public class NetworkManagerGame : NobleNetworkManager {
+	public enum ConnectionState {
+		RelayError,
+		Loading,
+		Hosting,
+		ClientConnecting,
+		ClientConnected
+	}
+
+	private const float HardKickDelay = 0.5f;
+
 	public static NetworkManagerGame Singleton;
+	[HideInInspector] public bool roomOpen;
 	public bool serverOnlyIfEditor;
+
+	public bool visualizeAuthority;
+
+	public ConnectionState State;
 
 	public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos =
 		new Dictionary<NetworkConnection, PlayerInfo>();
 
 	private DissonanceComms _comms;
 
-	public EventHandler<NetworkConnection> ServerAddPlayer;
-	public EventHandler<NetworkConnection> ServerDisconnect;
+	public EventHandler InfoChange;
+	public static EventHandler<NetworkConnection> ServerAddPlayer;
+	public static EventHandler<NetworkConnection> ServerDisconnect;
 
 	public override void Awake() {
 		base.Awake();
@@ -42,18 +57,16 @@ public class NetworkManagerGame : NobleNetworkManager {
 		MoveToDesk.OrientationChanged += HandleOrientationChanged;
 
 		_comms = GetComponent<DissonanceComms>();
-		SetCommsActive( false);
+		SetCommsActive(false);
 
 		if (Application.isEditor && !serverOnlyIfEditor) {
 			StartCoroutine(StartXR());
 		}
 	}
 
-	private void HandleOrientationChanged(bool oriented) {
-		if (!oriented) {
-			SetCommsActive( false);
-		}
-		throw new NotImplementedException();
+	public override void Update() {
+		base.Update();
+		Debug.Log(mode);
 	}
 
 	private void OnApplicationFocus(bool focus) {
@@ -78,6 +91,14 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public override void OnApplicationQuit() {
 		base.OnApplicationQuit();
 		StopXR();
+	}
+
+	private void HandleOrientationChanged(bool oriented) {
+		if (!oriented) {
+			SetCommsActive(false);
+		}
+
+		throw new NotImplementedException();
 	}
 
 	private void SetCommsActive(bool active) {
@@ -105,15 +126,24 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	private void HandleJoinRoom(TableBrowserMenu.RoomData roomData) {
-		throw new NotImplementedException();
+		networkAddress = roomData.ip_address;
+		networkPort    = roomData.port;
+		Debug.Log($"[Bonsai] NetworkManager Join Room {networkAddress} {networkPort}");
+		StopHost();
+		StartClient();
 	}
 
 	private void HandleCloseRoom() {
-		throw new NotImplementedException();
+		Debug.Log("[BONSAI] HandleCloseRoom");
+		roomOpen = false;
+		StartCoroutine(KickClients());
+		InfoChange?.Invoke(this, new EventArgs());
 	}
 
 	private void HandleOpenRoom() {
-		throw new NotImplementedException();
+		Debug.Log("[BONSAI] HandleOpenRoom");
+		roomOpen = true;
+		InfoChange?.Invoke(this, new EventArgs());
 	}
 
 	public override void OnServerAddPlayer(NetworkConnection conn) {
@@ -134,6 +164,29 @@ public class NetworkManagerGame : NobleNetworkManager {
 		base.OnServerDisconnect(conn);
 		ServerDisconnect?.Invoke(this, conn);
 		throw new NotImplementedException();
+	}
+
+	public override void OnClientConnect(NetworkConnection conn) {
+		base.OnClientConnect(conn);
+		NetworkClient.RegisterHandler<SpotMessage>(OnSpot);
+		NetworkClient.RegisterHandler<ShouldDisconnectMessage>(OnShouldDisconnect);
+	}
+
+	private void OnShouldDisconnect(ShouldDisconnectMessage _) {
+		client?.Disconnect();
+	}
+
+	private void OnSpot(SpotMessage spot) {
+		switch (spot.ID) {
+			case 0:
+				GameObject.Find("GameManager").GetComponent<MoveToDesk>()
+				          .SetTableEdge(GameObject.Find("DefaultEdge").transform);
+				break;
+			case 1:
+				GameObject.Find("GameManager").GetComponent<MoveToDesk>()
+				          .SetTableEdge(GameObject.Find("AcrossEdge").transform);
+				break;
+		}
 	}
 
 	private static IEnumerator StartXR() {
@@ -175,18 +228,42 @@ public class NetworkManagerGame : NobleNetworkManager {
 		}
 	}
 
-	[TargetRpc]
-	private void TargetSetSpot(NetworkConnection conn, int spot) {
-		switch (spot) {
-			case 0:
-				GameObject.Find("GameManager").GetComponent<MoveToDesk>()
-				          .SetTableEdge(GameObject.Find("DefaultEdge").transform);
-				break;
-			case 1:
-				GameObject.Find("GameManager").GetComponent<MoveToDesk>()
-				          .SetTableEdge(GameObject.Find("AcrossEdge").transform);
-				break;
+	private IEnumerator KickClients() {
+		foreach (var conn in NetworkServer.connections.Values) {
+			if (conn.connectionId != NetworkConnection.LocalConnectionId) {
+				RequestDisconnectClient(conn);
+			}
 		}
+
+		yield return new WaitForSeconds(HardKickDelay);
+
+		foreach (var conn in NetworkServer.connections.Values) {
+			if (conn.connectionId != NetworkConnection.LocalConnectionId) {
+				DisconnectClient(conn);
+			}
+		}
+	}
+
+	private int OpenSpotId() {
+		var spots = new List<int> {0, 1};
+		foreach (var info in PlayerInfos.Values) {
+			spots.Remove(info.spot);
+		}
+
+		if (spots.Count > 0) {
+			return spots[0];
+		}
+
+		Debug.LogError("[BONSAI] No open spot");
+		return 0;
+	}
+
+	private void RequestDisconnectClient(NetworkConnection conn) {
+		conn.Send(new ShouldDisconnectMessage());
+	}
+
+	private void DisconnectClient(NetworkConnection conn) {
+		conn.Disconnect();
 	}
 
 	[Serializable]
@@ -208,15 +285,12 @@ public class NetworkManagerGame : NobleNetworkManager {
 		}
 	}
 
-	private int OpenSpotId() {
-		var spots = new List<int>{0, 1};
-		foreach (var info in PlayerInfos.Values) {
-			spots.Remove(info.spot);
+	private struct ShouldDisconnectMessage : NetworkMessage { }
+	
+	private struct SpotMessage : NetworkMessage {
+		public int ID;
+		public SpotMessage(int id) {
+			ID = id;
 		}
-		if (spots.Count > 0) {
-			return spots[0];
-		}
-		Debug.LogError("[BONSAI] No open spot");
-		return 0;
 	}
 }

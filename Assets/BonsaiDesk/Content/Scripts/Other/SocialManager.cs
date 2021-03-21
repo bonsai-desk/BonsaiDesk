@@ -98,7 +98,7 @@ public class SocialManager : NetworkBehaviour {
 		Debug.Log($"[BONSAI] Recieved user info (id={id}) ({user.DisplayName})");
 	}
 
-	private void HandleServerAddPlayer(NetworkConnection conn) {
+	private void HandleServerAddPlayer(object _, NetworkConnection conn) {
 		TargetReportUserInfo(conn);
 	}
 }

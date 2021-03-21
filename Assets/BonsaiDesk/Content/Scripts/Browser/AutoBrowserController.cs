@@ -108,7 +108,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		}
 	}
 
-	private void HandleServerAddPlayer(NetworkConnection newConn) {
+	private void HandleServerAddPlayer(object _, NetworkConnection newConn) {
 		var newId = newConn.identity.netId;
 		TLog($"AutoBrowserController add player [{newId}]");
 		_clientsJoinedNetworkTime.Add(newId, NetworkTime.time);
@@ -124,7 +124,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		}
 	}
 
-	private void HandleServerDisconnect(NetworkConnection conn) {
+	private void HandleServerDisconnect(object _, NetworkConnection conn) {
 		var id = conn.identity.netId;
 		TLog($"AutoBrowserController remove player [{id}]");
 		_clientsJoinedNetworkTime.Remove(id);
