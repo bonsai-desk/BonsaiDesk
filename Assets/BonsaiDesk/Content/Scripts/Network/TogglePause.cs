@@ -141,9 +141,9 @@ public class TogglePause : NetworkBehaviour
         _visibilitySynced                             =  1;
         _positionSynced                               =  0;
         
-        NetworkManagerGame.Singleton.ServerDisconnect -= HandleServerAddPlayer;
+        NetworkManagerGame.ServerDisconnect -= HandleServerAddPlayer;
         
-        NetworkManagerGame.Singleton.ServerDisconnect += HandleServerAddPlayer;
+        NetworkManagerGame.ServerDisconnect += HandleServerAddPlayer;
     }
 
     private void HandleServerAddPlayer(object _, NetworkConnection conn) {

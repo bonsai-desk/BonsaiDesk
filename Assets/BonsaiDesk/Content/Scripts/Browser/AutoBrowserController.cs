@@ -66,13 +66,13 @@ public class AutoBrowserController : NetworkBehaviour {
 		base.OnStartServer();
 		_contentInfo                                  =  new ContentInfo(false, "", new Vector2(1, 1));
 		
-		NetworkManagerGame.Singleton.ServerAddPlayer  -= HandleServerAddPlayer;
-		NetworkManagerGame.Singleton.ServerDisconnect -= HandleServerDisconnect;
+		NetworkManagerGame.ServerAddPlayer  -= HandleServerAddPlayer;
+		NetworkManagerGame.ServerDisconnect -= HandleServerDisconnect;
 		togglePause.CmdSetPausedServer                -= HandleCmdSetPausedServer;
 		TableBrowserMenu.Singleton.VolumeChange       -= HandleVolumeChange;
 		
-		NetworkManagerGame.Singleton.ServerAddPlayer  += HandleServerAddPlayer;
-		NetworkManagerGame.Singleton.ServerDisconnect += HandleServerDisconnect;
+		NetworkManagerGame.ServerAddPlayer  += HandleServerAddPlayer;
+		NetworkManagerGame.ServerDisconnect += HandleServerDisconnect;
 		togglePause.CmdSetPausedServer                += HandleCmdSetPausedServer;
 		TableBrowserMenu.Singleton.VolumeChange       += HandleVolumeChange;
 
