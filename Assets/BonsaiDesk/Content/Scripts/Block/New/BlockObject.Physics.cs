@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Mirror;
 using UnityEngine;
+using BlockDictOp = Mirror.SyncDictionary<UnityEngine.Vector3Int, SyncBlock>.Operation;
 
 public partial class BlockObject
 {
@@ -126,11 +127,9 @@ public partial class BlockObject
                             child.gameObject.SetActive(false);
                         }
 
-                        if (!blockObject._meshBlocks.ContainsKey(coord))
-                        {
-                            blockObject.AddBlockToMesh(Blocks[coord].id, blockCoord,
-                                BlockUtility.SnapToNearestRightAngle(localRotation), true);
-                        }
+                        var syncBlock = new SyncBlock(Blocks[coord].id,
+                            BlockUtility.QuaternionToByte(BlockUtility.SnapToNearestRightAngle(localRotation)));
+                        blockObject.BlockChanges.Enqueue((coord, syncBlock, BlockDictOp.OP_ADD));
 
                         return;
                     }

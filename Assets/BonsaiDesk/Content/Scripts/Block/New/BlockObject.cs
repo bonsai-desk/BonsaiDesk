@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Mirror;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Random = UnityEngine.Random;
+using BlockDictOp = Mirror.SyncDictionary<UnityEngine.Vector3Int, SyncBlock>.Operation;
 
 public struct SyncBlock
 {
@@ -28,6 +30,10 @@ public partial class BlockObject : NetworkBehaviour
 
     //contains all of the information required to construct this BlockObject
     public readonly SyncDictionary<Vector3Int, SyncBlock> Blocks = new SyncDictionary<Vector3Int, SyncBlock>();
+
+    //caches changes made to the sync dictionary so all block changes can be made at once with a single mesh update
+    public readonly Queue<(Vector3Int coord, SyncBlock syncBlock, BlockDictOp op)> BlockChanges =
+        new Queue<(Vector3Int coord, SyncBlock syncBlock, BlockDictOp op)>();
 
     //public inspector variables
     public Material blockObjectMaterial;
@@ -70,11 +76,11 @@ public partial class BlockObject : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
-        
+
         if (debug)
         {
             Blocks.Add(Vector3Int.zero, new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            
+
             for (int i = 1; i < 6; i++)
             {
                 Blocks.Add(new Vector3Int(0, 0, i),
@@ -140,6 +146,7 @@ public partial class BlockObject : NetworkBehaviour
 
     private void Update()
     {
+        ProcessBlockChanges();
         UpdateDamagedBlocks();
     }
 
@@ -198,28 +205,48 @@ public partial class BlockObject : NetworkBehaviour
         sphereObject.layer = LayerMask.NameToLayer("sphere");
     }
 
-    private void OnBlocksDictionaryChange(SyncDictionary<Vector3Int, SyncBlock>.Operation op, Vector3Int key,
+    private void OnBlocksDictionaryChange(BlockDictOp op, Vector3Int key,
         SyncBlock value)
     {
-        switch (op)
-        {
-            case SyncIDictionary<Vector3Int, SyncBlock>.Operation.OP_ADD:
-                if (!_meshBlocks.ContainsKey(key))
-                {
-                    AddBlockToMesh(value.id, key, BlockUtility.ByteToQuaternion(value.rotation), true);
-                }
+        BlockChanges.Enqueue((key, value, op));
+    }
 
-                break;
-            case SyncIDictionary<Vector3Int, SyncBlock>.Operation.OP_REMOVE:
-                if (_meshBlocks.ContainsKey(key))
-                {
-                    RemoveBlockFromMesh(key);
-                }
-                break;
-            default:
-                Debug.LogError("Unknown dictionary operation.");
-                break;
+    //loops through any blocks in BlockChanges and adds/removes blocks from the mesh
+    private void ProcessBlockChanges()
+    {
+        if (BlockChanges.Count == 0)
+        {
+            return;
         }
+
+        while (BlockChanges.Count > 0)
+        {
+            var (coord, syncBlock, op) = BlockChanges.Dequeue();
+
+            switch (op)
+            {
+                case BlockDictOp.OP_ADD:
+                    if (!_meshBlocks.ContainsKey(coord))
+                    {
+                        AddBlockToMesh(syncBlock.id, coord, BlockUtility.ByteToQuaternion(syncBlock.rotation));
+                    }
+
+                    break;
+                case BlockDictOp.OP_REMOVE:
+                    if (_meshBlocks.ContainsKey(coord))
+                    {
+                        RemoveBlockFromMesh(coord);
+                    }
+
+                    break;
+                default:
+                    Debug.LogError("Unknown dictionary operation.");
+                    break;
+            }
+        }
+
+        UpdateMesh(UpdateType.AddBlock);
+        // UpdateMesh(UpdateType.RemoveBlock);
     }
 
     [Command(ignoreAuthority = true)]
@@ -236,7 +263,7 @@ public partial class BlockObject : NetworkBehaviour
         Blocks.Add(coord, new SyncBlock(id, BlockUtility.QuaternionToByte(rotation)));
     }
 
-    private void AddBlockToMesh(byte id, Vector3Int coord, Quaternion rotation, bool updateTheMesh)
+    private void AddBlockToMesh(byte id, Vector3Int coord, Quaternion rotation)
     {
         if (_meshBlocks.ContainsKey(coord))
         {
@@ -265,11 +292,6 @@ public partial class BlockObject : NetworkBehaviour
         // }
 
         _meshBlocks.Add(coord, new MeshBlock(_meshBlocks.Count));
-
-        if (updateTheMesh)
-        {
-            UpdateMesh(UpdateType.AddBlock);
-        }
     }
 
     [Command(ignoreAuthority = true)]
@@ -327,7 +349,7 @@ public partial class BlockObject : NetworkBehaviour
                     {
                         newBlockObjectScript.Blocks.Add(pair.Key, pair.Value);
                     }
-                    
+
                     NetworkServer.Spawn(newBlockObject);
                 }
             }
@@ -387,8 +409,6 @@ public partial class BlockObject : NetworkBehaviour
 
         //finally remove the block from the mesh blocks
         _meshBlocks.Remove(coord);
-
-        UpdateMesh(UpdateType.RemoveBlock);
     }
 
     private void DamageBlock(Vector3Int coord)
@@ -415,12 +435,13 @@ public partial class BlockObject : NetworkBehaviour
         {
             _damagedBlocks.Remove(coord);
             CmdRemoveBlock(coord);
-            
+
             //client side prediction - remove block locally
             if (_meshBlocks.ContainsKey(coord))
             {
                 RemoveBlockFromMesh(coord);
             }
+
             return;
         }
 
@@ -484,6 +505,7 @@ public partial class BlockObject : NetworkBehaviour
             case UpdateType.RemoveBlock:
                 _mesh.triangles = _triangles.ToArray();
                 _mesh.vertices = _vertices.ToArray();
+                //_mesh.SetVertices()
                 break;
         }
 
@@ -492,7 +514,6 @@ public partial class BlockObject : NetworkBehaviour
 
         _mesh.RecalculateNormals();
         _mesh.RecalculateTangents();
-        _mesh.RecalculateBounds();
 
         // if (blocks.Count == 1)
         // {
@@ -528,7 +549,7 @@ public partial class BlockObject : NetworkBehaviour
     {
         foreach (var block in Blocks)
         {
-            AddBlockToMesh(block.Value.id, block.Key, BlockUtility.ByteToQuaternion(block.Value.rotation), false);
+            AddBlockToMesh(block.Value.id, block.Key, BlockUtility.ByteToQuaternion(block.Value.rotation));
         }
 
         UpdateMesh(UpdateType.AddBlock);
