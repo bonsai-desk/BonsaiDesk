@@ -86,11 +86,24 @@ function showPlayerInfo(playerInfo) {
 //
 
 function ListItem(props) {
-  let {selected, handleClick, inactive = false} = props;
+  let {
+    selected,
+    handleClick,
+    inactive = false,
+    buttonClassSelected = '',
+    buttonClass = '',
+    buttonClassInactive = '',
+  } = props;
 
-  const buttonClassSelected = 'py-4 px-8 bg-blue-700 text-white rounded cursor-pointer flex flex-wrap content-center';
-  const buttonClass = 'py-4 px-8 hover:bg-gray-800 active:bg-gray-900 hover:text-white rounded cursor-pointer flex flex-wrap content-center';
-  const buttonClassInactive = 'py-4 px-8 bg-gray-800 rounded cursor-pointer flex flex-wrap content-center';
+  buttonClass = buttonClass ?
+      buttonClass :
+      'py-4 px-8 hover:bg-gray-800 active:bg-gray-900 hover:text-white rounded cursor-pointer flex flex-wrap content-center';
+  buttonClassSelected = buttonClassSelected ?
+      buttonClassSelected :
+      'py-4 px-8 bg-blue-700 text-white rounded cursor-pointer flex flex-wrap content-center';
+  buttonClassInactive = buttonClassInactive ?
+      buttonClassInactive :
+      'py-4 px-8 bg-gray-800 rounded cursor-pointer flex flex-wrap content-center';
 
   if (inactive) {
     return (
@@ -322,16 +335,16 @@ const PlayerPage = observer(() => {
 
   function handleClick(e) {
     let pct = (e.clientX - ref.current.offsetLeft) / ref.current.offsetWidth;
-    let ts = pct * store.media_info.Duration
-    postSeekPlayer(ts)
+    let ts = pct * store.media_info.Duration;
+    postSeekPlayer(ts);
   }
 
-  function VolumeDecrement () {
-    postVolumeDecrement()
+  function VolumeDecrement() {
+    postVolumeDecrement();
   }
 
-  function VolumeIncrement () {
-    postVolumeIncrement()
+  function VolumeIncrement() {
+    postVolumeIncrement();
   }
 
   return <MenuContent name={'Player'}>
@@ -341,9 +354,11 @@ const PlayerPage = observer(() => {
       <div style={{width: pct + '%'}} className={'h-full bg-gray-400'}/>
     </div>
     <div>Volume {parseInt(100 * media.VolumeLevel)}</div>
-    <div className={"flex space-x-2"}>
-      <Button handleClick={VolumeDecrement} className={grayButtonClass}>-</Button>
-      <Button handleClick={VolumeIncrement} className={grayButtonClass}>+</Button>
+    <div className={'flex space-x-2'}>
+      <Button handleClick={VolumeDecrement}
+              className={grayButtonClass}>-</Button>
+      <Button handleClick={VolumeIncrement}
+              className={grayButtonClass}>+</Button>
     </div>
   </MenuContent>;
 
@@ -514,6 +529,39 @@ const DebugPage = observer(() => {
     store.room_open = !store.room_open;
   });
 
+  let addFakeVideoPlayerPaused = () => {
+    store.media_info = {
+      Active: true,
+      Name: 'Video Name',
+      Paused: true,
+      Scrub: 20,
+      Duration: 60,
+      VolumeLevel: 0.5,
+    };
+  };
+
+  let addFakeVideoPlayerPlaying = () => {
+    store.media_info = {
+      Active: true,
+      Name: 'Video Name',
+      Paused: false,
+      Scrub: 20,
+      Duration: 60,
+      VolumeLevel: 0.5,
+    };
+  };
+
+  let rmFakeVideoPlayer = () => {
+    store.media_info = {
+      Active: false,
+      Name: 'None',
+      Paused: true,
+      Scrub: 0,
+      Duration: 1,
+      VolumeLevel: 0,
+    };
+  };
+
   let containerClass = 'flex flex-wrap';
 
   return (
@@ -581,8 +629,17 @@ const DebugPage = observer(() => {
               <Button handleClick={() => {
                 toggleRoomOpen(store);
               }} className={grayButtonClass}>
-                toggle room open
+                toggle
               </Button>
+            </div>
+            <div>Player</div>
+            <div className={containerClass}>
+              <Button handleClick={rmFakeVideoPlayer}
+                      className={grayButtonClass}>none</Button>
+              <Button handleClick={addFakeVideoPlayerPlaying}
+                      className={grayButtonClass}>playing</Button>
+              <Button handleClick={addFakeVideoPlayerPaused}
+                      className={grayButtonClass}>paused</Button>
             </div>
 
           </div>
@@ -592,19 +649,19 @@ const DebugPage = observer(() => {
   );
 });
 
-const SettingsPage = observer(()=>{
-  function handleClickVibes () {
-    postLightsChange("vibes")
+const SettingsPage = observer(() => {
+  function handleClickVibes() {
+    postLightsChange('vibes');
   }
 
-  function handleClickBright () {
-    postLightsChange("bright")
+  function handleClickBright() {
+    postLightsChange('bright');
   }
 
-  return <MenuContent name={"Settings"}>
+  return <MenuContent name={'Settings'}>
     <InfoItem title={'Lights'} slug={'Set the mood'}
               imgSrc={LightImg}>
-      <div className={"flex space-x-2"}>
+      <div className={'flex space-x-2'}>
         <Button handleClick={handleClickVibes}
                 className={grayButtonClass}>Vibes</Button>
         <Button handleClick={handleClickBright}
@@ -612,8 +669,8 @@ const SettingsPage = observer(()=>{
 
       </div>
     </InfoItem>
-  </MenuContent>
-})
+  </MenuContent>;
+});
 
 //
 
@@ -669,19 +726,30 @@ let Menu = observer(() => {
     };
   }, [pushStore]);
 
-  const pages = [
+  let pages = [
     {name: 'Home', component: HomePage},
     {name: 'Join Desk', component: JoinDeskPage},
     {name: 'Videos', component: VideosPage},
-    {name: 'Player', component: PlayerPage},
     {name: 'Settings', component: SettingsPage},
   ];
+
+  if (store.media_info.Active) {
+    pages.push({name: 'Player', component: PlayerPage});
+
+  }
 
   if (store.build === 'DEVELOPMENT') {
     pages.push({name: 'Debug', component: DebugPage});
   }
 
-  let SelectedPage = pages[active].component;
+  let SelectedPage;
+  if (active > pages.length - 1) {
+    setActive(0)
+    SelectedPage = pages[0].component;
+  } else {
+    SelectedPage = pages[active].component;
+  }
+
 
   let joinDeskActive = store.network_state === 'Hosting' && !store._room_open;
 
@@ -699,6 +767,18 @@ let Menu = observer(() => {
               if (info.name.toLowerCase() === 'join desk' && !joinDeskActive) {
                 return <ListItem key={info.name}
                                  inactive={true}>{info.name}</ListItem>;
+              }
+              if (info.name.toLowerCase() === 'player') {
+                const buttonClass = 'text-white py-4 px-8 hover:bg-gray-800 active:bg-gray-900 hover:text-white rounded cursor-pointer flex flex-wrap content-center border-4 border-green-400';
+                const buttonClassSelected = 'py-4 px-8 bg-blue-700 text-white rounded cursor-pointer flex flex-wrap content-center border-4 border-green-400';
+
+                return <ListItem
+                    buttonClass={buttonClass}
+                    buttonClassSelected={buttonClassSelected}
+                    key={info.name} handleClick={() => {
+                  setActive(i);
+                }} selected={active === i}>{info.name}</ListItem>;
+
               }
               return <ListItem key={info.name} handleClick={() => {
                 setActive(i);
