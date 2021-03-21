@@ -20,6 +20,8 @@ public class NetworkManagerGame : NobleNetworkManager {
 	private const float HardKickDelay = 0.5f;
 
 	public static NetworkManagerGame Singleton;
+	public static EventHandler<NetworkConnection> ServerAddPlayer;
+	public static EventHandler<NetworkConnection> ServerDisconnect;
 	[HideInInspector] public bool roomOpen;
 	public bool serverOnlyIfEditor;
 
@@ -33,8 +35,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 	private DissonanceComms _comms;
 
 	public EventHandler InfoChange;
-	public static EventHandler<NetworkConnection> ServerAddPlayer;
-	public static EventHandler<NetworkConnection> ServerDisconnect;
 
 	public override void Awake() {
 		base.Awake();
@@ -149,9 +149,9 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public override void OnServerAddPlayer(NetworkConnection conn) {
 		base.OnServerAddPlayer(conn);
 
-		TargetSetSpot(conn, PlayerInfos[conn].spot);
-
-		// todo send an open spot message
+		var openSpot = OpenSpotId();
+		PlayerInfos.Add(conn, new PlayerInfo(openSpot, "NoName"));
+		conn.Send(new SpotMessage(openSpot));
 
 		// todo move into hosting mode if not already
 
@@ -247,7 +247,7 @@ public class NetworkManagerGame : NobleNetworkManager {
 	private int OpenSpotId() {
 		var spots = new List<int> {0, 1};
 		foreach (var info in PlayerInfos.Values) {
-			spots.Remove(info.spot);
+			spots.Remove(info.Spot);
 		}
 
 		if (spots.Count > 0) {
@@ -268,12 +268,12 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 	[Serializable]
 	public class PlayerInfo {
-		public int spot;
+		public int Spot;
 		public UserInfo User;
 
-		// todo add the proper username
-		public PlayerInfo() {
-			User = new UserInfo("NoName");
+		public PlayerInfo(int spot, string user) {
+			Spot = spot;
+			User = new UserInfo(user);
 		}
 	}
 
@@ -286,9 +286,10 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	private struct ShouldDisconnectMessage : NetworkMessage { }
-	
+
 	private struct SpotMessage : NetworkMessage {
-		public int ID;
+		public readonly int ID;
+
 		public SpotMessage(int id) {
 			ID = id;
 		}
