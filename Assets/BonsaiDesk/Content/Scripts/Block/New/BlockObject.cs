@@ -204,10 +204,17 @@ public partial class BlockObject : NetworkBehaviour
         switch (op)
         {
             case SyncIDictionary<Vector3Int, SyncBlock>.Operation.OP_ADD:
-                AddBlockToMesh(value.id, key, BlockUtility.ByteToQuaternion(value.rotation), true);
+                if (!_meshBlocks.ContainsKey(key))
+                {
+                    AddBlockToMesh(value.id, key, BlockUtility.ByteToQuaternion(value.rotation), true);
+                }
+
                 break;
             case SyncIDictionary<Vector3Int, SyncBlock>.Operation.OP_REMOVE:
-                RemoveBlockFromMesh(key);
+                if (_meshBlocks.ContainsKey(key))
+                {
+                    RemoveBlockFromMesh(key);
+                }
                 break;
             default:
                 Debug.LogError("Unknown dictionary operation.");
@@ -408,6 +415,12 @@ public partial class BlockObject : NetworkBehaviour
         {
             _damagedBlocks.Remove(coord);
             CmdRemoveBlock(coord);
+            
+            //client side prediction - remove block locally
+            if (_meshBlocks.ContainsKey(coord))
+            {
+                RemoveBlockFromMesh(coord);
+            }
             return;
         }
 

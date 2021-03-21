@@ -120,6 +120,18 @@ public partial class BlockObject
                         blockObject.CmdAddBlock(Blocks[coord].id, blockCoord,
                             BlockUtility.SnapToNearestRightAngle(localRotation), netIdentity);
 
+                        //client side prediction
+                        foreach (Transform child in transform)
+                        {
+                            child.gameObject.SetActive(false);
+                        }
+
+                        if (!blockObject._meshBlocks.ContainsKey(coord))
+                        {
+                            blockObject.AddBlockToMesh(Blocks[coord].id, blockCoord,
+                                BlockUtility.SnapToNearestRightAngle(localRotation), true);
+                        }
+
                         return;
                     }
 
@@ -221,7 +233,7 @@ public partial class BlockObject
         {
             return;
         }
-        
+
         ContactPoint contact = collision.GetContact(0);
         Vector3 blockPosition = contact.point;
         blockPosition += contact.normal * (BlockArea.cubeScale / 2f);
