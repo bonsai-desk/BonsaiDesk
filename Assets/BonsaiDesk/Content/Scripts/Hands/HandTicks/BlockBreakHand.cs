@@ -22,15 +22,16 @@ public class BlockBreakHand : MonoBehaviour, IHandTick
             Init();
         }
 
-        _particleObject.SetActive(playerHand.HandComponents.TrackingRecently && BreakModeActive);
+        var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
+        _particleObject.SetActive(playerHand.HandComponents.TrackingRecently && BreakModeActive && playing);
     }
 
     private void Init()
     {
         _particleObject = Instantiate(particlePrefab);
         _particleObject.transform.SetParent(playerHand.HandComponents.PhysicsFingerTips[1], false);
-        SetBreakMode(playerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft);
-        // SetBreakMode(false);
+        // SetBreakMode(playerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft);
+        SetBreakMode(false);
     }
 
     public void SetBreakMode(bool active)

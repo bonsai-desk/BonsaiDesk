@@ -225,15 +225,6 @@ public class InputManager : MonoBehaviour
         return rotation;
     }
 
-    private void OnApplicationPause(bool pauseStatus)
-    {
-        if (pauseStatus)
-        {
-            Left.TurnOffHandForPause();
-            Right.TurnOffHandForPause();
-        }
-    }
-
     private void OnApplicationFocus(bool hasFocus)
     {
         if (!hasFocus)
@@ -245,6 +236,7 @@ public class InputManager : MonoBehaviour
             {
                 leftMenu.TurnOffMenu();
             }
+
             var rightMenu = Right.PlayerHand.GetIHandTick<MenuHand>();
             if (rightMenu)
             {
