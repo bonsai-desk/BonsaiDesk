@@ -118,18 +118,13 @@ public partial class BlockObject
                         gameObject.SetActive(false);
 
                         var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
-                        blockObject.CmdAddBlock(Blocks[coord].id, blockCoord,
-                            BlockUtility.SnapToNearestRightAngle(localRotation), netIdentity);
+                        localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) *
+                                        BlockUtility.ByteToQuaternion(Blocks[coord].rotation);
+                        blockObject.CmdAddBlock(Blocks[coord].id, blockCoord, localRotation, netIdentity);
 
                         //client side prediction
-                        foreach (Transform child in transform)
-                        {
-                            child.gameObject.SetActive(false);
-                        }
-
-                        var syncBlock = new SyncBlock(Blocks[coord].id,
-                            BlockUtility.QuaternionToByte(BlockUtility.SnapToNearestRightAngle(localRotation)));
-                        blockObject.BlockChanges.Enqueue((coord, syncBlock, BlockDictOp.OP_ADD));
+                        var syncBlock = new SyncBlock(Blocks[coord].id, BlockUtility.QuaternionToByte(localRotation));
+                        blockObject.BlockChanges.Enqueue((blockCoord, syncBlock, BlockDictOp.OP_ADD));
 
                         return;
                     }

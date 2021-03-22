@@ -148,6 +148,15 @@ public partial class BlockObject : NetworkBehaviour
     {
         ProcessBlockChanges();
         UpdateDamagedBlocks();
+
+        if (Input.GetKeyDown(KeyCode.Space) && debug)
+        {
+            print("--- " + Blocks.Count);
+            foreach (var pair in Blocks)
+            {
+                print(pair.Key);
+            }
+        }
     }
 
     private void FixedUpdate()
@@ -245,8 +254,7 @@ public partial class BlockObject : NetworkBehaviour
             }
         }
 
-        UpdateMesh(UpdateType.AddBlock);
-        // UpdateMesh(UpdateType.RemoveBlock);
+        UpdateMesh();
     }
 
     [Command(ignoreAuthority = true)]
@@ -439,7 +447,7 @@ public partial class BlockObject : NetworkBehaviour
             //client side prediction - remove block locally
             if (_meshBlocks.ContainsKey(coord))
             {
-                RemoveBlockFromMesh(coord);
+                BlockChanges.Enqueue((coord, new SyncBlock(), BlockDictOp.OP_REMOVE));
             }
 
             return;
@@ -493,27 +501,33 @@ public partial class BlockObject : NetworkBehaviour
         RemoveBlock
     }
 
-    private void UpdateMesh(UpdateType updateType)
+    private void UpdateMesh()
     {
         //the order of updating the mesh matters depending on if adding or removing parts of the mesh
-        switch (updateType)
-        {
-            case UpdateType.AddBlock:
-                _mesh.vertices = _vertices.ToArray();
-                _mesh.triangles = _triangles.ToArray();
-                break;
-            case UpdateType.RemoveBlock:
-                _mesh.triangles = _triangles.ToArray();
-                _mesh.vertices = _vertices.ToArray();
-                //_mesh.SetVertices()
-                break;
-        }
+        // switch (updateType)
+        // {
+        //     case UpdateType.AddBlock:
+        //         _mesh.vertices = _vertices.ToArray();
+        //         _mesh.triangles = _triangles.ToArray();
+        //         break;
+        //     case UpdateType.RemoveBlock:
+        //         _mesh.triangles = _triangles.ToArray();
+        //         _mesh.vertices = _vertices.ToArray();
+        //         //_mesh.SetVertices()
+        //         break;
+        // }
+
+        //first set triangles to empty so we can update the vertices without triangles referencing (now) invalid vertices
+        _mesh.triangles = new int[0];
+        _mesh.vertices = _vertices.ToArray();
+        _mesh.triangles = _triangles.ToArray();
 
         _mesh.uv = _uv.ToArray();
         _mesh.uv2 = _uv2.ToArray();
 
         _mesh.RecalculateNormals();
         _mesh.RecalculateTangents();
+        _mesh.RecalculateBounds();
 
         // if (blocks.Count == 1)
         // {
@@ -552,7 +566,7 @@ public partial class BlockObject : NetworkBehaviour
             AddBlockToMesh(block.Value.id, block.Key, BlockUtility.ByteToQuaternion(block.Value.rotation));
         }
 
-        UpdateMesh(UpdateType.AddBlock);
+        UpdateMesh();
     }
 
     private Vector3Int GetOnlyBlockCoord()
