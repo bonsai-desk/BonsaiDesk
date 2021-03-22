@@ -148,15 +148,6 @@ public partial class BlockObject : NetworkBehaviour
     {
         ProcessBlockChanges();
         UpdateDamagedBlocks();
-
-        if (Input.GetKeyDown(KeyCode.Space) && debug)
-        {
-            print("--- " + Blocks.Count);
-            foreach (var pair in Blocks)
-            {
-                print(pair.Key);
-            }
-        }
     }
 
     private void FixedUpdate()
@@ -303,7 +294,7 @@ public partial class BlockObject : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdRemoveBlock(Vector3Int coord)
+    private void CmdRemoveBlock(Vector3Int coord, uint identityId)
     {
         if (!Blocks.ContainsKey(coord))
         {
@@ -359,6 +350,8 @@ public partial class BlockObject : NetworkBehaviour
                     }
 
                     NetworkServer.Spawn(newBlockObject);
+                    newBlockObject.GetComponent<AutoAuthority>()
+                        .ServerForceNewOwner(identityId, NetworkTime.time, false);
                 }
             }
         }
@@ -442,7 +435,14 @@ public partial class BlockObject : NetworkBehaviour
         if (meshBlock.health < 0)
         {
             _damagedBlocks.Remove(coord);
-            CmdRemoveBlock(coord);
+            
+            var nId = uint.MaxValue;
+            if (NetworkClient.connection != null && NetworkClient.connection.identity)
+            {
+                nId = NetworkClient.connection.identity.netId;
+            }
+
+            CmdRemoveBlock(coord, nId);
 
             //client side prediction - remove block locally
             if (_meshBlocks.ContainsKey(coord))
