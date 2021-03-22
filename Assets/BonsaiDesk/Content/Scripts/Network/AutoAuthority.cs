@@ -60,12 +60,14 @@ public class AutoAuthority : NetworkBehaviour
         UpdateColor();
         _visualizePinchPull = false;
 
-        // if (isServer && transform.position.y < -100f)
-        // {
-        //     ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true);
-        //     NetworkServer.Destroy(gameObject);
-        //     return;
-        // }
+        if (isServer && transform.position.y < -1f)
+        {
+            ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
+            transform.position = new Vector3(0, 1, 0);
+            _body.velocity = Vector3.zero;
+            _body.angularVelocity = Vector3.zero;
+            return;
+        }
 
         //if you don't have control over the object
         if (!HasAuthority())
