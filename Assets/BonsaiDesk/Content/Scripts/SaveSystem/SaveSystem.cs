@@ -9,7 +9,10 @@ public class SaveSystem : MonoBehaviour
 {
     public static SaveSystem Instance { get; private set; }
 
-    private Dictionary<string, bool> _boolPairs = new Dictionary<string, bool>();
+    public Dictionary<string, bool> BoolPairs = new Dictionary<string, bool>();
+    public Dictionary<string, int> IntPairs = new Dictionary<string, int>();
+    public Dictionary<string, float> FloatPairs = new Dictionary<string, float>();
+    public Dictionary<string, string> StringPairs = new Dictionary<string, string>();
 
     private void Awake()
     {
@@ -44,7 +47,22 @@ public class SaveSystem : MonoBehaviour
 
         if (dictionaries.TryGetValue(typeof(bool), out var value))
         {
-            _boolPairs = (Dictionary<string, bool>) value;
+            BoolPairs = (Dictionary<string, bool>) value;
+        }
+        
+        if (dictionaries.TryGetValue(typeof(int), out value))
+        {
+            IntPairs = (Dictionary<string, int>) value;
+        }
+        
+        if (dictionaries.TryGetValue(typeof(float), out value))
+        {
+            FloatPairs = (Dictionary<string, float>) value;
+        }
+        
+        if (dictionaries.TryGetValue(typeof(string), out value))
+        {
+            StringPairs = (Dictionary<string, string>) value;
         }
     }
 
@@ -58,25 +76,13 @@ public class SaveSystem : MonoBehaviour
         else file = File.Create(destination);
 
         var dictionaries = new Dictionary<Type, IDictionary>();
-        dictionaries.Add(typeof(bool), _boolPairs);
+        dictionaries.Add(typeof(bool), BoolPairs);
+        dictionaries.Add(typeof(int), IntPairs);
+        dictionaries.Add(typeof(float), FloatPairs);
+        dictionaries.Add(typeof(string), StringPairs);
 
         var bf = new BinaryFormatter();
         bf.Serialize(file, dictionaries);
         file.Close();
-    }
-
-    public bool GetBool(string key)
-    {
-        if (_boolPairs.TryGetValue(key, out var value))
-        {
-            return value;
-        }
-
-        return false;
-    }
-
-    public void SetBool(string key, bool value)
-    {
-        _boolPairs[key] = value;
     }
 }

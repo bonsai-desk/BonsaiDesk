@@ -6,16 +6,16 @@ public class MenuTutorial : MonoBehaviour
 {
     private void Start()
     {
-        if (SaveSystem.Instance.GetBool("FinishedMenuTutorial"))
+        if (SaveSystem.Instance.BoolPairs.TryGetValue("FinishedMenuTutorial", out var finished))
         {
-            gameObject.SetActive(false);
+            gameObject.SetActive(!finished);
         }
     }
     
     public void DisableSelf()
     {
         gameObject.SetActive(false);
-        SaveSystem.Instance.SetBool("FinishedMenuTutorial", true);
+        SaveSystem.Instance.BoolPairs["FinishedMenuTutorial"] = true;
         SaveSystem.Instance.Save();
     }
 }
