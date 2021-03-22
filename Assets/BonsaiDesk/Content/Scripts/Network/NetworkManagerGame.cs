@@ -183,7 +183,12 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	private void HandleJoinRoom(TableBrowserMenu.RoomData roomData) {
-		StartCoroutine(JoinRoom(roomData));
+		if (!_roomJoinInProgress) {
+			StartCoroutine(JoinRoom(roomData));
+		}
+		else {
+			Debug.LogWarning("[BONSAI] Ignoring attempt to join room while room join is in progress");
+		}
 	}
 
 	private IEnumerator JoinRoom(TableBrowserMenu.RoomData roomData) {
