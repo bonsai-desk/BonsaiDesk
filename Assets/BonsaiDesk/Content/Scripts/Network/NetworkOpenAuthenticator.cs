@@ -14,6 +14,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 	/// </summary>
 	public override void OnStartServer() {
 		// do nothing
+		Debug.Log("[BONSAI] OnStartServer");
 	}
 
 	/// <summary>
@@ -21,6 +22,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 	/// </summary>
 	/// <param name="conn">Connection to client.</param>
 	public override void OnServerAuthenticate(NetworkConnection conn) {
+		Debug.Log("[BONSAI] OnServerAuthenticate");
 		if (NetworkManagerGame.Singleton.roomOpen ||
 		    conn.connectionId == NetworkServer.localConnection.connectionId) {
 			var authResponseMessage = new AuthResponseMessage {
@@ -46,6 +48,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 	///     <para>Client message handlers should be registered in this method.</para>
 	/// </summary>
 	public override void OnStartClient() {
+		Debug.Log("[BONSAI] OnStartClient");
 		// register a handler for the authentication response we expect from server
 		NetworkClient.RegisterHandler<AuthResponseMessage>(OnAuthResponseMessage, false);
 	}
@@ -55,6 +58,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 	/// </summary>
 	/// <param name="conn">Connection of the client.</param>
 	public override void OnClientAuthenticate(NetworkConnection conn) {
+		Debug.Log("[BONSAI] OnClientAuthenticate");
 		// do nothing just wait for AuthMessageResponse
 	}
 

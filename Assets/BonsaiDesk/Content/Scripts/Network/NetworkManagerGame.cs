@@ -7,6 +7,7 @@ using Mirror;
 using NobleConnect.Mirror;
 using UnityEngine;
 using UnityEngine.XR.Management;
+using Logger = NobleConnect.Logger;
 
 public class NetworkManagerGame : NobleNetworkManager {
 	public enum ConnectionState {
@@ -34,6 +35,8 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 	private DissonanceComms _comms;
 	private float _lastStartHost = Mathf.NegativeInfinity;
+
+	private bool _roomJoinInProgress;
 
 	public EventHandler InfoChange;
 
@@ -64,6 +67,8 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public override void Start() {
 		base.Start();
 
+		logLevel = Logger.Level.Debug;
+
 		// todo make these into EventHandler
 		TableBrowserMenu.JoinRoom         += HandleJoinRoom;
 		TableBrowserMenu.LeaveRoom        += HandleLeaveRoom;
@@ -80,17 +85,17 @@ public class NetworkManagerGame : NobleNetworkManager {
 		if (Application.isEditor && !serverOnlyIfEditor) {
 			StartCoroutine(StartXR());
 		}
-
-	}
-
-	private IEnumerator DelayStopHost(float seconds) {
-		yield return new WaitForSeconds(seconds);
-		Debug.Log("Stop Hosting");
-		StopHost();
 	}
 
 	public override void Update() {
 		base.Update();
+
+		if (isDisconnecting || _roomJoinInProgress) {
+			Debug.Log(
+				$"[BONSAI] NetworkManager prevent Update while isDisconnecting={isDisconnecting} _roomJoinInProgress={_roomJoinInProgress}");
+			return;
+		}
+
 		if (serverOnlyIfEditor) {
 			if (mode != NetworkManagerMode.ServerOnly) {
 				roomOpen = true;
@@ -100,7 +105,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 		else {
 			switch (mode) {
 				case NetworkManagerMode.Offline:
-					// todo make this trigger on a cooldown
 					MaybeStartHost();
 					break;
 				case NetworkManagerMode.ServerOnly:
@@ -139,6 +143,12 @@ public class NetworkManagerGame : NobleNetworkManager {
 		StopXR();
 	}
 
+	private IEnumerator DelayStopHost(float seconds) {
+		yield return new WaitForSeconds(seconds);
+		Debug.Log("Stop Hosting");
+		StopHost();
+	}
+
 	private void HandleOrientationChanged(bool oriented) {
 		if (!oriented) {
 			SetCommsActive(false);
@@ -173,20 +183,31 @@ public class NetworkManagerGame : NobleNetworkManager {
 	}
 
 	private void HandleJoinRoom(TableBrowserMenu.RoomData roomData) {
+		StartCoroutine(JoinRoom(roomData));
+	}
+
+	private IEnumerator JoinRoom(TableBrowserMenu.RoomData roomData) {
 		Debug.Log("[Bonsai] NetworkManager Begin JoinRoom");
-		if (mode == NetworkManagerMode.Host) {
+		_roomJoinInProgress = true;
+		if (mode == NetworkManagerMode.Host || !(HostEndPoint is null)) {
 			StopHost();
+		}
+
+		while (!(HostEndPoint is null)) {
+			Debug.Log("[BONSAI] JoinRoom: wait for HostEndPoint to be null");
+			yield return null;
 		}
 
 		if (mode == NetworkManagerMode.Offline) {
 			networkAddress = roomData.ip_address;
 			networkPort    = roomData.port;
-			Debug.Log($"[Bonsai] NetworkManager JoinRoom: ({networkAddress}, {networkPort})");
 			StartClient();
 		}
 		else {
-			Debug.LogWarning($"[Bonsai] NetworkManager tried to join room while a hosting/client, ignoring");
+			Debug.LogWarning("[Bonsai] NetworkManager tried to join room while a hosting/client, ignoring");
 		}
+
+		_roomJoinInProgress = false;
 	}
 
 	private void HandleCloseRoom() {
@@ -222,11 +243,11 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 	public override void OnServerDisconnect(NetworkConnection conn) {
 		Debug.Log("[BONSAI] ServerDisconnect");
-		
+
 		ServerDisconnect?.Invoke(this, conn);
-		
+
 		PlayerInfos.Remove(conn);
-		
+
 		var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
 		foreach (var identity in tmp) {
 			var autoAuthority = identity.GetComponent<AutoAuthority>();
@@ -238,24 +259,27 @@ public class NetworkManagerGame : NobleNetworkManager {
 				identity.RemoveClientAuthority();
 			}
 		}
-		
+
 		// call the base after the ServerDisconnect event otherwise null reference gets passed to subscribers
 		base.OnServerDisconnect(conn);
 	}
 
 	public override void OnClientConnect(NetworkConnection conn) {
 		Debug.Log($"[BONSAI] OnClientConnect {conn.connectionId} {conn.isReady}");
-		
+
 		base.OnClientConnect(conn);
-		
+
 		NetworkClient.RegisterHandler<SpotMessage>(OnSpot);
 		NetworkClient.RegisterHandler<ShouldDisconnectMessage>(OnShouldDisconnect);
 	}
 
 	public override void OnFatalError(string error) {
 		base.OnFatalError(error);
-		Debug.Log("[BONSAI] OnFatalError");
-		Debug.Log(error);
+		Debug.LogWarning($"[BONSAI] OnFatalError: {error}");
+	}
+
+	public override void OnServerPrepared(string hostAddress, ushort hostPort) {
+		Debug.Log($"[BONSAI] OnServerPrepared ({hostAddress} : {hostPort}) isLanOnly={isLANOnly}");
 	}
 
 	private void OnShouldDisconnect(ShouldDisconnectMessage _) {
@@ -377,6 +401,13 @@ public class NetworkManagerGame : NobleNetworkManager {
 		}
 	}
 
+	private IEnumerator DelayStopClient(float seconds) {
+		yield return new WaitForSeconds(seconds);
+		Debug.Log("[BONSAI] StopClient");
+		StopClient();
+		_lastStartHost = Time.time;
+	}
+
 	[Serializable]
 	public class PlayerInfo {
 		public int Spot;
@@ -404,12 +435,5 @@ public class NetworkManagerGame : NobleNetworkManager {
 		public SpotMessage(int id) {
 			ID = id;
 		}
-	}
-
-	private IEnumerator DelayStopClient(float seconds) {
-		yield return new WaitForSeconds(seconds);
-		Debug.Log("[BONSAI] StopClient");
-		StopClient();
-		_lastStartHost = Time.time;
 	}
 }
