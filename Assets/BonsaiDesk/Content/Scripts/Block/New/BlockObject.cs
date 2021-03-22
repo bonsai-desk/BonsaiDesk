@@ -305,54 +305,83 @@ public partial class BlockObject : NetworkBehaviour
         if (Blocks.Count <= 1)
         {
             _autoAuthority.ServerStripOwnerAndDestroy();
+            return;
         }
-        else
+
+        //flood fill blocks surrounding the block which will be removed so we can know if removing this block
+        //should result in the block object splitting into 2 or more block objects
+        var filledBlocksGroups = new List<Dictionary<Vector3Int, SyncBlock>>();
+
+        var surroundingBlocks = BlockUtility.GetSurroundingBlocks(coord, Blocks);
+        foreach (var block in surroundingBlocks)
         {
-            var filledBlocksGroups = new List<Dictionary<Vector3Int, SyncBlock>>();
-
-            var surroundingBlocks = BlockUtility.GetSurroundingBlocks(coord, Blocks);
-            foreach (var block in surroundingBlocks)
+            bool blockAlreadyFilled = false;
+            for (int i = 0; i < filledBlocksGroups.Count; i++)
             {
-                bool blockAlreadyFilled = false;
-                for (int i = 0; i < filledBlocksGroups.Count; i++)
+                if (filledBlocksGroups[i].ContainsKey(block))
                 {
-                    if (filledBlocksGroups[i].ContainsKey(block))
-                    {
-                        blockAlreadyFilled = true;
-                        break;
-                    }
-                }
-
-                if (!blockAlreadyFilled)
-                {
-                    filledBlocksGroups.Add(BlockUtility.FloodFill(block, coord, Blocks));
+                    blockAlreadyFilled = true;
+                    break;
                 }
             }
 
-            //if there is only one group of filled blocks, just remove the block
-            if (filledBlocksGroups.Count <= 1)
+            if (!blockAlreadyFilled)
             {
-                Blocks.Remove(coord);
+                filledBlocksGroups.Add(BlockUtility.FloodFill(block, coord, Blocks));
             }
-            else //if there are 2 or more groups of filled blocks, we must delete this object and create 2 or more new objects
+        }
+
+        //if there is only one group of filled blocks, just remove the block
+        if (filledBlocksGroups.Count <= 1)
+        {
+            Blocks.Remove(coord);
+        }
+        else //if there are 2 or more groups of filled blocks, we must split this object into 2 or more objects
+        {
+            //find the largest block group
+            int indexOfLargest = 0;
+            for (int i = 1; i < filledBlocksGroups.Count; i++)
             {
-                _autoAuthority.ServerStripOwnerAndDestroy();
-
-                foreach (var filledBlocks in filledBlocksGroups)
+                if (filledBlocksGroups[i].Count > filledBlocksGroups[indexOfLargest].Count)
                 {
-                    var newBlockObject = Instantiate(StaticPrefabs.instance.blockObjectPrefab, transform.position,
-                        transform.rotation);
-
-                    var newBlockObjectScript = newBlockObject.GetComponent<BlockObject>();
-                    foreach (var pair in filledBlocks)
-                    {
-                        newBlockObjectScript.Blocks.Add(pair.Key, pair.Value);
-                    }
-
-                    NetworkServer.Spawn(newBlockObject);
-                    newBlockObject.GetComponent<AutoAuthority>()
-                        .ServerForceNewOwner(identityId, NetworkTime.time, false);
+                    indexOfLargest = i;
                 }
+            }
+
+            //renmove largest block group from the list
+            var largestGroup = filledBlocksGroups[indexOfLargest];
+            filledBlocksGroups.RemoveAt(0);
+
+            //every block that is not a part of the largest group will be removed and spawned as a new block
+            //this way the largest group of blocks can be reused instead of regenerated
+            Blocks.Remove(coord);
+            foreach (var filledBlocks in filledBlocksGroups)
+            {
+                foreach (var pair in filledBlocks)
+                {
+                    Blocks.Remove(pair.Key);
+                }
+            }
+            
+            //immediately remove the blocks so the newly spawned blocks to not clip
+            //this will only happen for the server/host, so hopefully it does not glitch on the client
+            ProcessBlockChanges();
+
+            //generate the new block objects from the remaining blocks groups
+            foreach (var filledBlocks in filledBlocksGroups)
+            {
+                var newBlockObject = Instantiate(StaticPrefabs.instance.blockObjectPrefab, transform.position,
+                    transform.rotation);
+
+                var newBlockObjectScript = newBlockObject.GetComponent<BlockObject>();
+                foreach (var pair in filledBlocks)
+                {
+                    newBlockObjectScript.Blocks.Add(pair.Key, pair.Value);
+                }
+
+                NetworkServer.Spawn(newBlockObject);
+                newBlockObject.GetComponent<AutoAuthority>()
+                    .ServerForceNewOwner(identityId, NetworkTime.time, false);
             }
         }
     }
@@ -435,7 +464,7 @@ public partial class BlockObject : NetworkBehaviour
         if (meshBlock.health < 0)
         {
             _damagedBlocks.Remove(coord);
-            
+
             var nId = uint.MaxValue;
             if (NetworkClient.connection != null && NetworkClient.connection.identity)
             {
