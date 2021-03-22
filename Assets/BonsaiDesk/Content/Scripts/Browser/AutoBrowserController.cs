@@ -41,7 +41,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		// so the server runs a browser but does not sync it yet
 		// it will need to be synced for streamer mode
 		_autoBrowser              =  GetComponent<AutoBrowser>();
-		_autoBrowser.BrowserReady += () => { SetupBrowser(); };
+		_autoBrowser.BrowserReady += (object _, EventArgs e) => { SetupBrowser(); };
 	}
 
 	private void Update() {

@@ -141,12 +141,12 @@ public class TogglePause : NetworkBehaviour
         _visibilitySynced                             =  1;
         _positionSynced                               =  0;
         
-        NetworkManagerGame.ServerDisconnect -= HandleServerAddPlayer;
+        NetworkManagerGame.ServerDisconnect -= HandleServerDisconnect;
         
-        NetworkManagerGame.ServerDisconnect += HandleServerAddPlayer;
+        NetworkManagerGame.ServerDisconnect += HandleServerDisconnect;
     }
 
-    private void HandleServerAddPlayer(object _, NetworkConnection conn) {
+    private void HandleServerDisconnect(object _, NetworkConnection conn) {
 		if (conn.identity != null && AuthorityIdentityId == conn.identity.netId) {
 			RemoveClientAuthority();
 		}

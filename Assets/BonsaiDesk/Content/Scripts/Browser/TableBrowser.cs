@@ -21,7 +21,7 @@ public class TableBrowser : Browser {
 
 		SetMaterialOnTop();
 
-		BrowserReady += () =>
+		BrowserReady += (object _, EventArgs e) =>
 		{
 			//var view = WebViewPrefab.transform.Find("WebViewPrefabResizer/WebViewPrefabView").gameObject.GetComponent<MeshRenderer>();
 			CustomInputModule.Singleton.Browsers.Add(this);

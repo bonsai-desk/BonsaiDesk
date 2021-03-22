@@ -81,7 +81,7 @@ public class TableBrowserMenu : MonoBehaviour {
 		}
 	}
 
-	private void SetupBrowser() {
+	private void SetupBrowser(object sender, EventArgs eventArgs) {
 		browser.OnMessageEmitted(HandleJavascriptMessage);
 	}
 
@@ -99,7 +99,7 @@ public class TableBrowserMenu : MonoBehaviour {
 				switch (message.Message) {
 					case "joinRoom":
 						var roomData = JsonConvert.DeserializeObject<RoomData>(message.Data);
-						Debug.Log($"[BONSAI] Join Room {message.Data}");
+						Debug.Log($"[BONSAI] Event JoinRoom {message.Data}");
 						JoinRoom?.Invoke(roomData);
 						break;
 					case "leaveRoom":

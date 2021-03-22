@@ -3,27 +3,39 @@ using Mirror;
 using UnityEngine;
 using Vuplex.WebView;
 
-public class WebBrowserParent : NetworkBehaviour {
+public class WebBrowserParent : MonoBehaviour {
 	public TableBrowser webBrowser;
 	public TableBrowser keyboardBrowser;
 	public TableBrowser webNavBrowser;
 	public KeyboardBrowserController keyboardBrowserController;
 	public WebBrowserController webBrowserController;
 	public WebNavBrowserController webNavBrowserController;
-	public GameObject VideoPrefab;
 	public Transform videoSpawnLocation;
 	public TableBrowserParent tableBrowserParent;
+	private int _browsersReady = 0;
 
 	// Start is called before the first frame update
 	private void Start() {
 		keyboardBrowser.ListenersReady += SetupKeyboardBrowser;
-		webNavBrowser.BrowserReady     += SetupWebWebNavBrowser;
+		webNavBrowser.BrowserReady     += HandleWebNavBrowserReady;
+		
+		webBrowser.BrowserReady        += HandleBrowserReady;
+		webNavBrowser.BrowserReady     += HandleBrowserReady;
+		keyboardBrowser.BrowserReady   += HandleBrowserReady;
+	}
+
+	private void HandleBrowserReady(object sender, EventArgs eventArgs) {
+		_browsersReady += 1;
+		if (_browsersReady == 3) {
+			BrowsersReady?.Invoke(this, new EventArgs());
+		}
 	}
 
 	// Update is called once per frame
 	private void Update() { }
 
 	public event EventHandler CloseWeb;
+	public event EventHandler BrowsersReady;
 
 	public void SetAllHidden(bool hidden) {
 		webBrowser.SetHidden(hidden);
@@ -34,7 +46,7 @@ public class WebBrowserParent : NetworkBehaviour {
 		}
 	}
 
-	private void SetupWebWebNavBrowser() {
+	private void HandleWebNavBrowserReady(object sender, EventArgs eventArgs) {
 		Debug.Log("[BONSAI] SetupWebWebNavBrowser");
 		webNavBrowserController.GoBack          += HandleGoBack;
 		webNavBrowserController.GoForward       += HandleGoForward;
@@ -56,7 +68,7 @@ public class WebBrowserParent : NetworkBehaviour {
 
 	private void HandleSpawnYt(object sender, EventArgs<string> e) {
 		Debug.Log($"[BONSAI] Spawn YT {e.Value}");
-		CmdSpawnYT(videoSpawnLocation.localPosition, e.Value);
+		YouTubeSpawner.Singleton.CmdSpawnYT(videoSpawnLocation.localPosition, e.Value);
 		tableBrowserParent.Sleep();
 	}
 
@@ -93,14 +105,7 @@ public class WebBrowserParent : NetworkBehaviour {
 		webBrowser.LoadUrl(url);
 	}
 
-	[Command(ignoreAuthority = true)]
-	private void CmdSpawnYT(Vector3 position, string id) {
-		var spawnedObject = Instantiate(VideoPrefab, position, Quaternion.AngleAxis(-90, Vector3.up));
-		NetworkServer.Spawn(spawnedObject);
-		spawnedObject.GetComponent<TabletControl>().videoId = id;
-	}
-
 	public void DummySpawn() {
-		CmdSpawnYT(videoSpawnLocation.position, "niS_Fpy_2-U");
+		YouTubeSpawner.Singleton.CmdSpawnYT(videoSpawnLocation.position, "niS_Fpy_2-U");
 	}
 }

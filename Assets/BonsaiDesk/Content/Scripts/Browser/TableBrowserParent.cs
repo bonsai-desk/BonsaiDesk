@@ -6,13 +6,23 @@ public class TableBrowserParent : MonoBehaviour {
 	public TableBrowserMenu TableBrowserMenu;
 	public WebBrowserParent WebBrowserParent;
 	public bool sleeped { get; private set; }
+	private int parentsReady;
 
 	// Start is called before the first frame update
 	private void Start() {
 		MoveToDesk.OrientationChanged += HandleOrientationChange;
 		TableBrowserMenu.BrowseSite   += HandleBrowseSite;
 		WebBrowserParent.CloseWeb     += HandleCloseWeb;
-		TableBrowser.BrowserReady     += Sleep;
+
+		WebBrowserParent.BrowsersReady += HandleParentReady;
+		TableBrowser.BrowserReady      += HandleParentReady;
+	}
+
+	private void HandleParentReady(object sender, EventArgs e) {
+		parentsReady += 1;
+		if (parentsReady == 2) {
+			Sleep();
+		}
 	}
 
 	// Update is called once per frame

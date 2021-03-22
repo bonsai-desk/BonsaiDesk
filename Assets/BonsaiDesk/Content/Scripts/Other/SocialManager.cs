@@ -54,7 +54,6 @@ public class SocialManager : NetworkBehaviour {
 	}
 
 	private void HandleGetLoggedInUser(Message<User> msg) {
-		Debug.Log("");
 		if (msg.IsError) {
 			TerminateWithError(msg);
 			return;

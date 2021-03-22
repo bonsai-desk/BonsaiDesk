@@ -21,13 +21,12 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 	/// </summary>
 	/// <param name="conn">Connection to client.</param>
 	public override void OnServerAuthenticate(NetworkConnection conn) {
-		Debug.Log("[BONSAI] OnServerAuthenticate");
 		if (NetworkManagerGame.Singleton.roomOpen ||
 		    conn.connectionId == NetworkServer.localConnection.connectionId) {
 			var authResponseMessage = new AuthResponseMessage {
 				Code = 100
 			};
-			Debug.Log("[BONSAI] OnServerAuthenticate 100");
+			Debug.Log("[BONSAI] ServerAuthenticate Accept");
 			conn.Send(authResponseMessage);
 			ServerAccept(conn);
 		}
@@ -35,7 +34,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 			var authResponseMessage = new AuthResponseMessage {
 				Code = 200
 			};
-			Debug.Log("[BONSAI] OnServerAuthenticate 200");
+			Debug.Log("[BONSAI] ServerAuthenticate Reject");
 			conn.Send(authResponseMessage);
 			conn.isAuthenticated = false;
 			ServerReject(conn);
@@ -69,7 +68,6 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 			case 200:
 				Debug.Log("[BONSAI] Authenticator Rejected");
 				ClientReject(conn);
-				NetworkManagerGame.Singleton.State = NetworkManagerGame.ConnectionState.Loading;
 				break;
 		}
 	}

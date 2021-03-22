@@ -395,31 +395,31 @@ function JoinDeskPage(props) {
   let {navHome} = props;
 
   let [code, setCode] = useState('');
-  let [loading, setLoading] = useState(false);
+  let [posting, setPosting] = useState(false);
   let [message, setMessage] = useState('');
 
   useEffect(() => {
-    if (loading) return;
+    if (posting) return;
 
     if (code.length === 4) {
+      setPosting(true);
       let url = API_BASE + `/rooms/${code}`;
-      console.log(url);
       axios({
         method: 'get',
         url: url,
       }).then(response => {
         postJoinRoom(response.data);
-        navHome();
         setCode('');
-        setLoading(false);
+        setPosting(false);
+        navHome();
       }).catch(err => {
         console.log(err);
         setMessage(`Could not find ${code} try again`);
         setCode('');
-        setLoading(false);
+        setPosting(false);
       });
     }
-  }, [loading, code, navHome]);
+  }, [code, navHome]);
 
   function handleClick(char) {
     setMessage('');
@@ -744,12 +744,11 @@ let Menu = observer(() => {
 
   let SelectedPage;
   if (active > pages.length - 1) {
-    setActive(0)
+    setActive(0);
     SelectedPage = pages[0].component;
   } else {
     SelectedPage = pages[active].component;
   }
-
 
   let joinDeskActive = store.network_state === 'Hosting' && !store._room_open;
 
