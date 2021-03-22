@@ -35,7 +35,7 @@ public class MenuHand : MonoBehaviour, IHandTick
         {
             var angleBelowThreshold = angleToHead.AngleBelowThreshold();
             var menuOpen = tableBrowserParent && !tableBrowserParent.sleeped;
-            var playing = Application.isFocused && Application.isPlaying;
+            var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
             menuObject.SetActive(angleBelowThreshold && playerHand.HandComponents.TrackingRecently && !menuOpen &&
                                  playing);
         }

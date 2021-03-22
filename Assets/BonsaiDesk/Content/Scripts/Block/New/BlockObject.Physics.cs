@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Mirror;
 using UnityEngine;
+using BlockDictOp = Mirror.SyncDictionary<UnityEngine.Vector3Int, SyncBlock>.Operation;
 
 public partial class BlockObject
 {
@@ -117,8 +118,13 @@ public partial class BlockObject
                         gameObject.SetActive(false);
 
                         var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
-                        blockObject.CmdAddBlock(Blocks[coord].id, blockCoord,
-                            BlockUtility.SnapToNearestRightAngle(localRotation), netIdentity);
+                        localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) *
+                                        BlockUtility.ByteToQuaternion(Blocks[coord].rotation);
+                        blockObject.CmdAddBlock(Blocks[coord].id, blockCoord, localRotation, netIdentity);
+
+                        //client side prediction
+                        var syncBlock = new SyncBlock(Blocks[coord].id, BlockUtility.QuaternionToByte(localRotation));
+                        blockObject.BlockChanges.Enqueue((blockCoord, syncBlock, BlockDictOp.OP_ADD));
 
                         return;
                     }
@@ -221,7 +227,7 @@ public partial class BlockObject
         {
             return;
         }
-        
+
         ContactPoint contact = collision.GetContact(0);
         Vector3 blockPosition = contact.point;
         blockPosition += contact.normal * (BlockArea.cubeScale / 2f);
