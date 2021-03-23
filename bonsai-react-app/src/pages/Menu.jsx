@@ -250,6 +250,18 @@ function ClientHomePage() {
 const RoomInfo = observer(() => {
   let {store} = useStore();
 
+  let handleCloseRoom = () => {
+    axios({
+      method: 'delete',
+      url: API_BASE + '/rooms/' + store._room_code,
+    }).then(r => {
+      if (r.status === 200) {
+        console.log(`deleted room ${store._room_code}`);
+      }
+    }).catch(console.log);
+    postCloseRoom();
+  };
+
   let OpenRoom =
       <InfoItem title={'Room'} slug={'Invite others'} imgSrc={DoorOpen}>
         <Button className={greenButtonClass} handleClick={postOpenRoom}>
@@ -260,7 +272,7 @@ const RoomInfo = observer(() => {
   let CloseRoom =
       <InfoItem title={'Room'} slug={'Ready to accept connections'}
                 imgSrc={DoorOpen}>
-        <Button className={redButtonClass} handleClick={postCloseRoom}>
+        <Button className={redButtonClass} handleClick={handleCloseRoom}>
           Close
         </Button>
       </InfoItem>;
@@ -431,7 +443,7 @@ let JoinDeskPage = observer((props) => {
         setPosting(false);
       });
     }
-  }, [code, navHome]);
+  }, [code, navHome, posting, store.ip_address, store.port]);
 
   function handleClick(char) {
     setMessage('');
