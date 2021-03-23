@@ -45,7 +45,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 
 	public ConnectionState State {
 		get {
-			switch (mode) {
+			switch (mode)
+			{
 				case NetworkManagerMode.Offline:
 					return ConnectionState.RelayError;
 				case NetworkManagerMode.ServerOnly:
@@ -62,7 +63,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 
 	public override void Awake() {
 		base.Awake();
-		if (Singleton == null) {
+		if (Singleton == null)
+		{
 			Singleton = this;
 		}
 	}
@@ -79,7 +81,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 
 		_comms = GetComponent<DissonanceComms>();
 
-		if (Application.isEditor && !serverOnlyIfEditor) {
+		if (Application.isEditor && !serverOnlyIfEditor)
+		{
 			StartCoroutine(StartXR());
 		}
 	}
@@ -87,20 +90,25 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	public override void Update() {
 		base.Update();
 
-		if (isDisconnecting || _roomJoinInProgress) {
+		if (isDisconnecting || _roomJoinInProgress)
+		{
 			Debug.Log(
 				$"[BONSAI] NetworkManager prevent Update while isDisconnecting={isDisconnecting} _roomJoinInProgress={_roomJoinInProgress}");
 			return;
 		}
 
-		if (serverOnlyIfEditor) {
-			if (mode != NetworkManagerMode.ServerOnly) {
+		if (serverOnlyIfEditor)
+		{
+			if (mode != NetworkManagerMode.ServerOnly)
+			{
 				roomOpen = true;
 				StartServer();
 			}
 		}
-		else {
-			switch (mode) {
+		else
+		{
+			switch (mode)
+			{
 				case NetworkManagerMode.Offline:
 					MaybeStartHost();
 					break;
@@ -115,17 +123,21 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 			}
 		}
 
-		if (mode == NetworkManagerMode.ClientOnly || mode == NetworkManagerMode.Host) {
+		if (mode == NetworkManagerMode.ClientOnly || mode == NetworkManagerMode.Host)
+		{
 			var oriented    = MoveToDesk.Singleton.oriented;
 			var commsActive = IsCommsActive();
-			if (_hasFocus && oriented && !commsActive) {
+			if (_hasFocus && oriented && !commsActive)
+			{
 				SetCommsActive(true);
 			}
-			else if ((!_hasFocus || !oriented) && commsActive) {
+			else if ((!_hasFocus || !oriented) && commsActive)
+			{
 				SetCommsActive(false);
 			}
 		}
-		else if (IsCommsActive()) {
+		else if (IsCommsActive())
+		{
 			SetCommsActive(false);
 		}
 	}
@@ -135,7 +147,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	}
 
 	private void OnApplicationPause(bool pauseStatus) {
-		if (pauseStatus) {
+		if (pauseStatus)
+		{
 			SetCommsActive(false);
 		}
 	}
@@ -146,16 +159,19 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	}
 
 	private void SetCommsActive(bool active) {
-		if (_comms is null) {
+		if (_comms is null)
+		{
 			Debug.LogWarning("[BONSAI] Trying to set active on comms when null");
 			return;
 		}
 
-		if (active) {
+		if (active)
+		{
 			_comms.IsMuted    = false;
 			_comms.IsDeafened = false;
 		}
-		else {
+		else
+		{
 			_comms.IsMuted    = true;
 			_comms.IsDeafened = true;
 		}
@@ -178,10 +194,12 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	}
 
 	private void HandleJoinRoom(TableBrowserMenu.RoomData roomData) {
-		if (!_roomJoinInProgress) {
+		if (!_roomJoinInProgress)
+		{
 			StartCoroutine(JoinRoom(roomData));
 		}
-		else {
+		else
+		{
 			Debug.LogWarning("[BONSAI] Ignoring attempt to join room while room join is in progress");
 		}
 	}
@@ -189,24 +207,27 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	private IEnumerator JoinRoom(TableBrowserMenu.RoomData roomData) {
 		Debug.Log("[BONSAI] NetworkManager Begin JoinRoom");
 		_roomJoinInProgress = true;
-		if (mode == NetworkManagerMode.Host || !(HostEndPoint is null)) {
+		if (mode == NetworkManagerMode.Host || !(HostEndPoint is null))
+		{
 			StopHost();
 			InfoChange?.Invoke(this, new EventArgs());
 		}
-		
 
-		while (!(HostEndPoint is null)) {
+		while (!(HostEndPoint is null))
+		{
 			Debug.Log("[BONSAI] JoinRoom: wait for HostEndPoint to be null");
 			yield return null;
 		}
 
-		if (mode == NetworkManagerMode.Offline) {
+		if (mode == NetworkManagerMode.Offline)
+		{
 			networkAddress = roomData.ip_address;
 			networkPort    = roomData.port;
 			StartClient();
 			InfoChange?.Invoke(this, new EventArgs());
 		}
-		else {
+		else
+		{
 			Debug.LogWarning("[Bonsai] NetworkManager tried to join room while a hosting/client, ignoring");
 		}
 
@@ -251,10 +272,13 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		PlayerInfos.Remove(conn);
 
 		var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
-		foreach (var identity in tmp) {
+		foreach (var identity in tmp)
+		{
 			var autoAuthority = identity.GetComponent<AutoAuthority>();
-			if (autoAuthority != null) {
-				if (autoAuthority.InUse) {
+			if (autoAuthority != null)
+			{
+				if (autoAuthority.InUse)
+				{
 					autoAuthority.SetInUse(false);
 				}
 
@@ -264,7 +288,7 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 
 		// call the base after the ServerDisconnect event otherwise null reference gets passed to subscribers
 		base.OnServerDisconnect(conn);
-		
+
 		InfoChange?.Invoke(this, new EventArgs());
 	}
 
@@ -279,10 +303,10 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 
 	public override void OnClientDisconnect(NetworkConnection conn) {
 		Debug.Log("[BONSAI] OnClientDisconnect");
-		
+
 		NetworkClient.UnregisterHandler<SpotMessage>();
 		NetworkClient.UnregisterHandler<ShouldDisconnectMessage>();
-		
+
 		base.OnClientDisconnect(conn);
 	}
 
@@ -301,7 +325,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	}
 
 	private void OnSpot(SpotMessage spot) {
-		switch (spot.ID) {
+		switch (spot.ID)
+		{
 			case 0:
 				GameObject.Find("GameManager").GetComponent<MoveToDesk>()
 				          .SetTableEdge(GameObject.Find("DefaultEdge").transform);
@@ -317,17 +342,20 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		Debug.Log("[BONSAI] Initializing XR");
 		yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
 
-		if (XRGeneralSettings.Instance.Manager.activeLoader == null) {
+		if (XRGeneralSettings.Instance.Manager.activeLoader == null)
+		{
 			Debug.LogError("[BONSAI] Initializing XR Failed. Check Editor or Player log for details.");
 		}
-		else {
+		else
+		{
 			Debug.Log("[BONSAI] Starting XR");
 			XRGeneralSettings.Instance.Manager.StartSubsystems();
 		}
 	}
 
 	private static void StopXR() {
-		if (XRGeneralSettings.Instance.Manager.isInitializationComplete) {
+		if (XRGeneralSettings.Instance.Manager.isInitializationComplete)
+		{
 			Debug.Log("[BONSAI] Stopping XR");
 			XRGeneralSettings.Instance.Manager.StopSubsystems();
 			XRGeneralSettings.Instance.Manager.DeinitializeLoader();
@@ -337,49 +365,62 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 
 	public void UpdateUserInfo(uint netId, UserInfo userInfo) {
 		var updated = false;
-		foreach (var conn in PlayerInfos.Keys.ToList()) {
-			if (netId == conn.identity.netId) {
+		foreach (var conn in PlayerInfos.Keys.ToList())
+		{
+			if (netId == conn.identity.netId)
+			{
 				PlayerInfos[conn].User = userInfo;
 				updated                = true;
 			}
 		}
 
-		if (updated) {
+		if (updated)
+		{
 			Debug.Log($"[BONSAI] Updated UserInfo in PlayerInfos -> {userInfo.DisplayName}");
 		}
-		else {
+		else
+		{
 			Debug.LogWarning("[BONSAI] Tried to update PlayerInfos but failed");
 		}
+
 		InfoChange?.Invoke(this, new EventArgs());
 	}
 
 	private IEnumerator KickClients() {
-		foreach (var conn in NetworkServer.connections.Values) {
-			if (conn.connectionId != NetworkConnection.LocalConnectionId) {
+		foreach (var conn in NetworkServer.connections.Values)
+		{
+			if (conn.connectionId != NetworkConnection.LocalConnectionId)
+			{
 				RequestDisconnectClient(conn);
 			}
 		}
 
 		yield return new WaitForSeconds(HardKickDelay);
 
-		foreach (var conn in NetworkServer.connections.Values) {
-			if (conn.connectionId != NetworkConnection.LocalConnectionId) {
+		foreach (var conn in NetworkServer.connections.Values)
+		{
+			if (conn.connectionId != NetworkConnection.LocalConnectionId)
+			{
 				DisconnectClient(conn);
 			}
 		}
 	}
 
 	private IEnumerator KickClient(int id) {
-		foreach (var conn in NetworkServer.connections.Values) {
-			if (conn.connectionId == id) {
+		foreach (var conn in NetworkServer.connections.Values)
+		{
+			if (conn.connectionId == id)
+			{
 				RequestDisconnectClient(conn);
 			}
 		}
 
 		yield return new WaitForSeconds(HardKickDelay);
 
-		foreach (var conn in NetworkServer.connections.Values) {
-			if (conn.connectionId == id) {
+		foreach (var conn in NetworkServer.connections.Values)
+		{
+			if (conn.connectionId == id)
+			{
 				DisconnectClient(conn);
 			}
 		}
@@ -387,11 +428,13 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 
 	private int OpenSpotId() {
 		var spots = new List<int> {0, 1};
-		foreach (var info in PlayerInfos.Values) {
+		foreach (var info in PlayerInfos.Values)
+		{
 			spots.Remove(info.Spot);
 		}
 
-		if (spots.Count > 0) {
+		if (spots.Count > 0)
+		{
 			return spots[0];
 		}
 
@@ -408,7 +451,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	}
 
 	private void MaybeStartHost() {
-		if (Time.time - _lastStartHost > StartHostCooldown) {
+		if (Time.time - _lastStartHost > StartHostCooldown)
+		{
 			Debug.Log("[BONSAI] NetworkManager StartHost");
 			StartHost();
 			_lastStartHost = Time.time;
