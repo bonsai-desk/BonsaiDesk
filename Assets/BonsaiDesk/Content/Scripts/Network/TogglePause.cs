@@ -151,6 +151,7 @@ public class TogglePause : NetworkBehaviour
     }
 
     private void HandleServerDisconnect(object _, NetworkConnection conn) {
+        // Cameron: moved this here from NetworkManagerGame
 		if (conn.identity != null && AuthorityIdentityId == conn.identity.netId) {
 			RemoveClientAuthority();
 		}
