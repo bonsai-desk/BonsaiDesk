@@ -36,6 +36,7 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		new Dictionary<NetworkConnection, PlayerInfo>();
 
 	private DissonanceComms _comms;
+	private bool _hasFocus;
 	private float _lastStartHost = Mathf.NegativeInfinity;
 
 	private bool _roomJoinInProgress;
@@ -76,11 +77,7 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		TableBrowserMenu.OpenRoom         += HandleOpenRoom;
 		TableBrowserMenu.CloseRoom        += HandleCloseRoom;
 
-		// todo make this into EventHandler
-		MoveToDesk.OrientationChanged += HandleOrientationChanged;
-
 		_comms = GetComponent<DissonanceComms>();
-		SetCommsActive(false);
 
 		if (Application.isEditor && !serverOnlyIfEditor) {
 			StartCoroutine(StartXR());
@@ -117,19 +114,24 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 					throw new ArgumentOutOfRangeException();
 			}
 		}
+
+		if (mode == NetworkManagerMode.ClientOnly || mode == NetworkManagerMode.Host) {
+			var oriented    = MoveToDesk.Singleton.oriented;
+			var commsActive = IsCommsActive();
+			if (_hasFocus && oriented && !commsActive) {
+				SetCommsActive(true);
+			}
+			else if ((!_hasFocus || !oriented) && commsActive) {
+				SetCommsActive(false);
+			}
+		}
+		else if (IsCommsActive()) {
+			SetCommsActive(false);
+		}
 	}
 
 	private void OnApplicationFocus(bool focus) {
-		if (focus) {
-			if (MoveToDesk.Singleton.oriented) {
-				Debug.Log("[BONSAI] Setting comms active");
-				SetCommsActive(true);
-			}
-		}
-		else {
-			Debug.Log("[BONSAI] Setting comms inactive");
-			SetCommsActive(false);
-		}
+		_hasFocus = focus;
 	}
 
 	private void OnApplicationPause(bool pauseStatus) {
@@ -141,12 +143,6 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	public override void OnApplicationQuit() {
 		base.OnApplicationQuit();
 		StopXR();
-	}
-
-	private void HandleOrientationChanged(bool oriented) {
-		if (!oriented) {
-			SetCommsActive(false);
-		}
 	}
 
 	private void SetCommsActive(bool active) {
@@ -163,6 +159,10 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 			_comms.IsMuted    = true;
 			_comms.IsDeafened = true;
 		}
+	}
+
+	private bool IsCommsActive() {
+		return !_comms.IsMuted && !_comms.IsDeafened;
 	}
 
 	private void HandleKickConnectionId(int id) {
