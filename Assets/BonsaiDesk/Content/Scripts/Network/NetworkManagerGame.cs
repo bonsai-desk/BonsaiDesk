@@ -196,7 +196,14 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	private void HandleJoinRoom(TableBrowserMenu.RoomData roomData) {
 		if (!_roomJoinInProgress)
 		{
-			StartCoroutine(JoinRoom(roomData));
+			if (HostEndPoint.Address.ToString() == roomData.ip_address && HostEndPoint.Port == roomData.port)
+			{
+				Debug.LogWarning("[BONSAI] Tried to join own hosted room as client, ignoring");
+			}
+			else
+			{
+				StartCoroutine(JoinRoom(roomData));
+			}
 		}
 		else
 		{
