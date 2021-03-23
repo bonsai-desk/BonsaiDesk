@@ -478,27 +478,27 @@ let JoinDeskPage = observer((props) => {
           <div className={'p-2 rounded space-y-4 text-2xl'}>
             <div className={'flex space-x-4'}>
               <JoinDeskButton handleClick={handleClick}
-                              char={'A'}/>
+                              char={'1'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'B'}/>
+                              char={'2'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'C'}/>
+                              char={'3'}/>
             </div>
             <div className={'flex space-x-4'}>
               <JoinDeskButton handleClick={handleClick}
-                              char={'D'}/>
+                              char={'4'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'E'}/>
+                              char={'5'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'F'}/>
+                              char={'6'}/>
             </div>
             <div className={'flex space-x-4'}>
               <JoinDeskButton handleClick={handleClick}
-                              char={'G'}/>
+                              char={'7'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'H'}/>
+                              char={'8'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'I'}/>
+                              char={'9'}/>
             </div>
             <div className={'flex flex-wrap w-full justify-around'}>
               <JoinDeskButton
