@@ -191,7 +191,9 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		_roomJoinInProgress = true;
 		if (mode == NetworkManagerMode.Host || !(HostEndPoint is null)) {
 			StopHost();
+			InfoChange?.Invoke(this, new EventArgs());
 		}
+		
 
 		while (!(HostEndPoint is null)) {
 			Debug.Log("[BONSAI] JoinRoom: wait for HostEndPoint to be null");
@@ -202,6 +204,7 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 			networkAddress = roomData.ip_address;
 			networkPort    = roomData.port;
 			StartClient();
+			InfoChange?.Invoke(this, new EventArgs());
 		}
 		else {
 			Debug.LogWarning("[Bonsai] NetworkManager tried to join room while a hosting/client, ignoring");
@@ -236,9 +239,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		PlayerInfos.Add(conn, new PlayerInfo(openSpot, "NoName"));
 		conn.Send(new SpotMessage(openSpot));
 
-		// todo move into hosting mode if not already
-
 		ServerAddPlayer?.Invoke(this, conn);
+		InfoChange?.Invoke(this, new EventArgs());
 	}
 
 	public override void OnServerDisconnect(NetworkConnection conn) {
@@ -262,6 +264,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 
 		// call the base after the ServerDisconnect event otherwise null reference gets passed to subscribers
 		base.OnServerDisconnect(conn);
+		
+		InfoChange?.Invoke(this, new EventArgs());
 	}
 
 	public override void OnClientConnect(NetworkConnection conn) {
@@ -271,6 +275,15 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 
 		NetworkClient.RegisterHandler<SpotMessage>(OnSpot);
 		NetworkClient.RegisterHandler<ShouldDisconnectMessage>(OnShouldDisconnect);
+	}
+
+	public override void OnClientDisconnect(NetworkConnection conn) {
+		Debug.Log("[BONSAI] OnClientDisconnect");
+		
+		NetworkClient.UnregisterHandler<SpotMessage>();
+		NetworkClient.UnregisterHandler<ShouldDisconnectMessage>();
+		
+		base.OnClientDisconnect(conn);
 	}
 
 	public override void OnFatalError(string error) {
@@ -337,6 +350,7 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		else {
 			Debug.LogWarning("[BONSAI] Tried to update PlayerInfos but failed");
 		}
+		InfoChange?.Invoke(this, new EventArgs());
 	}
 
 	private IEnumerator KickClients() {
