@@ -391,8 +391,9 @@ const HomePage = observer(() => {
   );
 });
 
-function JoinDeskPage(props) {
+let JoinDeskPage = observer((props) => {
   let {navHome} = props;
+  let {store} = useStore();
 
   let [code, setCode] = useState('');
   let [posting, setPosting] = useState(false);
@@ -408,10 +409,21 @@ function JoinDeskPage(props) {
         method: 'get',
         url: url,
       }).then(response => {
-        postJoinRoom(response.data);
-        setCode('');
-        setPosting(false);
-        navHome();
+        console.log(response.data);
+        console.log(store.ip_address, store.port);
+        if (response.data.ip_address.toString() ===
+            store.ip_address.toString() &&
+            response.data.port.toString() === store.port.toString()) {
+          // trying to join your own room
+          setMessage(`Could not find ${code} try again`);
+          setCode('');
+          setPosting(false);
+        } else {
+          postJoinRoom(response.data);
+          setCode('');
+          setPosting(false);
+          navHome();
+        }
       }).catch(err => {
         console.log(err);
         setMessage(`Could not find ${code} try again`);
@@ -484,7 +496,7 @@ function JoinDeskPage(props) {
         </div>
       </MenuContent>
   );
-}
+});
 
 function VideosPage() {
   return <MenuContent name={'Videos'}>
