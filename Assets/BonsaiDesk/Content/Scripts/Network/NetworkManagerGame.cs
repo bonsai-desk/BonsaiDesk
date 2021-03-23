@@ -7,7 +7,6 @@ using Mirror;
 using NobleConnect.Mirror;
 using UnityEngine;
 using UnityEngine.XR.Management;
-using Logger = NobleConnect.Logger;
 
 // this is a modified version of NobleNetworkManager
 // this version cleans up AddListener properly
@@ -69,8 +68,6 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 
 	public override void Start() {
 		base.Start();
-
-		logLevel = Logger.Level.Debug;
 
 		// todo make these into EventHandler
 		TableBrowserMenu.JoinRoom         += HandleJoinRoom;
@@ -146,12 +143,6 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		StopXR();
 	}
 
-	private IEnumerator DelayStopHost(float seconds) {
-		yield return new WaitForSeconds(seconds);
-		Debug.Log("Stop Hosting");
-		StopHost();
-	}
-
 	private void HandleOrientationChanged(bool oriented) {
 		if (!oriented) {
 			SetCommsActive(false);
@@ -180,8 +171,10 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	}
 
 	private void HandleLeaveRoom() {
-		Debug.Log("[Bonsai] NetworkManager LeaveRoom");
-		StartCoroutine(DelayStopClient(0.1f));
+		Debug.Log("[BONSAI] NetworkManager LeaveRoom");
+		Debug.Log("[BONSAI] StopClient");
+		StopClient();
+		// todo _lastStartHost = Time.time;
 	}
 
 	private void HandleJoinRoom(TableBrowserMenu.RoomData roomData) {
@@ -194,7 +187,7 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	}
 
 	private IEnumerator JoinRoom(TableBrowserMenu.RoomData roomData) {
-		Debug.Log("[Bonsai] NetworkManager Begin JoinRoom");
+		Debug.Log("[BONSAI] NetworkManager Begin JoinRoom");
 		_roomJoinInProgress = true;
 		if (mode == NetworkManagerMode.Host || !(HostEndPoint is null)) {
 			StopHost();
@@ -291,7 +284,7 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 
 	private void OnShouldDisconnect(ShouldDisconnectMessage _) {
 		Debug.Log("[BONSAI] NetworkManger ShouldDisconnect");
-		client?.Disconnect();
+		StopClient();
 	}
 
 	private void OnSpot(SpotMessage spot) {
@@ -406,13 +399,6 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 			StartHost();
 			_lastStartHost = Time.time;
 		}
-	}
-
-	private IEnumerator DelayStopClient(float seconds) {
-		yield return new WaitForSeconds(seconds);
-		Debug.Log("[BONSAI] StopClient");
-		StopClient();
-		_lastStartHost = Time.time;
 	}
 
 	[Serializable]
