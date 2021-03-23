@@ -9,7 +9,10 @@ using UnityEngine;
 using UnityEngine.XR.Management;
 using Logger = NobleConnect.Logger;
 
-public class NetworkManagerGame : NobleNetworkManager {
+// this is a modified version of NobleNetworkManager
+// this version cleans up AddListener properly
+
+public class NetworkManagerGame : BonsaiNetworkManager {
 	public enum ConnectionState {
 		RelayError,
 		Loading,
@@ -178,7 +181,6 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 	private void HandleLeaveRoom() {
 		Debug.Log("[Bonsai] NetworkManager LeaveRoom");
-		client?.Disconnect();
 		StartCoroutine(DelayStopClient(0.1f));
 	}
 
