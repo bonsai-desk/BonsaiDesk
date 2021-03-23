@@ -109,8 +109,12 @@ public class TogglePause : NetworkBehaviour
         set
         {
             _pauseMorphLocal = value;
-            if (isServer && !isClient)
+            if (isServer && !isClient || isServer && isClient) {
+                // Cameron: added (isServer && isClient) condition
+                // this prevents "Send command attempted with no client running" which
+                // occurs sometimes when shutting down a room as a host
                 _pauseMorphSynced = value;
+            }
             else if (NetworkClient.connection != null && NetworkClient.connection.identity != null)
                 CmdSetPauseMorph(value);
         }
