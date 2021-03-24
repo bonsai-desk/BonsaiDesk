@@ -14,7 +14,9 @@ public class TogglePause : NetworkBehaviour
     private bool _interactable = true;
     public bool Interactable => _interactable;
     
-    [SyncVar(hook = nameof(OnSetPaused))] private bool _paused = true;
+    // Cameron: made this public so that AutoBrowserController can determine whether to play after a ready up command
+    // todo probably need to make this a private setter
+    [SyncVar(hook = nameof(OnSetPaused))] public bool _paused = true;
     private bool _probablyPaused = false;
 
     [SyncVar] private bool _inUse = false;
@@ -160,8 +162,25 @@ public class TogglePause : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
+        
+		TableBrowserMenu.Singleton.PauseVideo   -= HandleMenuPauseVideo;
+		TableBrowserMenu.Singleton.PlayVideo    -= HandleMenuPlayVideo;
+        
+		TableBrowserMenu.Singleton.PauseVideo   += HandleMenuPauseVideo;
+		TableBrowserMenu.Singleton.PlayVideo    += HandleMenuPlayVideo;
+        
         updateIcons(_paused);
     }
+    
+	private void HandleMenuPlayVideo(object sender, EventArgs e) {
+		Debug.Log("[bonsai] Menu play video");
+		CmdSetPaused(false);
+	}
+
+	private void HandleMenuPauseVideo(object sender, EventArgs e) {
+		Debug.Log("[bonsai] Menu pause video");
+		CmdSetPaused(true);
+	}
 
     private void Update()
     {
@@ -268,7 +287,7 @@ public class TogglePause : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdSetPaused(bool paused)
+    public void CmdSetPaused(bool paused)
     {
         if (!_interactable) return;
         

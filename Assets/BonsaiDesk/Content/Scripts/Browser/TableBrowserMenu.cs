@@ -24,7 +24,8 @@ public class TableBrowserMenu : MonoBehaviour {
 	private float _postRoomInfoLast;
 
 	private void Awake() {
-		if (Singleton == null) {
+		if (Singleton == null)
+		{
 			Singleton = this;
 		}
 	}
@@ -38,12 +39,14 @@ public class TableBrowserMenu : MonoBehaviour {
 	}
 
 	public void Update() {
-		if (Time.time - _postMediaInfoLast > postMediaInfoEvery) {
+		if (Time.time - _postMediaInfoLast > postMediaInfoEvery)
+		{
 			PostMediaInfo(autoBrowserController.GetMediaInfo());
 			_postMediaInfoLast = Time.time;
 		}
 
-		if (Time.time - _postRoomInfoLast > PostRoomInfoEvery) {
+		if (Time.time - _postRoomInfoLast > PostRoomInfoEvery)
+		{
 			PostNetworkInfo();
 		}
 	}
@@ -58,7 +61,8 @@ public class TableBrowserMenu : MonoBehaviour {
 		var PlayerInfos  = NetworkManagerGame.Singleton.PlayerInfos;
 		var roomOpen     = NetworkManagerGame.Singleton.roomOpen;
 
-		if (canPost) {
+		if (canPost)
+		{
 			_postRoomInfoLast = Time.time;
 		#if UNITY_EDITOR || DEVELOPMENT_BUILD
 			const string build = "DEVELOPMENT";
@@ -72,10 +76,12 @@ public class TableBrowserMenu : MonoBehaviour {
 			PostNetworkState(State.ToString());
 			PostPlayerInfo(PlayerInfos);
 			PostRoomOpen(roomOpen);
-			if (HostEndPoint != null) {
+			if (HostEndPoint != null)
+			{
 				PostRoomInfo(HostEndPoint.Address.ToString(), HostEndPoint.Port.ToString());
 			}
-			else {
+			else
+			{
 				PostRoomInfo("", "");
 			}
 		}
@@ -94,9 +100,11 @@ public class TableBrowserMenu : MonoBehaviour {
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<Browser.JsMessageString>(eventArgs.Value);
 
-		switch (message.Type) {
+		switch (message.Type)
+		{
 			case "command":
-				switch (message.Message) {
+				switch (message.Message)
+				{
 					case "joinRoom":
 						var roomData = JsonConvert.DeserializeObject<RoomData>(message.Data);
 						Debug.Log($"[BONSAI] Event JoinRoom {message.Data}");
@@ -112,15 +120,15 @@ public class TableBrowserMenu : MonoBehaviour {
 						CloseRoom?.Invoke();
 						break;
 					case "browseYouTube":
-						if (BrowseSite != null) {
+						if (BrowseSite != null)
+						{
 							BrowseSite(this, "https://m.youtube.com");
 						}
 
 						break;
 					case "seekPlayer":
 						var ts = float.Parse(message.Data);
-						autoBrowserController.CmdReadyUp(ts);
-
+						SeekPlayer?.Invoke(this, ts);
 						break;
 					case "kickConnectionId":
 						// todo what happens when this fails?
@@ -128,21 +136,24 @@ public class TableBrowserMenu : MonoBehaviour {
 						KickConnectionId?.Invoke(id);
 						break;
 					case "volumeIncrement":
-						if (VolumeChange != null) {
+						if (VolumeChange != null)
+						{
 							VolumeChange.Invoke(this, 0.25f);
 						}
 
 						break;
 					case "volumeDecrement":
-						if (VolumeChange != null) {
+						if (VolumeChange != null)
+						{
 							VolumeChange.Invoke(this, -0.25f);
 						}
 
 						break;
-
 					case "lightsChange":
-						if (LightChange != null) {
-							switch (message.Data) {
+						if (LightChange != null)
+						{
+							switch (message.Data)
+							{
 								case "vibes":
 									LightChange.Invoke(this, LightState.Vibes);
 									break;
@@ -152,6 +163,15 @@ public class TableBrowserMenu : MonoBehaviour {
 							}
 						}
 
+						break;
+					case "pauseVideo":
+						PauseVideo?.Invoke(this, new EventArgs());
+						break;
+					case "playVideo":
+						PlayVideo?.Invoke(this, new EventArgs());
+						break;
+					case "ejectVideo":
+						EjectVideo?.Invoke(this, new EventArgs());
 						break;
 				}
 
@@ -234,6 +254,11 @@ public class TableBrowserMenu : MonoBehaviour {
 	public static event Action OpenRoom;
 	public static event Action CloseRoom;
 	public static event Action<int> KickConnectionId;
+
+	public event EventHandler PlayVideo;
+	public event EventHandler PauseVideo;
+	public event EventHandler EjectVideo;
+	public event EventHandler<float> SeekPlayer;
 
 	public event EventHandler<string> BrowseSite;
 
