@@ -31,6 +31,10 @@ const grayButtonClassInert = 'py-4 px-8 font-bold bg-gray-800 rounded flex flex-
 
 // post data
 
+function postCloseMenu() {
+  postJson({Type: 'command', Message: 'closeMenu'});
+}
+
 function postBrowseYouTube() {
   postJson({Type: 'command', Message: 'browseYouTube'});
 }
@@ -833,6 +837,7 @@ let Menu = observer(() => {
               Menu
             </SettingsTitle>
           </div>
+
           <div className={'h-16'}/>
           <SettingsList>
             {pages.map((info, i) => {
@@ -857,6 +862,13 @@ let Menu = observer(() => {
               }} selected={active === i}>{info.name}</ListItem>;
             })}
           </SettingsList>
+          <div className={'w-screen bg-black absolute bottom-0 left-0'}>
+            <div className={'w-full'}>
+              <div className={'w-4/12'}>
+                <ExitButton/>
+              </div>
+            </div>
+          </div>
         </div>
         <div className={'bg-gray-900 z-10 w-full overflow-auto scroll-host'}>
           <SelectedPage navHome={navHome}/>
@@ -864,5 +876,19 @@ let Menu = observer(() => {
       </div>
   );
 });
+
+function ExitButton() {
+
+  function handleClick() {
+    postCloseMenu();
+  }
+
+  let buttonClass = 'h-16 py-4 px-8 bg-red-800 hover:bg-red-700 active:bg-red-600 hover:text-white cursor-pointer flex flex-wrap content-center';
+
+  return <ListItem buttonClass={buttonClass} handleClick={handleClick}
+                   className={'text-white'}>
+  </ListItem>;
+
+}
 
 export default Menu;
