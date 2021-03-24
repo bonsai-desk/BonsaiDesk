@@ -20,7 +20,7 @@ public class ServerTestButtons : MonoBehaviour
         {
             if (!first)
                 print("---");
-            print(player.Value.spot);
+            print(player.Value.Spot);
             first = false;
         }
     }

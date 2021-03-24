@@ -45,7 +45,7 @@ public class Browser : MonoBehaviour {
 		SetupHolePuncher();
 	}
 
-	public event Action BrowserReady;
+	public event EventHandler BrowserReady;
 
 	public event Action ListenersReady;
 
@@ -113,7 +113,7 @@ public class Browser : MonoBehaviour {
 			Debug.Log("[BONSAI] Browser Initialized");
 			WebViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
 			WebViewPrefab.DragMode               =  dragMode;
-			BrowserReady?.Invoke();
+			BrowserReady?.Invoke(this, new EventArgs());
 		};
 
 		if (useBuiltHtml) {

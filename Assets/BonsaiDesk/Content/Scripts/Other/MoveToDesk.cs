@@ -17,6 +17,8 @@ public class MoveToDesk : MonoBehaviour {
     public Transform oVRCameraRig;
     public Transform centerEyeAnchor;
 
+    private Camera _camera;
+
     public GameObject blackOverlay;
     public GameObject instructions;
 
@@ -68,10 +70,13 @@ public class MoveToDesk : MonoBehaviour {
         }
     }
 
-    private void Start()
-    {
-        oVRCameraRigStartPosition = oVRCameraRig.position;
-        oVRCameraRigStartRotation = oVRCameraRig.rotation;
+    private void Start() {
+        oVRCameraRigStartPosition =  oVRCameraRig.position;
+        oVRCameraRigStartRotation =  oVRCameraRig.rotation;
+		_camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
+        
+        OrientationChanged      += HandleOrientationChanged;
+        OVRManager.HMDUnmounted += HandleHMDUnmounted;
 
         instructionsTexts = new[]
             {instructionsText.text, "Place hands flat on table\nwith thumbs on the edge", "Move hands apart quickly"};
@@ -90,7 +95,20 @@ public class MoveToDesk : MonoBehaviour {
 
         playerOrientations = new List<PlayerOrientation>();
 
-        ResetPosition();
+        ResetPosition("Start");
+    }
+
+    private void HandleHMDUnmounted() {
+        ResetPosition("HandleHMDUnmounted");
+    }
+
+    private void HandleOrientationChanged(bool o) {
+		if (o) {
+			_camera.cullingMask |= 1 << LayerMask.NameToLayer("networkPlayer");
+		}
+		else {
+			_camera.cullingMask &= ~(1 << LayerMask.NameToLayer("networkPlayer"));
+		}
     }
 
     private bool WristsPointedOut()
@@ -255,7 +273,7 @@ public class MoveToDesk : MonoBehaviour {
         //TODO figure out why it is possible to be at the desk while not oriented
         if (!oriented && Vector3.Distance(oVRCameraRig.position, Vector3.zero) < 100f)
         {
-            ResetPosition();
+            ResetPosition("Not oriented but near the origin");
             return;
         }
 
@@ -418,12 +436,13 @@ public class MoveToDesk : MonoBehaviour {
     {
         if (oriented)
         {
-            ResetPosition();
+            ResetPosition("ResetIfOriented called");
         }
     }
 
-    public void ResetPosition()
-    {
+    public void ResetPosition(string reason = "") {
+        var reasonStr = reason.Length > 0 ? reason : "Reason not provided";
+        Debug.Log($"[BONSAI] Resetting position: {reasonStr}");
         oriented = false;
         blackOverlay.SetActive(true);
         instructions.SetActive(true);
@@ -504,5 +523,11 @@ public class MoveToDesk : MonoBehaviour {
         public float averageHeight;
         public Quaternion oVRCameraRigRotation;
         public float thumbDistance;
+    }
+
+    private void OnApplicationPause(bool pauseStatus) {
+        if (pauseStatus) {
+            ResetPosition("OnApplicationPause");
+        }
     }
 }

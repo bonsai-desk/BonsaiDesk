@@ -109,8 +109,12 @@ public class TogglePause : NetworkBehaviour
         set
         {
             _pauseMorphLocal = value;
-            if (isServer && !isClient)
+            if (isServer && !isClient || isServer && isClient) {
+                // Cameron: added (isServer && isClient) condition
+                // this prevents "Send command attempted with no client running" which
+                // occurs sometimes when shutting down a room as a host
                 _pauseMorphSynced = value;
+            }
             else if (NetworkClient.connection != null && NetworkClient.connection.identity != null)
                 CmdSetPauseMorph(value);
         }
@@ -137,9 +141,20 @@ public class TogglePause : NetworkBehaviour
     {
         base.OnStartServer();
 
-        _paused = true;
-        _visibilitySynced = 1;
-        _positionSynced = 0;
+        _paused                                       =  true;
+        _visibilitySynced                             =  1;
+        _positionSynced                               =  0;
+        
+        NetworkManagerGame.ServerDisconnect -= HandleServerDisconnect;
+        
+        NetworkManagerGame.ServerDisconnect += HandleServerDisconnect;
+    }
+
+    private void HandleServerDisconnect(object _, NetworkConnection conn) {
+        // Cameron: moved this here from NetworkManagerGame
+		if (conn.identity != null && AuthorityIdentityId == conn.identity.netId) {
+			RemoveClientAuthority();
+		}
     }
 
     public override void OnStartClient()
