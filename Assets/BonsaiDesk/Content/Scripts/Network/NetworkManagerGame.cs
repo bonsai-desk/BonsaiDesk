@@ -124,7 +124,6 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 			}
 		}
 
-		Debug.Log($"{mode} {MoveToDesk.Singleton.oriented} {IsCommsActive()} {_hasFocus}");
 		if (mode == NetworkManagerMode.ClientOnly || mode == NetworkManagerMode.Host)
 		{
 			var oriented    = MoveToDesk.Singleton.oriented;
