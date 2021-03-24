@@ -28,7 +28,24 @@ public class TabletSpot : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
+        
+        TableBrowserMenu.Singleton.EjectVideo -= HandleEjectVideo;
+
+        TableBrowserMenu.Singleton.EjectVideo += HandleEjectVideo;
+        
         Instance = this;
+    }
+
+    private void HandleEjectVideo(object sender, EventArgs e) {
+        CmdEjectCurrentTablet();
+    }
+
+    [Command (ignoreAuthority = true)]
+    private void CmdEjectCurrentTablet() {
+        if (_currentTabletIdentity)
+        {
+            EjectCurrentTablet();
+        }
     }
 
     private void Update()
@@ -62,25 +79,32 @@ public class TabletSpot : NetworkBehaviour
         }
     }
 
+    private void EjectCurrentTablet() {
+        _currentTabletIdentity.GetComponent<TabletControl>().SetServerLerping(false);
+        _currentTabletIdentity.GetComponent<AutoAuthority>().isKinematic = false;
+        _currentTabletIdentity.GetComponent<AutoAuthority>().SetInUse(false);
+
+        //if it had activated
+        if (_lerpTime >= 1f)
+        {
+            var tabletBody = _currentTabletIdentity.GetComponent<Rigidbody>();
+            tabletBody.isKinematic = false;
+            tabletBody.angularVelocity = new Vector3(-Mathf.PI, Random.value - 0.5f, Random.value - 0.5f);
+            tabletBody.velocity = new Vector3(
+                (2 * Random.value - 1)/2,
+                1f + (Random.value * 0.15f), 
+                -(2f + (Random.value * 0.15f))
+            );
+        }
+    }
+
     [Command(ignoreAuthority = true)]
     public void CmdSetNewVideo(NetworkIdentity tabletIdentity)
     {
         SetNewVideo?.Invoke(tabletIdentity.GetComponent<TabletControl>().videoId);
         if (_currentTabletIdentity)
         {
-            _currentTabletIdentity.GetComponent<TabletControl>().SetServerLerping(false);
-            _currentTabletIdentity.GetComponent<AutoAuthority>().isKinematic = false;
-            _currentTabletIdentity.GetComponent<AutoAuthority>().SetInUse(false);
-
-            //if it had activated
-            if (_lerpTime >= 1f)
-            {
-                var tabletBody = _currentTabletIdentity.GetComponent<Rigidbody>();
-                tabletBody.isKinematic = false;
-                tabletBody.angularVelocity = new Vector3(-Mathf.PI, Random.value - 0.5f, Random.value - 0.5f);
-                tabletBody.velocity = new Vector3(1f + (Random.value * 0.15f), 2f + (Random.value * 0.15f),
-                    Random.value * 0.3f - 0.15f);
-            }
+            EjectCurrentTablet();
         }
 
         // _initDistance = Vector3.Distance(transform.position, tabletIdentity.transform.position);

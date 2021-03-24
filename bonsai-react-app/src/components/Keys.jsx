@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {animated, useSpring} from 'react-spring';
 import {Button} from './Button';
 import {postJson} from '../utilities';
@@ -23,19 +23,28 @@ export function Shift(props) {
 }
 
 export function KeyFrames({handleClick, width, children}) {
-  const [state, toggle] = useState(false);
   const level = 150;
-  const {color} = useSpring(
-      {
-        reset: true,
-        from: {color: `rgba(${level},${level},${level},1)`},
-        color: 'rgba(38,38,38,1)',
-        config: {duration: 400},
-      });
+  const [props, set] = useSpring(() => ({
+    color: 'rgba(38,38,38,1)',
+    config: {duration: 400},
+  }));
+
+  function triggerKey() {
+    set({
+      from: {color: `rgba(${level},${level},${level},1)`},
+      color: 'rgba(38,38,38,1)',
+    });
+  }
+
+  function _handleClick() {
+    triggerKey();
+    handleClick();
+  }
+
   return (
-      <Button handleClick={handleClick} shouldPostDown={false}
+      <Button handleClick={_handleClick} shouldPostDown={false}
               shouldPostUp={false} shouldPostHover={false}>
-        <div onClick={() => toggle(!state)} className={''}>
+        <div>
           <animated.div
               style={{
                 width: width ? width : '5rem',
@@ -43,7 +52,7 @@ export function KeyFrames({handleClick, width, children}) {
                 padding: '1rem',
                 cursor: 'pointer',
                 borderRadius: '0.25rem',
-                background: color,
+                background: props.color,
                 display: 'flex',
                 flexWrap: 'wrap',
                 alignContent: 'center',
