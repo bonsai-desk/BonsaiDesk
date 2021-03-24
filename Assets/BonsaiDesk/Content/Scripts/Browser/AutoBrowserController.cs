@@ -20,6 +20,7 @@ public class AutoBrowserController : NetworkBehaviour {
 	private readonly Dictionary<uint, double> _clientsJoinedNetworkTime = new Dictionary<uint, double>();
 	private readonly Dictionary<uint, double> _clientsLastPing = new Dictionary<uint, double>();
 	private readonly Dictionary<uint, PlayerState> _clientsPlayerStatus = new Dictionary<uint, PlayerState>();
+	private readonly float _setVolumeLevelEvery = 0.5f;
 	private bool _allGood;
 	private AutoBrowser _autoBrowser;
 	private double _beginReadyUpTime;
@@ -27,13 +28,13 @@ public class AutoBrowserController : NetworkBehaviour {
 	private float _clientPlayerDuration;
 	private PlayerState _clientPlayerStatus;
 	private float _clientPlayerTimeStamp;
+	[SyncVar] private bool _contentActive;
 	private ContentInfo _contentInfo;
 	private double _contentInfoAtTime;
 	private Coroutine _fetchAndReadyUp;
 
 	[SyncVar] private float _height;
 	[SyncVar] private ScrubData _idealScrub;
-	private readonly float _setVolumeLevelEvery = 0.5f;
 	private float _setVolumeLevelLast;
 	[SyncVar] private float _volumeLevel = 1.0f;
 
@@ -66,7 +67,8 @@ public class AutoBrowserController : NetworkBehaviour {
 	public override void OnStartServer() {
 		TLog("On Start Server");
 		base.OnStartServer();
-		_contentInfo = new ContentInfo(false, "", new Vector2(1, 1));
+		_contentInfo   = new ContentInfo(false, "", new Vector2(1, 1));
+		_contentActive = false;
 
 		NetworkManagerGame.ServerAddPlayer      -= HandleServerAddPlayer;
 		NetworkManagerGame.ServerDisconnect     -= HandleServerDisconnect;
@@ -136,6 +138,14 @@ public class AutoBrowserController : NetworkBehaviour {
 		}
 	}
 
+	[Server]
+	private void FillClientsLastPing() {
+		foreach (var conn in NetworkServer.connections.Values)
+		{
+			_clientsLastPing[conn.identity.netId] = Time.time;
+		}
+	}
+
 	private void HandleServerDisconnect(object _, NetworkConnection conn) {
 		var id = conn.identity.netId;
 		TLog($"AutoBrowserController remove player [{id}]");
@@ -184,8 +194,7 @@ public class AutoBrowserController : NetworkBehaviour {
 
 		// ping the server with the current timestamp
 		// todo _contentInfo.Active is always false on client
-		if (_contentInfo.Active &&
-		    NetworkTime.time - _clientLastSentPing > ClientPingInterval &&
+		if (_contentActive && NetworkTime.time - _clientLastSentPing > ClientPingInterval &&
 		    NetworkClient.connection != null && NetworkClient.connection.identity != null)
 		{
 			var id        = NetworkClient.connection.identity.netId;
@@ -234,6 +243,7 @@ public class AutoBrowserController : NetworkBehaviour {
 				TLog($"All clients report ready, un-pausing the scrub at network time {networkTimeToUnpause}");
 				_idealScrub = _idealScrub.UnPauseAtNetworkTime(networkTimeToUnpause);
 				// todo this could become interactable at networkTimeToUnpause
+				FillClientsLastPing();
 				togglePause.SetInteractable(true);
 				_allGood = true;
 			}
@@ -265,7 +275,6 @@ public class AutoBrowserController : NetworkBehaviour {
 		{
 			if (!ClientInGracePeriod(entry.Key) && !ClientPingedRecently(entry.Value))
 			{
-				TLog($"Bad ping for client [{entry.Key}]");
 				aBadPing = true;
 			}
 		}
@@ -423,6 +432,7 @@ public class AutoBrowserController : NetworkBehaviour {
 			TLog($"Fetched aspect ({aspect.x},{aspect.y}) for video ({id})");
 
 			_contentInfo       = new ContentInfo(true, id, aspect);
+			_contentActive     = true;
 			_contentInfoAtTime = NetworkTime.time;
 			_idealScrub        = ScrubData.PausedAtScrub(timeStamp);
 
@@ -477,7 +487,8 @@ public class AutoBrowserController : NetworkBehaviour {
 	private void CloseVideo() {
 		// todo set paused
 		// todo lower the screen
-		_contentInfo = new ContentInfo(false, "", new Vector2(1, 1));
+		_contentInfo   = new ContentInfo(false, "", new Vector2(1, 1));
+		_contentActive = false;
 		togglePause.SetInteractable(false);
 		RpcGoHome();
 	}
