@@ -29,12 +29,12 @@ public class AutoBrowserController : NetworkBehaviour {
 	private PlayerState _clientPlayerStatus;
 	private float _clientPlayerTimeStamp;
 	[SyncVar] private bool _contentActive;
-	private ContentInfo _serverContentInfo;
 	private double _contentInfoAtTime;
 	private Coroutine _fetchAndReadyUp;
 
 	[SyncVar] private float _height;
 	[SyncVar] private ScrubData _idealScrub;
+	private ContentInfo _serverContentInfo;
 	private float _setVolumeLevelLast;
 	[SyncVar] private float _volumeLevel = 1.0f;
 
@@ -67,8 +67,8 @@ public class AutoBrowserController : NetworkBehaviour {
 	public override void OnStartServer() {
 		TLog("On Start Server");
 		base.OnStartServer();
-		_serverContentInfo   = new ContentInfo(false, "", new Vector2(1, 1));
-		_contentActive = false;
+		_serverContentInfo = new ContentInfo(false, "", new Vector2(1, 1));
+		_contentActive     = false;
 
 		NetworkManagerGame.ServerAddPlayer      -= HandleServerAddPlayer;
 		NetworkManagerGame.ServerDisconnect     -= HandleServerDisconnect;
@@ -431,7 +431,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		_fetchAndReadyUp = StartCoroutine(FetchYouTubeAspect(id, aspect => {
 			TLog($"Fetched aspect ({aspect.x},{aspect.y}) for video ({id})");
 
-			_serverContentInfo       = new ContentInfo(true, id, aspect);
+			_serverContentInfo = new ContentInfo(true, id, aspect);
 			_contentActive     = true;
 			_contentInfoAtTime = NetworkTime.time;
 			_idealScrub        = ScrubData.PausedAtScrub(timeStamp);
@@ -487,8 +487,8 @@ public class AutoBrowserController : NetworkBehaviour {
 	private void CloseVideo() {
 		// todo set paused
 		// todo lower the screen
-		_serverContentInfo   = new ContentInfo(false, "", new Vector2(1, 1));
-		_contentActive = false;
+		_serverContentInfo = new ContentInfo(false, "", new Vector2(1, 1));
+		_contentActive     = false;
 		togglePause.SetInteractable(false);
 		RpcGoHome();
 	}
@@ -570,13 +570,13 @@ public class AutoBrowserController : NetworkBehaviour {
 	}
 
 	public MediaInfo GetMediaInfo() {
-		if (_serverContentInfo.Active)
+		if (_contentActive)
 		{
 			return new MediaInfo {
 				Active      = true,
-				Name        = "youtube." + _serverContentInfo.ID,
+				Name        = "Unknown",
 				Paused      = !_idealScrub.Active,
-				Scrub       = _clientPlayerTimeStamp,
+				Scrub       = (float) _idealScrub.CurrentTimeStamp(NetworkTime.time),
 				Duration    = _clientPlayerDuration,
 				VolumeLevel = _volumeLevel
 			};
