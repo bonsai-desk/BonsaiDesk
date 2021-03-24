@@ -14,6 +14,8 @@ public class TogglePause : NetworkBehaviour
     private bool _interactable = true;
     public bool Interactable => _interactable;
     
+    // Cameron: made this public so that AutoBrowserController can determine whether to play after a ready up command
+    // todo probably need to make this a private setter
     [SyncVar(hook = nameof(OnSetPaused))] public bool _paused = true;
     private bool _probablyPaused = false;
 
