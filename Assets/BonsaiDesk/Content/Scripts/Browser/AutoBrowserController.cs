@@ -92,22 +92,26 @@ public class AutoBrowserController : NetworkBehaviour {
 		base.OnStopServer();
 	}
 
+	[Server]
 	private void HandleSetNewVideo(string id) {
 		if (_contentInfo.Active) {
 			CloseVideo();
 		}
 	}
 
+	[Server]
 	private void HandlePlayVideo(string id) {
 		LoadVideo(id, 0);
 	}
 
+	[Server]
 	private void HandleStopVideo() {
 		if (_contentInfo.Active) {
 			CloseVideo();
 		}
 	}
 
+	[Server]
 	private void HandleServerAddPlayer(object _, NetworkConnection newConn) {
 		var newId = newConn.identity.netId;
 		TLog($"AutoBrowserController add player [{newId}]");
@@ -132,6 +136,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		_clientsPlayerStatus.Remove(id);
 	}
 
+	[Server]
 	private void HandleCmdSetPausedServer(bool paused) {
 		if (!_contentInfo.Active) {
 			Debug.LogWarning("Ignoring attempt to toggle pause status when content is not active");
@@ -165,6 +170,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		}
 
 		// ping the server with the current timestamp
+		// todo _contentInfo.Active is always false on client
 		if (_contentInfo.Active &&
 		    NetworkTime.time - _clientLastSentPing > ClientPingInterval &&
 		    NetworkClient.connection != null && NetworkClient.connection.identity != null) {
@@ -192,6 +198,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		}
 	}
 
+	[Server]
 	private void HandlePlayerServer() {
 		if (_contentInfo.Active == false) {
 			return;
@@ -243,6 +250,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		return aBadPing;
 	}
 
+	[Server]
 	private void HandleScreenServer() {
 		const float transitionTime = 0.5f;
 		var         browserDown    = !_contentInfo.Active || NetworkTime.time - _contentInfoAtTime < 1.5;
