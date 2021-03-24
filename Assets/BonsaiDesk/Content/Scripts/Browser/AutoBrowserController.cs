@@ -29,7 +29,7 @@ public class AutoBrowserController : NetworkBehaviour {
 	private PlayerState _clientPlayerStatus;
 	private float _clientPlayerTimeStamp;
 	[SyncVar] private bool _contentActive;
-	private ContentInfo _contentInfo;
+	private ContentInfo _serverContentInfo;
 	private double _contentInfoAtTime;
 	private Coroutine _fetchAndReadyUp;
 
@@ -67,7 +67,7 @@ public class AutoBrowserController : NetworkBehaviour {
 	public override void OnStartServer() {
 		TLog("On Start Server");
 		base.OnStartServer();
-		_contentInfo   = new ContentInfo(false, "", new Vector2(1, 1));
+		_serverContentInfo   = new ContentInfo(false, "", new Vector2(1, 1));
 		_contentActive = false;
 
 		NetworkManagerGame.ServerAddPlayer      -= HandleServerAddPlayer;
@@ -99,7 +99,7 @@ public class AutoBrowserController : NetworkBehaviour {
 
 	[Server]
 	private void HandleSetNewVideo(string id) {
-		if (_contentInfo.Active)
+		if (_serverContentInfo.Active)
 		{
 			CloseVideo();
 		}
@@ -112,7 +112,7 @@ public class AutoBrowserController : NetworkBehaviour {
 
 	[Server]
 	private void HandleStopVideo() {
-		if (_contentInfo.Active)
+		if (_serverContentInfo.Active)
 		{
 			CloseVideo();
 		}
@@ -123,11 +123,11 @@ public class AutoBrowserController : NetworkBehaviour {
 		var newId = newConn.identity.netId;
 		TLog($"AutoBrowserController add player [{newId}]");
 		_clientsJoinedNetworkTime.Add(newId, NetworkTime.time);
-		if (_contentInfo.Active)
+		if (_serverContentInfo.Active)
 		{
 			BeginSync("new player joined");
 			var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
-			TargetReloadYoutube(newConn, _contentInfo.ID, timeStamp, _contentInfo.Aspect);
+			TargetReloadYoutube(newConn, _serverContentInfo.ID, timeStamp, _serverContentInfo.Aspect);
 			foreach (var conn in NetworkServer.connections.Values)
 			{
 				if (conn.identity.netId != newId)
@@ -156,7 +156,7 @@ public class AutoBrowserController : NetworkBehaviour {
 
 	[Server]
 	private void HandleCmdSetPausedServer(bool paused) {
-		if (!_contentInfo.Active)
+		if (!_serverContentInfo.Active)
 		{
 			Debug.LogWarning("Ignoring attempt to toggle pause status when content is not active");
 			return;
@@ -224,7 +224,7 @@ public class AutoBrowserController : NetworkBehaviour {
 
 	[Server]
 	private void HandlePlayerServer() {
-		if (_contentInfo.Active == false)
+		if (_serverContentInfo.Active == false)
 		{
 			return;
 		}
@@ -285,7 +285,7 @@ public class AutoBrowserController : NetworkBehaviour {
 	[Server]
 	private void HandleScreenServer() {
 		const float transitionTime = 0.5f;
-		var         browserDown    = !_contentInfo.Active || NetworkTime.time - _contentInfoAtTime < 1.5;
+		var         browserDown    = !_serverContentInfo.Active || NetworkTime.time - _contentInfoAtTime < 1.5;
 		var         targetHeight   = browserDown ? 0 : 1;
 
 		if (!Mathf.Approximately(_height, targetHeight))
@@ -414,7 +414,7 @@ public class AutoBrowserController : NetworkBehaviour {
 
 		var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
 		togglePause.ServerSetPaused(false);
-		RpcReloadYouTube(_contentInfo.ID, timeStamp, _contentInfo.Aspect);
+		RpcReloadYouTube(_serverContentInfo.ID, timeStamp, _serverContentInfo.Aspect);
 	}
 
 	[Server]
@@ -431,7 +431,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		_fetchAndReadyUp = StartCoroutine(FetchYouTubeAspect(id, aspect => {
 			TLog($"Fetched aspect ({aspect.x},{aspect.y}) for video ({id})");
 
-			_contentInfo       = new ContentInfo(true, id, aspect);
+			_serverContentInfo       = new ContentInfo(true, id, aspect);
 			_contentActive     = true;
 			_contentInfoAtTime = NetworkTime.time;
 			_idealScrub        = ScrubData.PausedAtScrub(timeStamp);
@@ -487,7 +487,7 @@ public class AutoBrowserController : NetworkBehaviour {
 	private void CloseVideo() {
 		// todo set paused
 		// todo lower the screen
-		_contentInfo   = new ContentInfo(false, "", new Vector2(1, 1));
+		_serverContentInfo   = new ContentInfo(false, "", new Vector2(1, 1));
 		_contentActive = false;
 		togglePause.SetInteractable(false);
 		RpcGoHome();
@@ -570,11 +570,11 @@ public class AutoBrowserController : NetworkBehaviour {
 	}
 
 	public MediaInfo GetMediaInfo() {
-		if (_contentInfo.Active)
+		if (_serverContentInfo.Active)
 		{
 			return new MediaInfo {
 				Active      = true,
-				Name        = "youtube." + _contentInfo.ID,
+				Name        = "youtube." + _serverContentInfo.ID,
 				Paused      = !_idealScrub.Active,
 				Scrub       = _clientPlayerTimeStamp,
 				Duration    = _clientPlayerDuration,
