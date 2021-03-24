@@ -105,6 +105,9 @@ public class TableBrowserMenu : MonoBehaviour {
 			case "command":
 				switch (message.Message)
 				{
+					case "closeMenu":
+						CloseMenu?.Invoke(this, new EventArgs());
+						break;
 					case "joinRoom":
 						var roomData = JsonConvert.DeserializeObject<RoomData>(message.Data);
 						Debug.Log($"[BONSAI] Event JoinRoom {message.Data}");
@@ -255,6 +258,7 @@ public class TableBrowserMenu : MonoBehaviour {
 	public static event Action CloseRoom;
 	public static event Action<int> KickConnectionId;
 
+	public event EventHandler CloseMenu;
 	public event EventHandler PlayVideo;
 	public event EventHandler PauseVideo;
 	public event EventHandler EjectVideo;

@@ -14,8 +14,13 @@ public class TableBrowserParent : MonoBehaviour {
 		TableBrowserMenu.BrowseSite   += HandleBrowseSite;
 		WebBrowserParent.CloseWeb     += HandleCloseWeb;
 
-		WebBrowserParent.BrowsersReady += HandleParentReady;
-		TableBrowser.BrowserReady      += HandleParentReady;
+		WebBrowserParent.BrowsersReady       += HandleParentReady;
+		TableBrowser.BrowserReady            += HandleParentReady;
+		TableBrowserMenu.Singleton.CloseMenu += HandleCloseMenu;
+	}
+
+	private void HandleCloseMenu(object sender, EventArgs e) {
+		Sleep();
 	}
 
 	private void HandleParentReady(object sender, EventArgs e) {
