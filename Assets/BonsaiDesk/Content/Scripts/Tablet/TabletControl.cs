@@ -2,6 +2,7 @@
 using Mirror;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Rendering;
 
 public class TabletControl : NetworkBehaviour {
 	[SyncVar(hook = nameof(VideoIdHook))] public string videoId;
@@ -88,8 +89,8 @@ public class TabletControl : NetworkBehaviour {
 
 				//generate new texture with mipmaps
 				var newTexture = new Texture2D(texture.width, texture.height);
+				newTexture.LoadImage(uwr.downloadHandler.data);
 				newTexture.filterMode = FilterMode.Trilinear;
-				newTexture.SetPixels(texture.GetPixels(0));
 				newTexture.Apply();
 
 				var aspectRatio = (float) newTexture.width / newTexture.height;
