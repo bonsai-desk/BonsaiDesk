@@ -33,7 +33,8 @@ public class WebBrowserParent : MonoBehaviour {
 	}
 
 	// Update is called once per frame
-	private void Update() { }
+	private void Update() {
+	}
 
 	public event EventHandler CloseWeb;
 	public event EventHandler BrowsersReady;

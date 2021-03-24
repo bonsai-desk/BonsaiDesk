@@ -14,10 +14,10 @@ public class YouTubeSpawner : NetworkBehaviour {
 
 	[Command(ignoreAuthority = true)]
 	public void CmdSpawnYT(Vector3 position, Vector3 headPosition,  string id) {
-		var atHead = (headPosition - position);
-		var theta  = Mathf.Atan(atHead.z/atHead.x);
-		var angle  = - 360 * theta / (2 * Mathf.PI) + 270;
-		var rot  = Quaternion.Euler(0, angle, 0);
+		var atHead = headPosition - position;
+		var rot = Quaternion.LookRotation(-atHead, Vector3.up);
+		rot.x = 0;
+		rot.z = 0;
 		// todo this crashes when called without being a host/client
 		var spawnedObject = Instantiate(VideoPrefab, position, rot);
 		NetworkServer.Spawn(spawnedObject);
