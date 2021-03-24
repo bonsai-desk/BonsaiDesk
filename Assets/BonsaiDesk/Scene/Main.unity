@@ -627,6 +627,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.033333335
+  _paused: 1
   gestureActivateDistance: 0.1
   pointMovement: 0.075
   fadeTime: 0.2
@@ -17280,6 +17281,12 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 114282569294116652, guid: 1264c01c7f8182e47ac9f784af03d895,
+        type: 3}
+      propertyPath: _playbackPrefab2
+      value: 
+      objectReference: {fileID: 1041743830464418, guid: 1d5da08daf134aa41a83590aea0e4caa,
+        type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1264c01c7f8182e47ac9f784af03d895, type: 3}
 --- !u!1 &1516415525 stripped
@@ -17318,11 +17325,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _tokens:
     _tokens: []
-  _channelTypeExpanded: 0
-  _metadataExpanded: 0
+  _channelTypeExpanded: 1
+  _metadataExpanded: 1
   _activationModeExpanded: 1
-  _tokensExpanded: 0
-  _ampExpanded: 0
+  _tokensExpanded: 1
+  _ampExpanded: 1
   _activationFaderSettings:
     _volume: 1
     _fadeInTicks: 0
