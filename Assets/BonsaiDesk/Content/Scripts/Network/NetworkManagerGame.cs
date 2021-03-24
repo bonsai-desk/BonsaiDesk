@@ -6,6 +6,7 @@ using Dissonance;
 using Mirror;
 using NobleConnect.Mirror;
 using UnityEngine;
+using UnityEngine.UIElements;
 using UnityEngine.XR.Management;
 
 // this is a modified version of NobleNetworkManager
@@ -35,8 +36,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos =
 		new Dictionary<NetworkConnection, PlayerInfo>();
 
-	private DissonanceComms _comms;
-	private bool _hasFocus;
+	public DissonanceComms _comms;
+	private bool _hasFocus = true;
 	private float _lastStartHost = Mathf.NegativeInfinity;
 
 	private bool _roomJoinInProgress;
@@ -79,7 +80,7 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		TableBrowserMenu.OpenRoom         += HandleOpenRoom;
 		TableBrowserMenu.CloseRoom        += HandleCloseRoom;
 
-		_comms = GetComponent<DissonanceComms>();
+		// todo _comms = GetComponent<DissonanceComms>();
 
 		if (Application.isEditor && !serverOnlyIfEditor)
 		{
@@ -123,6 +124,7 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 			}
 		}
 
+		Debug.Log($"{mode} {MoveToDesk.Singleton.oriented} {IsCommsActive()} {_hasFocus}");
 		if (mode == NetworkManagerMode.ClientOnly || mode == NetworkManagerMode.Host)
 		{
 			var oriented    = MoveToDesk.Singleton.oriented;
@@ -159,6 +161,7 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	}
 
 	private void SetCommsActive(bool active) {
+		Debug.Log($"[BONSAI] Set Comms {active}");
 		if (_comms is null)
 		{
 			Debug.LogWarning("[BONSAI] Trying to set active on comms when null");

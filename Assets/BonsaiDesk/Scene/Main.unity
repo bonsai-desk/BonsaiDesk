@@ -1416,10 +1416,6 @@ GameObject:
   - component: {fileID: 217350383}
   - component: {fileID: 217350389}
   - component: {fileID: 217350385}
-  - component: {fileID: 217350388}
-  - component: {fileID: 217350387}
-  - component: {fileID: 217350386}
-  - component: {fileID: 217350382}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -1427,42 +1423,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &217350382
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 217350381}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6a066ddbf125f9546bcadc947418566b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _tokens:
-    _tokens: []
-  _channelTypeExpanded: 1
-  _metadataExpanded: 0
-  _activationModeExpanded: 0
-  _tokensExpanded: 0
-  _ampExpanded: 0
-  _activationFaderSettings:
-    _volume: 1
-    _fadeInTicks: 0
-    _fadeOutTicks: 1500000
-  _triggerFaderSettings:
-    _volume: 1
-    _fadeInTicks: 7500000
-    _fadeOutTicks: 11500000
-  _broadcastPosition: 1
-  _channelType: 0
-  _inputName: 
-  _mode: 1
-  _muted: 0
-  _playerId: 
-  _useTrigger: 0
-  _roomName: Global
-  _priority: -2
 --- !u!114 &217350383
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1511,6 +1471,7 @@ MonoBehaviour:
   roomOpen: 0
   serverOnlyIfEditor: 0
   visualizeAuthority: 0
+  _comms: {fileID: 1516415529}
 --- !u!4 &217350384
 Transform:
   m_ObjectHideFlags: 0
@@ -1571,56 +1532,6 @@ MonoBehaviour:
   clientMaxMessagesPerTick: 1000
   channels: 0204
   connectKey: MIRROR_LITENETLIB
---- !u!114 &217350386
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 217350381}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3737438748cf23f448d18cd2c6192e95, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _tokens:
-    _tokens: []
-  _roomName: Global
-  _useTrigger: 0
---- !u!114 &217350387
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 217350381}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e83d3d5772ae492499697165bf67bcd9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &217350388
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 217350381}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8cb4dc319de88dc4cb76c47aafb46b1c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _lastPrefabError: 
-  _isMuted: 1
-  _isDeafened: 1
-  _oneMinusBaseRemoteVoiceVolume: 0
-  _playbackPrefab: {fileID: 0}
-  _playbackPrefab2: {fileID: 0}
-  _micName: 
-  _playerPriority: 0
-  _tokens:
-    _tokens: []
 --- !u!114 &217350389
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6061,7 +5972,7 @@ MonoBehaviour:
   makePersistent: 1
   enableSpatializedAudio: 1
   enableSpatializedFastOverride: 0
-  audioMixer: {fileID: 0}
+  audioMixer: {fileID: 24100000, guid: 1dd706bb85d8aef4e83a6229dbd62c36, type: 2}
   defaultMixerGroup: {fileID: 0}
   reservedMixerGroup: {fileID: 0}
   voiceChatMixerGroup: {fileID: 0}
@@ -6211,7 +6122,7 @@ MonoBehaviour:
         invSquareFalloff: {x: 1, y: 250}
       soundClips:
       - {fileID: 8300000, guid: c54ae0ad623c4b743833e480c7a9f801, type: 3}
-      visibilityToggle: 1
+      visibilityToggle: 0
     - name: stone_breaking
       playback: 0
       volume: 1
@@ -6907,7 +6818,7 @@ MonoBehaviour:
         invSquareFalloff: {x: 1, y: 25}
       soundClips:
       - {fileID: 8300000, guid: 26190ffcafed44f43b147448e6ce7082, type: 3}
-      visibilityToggle: 1
+      visibilityToggle: 0
     - name: vcv mouseDown
       playback: 0
       volume: 1
@@ -6976,7 +6887,7 @@ MonoBehaviour:
         invSquareFalloff: {x: 1, y: 25}
       soundClips:
       - {fileID: 8300000, guid: bbe5474f81b372448b961e642986c4df, type: 3}
-      visibilityToggle: 1
+      visibilityToggle: 0
     - name: vcv mouseUp
       playback: 0
       volume: 1
@@ -7045,10 +6956,10 @@ MonoBehaviour:
         invSquareFalloff: {x: 1, y: 25}
       soundClips:
       - {fileID: 8300000, guid: 838dd6a6b99c2044fadc33f8a99b2f87, type: 3}
-      visibilityToggle: 1
+      visibilityToggle: 0
     mixerGroup: {fileID: 24300001, guid: 1dd706bb85d8aef4e83a6229dbd62c36, type: 2}
     maxPlayingSounds: 0
-    preloadAudio: 0
+    preloadAudio: 2
     volumeOverride: 1
     playingSoundCount: 0
 --- !u!4 &421973529
@@ -17190,6 +17101,133 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1513416326}
   m_CullTransparentMesh: 0
+--- !u!1001 &1516415524
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1948977645079602, guid: 1264c01c7f8182e47ac9f784af03d895, type: 3}
+      propertyPath: m_Name
+      value: DissonanceSetup
+      objectReference: {fileID: 0}
+    - target: {fileID: 4243346496773318, guid: 1264c01c7f8182e47ac9f784af03d895, type: 3}
+      propertyPath: m_RootOrder
+      value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 4243346496773318, guid: 1264c01c7f8182e47ac9f784af03d895, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 3.3225825
+      objectReference: {fileID: 0}
+    - target: {fileID: 4243346496773318, guid: 1264c01c7f8182e47ac9f784af03d895, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -1.5290487
+      objectReference: {fileID: 0}
+    - target: {fileID: 4243346496773318, guid: 1264c01c7f8182e47ac9f784af03d895, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 3.7851562
+      objectReference: {fileID: 0}
+    - target: {fileID: 4243346496773318, guid: 1264c01c7f8182e47ac9f784af03d895, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4243346496773318, guid: 1264c01c7f8182e47ac9f784af03d895, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4243346496773318, guid: 1264c01c7f8182e47ac9f784af03d895, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4243346496773318, guid: 1264c01c7f8182e47ac9f784af03d895, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4243346496773318, guid: 1264c01c7f8182e47ac9f784af03d895, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4243346496773318, guid: 1264c01c7f8182e47ac9f784af03d895, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4243346496773318, guid: 1264c01c7f8182e47ac9f784af03d895, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1264c01c7f8182e47ac9f784af03d895, type: 3}
+--- !u!1 &1516415525 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1948977645079602, guid: 1264c01c7f8182e47ac9f784af03d895,
+    type: 3}
+  m_PrefabInstance: {fileID: 1516415524}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1516415526
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1516415525}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3737438748cf23f448d18cd2c6192e95, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _tokens:
+    _tokens: []
+  _roomName: Global
+  _useTrigger: 0
+--- !u!114 &1516415527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1516415525}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a066ddbf125f9546bcadc947418566b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _tokens:
+    _tokens: []
+  _channelTypeExpanded: 0
+  _metadataExpanded: 0
+  _activationModeExpanded: 1
+  _tokensExpanded: 0
+  _ampExpanded: 0
+  _activationFaderSettings:
+    _volume: 1
+    _fadeInTicks: 0
+    _fadeOutTicks: 1500000
+  _triggerFaderSettings:
+    _volume: 1
+    _fadeInTicks: 7500000
+    _fadeOutTicks: 11500000
+  _broadcastPosition: 1
+  _channelType: 0
+  _inputName: 
+  _mode: 1
+  _muted: 0
+  _playerId: 
+  _useTrigger: 0
+  _roomName: Global
+  _priority: -2
+--- !u!114 &1516415529 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 114282569294116652, guid: 1264c01c7f8182e47ac9f784af03d895,
+    type: 3}
+  m_PrefabInstance: {fileID: 1516415524}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1516415525}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cb4dc319de88dc4cb76c47aafb46b1c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1518283273
 GameObject:
   m_ObjectHideFlags: 0
