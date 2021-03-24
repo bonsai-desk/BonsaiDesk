@@ -1,4 +1,5 @@
-﻿using Mirror;
+﻿using System;
+using Mirror;
 using UnityEngine;
 
 public class YouTubeSpawner : NetworkBehaviour {
@@ -12,9 +13,13 @@ public class YouTubeSpawner : NetworkBehaviour {
 	}
 
 	[Command(ignoreAuthority = true)]
-	public void CmdSpawnYT(Vector3 position, string id) {
+	public void CmdSpawnYT(Vector3 position, Vector3 headPosition,  string id) {
+		var atHead = (headPosition - position);
+		var theta  = Mathf.Atan(atHead.z/atHead.x);
+		var angle  = - 360 * theta / (2 * Mathf.PI) + 270;
+		var rot  = Quaternion.Euler(0, angle, 0);
 		// todo this crashes when called without being a host/client
-		var spawnedObject = Instantiate(VideoPrefab, position, Quaternion.AngleAxis(-90, Vector3.up));
+		var spawnedObject = Instantiate(VideoPrefab, position, rot);
 		NetworkServer.Spawn(spawnedObject);
 		spawnedObject.GetComponent<TabletControl>().videoId = id;
 	}
