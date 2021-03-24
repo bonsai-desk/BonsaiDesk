@@ -6,6 +6,14 @@ import axios from 'axios';
 import DoorOpen from '../static/door-open.svg';
 import LinkImg from '../static/link.svg';
 import LightImg from '../static/lightbulb.svg';
+import PauseImg from '../static/pause.svg';
+import PlayImg from '../static/play.svg';
+
+import MinusImg from '../static/minus.svg';
+import PlusImg from '../static/plus.svg';
+
+import EjectImg from '../static/eject-fill.svg';
+import {KeySVG} from '../components/Keys';
 import YtImg from '../static/yt-small.png';
 import ThinkingFace from '../static/thinking-face.svg';
 import {useStore} from '../DataProvider';
@@ -58,6 +66,18 @@ function postVolumeIncrement() {
 
 function postVolumeDecrement() {
   postJson({Type: 'command', Message: 'volumeDecrement'});
+}
+
+function postVideoPlay() {
+  postJson({Type: 'command', Message: 'playVideo'});
+}
+
+function postVideoPause() {
+  postJson({Type: 'command', Message: 'pauseVideo'});
+}
+
+function postVideoEject() {
+  postJson({Type: 'command', Message: 'ejectVideo'});
 }
 
 function postLightsChange(level) {
@@ -359,18 +379,47 @@ const PlayerPage = observer(() => {
     postVolumeIncrement();
   }
 
+  function handlePause() {
+    postVideoPause();
+  }
+
+  function handlePlay() {
+    postVideoPlay();
+  }
+
+  function handleEject() {
+    postVideoEject();
+  }
+
+  let mediaClass = 'flex rounded h-16 w-24';
+  mediaClass = grayButtonClass;
+
   return <MenuContent name={'Player'}>
     <div>Video Scrub</div>
-    <div ref={ref} onPointerDown={handleClick}
-         className={'relative h-16 bg-gray-600'}>
-      <div style={{width: pct + '%'}} className={'h-full bg-gray-400'}/>
+    <div className={'flex space-x-2'}>
+      {store.media_info.Paused ?
+          <KeySVG handleClick={handlePlay} imgSrc={PlayImg}/>
+          :
+          <KeySVG handleClick={handlePause} imgSrc={PauseImg}/>
+      }
+
+      <div ref={ref} onPointerDown={handleClick}
+           className={'relative bg-gray-600 rounded w-full'}>
+
+        <div style={{width: pct + '%'}}
+             className={'h-full bg-gray-400 rounded'}/>
+
+      </div>
+      <KeySVG handleClick={handleEject} imgSrc={EjectImg}
+              className={mediaClass}/>
+
     </div>
     <div>Volume {parseInt(100 * media.VolumeLevel)}</div>
     <div className={'flex space-x-2'}>
-      <Button handleClick={VolumeDecrement}
-              className={grayButtonClass}>-</Button>
-      <Button handleClick={VolumeIncrement}
-              className={grayButtonClass}>+</Button>
+      <KeySVG handleClick={VolumeDecrement} className={mediaClass}
+              imgSrc={MinusImg}/>
+      <KeySVG handleClick={VolumeIncrement} className={mediaClass}
+              imgSrc={PlusImg}/>
     </div>
   </MenuContent>;
 

@@ -5,6 +5,7 @@ import {postJson} from '../utilities';
 import BackSpaceImgHollow from '../static/backspace-hollow.svg';
 import CaretSquareUp from '../static/caret-square-up.svg';
 import CaretSquareUpHollow from '../static/caret-square-up-hollow.svg';
+import PlayImg from '../static/play.svg';
 
 export function Shift(props) {
   let {shift, toggleShift} = props;

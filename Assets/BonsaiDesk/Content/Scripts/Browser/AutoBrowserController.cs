@@ -74,11 +74,14 @@ public class AutoBrowserController : NetworkBehaviour {
 		NetworkManagerGame.ServerDisconnect     -= HandleServerDisconnect;
 		togglePause.CmdSetPausedServer          -= HandleCmdSetPausedServer;
 		TableBrowserMenu.Singleton.VolumeChange -= HandleVolumeChange;
+		TableBrowserMenu.Singleton.SeekPlayer   -= HandleSeekPlayer;
+		
 
 		NetworkManagerGame.ServerAddPlayer      += HandleServerAddPlayer;
 		NetworkManagerGame.ServerDisconnect     += HandleServerDisconnect;
 		togglePause.CmdSetPausedServer          += HandleCmdSetPausedServer;
 		TableBrowserMenu.Singleton.VolumeChange += HandleVolumeChange;
+		TableBrowserMenu.Singleton.SeekPlayer   += HandleSeekPlayer;
 
 		if (tabletSpot != null)
 		{
@@ -90,6 +93,11 @@ public class AutoBrowserController : NetworkBehaviour {
 			tabletSpot.PlayVideo   += HandlePlayVideo;
 			tabletSpot.StopVideo   += HandleStopVideo;
 		}
+	}
+
+	private void HandleSeekPlayer(object sender, float ts) {
+		TLog($"Seek player to time stamp {ts}");
+		CmdReadyUp(ts);
 	}
 
 	public override void OnStopServer() {
@@ -241,7 +249,11 @@ public class AutoBrowserController : NetworkBehaviour {
 			{
 				var networkTimeToUnpause = NetworkTime.time + 1;
 				TLog($"All clients report ready, un-pausing the scrub at network time {networkTimeToUnpause}");
-				_idealScrub = _idealScrub.UnPauseAtNetworkTime(networkTimeToUnpause);
+				if (!togglePause._paused)
+				{
+					_idealScrub = _idealScrub.UnPauseAtNetworkTime(networkTimeToUnpause);
+					
+				}
 				// todo this could become interactable at networkTimeToUnpause
 				FillClientsLastPing();
 				togglePause.SetInteractable(true);
