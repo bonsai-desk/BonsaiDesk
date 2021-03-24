@@ -59,8 +59,8 @@ public class AutoBrowserController : NetworkBehaviour {
 		}
 	}
 
-	public override void OnStartClient() {
-		base.OnStartClient();
+	private void ResetClientPlayer() {
+		_autoBrowser.PostMessage(YouTubeMessage.NavHome);
 		_clientPlayerStatus = PlayerState.Unstarted;
 	}
 
@@ -103,6 +103,11 @@ public class AutoBrowserController : NetworkBehaviour {
 	public override void OnStopServer() {
 		TLog("On Stop Server");
 		base.OnStopServer();
+	}
+
+	public override void OnStopClient() {
+		base.OnStopClient();
+		ResetClientPlayer();
 	}
 
 	[Server]

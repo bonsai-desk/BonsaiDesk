@@ -37,6 +37,11 @@ public class TabletSpot : NetworkBehaviour
     }
 
     private void HandleEjectVideo(object sender, EventArgs e) {
+        CmdEjectCurrentTablet();
+    }
+
+    [Command (ignoreAuthority = true)]
+    private void CmdEjectCurrentTablet() {
         if (_currentTabletIdentity)
         {
             EjectCurrentTablet();
@@ -85,8 +90,11 @@ public class TabletSpot : NetworkBehaviour
             var tabletBody = _currentTabletIdentity.GetComponent<Rigidbody>();
             tabletBody.isKinematic = false;
             tabletBody.angularVelocity = new Vector3(-Mathf.PI, Random.value - 0.5f, Random.value - 0.5f);
-            tabletBody.velocity = new Vector3(1f + (Random.value * 0.15f), 2f + (Random.value * 0.15f),
-                Random.value * 0.3f - 0.15f);
+            tabletBody.velocity = new Vector3(
+                (2 * Random.value - 1)/2,
+                1f + (Random.value * 0.15f), 
+                -(2f + (Random.value * 0.15f))
+            );
         }
     }
 
