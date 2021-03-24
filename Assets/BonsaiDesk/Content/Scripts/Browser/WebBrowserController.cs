@@ -19,7 +19,7 @@ public class WebBrowserController : MonoBehaviour {
 	// Update is called once per frame
 	private void Update() { }
 
-	private void SetupBrowser() {
+	private void SetupBrowser(object sender, EventArgs eventArgs) {
 		_browser.SetHidden(false);
 		_browser.OnMessageEmitted(HandleJavascriptMessage);
 		SetRaised(false);

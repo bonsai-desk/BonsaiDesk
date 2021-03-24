@@ -4,15 +4,24 @@ using System.Linq;
 using Mirror;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Vuplex.WebView;
 
 [RequireComponent(typeof(TableBrowser))]
 public class TableBrowserMenu : MonoBehaviour {
+	public enum LightState {
+		Bright,
+		Vibes
+	}
+
+	private const float PostRoomInfoEvery = 1f;
 	public static TableBrowserMenu Singleton;
 	public AutoBrowserController autoBrowserController;
 	public float postMediaInfoEvery = 0.5f;
+	[FormerlySerializedAs("_browser")] public TableBrowser browser;
+	public bool canPost;
 	private float _postMediaInfoLast;
-	private TableBrowser _browser;
+	private float _postRoomInfoLast;
 
 	private void Awake() {
 		if (Singleton == null) {
@@ -21,10 +30,11 @@ public class TableBrowserMenu : MonoBehaviour {
 	}
 
 	private void Start() {
-		_browser                =  GetComponent<TableBrowser>();
-		_browser.BrowserReady   += SetupBrowser;
-		_browser.ListenersReady += NavToMenu;
-		OVRManager.HMDUnmounted += () => { _browser.SetHidden(true); };
+		browser                                 =  GetComponent<TableBrowser>();
+		browser.BrowserReady                    += SetupBrowser;
+		browser.ListenersReady                  += HandleListnersReady;
+		NetworkManagerGame.Singleton.InfoChange += HandleNetworkInfoChange;
+		OVRManager.HMDUnmounted                 += () => { browser.SetHidden(true); };
 	}
 
 	public void Update() {
@@ -32,15 +42,53 @@ public class TableBrowserMenu : MonoBehaviour {
 			PostMediaInfo(autoBrowserController.GetMediaInfo());
 			_postMediaInfoLast = Time.time;
 		}
+
+		if (Time.time - _postRoomInfoLast > PostRoomInfoEvery) {
+			PostNetworkInfo();
+		}
 	}
 
-	private void SetupBrowser() {
-		_browser.OnMessageEmitted(HandleJavascriptMessage);
+	private void HandleNetworkInfoChange(object sender, EventArgs e) {
+		PostNetworkInfo();
 	}
 
-	private void NavToMenu() {
+	private void PostNetworkInfo() {
+		var HostEndPoint = NetworkManagerGame.Singleton.HostEndPoint;
+		var State        = NetworkManagerGame.Singleton.State;
+		var PlayerInfos  = NetworkManagerGame.Singleton.PlayerInfos;
+		var roomOpen     = NetworkManagerGame.Singleton.roomOpen;
+
+		if (canPost) {
+			_postRoomInfoLast = Time.time;
+		#if UNITY_EDITOR || DEVELOPMENT_BUILD
+			const string build = "DEVELOPMENT";
+		#else
+			const string build = "PRODUCTION";
+		#endif
+
+			PostKvs(new[] {
+				new KeyVal {Key = "build", Val = build}
+			});
+			PostNetworkState(State.ToString());
+			PostPlayerInfo(PlayerInfos);
+			PostRoomOpen(roomOpen);
+			if (HostEndPoint != null) {
+				PostRoomInfo(HostEndPoint.Address.ToString(), HostEndPoint.Port.ToString());
+			}
+			else {
+				PostRoomInfo("", "");
+			}
+		}
+	}
+
+	private void SetupBrowser(object sender, EventArgs eventArgs) {
+		browser.OnMessageEmitted(HandleJavascriptMessage);
+	}
+
+	private void HandleListnersReady() {
 		Debug.Log("[BONSAI] nav to menu");
-		_browser.PostMessage(Browser.BrowserMessage.NavToMenu);
+		browser.PostMessage(Browser.BrowserMessage.NavToMenu);
+		canPost = true;
 	}
 
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
@@ -51,7 +99,7 @@ public class TableBrowserMenu : MonoBehaviour {
 				switch (message.Message) {
 					case "joinRoom":
 						var roomData = JsonConvert.DeserializeObject<RoomData>(message.Data);
-						Debug.Log($"[BONSAI] Join Room {message.Data}");
+						Debug.Log($"[BONSAI] Event JoinRoom {message.Data}");
 						JoinRoom?.Invoke(roomData);
 						break;
 					case "leaveRoom":
@@ -91,7 +139,7 @@ public class TableBrowserMenu : MonoBehaviour {
 						}
 
 						break;
-					
+
 					case "lightsChange":
 						if (LightChange != null) {
 							switch (message.Data) {
@@ -122,23 +170,23 @@ public class TableBrowserMenu : MonoBehaviour {
 			Type = "command", Message = "pushStore", Data = kvs
 		};
 		var message = JsonConvert.SerializeObject(jsMessage);
-		_browser.PostMessage(message);
+		browser.PostMessage(message);
 	}
 
 	private void PostMediaInfo(AutoBrowserController.MediaInfo mediaInfo) {
 		var kv = new KeyType<AutoBrowserController.MediaInfo> {Key = "media_info", Val = mediaInfo};
-		var jsMessage = new CsMessageKeyType<AutoBrowserController.MediaInfo>() {
+		var jsMessage = new CsMessageKeyType<AutoBrowserController.MediaInfo> {
 			Data = kv
 		};
 		var message = JsonConvert.SerializeObject(jsMessage);
-		_browser.PostMessage(message);
+		browser.PostMessage(message);
 	}
 
 	public void PostRoomOpen(bool open) {
 		var kv        = new KeyType<bool> {Key           = "room_open", Val = open};
 		var jsMessage = new CsMessageKeyType<bool> {Data = kv};
 		var message   = JsonConvert.SerializeObject(jsMessage);
-		_browser.PostMessage(message);
+		browser.PostMessage(message);
 	}
 
 	public void PostRoomInfo(string ipAddress, string port) {
@@ -150,7 +198,7 @@ public class TableBrowserMenu : MonoBehaviour {
 			Data = kvs
 		};
 		var message = JsonConvert.SerializeObject(jsMessage);
-		_browser.PostMessage(message);
+		browser.PostMessage(message);
 	}
 
 	public void PostKvs(KeyVal[] kvs) {
@@ -158,34 +206,34 @@ public class TableBrowserMenu : MonoBehaviour {
 			Data = kvs
 		};
 		var message = JsonConvert.SerializeObject(jsMessage);
-		_browser.PostMessage(message);
+		browser.PostMessage(message);
 	}
 
 	public void PostPlayerInfo(Dictionary<NetworkConnection, NetworkManagerGame.PlayerInfo> playerInfos) {
 		var data = playerInfos
 		           .Select(entry => new PlayerData
-			                   {Name = entry.Value.userInfo.DisplayName, ConnectionId = entry.Key.connectionId})
+			                   {Name = entry.Value.User.DisplayName, ConnectionId = entry.Key.connectionId})
 		           .ToArray();
 
 		var csMessage = new CsMessageKeyType<PlayerData[]>
 			{Data = new KeyType<PlayerData[]> {Key = "player_info", Val = data}};
 
 		var message = JsonConvert.SerializeObject(csMessage);
-		_browser.PostMessage(message);
+		browser.PostMessage(message);
 	}
 
 	public void PostUserInfo(UserInfo userInfo) {
-		var data = new KeyType<UserInfo> {Key = "user_info", Val = userInfo};
+		var data      = new KeyType<UserInfo> {Key           = "user_info", Val = userInfo};
 		var csMessage = new CsMessageKeyType<UserInfo> {Data = data};
 		var message   = JsonConvert.SerializeObject(csMessage);
-		_browser.PostMessage(message);
+		browser.PostMessage(message);
 	}
 
-	public event Action<RoomData> JoinRoom;
-	public event Action LeaveRoom;
-	public event Action OpenRoom;
-	public event Action CloseRoom;
-	public event Action<int> KickConnectionId;
+	public static event Action<RoomData> JoinRoom;
+	public static event Action LeaveRoom;
+	public static event Action OpenRoom;
+	public static event Action CloseRoom;
+	public static event Action<int> KickConnectionId;
 
 	public event EventHandler<string> BrowseSite;
 
@@ -229,9 +277,5 @@ public class TableBrowserMenu : MonoBehaviour {
 
 	public struct UserInfo {
 		public string UserName;
-	}
-	
-	public enum LightState {
-		Bright, Vibes
 	}
 }

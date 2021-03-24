@@ -6,11 +6,13 @@ using Dissonance;
 using Mirror;
 using NobleConnect.Mirror;
 using UnityEngine;
-using UnityEngine.Android;
-using UnityEngine.Networking;
+using UnityEngine.UIElements;
 using UnityEngine.XR.Management;
 
-public class NetworkManagerGame : NobleNetworkManager {
+// this is a modified version of NobleNetworkManager
+// this version cleans up AddListener properly
+
+public class NetworkManagerGame : BonsaiNetworkManager {
 	public enum ConnectionState {
 		RelayError,
 		Loading,
@@ -19,52 +21,51 @@ public class NetworkManagerGame : NobleNetworkManager {
 		ClientConnected
 	}
 
-	public static NetworkManagerGame Singleton;
+	private const double StartHostCooldown = 0.5f;
 
-	[Header("Bonsai Network Manager")] public bool serverOnlyIfEditor;
+	private const float HardKickDelay = 0.5f;
+
+	public static NetworkManagerGame Singleton;
+	public static EventHandler<NetworkConnection> ServerAddPlayer;
+	public static EventHandler<NetworkConnection> ServerDisconnect;
+	[HideInInspector] public bool roomOpen;
+	public bool serverOnlyIfEditor;
+
 	public bool visualizeAuthority;
-	public bool browserReady;
-	public TableBrowser tableBrowser;
-	public TableBrowserMenu tableBrowserMenu;
-	public MoveToDesk moveToDesk;
-	public TogglePause togglePause;
-	public BonsaiScreenFade fader;
-	public bool roomOpen;
-	private readonly bool[] _spotInUse = new bool[2];
 
 	public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos =
 		new Dictionary<NetworkConnection, PlayerInfo>();
 
-	private readonly float postRoomInfoEvery = 1f;
-	private Camera _camera;
-	private DissonanceComms _comms;
-	private ConnectionState _connectionState = ConnectionState.RelayError;
-	private float _postRoomInfoLast;
-	private UnityWebRequest _roomRequest;
+	public DissonanceComms _comms;
+	private bool _hasFocus = true;
+	private float _lastStartHost = Mathf.NegativeInfinity;
+
+	private bool _roomJoinInProgress;
+
+	public EventHandler InfoChange;
 
 	public ConnectionState State {
-		get => _connectionState;
-		set {
-			if (_connectionState == value) {
-				Debug.LogWarning("[BONSAI] Trying to set state to itself: " + State);
+		get {
+			switch (mode)
+			{
+				case NetworkManagerMode.Offline:
+					return ConnectionState.RelayError;
+				case NetworkManagerMode.ServerOnly:
+					return ConnectionState.Hosting;
+				case NetworkManagerMode.ClientOnly:
+					return ConnectionState.ClientConnected;
+				case NetworkManagerMode.Host:
+					return ConnectionState.Hosting;
+				default:
+					throw new ArgumentOutOfRangeException();
 			}
-
-			Debug.Log("[BONSAI] HandleState Cleanup " + _connectionState);
-			HandleState(_connectionState, Work.Cleanup);
-
-			_connectionState = value;
-
-			Debug.Log("[BONSAI] HandleState Setup " + value);
-			HandleState(value, Work.Setup);
-
-			PostInfo();
 		}
 	}
 
 	public override void Awake() {
 		base.Awake();
-
-		if (Singleton == null) {
+		if (Singleton == null)
+		{
 			Singleton = this;
 		}
 	}
@@ -72,39 +73,17 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public override void Start() {
 		base.Start();
 
-		tableBrowser.BrowserReady += () =>
+		// todo make these into EventHandler
+		TableBrowserMenu.JoinRoom         += HandleJoinRoom;
+		TableBrowserMenu.LeaveRoom        += HandleLeaveRoom;
+		TableBrowserMenu.KickConnectionId += HandleKickConnectionId;
+		TableBrowserMenu.OpenRoom         += HandleOpenRoom;
+		TableBrowserMenu.CloseRoom        += HandleCloseRoom;
+
+		// todo _comms = GetComponent<DissonanceComms>();
+
+		if (Application.isEditor && !serverOnlyIfEditor)
 		{
-			browserReady = true;
-			tableBrowser.SetHidden(true);
-		};
-
-		tableBrowserMenu.JoinRoom         += HandleJoinRoom;
-		tableBrowserMenu.LeaveRoom        += HandleLeaveRoom;
-		tableBrowserMenu.KickConnectionId += HandleKickConnectionId;
-
-		tableBrowserMenu.OpenRoom  += HandleOpenRoom;
-		tableBrowserMenu.CloseRoom += HandleCloseRoom;
-
-		_camera = GameObject.Find("CenterEyeAnchor").GetComponent<Camera>();
-
-		for (var i = 0; i < _spotInUse.Length; i++) {
-			_spotInUse[i] = false;
-		}
-
-		State = ConnectionState.Loading;
-
-		if (!Permission.HasUserAuthorizedPermission(Permission.Microphone)) {
-			Permission.RequestUserPermission(Permission.Microphone);
-		}
-
-		_comms = GetComponent<DissonanceComms>();
-		SetCommsActive(_comms, false);
-
-		OVRManager.HMDUnmounted += VoidAndDeafen;
-
-		MoveToDesk.OrientationChanged += HandleOrientationChange;
-
-		if (Application.isEditor && !serverOnlyIfEditor) {
 			StartCoroutine(StartXR());
 		}
 	}
@@ -112,28 +91,68 @@ public class NetworkManagerGame : NobleNetworkManager {
 	public override void Update() {
 		base.Update();
 
-		if (Time.time - _postRoomInfoLast > postRoomInfoEvery) {
-			PostInfo();
-		}
-
-		// TODO 
-		// StartCoroutine(StopHostFadeReturnToLoading());
-		// i.e. automatically try to reconnect to the relay service if not connected
-	}
-
-	private void OnApplicationFocus(bool focus) {
-		if (moveToDesk.oriented) {
-			SetCommsActive(_comms, focus);
-		}
-	}
-
-	private void OnApplicationPause(bool pause) {
-		if (!pause) {
+		if (isDisconnecting || _roomJoinInProgress)
+		{
+			Debug.Log(
+				$"[BONSAI] NetworkManager prevent Update while isDisconnecting={isDisconnecting} _roomJoinInProgress={_roomJoinInProgress}");
 			return;
 		}
 
-		SetCommsActive(_comms, false);
-		moveToDesk.ResetPosition();
+		if (serverOnlyIfEditor)
+		{
+			if (mode != NetworkManagerMode.ServerOnly)
+			{
+				roomOpen = true;
+				StartServer();
+			}
+		}
+		else
+		{
+			switch (mode)
+			{
+				case NetworkManagerMode.Offline:
+					MaybeStartHost();
+					break;
+				case NetworkManagerMode.ServerOnly:
+					break;
+				case NetworkManagerMode.ClientOnly:
+					break;
+				case NetworkManagerMode.Host:
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+		}
+
+		Debug.Log($"{mode} {MoveToDesk.Singleton.oriented} {IsCommsActive()} {_hasFocus}");
+		if (mode == NetworkManagerMode.ClientOnly || mode == NetworkManagerMode.Host)
+		{
+			var oriented    = MoveToDesk.Singleton.oriented;
+			var commsActive = IsCommsActive();
+			if (_hasFocus && oriented && !commsActive)
+			{
+				SetCommsActive(true);
+			}
+			else if ((!_hasFocus || !oriented) && commsActive)
+			{
+				SetCommsActive(false);
+			}
+		}
+		else if (IsCommsActive())
+		{
+			SetCommsActive(false);
+		}
+	}
+
+	private void OnApplicationFocus(bool focus) {
+		_hasFocus = focus;
+	}
+
+	private void OnApplicationPause(bool pauseStatus) {
+		if (pauseStatus)
+		{
+			SetCommsActive(false);
+		}
 	}
 
 	public override void OnApplicationQuit() {
@@ -141,340 +160,135 @@ public class NetworkManagerGame : NobleNetworkManager {
 		StopXR();
 	}
 
-	private void PostInfo() {
-		if (browserReady) {
-			_postRoomInfoLast = Time.time;
-			#if UNITY_EDITOR || DEVELOPMENT_BUILD
-				var build = "DEVELOPMENT";
-			#else
-				var build = "PRODUCTION";
-			#endif
-			
-			tableBrowserMenu.PostKvs(new[] {
-				new TableBrowserMenu.KeyVal {Key = "build", Val = build}
-			});
-			tableBrowserMenu.PostNetworkState(State.ToString());
-			tableBrowserMenu.PostPlayerInfo(PlayerInfos);
-			tableBrowserMenu.PostRoomOpen(roomOpen);
-			if (HostEndPoint != null) {
-				tableBrowserMenu.PostRoomInfo(HostEndPoint.Address.ToString(), HostEndPoint.Port.ToString());
-			}
-			else {
-				tableBrowserMenu.PostRoomInfo("", "");
-			}
+	private void SetCommsActive(bool active) {
+		Debug.Log($"[BONSAI] Set Comms {active}");
+		if (_comms is null)
+		{
+			Debug.LogWarning("[BONSAI] Trying to set active on comms when null");
+			return;
+		}
+
+		if (active)
+		{
+			_comms.IsMuted    = false;
+			_comms.IsDeafened = false;
+		}
+		else
+		{
+			_comms.IsMuted    = true;
+			_comms.IsDeafened = true;
 		}
 	}
 
-	private void HandleCloseRoom() {
-		roomOpen = false;
-		State    = ConnectionState.Loading;
-		PostInfo();
-	}
-
-	private void HandleOpenRoom() {
-		roomOpen = true;
-		PostInfo();
+	private bool IsCommsActive() {
+		return !_comms.IsMuted && !_comms.IsDeafened;
 	}
 
 	private void HandleKickConnectionId(int id) {
-		Debug.Log($"[BONSAI] Kick Id {id}");
+		Debug.Log($"[Bonsai] NetworkManager Kick (id={id})");
 		StartCoroutine(KickClient(id));
 	}
 
-	private void OnShouldDisconnect(ShouldDisconnectMessage _) {
-		StartCoroutine(FadeThenReturnToLoading());
-	}
-
-	private static void SetCommsActive(DissonanceComms comms, bool active) {
-		if (comms == null) {
-			return;
-		}
-
-		if (active) {
-			comms.IsMuted    = false;
-			comms.IsDeafened = false;
-		}
-		else {
-			comms.IsMuted    = true;
-			comms.IsDeafened = true;
-		}
-	}
-
-	private void HandleState(ConnectionState state, Work work) {
-		switch (state) {
-			case ConnectionState.RelayError:
-				// set to loading to get out of here
-				// you will get bounced back if there is no internet
-				if (work == Work.Setup) {
-					isLANOnly = true;
-					Debug.Log("[BONSAI] RelayError Setup");
-				}
-
-				break;
-
-			// Waiting for a HostEndPoint
-			case ConnectionState.Loading:
-				if (work == Work.Setup) {
-					Debug.Log("[BONSAI] Loading Setup isLanOnly " + isLANOnly);
-
-					if (client != null) {
-						StopClient();
-					}
-
-					moveToDesk.SetTableEdge(GameObject.Find("DefaultEdge").transform);
-					SetCommsActive(_comms, false);
-					StartCoroutine(StartHostAfterDisconnect());
-				}
-
-				break;
-
-			// Has a client connected
-			case ConnectionState.Hosting:
-				if (work == Work.Setup) {
-					SetCommsActive(_comms, true);
-				}
-				else {
-					StartCoroutine(KickClients());
-				}
-
-				break;
-
-			// Client connected to a host
-			case ConnectionState.ClientConnected:
-				if (work == Work.Setup) {
-					// todo set fade mask 0
-					SetCommsActive(_comms, true);
-				}
-				else {
-					client?.Disconnect();
-					StopClient();
-				}
-
-				break;
-
-			default:
-				Debug.LogWarning($"[BONSAI] HandleState not handled {State}");
-				break;
-		}
-	}
-
-	private IEnumerator StartHostAfterDisconnect() {
-		while (isDisconnecting) {
-			yield return null;
-		}
-
-		if (HostEndPoint == null || isLANOnly) {
-			Debug.Log("[BONSAI] StartHostAfterDisconnect StartHost ");
-			isLANOnly = false;
-			if (serverOnlyIfEditor && Application.isEditor) {
-				roomOpen = true;
-				StartServer();
-			}
-			else {
-				StartHost();
-			}
-		}
-		else {
-			State = ConnectionState.Hosting;
-		}
-
-		// todo set fade mask 0
-	}
-
-	private IEnumerator SmoothStartClient() {
-		State = ConnectionState.ClientConnecting;
-		// todo set fade mask 1
-		yield return new WaitForSeconds(fader.fadeTime);
-		Debug.Log("[BONSAI] SmoothStartClient StopHost");
-		StopHost();
-		if (HostEndPoint != null) {
-			yield return null;
-		}
-
-		Debug.Log("[BONSAI] HostEndPoint == null");
-		Debug.Log("[BONSAI] StartClient");
-		StartClient();
-	}
-
-	private IEnumerator FadeThenReturnToLoading() {
-		// todo set fade mask 1
-		yield return new WaitForSeconds(fader.fadeTime);
-		State = ConnectionState.Loading;
-	}
-
-	private IEnumerator KickClients() {
-		foreach (var conn in NetworkServer.connections.Values.ToList()
-		                                  .Where(conn => conn.connectionId != NetworkConnection.LocalConnectionId)) {
-			conn.Send(new ShouldDisconnectMessage());
-		}
-
-		yield return new WaitForSeconds(fader.fadeTime + 0.15f);
-		foreach (var conn in NetworkServer.connections.Values.ToList()
-		                                  .Where(conn => conn.connectionId != NetworkConnection.LocalConnectionId)) {
-			conn.Disconnect();
-		}
-	}
-
-	private IEnumerator KickClient(int id) {
-		NetworkConnectionToClient _conn = null;
-		foreach (var conn in NetworkServer.connections.Values.ToList()) {
-			if (conn.connectionId != NetworkConnection.LocalConnectionId && conn.connectionId == id) {
-				_conn = conn;
-				break;
-			}
-		}
-
-		if (_conn != null) {
-			_conn.Send(new ShouldDisconnectMessage());
-			yield return new WaitForSeconds(fader.fadeTime + 0.15f);
-			_conn.Disconnect();
-		}
-
-		PostInfo();
-	}
-
-	private void VoidAndDeafen() {
-		moveToDesk.ResetPosition();
-		SetCommsActive(_comms, false);
-	}
-
-	private void HandleOrientationChange(bool oriented) {
-		if (oriented) {
-			_camera.cullingMask |= 1 << LayerMask.NameToLayer("networkPlayer");
-		}
-		else {
-			_camera.cullingMask &= ~(1 << LayerMask.NameToLayer("networkPlayer"));
-		}
-
-		if (State != ConnectionState.ClientConnected && State != ConnectionState.Hosting) {
-			return;
-		}
-
-		SetCommsActive(_comms, oriented);
+	private void HandleLeaveRoom() {
+		Debug.Log("[BONSAI] NetworkManager LeaveRoom");
+		Debug.Log("[BONSAI] StopClient");
+		StopClient();
+		// todo _lastStartHost = Time.time;
 	}
 
 	private void HandleJoinRoom(TableBrowserMenu.RoomData roomData) {
-		Debug.Log($"[Bonsai] NetworkManager Join Room {roomData.ip_address} {roomData.port}");
-		networkAddress = roomData.ip_address;
-		networkPort    = roomData.port;
-		StartCoroutine(SmoothStartClient());
-	}
-
-	private void HandleLeaveRoom() {
-		StartCoroutine(FadeThenReturnToLoading());
-	}
-
-	public event Action<NetworkConnection> ServerAddPlayer;
-
-	public event Action<NetworkConnection> ServerDisconnect;
-
-	private IEnumerator StartXR() {
-		Debug.Log("Initializing XR...");
-		yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
-
-		if (XRGeneralSettings.Instance.Manager.activeLoader == null) {
-			Debug.LogError("Initializing XR Failed. Check Editor or Player log for details.");
+		if (!_roomJoinInProgress)
+		{
+			if (HostEndPoint.Address.ToString() == roomData.ip_address && HostEndPoint.Port == roomData.port)
+			{
+				Debug.LogWarning("[BONSAI] Tried to join own hosted room as client, ignoring");
+			}
+			else
+			{
+				StartCoroutine(JoinRoom(roomData));
+			}
 		}
-		else {
-			Debug.Log("Starting XR...");
-			XRGeneralSettings.Instance.Manager.StartSubsystems();
+		else
+		{
+			Debug.LogWarning("[BONSAI] Ignoring attempt to join room while room join is in progress");
 		}
 	}
 
-	private void StopXR() {
-		if (XRGeneralSettings.Instance.Manager.isInitializationComplete) {
-			Debug.Log("Stopping XR...");
-
-			XRGeneralSettings.Instance.Manager.StopSubsystems();
-			XRGeneralSettings.Instance.Manager.DeinitializeLoader();
-			Debug.Log("XR stopped completely.");
+	private IEnumerator JoinRoom(TableBrowserMenu.RoomData roomData) {
+		Debug.Log("[BONSAI] NetworkManager Begin JoinRoom");
+		_roomJoinInProgress = true;
+		if (mode == NetworkManagerMode.Host || !(HostEndPoint is null))
+		{
+			StopHost();
+			InfoChange?.Invoke(this, new EventArgs());
 		}
+
+		while (!(HostEndPoint is null))
+		{
+			Debug.Log("[BONSAI] JoinRoom: wait for HostEndPoint to be null");
+			yield return null;
+		}
+
+		if (mode == NetworkManagerMode.Offline)
+		{
+			networkAddress = roomData.ip_address;
+			networkPort    = roomData.port;
+			StartClient();
+			InfoChange?.Invoke(this, new EventArgs());
+		}
+		else
+		{
+			Debug.LogWarning("[Bonsai] NetworkManager tried to join room while a hosting/client, ignoring");
+		}
+
+		_roomJoinInProgress = false;
 	}
 
-	public override void OnFatalError(string error) {
-		base.OnFatalError(error);
-		Debug.Log("[BONSAI] OnFatalError");
-		Debug.Log(error);
-		State = ConnectionState.RelayError;
+	private void HandleCloseRoom() {
+		Debug.Log("[BONSAI] NetworkManager CloseRoom");
+		roomOpen = false;
+		StartCoroutine(KickClients());
+		InfoChange?.Invoke(this, new EventArgs());
 	}
 
-	public override void OnServerPrepared(string hostAddress, ushort hostPort) {
-		Debug.Log($"[BONSAI] OnServerPrepared ({hostAddress} : {hostPort}) isLanOnly={isLANOnly}");
-		State = !isLANOnly ? ConnectionState.Hosting : ConnectionState.RelayError;
+	private void HandleOpenRoom() {
+		Debug.Log("[BONSAI] NetworkManager OpenRoom");
+		roomOpen = true;
+		InfoChange?.Invoke(this, new EventArgs());
 	}
 
 	public override void OnServerConnect(NetworkConnection conn) {
-		Debug.Log("[BONSAI] OnServerConnect");
-
 		base.OnServerConnect(conn);
-
-		var openSpotId = -1;
-		for (var i = 0; i < _spotInUse.Length; i++) {
-			if (!_spotInUse[i]) {
-				openSpotId = i;
-				break;
-			}
-		}
-
-		if (openSpotId == -1) {
-			Debug.LogError("No open spot.");
-			openSpotId = 0;
-		}
-
-		_spotInUse[openSpotId] = true;
-		PlayerInfos.Add(conn, new PlayerInfo(openSpotId));
-
-		// triggers when client joins
-		if (NetworkServer.connections.Count > 1 && State != ConnectionState.Hosting) {
-			State = ConnectionState.Hosting;
-		}
+		Debug.Log("[BONSAI] NetworkManager ServerConnect");
 	}
 
 	public override void OnServerAddPlayer(NetworkConnection conn) {
-		Debug.Log($"[BONSAI] OnServerAddPlayer {conn.connectionId} {conn.identity?.netId}");
-		conn.Send(new SpotMessage {
-			SpotId     = PlayerInfos[conn].spot,
-			ColorIndex = PlayerInfos[conn].spot
-		});
-
 		base.OnServerAddPlayer(conn);
+		Debug.Log("[BONSAI] NetworkManager ServerAddPlayer");
 
-		if (State != ConnectionState.Hosting) {
-			State = ConnectionState.Hosting;
-		}
+		var openSpot = OpenSpotId();
+		PlayerInfos.Add(conn, new PlayerInfo(openSpot, "NoName"));
+		conn.Send(new SpotMessage(openSpot));
 
-		ServerAddPlayer?.Invoke(conn);
+		ServerAddPlayer?.Invoke(this, conn);
+		InfoChange?.Invoke(this, new EventArgs());
 	}
 
 	public override void OnServerDisconnect(NetworkConnection conn) {
-		Debug.Log("[BONSAI] OnServerDisconnect");
+		Debug.Log("[BONSAI] ServerDisconnect");
 
-		if (!conn.isAuthenticated) {
-			return;
-		}
-
-		ServerDisconnect?.Invoke(conn);
-
-		var spotId = PlayerInfos[conn].spot;
-
-		var spotUsedCount = 0;
-		foreach (var player in PlayerInfos) {
-			if (player.Value.spot == spotId) {
-				spotUsedCount++;
-			}
-		}
-
-		if (spotUsedCount <= 1) {
-			_spotInUse[spotId] = false;
-		}
+		ServerDisconnect?.Invoke(this, conn);
 
 		PlayerInfos.Remove(conn);
 
 		var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
-		foreach (var identity in tmp) {
+		foreach (var identity in tmp)
+		{
 			var autoAuthority = identity.GetComponent<AutoAuthority>();
-			if (autoAuthority != null) {
-				if (autoAuthority.InUse) {
+			if (autoAuthority != null)
+			{
+				if (autoAuthority.InUse)
+				{
 					autoAuthority.SetInUse(false);
 				}
 
@@ -482,35 +296,19 @@ public class NetworkManagerGame : NobleNetworkManager {
 			}
 		}
 
-		if (conn.identity != null && togglePause.AuthorityIdentityId == conn.identity.netId) {
-			togglePause.RemoveClientAuthority();
-		}
-
+		// call the base after the ServerDisconnect event otherwise null reference gets passed to subscribers
 		base.OnServerDisconnect(conn);
 
-		// triggers when last client leaves
-		if (NetworkServer.connections.Count == 1) {
-			State = ConnectionState.Loading;
-		}
+		InfoChange?.Invoke(this, new EventArgs());
 	}
 
 	public override void OnClientConnect(NetworkConnection conn) {
-		Debug.Log("[BONSAI] OnClientConnect");
-
-		// For some reason OnClientConnect triggers twice occasionally. This is a hack to ignore the second trigger.
-		if (conn.isReady) {
-			return;
-		}
+		Debug.Log($"[BONSAI] OnClientConnect {conn.connectionId} {conn.isReady}");
 
 		base.OnClientConnect(conn);
 
 		NetworkClient.RegisterHandler<SpotMessage>(OnSpot);
 		NetworkClient.RegisterHandler<ShouldDisconnectMessage>(OnShouldDisconnect);
-
-		// triggers when client connects to remote host
-		if (NetworkServer.connections.Count == 0) {
-			State = ConnectionState.ClientConnected;
-		}
 	}
 
 	public override void OnClientDisconnect(NetworkConnection conn) {
@@ -519,28 +317,26 @@ public class NetworkManagerGame : NobleNetworkManager {
 		NetworkClient.UnregisterHandler<SpotMessage>();
 		NetworkClient.UnregisterHandler<ShouldDisconnectMessage>();
 
-		switch (State) {
-			case ConnectionState.ClientConnected:
-				// this happens on client when the host exits rudely (power off, etc)
-				// base method stops client with a delay so it can gracefully disconnct
-				// since the client is getting booted here, we don't need to wait (which introduces bugs)
-
-				// todo set fade mask 1
-				State = ConnectionState.Loading;
-				break;
-			case ConnectionState.ClientConnecting:
-				//this should happen on client trying to connect to a paused host
-				StopClient();
-				State = ConnectionState.Loading;
-				break;
-			default:
-				base.OnClientDisconnect(conn);
-				break;
-		}
+		base.OnClientDisconnect(conn);
 	}
 
-	private static void OnSpot(NetworkConnection conn, SpotMessage msg) {
-		switch (msg.SpotId) {
+	public override void OnFatalError(string error) {
+		base.OnFatalError(error);
+		Debug.LogWarning($"[BONSAI] OnFatalError: {error}");
+	}
+
+	public override void OnServerPrepared(string hostAddress, ushort hostPort) {
+		Debug.Log($"[BONSAI] OnServerPrepared ({hostAddress} : {hostPort}) isLanOnly={isLANOnly}");
+	}
+
+	private void OnShouldDisconnect(ShouldDisconnectMessage _) {
+		Debug.Log("[BONSAI] NetworkManger ShouldDisconnect");
+		StopClient();
+	}
+
+	private void OnSpot(SpotMessage spot) {
+		switch (spot.ID)
+		{
 			case 0:
 				GameObject.Find("GameManager").GetComponent<MoveToDesk>()
 				          .SetTableEdge(GameObject.Find("DefaultEdge").transform);
@@ -552,35 +348,136 @@ public class NetworkManagerGame : NobleNetworkManager {
 		}
 	}
 
+	private static IEnumerator StartXR() {
+		Debug.Log("[BONSAI] Initializing XR");
+		yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
+
+		if (XRGeneralSettings.Instance.Manager.activeLoader == null)
+		{
+			Debug.LogError("[BONSAI] Initializing XR Failed. Check Editor or Player log for details.");
+		}
+		else
+		{
+			Debug.Log("[BONSAI] Starting XR");
+			XRGeneralSettings.Instance.Manager.StartSubsystems();
+		}
+	}
+
+	private static void StopXR() {
+		if (XRGeneralSettings.Instance.Manager.isInitializationComplete)
+		{
+			Debug.Log("[BONSAI] Stopping XR");
+			XRGeneralSettings.Instance.Manager.StopSubsystems();
+			XRGeneralSettings.Instance.Manager.DeinitializeLoader();
+			Debug.Log("[BONSAI] Stopped XR");
+		}
+	}
+
 	public void UpdateUserInfo(uint netId, UserInfo userInfo) {
-		foreach (var conn in PlayerInfos.Keys.ToList()) {
-			if (netId == conn.identity.netId) {
-				PlayerInfos[conn].userInfo = userInfo;
+		var updated = false;
+		foreach (var conn in PlayerInfos.Keys.ToList())
+		{
+			if (netId == conn.identity.netId)
+			{
+				PlayerInfos[conn].User = userInfo;
+				updated                = true;
 			}
+		}
+
+		if (updated)
+		{
+			Debug.Log($"[BONSAI] Updated UserInfo in PlayerInfos -> {userInfo.DisplayName}");
+		}
+		else
+		{
+			Debug.LogWarning("[BONSAI] Tried to update PlayerInfos but failed");
+		}
+
+		InfoChange?.Invoke(this, new EventArgs());
+	}
+
+	private IEnumerator KickClients() {
+		foreach (var conn in NetworkServer.connections.Values)
+		{
+			if (conn.connectionId != NetworkConnection.LocalConnectionId)
+			{
+				RequestDisconnectClient(conn);
+			}
+		}
+
+		yield return new WaitForSeconds(HardKickDelay);
+
+		foreach (var conn in NetworkServer.connections.Values)
+		{
+			if (conn.connectionId != NetworkConnection.LocalConnectionId)
+			{
+				DisconnectClient(conn);
+			}
+		}
+	}
+
+	private IEnumerator KickClient(int id) {
+		foreach (var conn in NetworkServer.connections.Values)
+		{
+			if (conn.connectionId == id)
+			{
+				RequestDisconnectClient(conn);
+			}
+		}
+
+		yield return new WaitForSeconds(HardKickDelay);
+
+		foreach (var conn in NetworkServer.connections.Values)
+		{
+			if (conn.connectionId == id)
+			{
+				DisconnectClient(conn);
+			}
+		}
+	}
+
+	private int OpenSpotId() {
+		var spots = new List<int> {0, 1};
+		foreach (var info in PlayerInfos.Values)
+		{
+			spots.Remove(info.Spot);
+		}
+
+		if (spots.Count > 0)
+		{
+			return spots[0];
+		}
+
+		Debug.LogError("[BONSAI] No open spot");
+		return 0;
+	}
+
+	private void RequestDisconnectClient(NetworkConnection conn) {
+		conn.Send(new ShouldDisconnectMessage());
+	}
+
+	private void DisconnectClient(NetworkConnection conn) {
+		conn.Disconnect();
+	}
+
+	private void MaybeStartHost() {
+		if (Time.time - _lastStartHost > StartHostCooldown)
+		{
+			Debug.Log("[BONSAI] NetworkManager StartHost");
+			StartHost();
+			_lastStartHost = Time.time;
 		}
 	}
 
 	[Serializable]
 	public class PlayerInfo {
-		public int spot;
-		public UserInfo userInfo;
+		public int Spot;
+		public UserInfo User;
 
-		public PlayerInfo(int spot) {
-			this.spot = spot;
-			userInfo  = new UserInfo("User");
+		public PlayerInfo(int spot, string user) {
+			Spot = spot;
+			User = new UserInfo(user);
 		}
-	}
-
-	private enum Work {
-		Setup,
-		Cleanup
-	}
-
-	private struct ShouldDisconnectMessage : NetworkMessage { }
-
-	private struct SpotMessage : NetworkMessage {
-		public int ColorIndex;
-		public int SpotId;
 	}
 
 	public readonly struct UserInfo {
@@ -588,6 +485,16 @@ public class NetworkManagerGame : NobleNetworkManager {
 
 		public UserInfo(string displayName) {
 			DisplayName = displayName;
+		}
+	}
+
+	private struct ShouldDisconnectMessage : NetworkMessage { }
+
+	private struct SpotMessage : NetworkMessage {
+		public readonly int ID;
+
+		public SpotMessage(int id) {
+			ID = id;
 		}
 	}
 }

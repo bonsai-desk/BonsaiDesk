@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.XR.Management;
 
+// todo Delete this file
+
 public class NetworkControl : MonoBehaviour
 {
     public bool serverOnlyIfEditor = false;

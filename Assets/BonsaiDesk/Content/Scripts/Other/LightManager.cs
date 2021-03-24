@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections;
-using Mirror;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class LightManager : NetworkBehaviour {
+public class LightManager : MonoBehaviour {
+	public static LightManager Singleton;
 	public Texture2D[] Lights;
 	public Material Garden;
 
@@ -14,17 +14,13 @@ public class LightManager : NetworkBehaviour {
 	public bool mipChain;
 	public float candleLevel = 1;
 	
-	public float backRoomLevel=0;
+	public float backRoomLevel;
 	
-	[Range(0.0f, 1f), SyncVar]
-	public float backRoomLevelTarget=0;
+	public float backRoomLevelTarget;
 	
-	public float mainRoomLevel=0;
+	public float mainRoomLevel;
 	
-	[Range(0.0f, 1f), SyncVar]
 	public float mainRoomLevelTarget=1;
-
-	private TableBrowserMenu.LightState LightTarget;
 
 	[Header("ring")] public float ringScale = 1f;
 
@@ -37,7 +33,11 @@ public class LightManager : NetworkBehaviour {
 	// ambient, main, area, back
 	private readonly float[] lightLevels = new float[64];
 
-	private float t;
+	private void Awake() {
+		if (Singleton == null) {
+			Singleton = this;
+		}
+	}
 
 	// Start is called before the first frame update
 	private void Start() {
@@ -62,7 +62,6 @@ public class LightManager : NetworkBehaviour {
 		Garden.SetTexture("Lights", arr);
 
 		MoveToDesk.OrientationChanged          += HandleOrient;
-		TableBrowserMenu.Singleton.LightChange += HandleLightsChange;
 
 	#if UNITY_EDITOR
 		if (NetworkManagerGame.Singleton.serverOnlyIfEditor) {
@@ -71,23 +70,7 @@ public class LightManager : NetworkBehaviour {
 	#endif
 	}
 
-	[Command(ignoreAuthority = true)]
-	private void CmdSetLights(TableBrowserMenu.LightState state) {
-		switch (state) {
-			case TableBrowserMenu.LightState.Bright:
-				mainRoomLevelTarget = 1;
-				backRoomLevelTarget = 0;
-				break;
-			case TableBrowserMenu.LightState.Vibes:
-				mainRoomLevelTarget = 0.146f;
-				backRoomLevelTarget = 0.507f;
-				break;
-		}
-	}
 
-	private void HandleLightsChange(object sender, TableBrowserMenu.LightState e) {
-		CmdSetLights(e);
-	}
 
 	// Update is called once per frame
 	private void Update() {
@@ -133,24 +116,24 @@ public class LightManager : NetworkBehaviour {
 		lightLevels[2] = 1f;
 	}
 
-	private static float gauss(float ringScale, float ringFloor, float ringSpeed, float x, float shift = 0) {
+	private static float Gauss(float ringScale, float ringFloor, float ringSpeed, float x, float shift = 0) {
 		return (float) (ringFloor + (1 - ringFloor) * Math.Exp(
 			-ringScale * Math.Pow(
 				Math.Sin(ringSpeed * x - shift), 2f
 			)));
 	}
 
-	private void ring(int[] idxs) {
+	private void Ring(int[] idxs) {
 		var numLights = idxs.Length;
 		var twoPi     = 2 * Math.PI;
 		for (var i = 0; i < idxs.Length; i++) {
 			lightLevels[idxs[i]] =
-				gauss(ringScale, ringFloor, ringSpeed, Time.time, (float) twoPi * (i + 1) / numLights);
+				Gauss(ringScale, ringFloor, ringSpeed, Time.time, (float) twoPi * (i + 1) / numLights);
 		}
 	}
 
 	private float Pulse(Vector3 pulseData, float offset) {
-		return gauss(pulseData[0], pulseData[1], pulseData[2],
+		return Gauss(pulseData[0], pulseData[1], pulseData[2],
 		             Time.time + offset);
 	}
 
