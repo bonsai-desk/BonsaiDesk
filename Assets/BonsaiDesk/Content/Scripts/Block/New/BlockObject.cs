@@ -137,6 +137,7 @@ public partial class BlockObject : NetworkBehaviour
         _texturePadding = 1f / blockObjectMaterial.mainTexture.width / 2f;
 
         _mesh = new Mesh();
+        _mesh.MarkDynamic();
         _meshFilter.mesh = _mesh;
 
         CreateInitialMesh();
