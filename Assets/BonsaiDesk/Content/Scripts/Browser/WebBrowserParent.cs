@@ -13,6 +13,7 @@ public class WebBrowserParent : MonoBehaviour {
 	public Transform videoSpawnLocation;
 	public TableBrowserParent tableBrowserParent;
 	private int _browsersReady = 0;
+    public Transform headTransform;
 
 	// Start is called before the first frame update
 	private void Start() {
@@ -32,7 +33,8 @@ public class WebBrowserParent : MonoBehaviour {
 	}
 
 	// Update is called once per frame
-	private void Update() { }
+	private void Update() {
+	}
 
 	public event EventHandler CloseWeb;
 	public event EventHandler BrowsersReady;
@@ -68,7 +70,7 @@ public class WebBrowserParent : MonoBehaviour {
 
 	private void HandleSpawnYt(object sender, EventArgs<string> e) {
 		Debug.Log($"[BONSAI] Spawn YT {e.Value}");
-		YouTubeSpawner.Singleton.CmdSpawnYT(videoSpawnLocation.localPosition, e.Value);
+		YouTubeSpawner.Singleton.CmdSpawnYT(videoSpawnLocation.position, headTransform.position, e.Value);
 		tableBrowserParent.Sleep();
 	}
 
@@ -106,6 +108,6 @@ public class WebBrowserParent : MonoBehaviour {
 	}
 
 	public void DummySpawn() {
-		YouTubeSpawner.Singleton.CmdSpawnYT(videoSpawnLocation.position, "niS_Fpy_2-U");
+		YouTubeSpawner.Singleton.CmdSpawnYT(videoSpawnLocation.position, headTransform.position, "niS_Fpy_2-U");
 	}
 }
