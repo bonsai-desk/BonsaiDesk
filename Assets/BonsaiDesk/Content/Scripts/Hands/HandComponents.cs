@@ -152,7 +152,8 @@ public class HandComponents
 
         float handAlphaTarget = Tracking ? 1f : 0f;
         _handAlpha = Mathf.MoveTowards(_handAlpha, handAlphaTarget, Time.deltaTime / RecentTrackingThreshold);
-        if (!Application.isFocused || !Application.isPlaying)
+        var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
+        if (!playing)
         {
             _handAlpha = 0;
         }

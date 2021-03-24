@@ -171,7 +171,6 @@ public class PhysicsHandController : MonoBehaviour
                 var body = hits[i].attachedRigidbody;
                 if (body)
                 {
-                    Debug.Log($"BONSAI body {body}");
                     var autoAuthority = body.GetComponent<AutoAuthority>();
                     if (autoAuthority)
                     {
