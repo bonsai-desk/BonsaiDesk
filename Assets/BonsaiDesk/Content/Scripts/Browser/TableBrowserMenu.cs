@@ -138,14 +138,14 @@ public class TableBrowserMenu : MonoBehaviour {
 					case "volumeIncrement":
 						if (VolumeChange != null)
 						{
-							VolumeChange.Invoke(this, 0.25f);
+							VolumeChange.Invoke(this, 0.15f);
 						}
 
 						break;
 					case "volumeDecrement":
 						if (VolumeChange != null)
 						{
-							VolumeChange.Invoke(this, -0.25f);
+							VolumeChange.Invoke(this, -0.15f);
 						}
 
 						break;
