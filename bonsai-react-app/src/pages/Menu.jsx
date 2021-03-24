@@ -250,6 +250,18 @@ function ClientHomePage() {
 const RoomInfo = observer(() => {
   let {store} = useStore();
 
+  let handleCloseRoom = () => {
+    axios({
+      method: 'delete',
+      url: API_BASE + '/rooms/' + store._room_code,
+    }).then(r => {
+      if (r.status === 200) {
+        console.log(`deleted room ${store._room_code}`);
+      }
+    }).catch(console.log);
+    postCloseRoom();
+  };
+
   let OpenRoom =
       <InfoItem title={'Room'} slug={'Invite others'} imgSrc={DoorOpen}>
         <Button className={greenButtonClass} handleClick={postOpenRoom}>
@@ -260,7 +272,7 @@ const RoomInfo = observer(() => {
   let CloseRoom =
       <InfoItem title={'Room'} slug={'Ready to accept connections'}
                 imgSrc={DoorOpen}>
-        <Button className={redButtonClass} handleClick={postCloseRoom}>
+        <Button className={redButtonClass} handleClick={handleCloseRoom}>
           Close
         </Button>
       </InfoItem>;
@@ -391,35 +403,47 @@ const HomePage = observer(() => {
   );
 });
 
-function JoinDeskPage(props) {
+let JoinDeskPage = observer((props) => {
   let {navHome} = props;
+  let {store} = useStore();
 
   let [code, setCode] = useState('');
-  let [loading, setLoading] = useState(false);
+  let [posting, setPosting] = useState(false);
   let [message, setMessage] = useState('');
 
   useEffect(() => {
-    if (loading) return;
+    if (posting) return;
 
     if (code.length === 4) {
+      setPosting(true);
       let url = API_BASE + `/rooms/${code}`;
-      console.log(url);
       axios({
         method: 'get',
         url: url,
       }).then(response => {
-        postJoinRoom(response.data);
-        navHome();
-        setCode('');
-        setLoading(false);
+        console.log(response.data);
+        console.log(store.ip_address, store.port);
+        if (response.data.ip_address.toString() ===
+            store.ip_address.toString() &&
+            response.data.port.toString() === store.port.toString()) {
+          // trying to join your own room
+          setMessage(`Could not find ${code} try again`);
+          setCode('');
+          setPosting(false);
+        } else {
+          postJoinRoom(response.data);
+          setCode('');
+          setPosting(false);
+          navHome();
+        }
       }).catch(err => {
         console.log(err);
         setMessage(`Could not find ${code} try again`);
         setCode('');
-        setLoading(false);
+        setPosting(false);
       });
     }
-  }, [loading, code, navHome]);
+  }, [code, navHome, posting, store.ip_address, store.port]);
 
   function handleClick(char) {
     setMessage('');
@@ -454,27 +478,27 @@ function JoinDeskPage(props) {
           <div className={'p-2 rounded space-y-4 text-2xl'}>
             <div className={'flex space-x-4'}>
               <JoinDeskButton handleClick={handleClick}
-                              char={'A'}/>
+                              char={'1'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'B'}/>
+                              char={'2'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'C'}/>
+                              char={'3'}/>
             </div>
             <div className={'flex space-x-4'}>
               <JoinDeskButton handleClick={handleClick}
-                              char={'D'}/>
+                              char={'4'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'E'}/>
+                              char={'5'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'F'}/>
+                              char={'6'}/>
             </div>
             <div className={'flex space-x-4'}>
               <JoinDeskButton handleClick={handleClick}
-                              char={'G'}/>
+                              char={'7'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'H'}/>
+                              char={'8'}/>
               <JoinDeskButton handleClick={handleClick}
-                              char={'I'}/>
+                              char={'9'}/>
             </div>
             <div className={'flex flex-wrap w-full justify-around'}>
               <JoinDeskButton
@@ -484,7 +508,7 @@ function JoinDeskPage(props) {
         </div>
       </MenuContent>
   );
-}
+});
 
 function VideosPage() {
   return <MenuContent name={'Videos'}>
@@ -744,12 +768,11 @@ let Menu = observer(() => {
 
   let SelectedPage;
   if (active > pages.length - 1) {
-    setActive(0)
+    setActive(0);
     SelectedPage = pages[0].component;
   } else {
     SelectedPage = pages[active].component;
   }
-
 
   let joinDeskActive = store.network_state === 'Hosting' && !store._room_open;
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using UnityEngine.Android;
 using UnityEngine.SceneManagement;
 using UnityEngine.XR.Management;
 
@@ -8,6 +9,10 @@ public class LaunchManager : MonoBehaviour {
 	private void Start() {
 		if (Application.isEditor) {
 			StartCoroutine(StartXR());
+		}
+		
+		if (!Permission.HasUserAuthorizedPermission(Permission.Microphone)) {
+			Permission.RequestUserPermission(Permission.Microphone);
 		}
 
 		StartCoroutine(LoadAsync());

@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Mirror;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Random = UnityEngine.Random;
+using BlockDictOp = Mirror.SyncDictionary<UnityEngine.Vector3Int, SyncBlock>.Operation;
 
 public struct SyncBlock
 {
@@ -28,6 +30,10 @@ public partial class BlockObject : NetworkBehaviour
 
     //contains all of the information required to construct this BlockObject
     public readonly SyncDictionary<Vector3Int, SyncBlock> Blocks = new SyncDictionary<Vector3Int, SyncBlock>();
+
+    //caches changes made to the sync dictionary so all block changes can be made at once with a single mesh update
+    public readonly Queue<(Vector3Int coord, SyncBlock syncBlock, BlockDictOp op)> BlockChanges =
+        new Queue<(Vector3Int coord, SyncBlock syncBlock, BlockDictOp op)>();
 
     //public inspector variables
     public Material blockObjectMaterial;
@@ -70,11 +76,11 @@ public partial class BlockObject : NetworkBehaviour
     public override void OnStartServer()
     {
         base.OnStartServer();
-        
+
         if (debug)
         {
             Blocks.Add(Vector3Int.zero, new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            
+
             for (int i = 1; i < 6; i++)
             {
                 Blocks.Add(new Vector3Int(0, 0, i),
@@ -140,6 +146,7 @@ public partial class BlockObject : NetworkBehaviour
 
     private void Update()
     {
+        ProcessBlockChanges();
         UpdateDamagedBlocks();
     }
 
@@ -198,21 +205,47 @@ public partial class BlockObject : NetworkBehaviour
         sphereObject.layer = LayerMask.NameToLayer("sphere");
     }
 
-    private void OnBlocksDictionaryChange(SyncDictionary<Vector3Int, SyncBlock>.Operation op, Vector3Int key,
+    private void OnBlocksDictionaryChange(BlockDictOp op, Vector3Int key,
         SyncBlock value)
     {
-        switch (op)
+        BlockChanges.Enqueue((key, value, op));
+    }
+
+    //loops through any blocks in BlockChanges and adds/removes blocks from the mesh
+    private void ProcessBlockChanges()
+    {
+        if (BlockChanges.Count == 0)
         {
-            case SyncIDictionary<Vector3Int, SyncBlock>.Operation.OP_ADD:
-                AddBlockToMesh(value.id, key, BlockUtility.ByteToQuaternion(value.rotation), true);
-                break;
-            case SyncIDictionary<Vector3Int, SyncBlock>.Operation.OP_REMOVE:
-                RemoveBlockFromMesh(key);
-                break;
-            default:
-                Debug.LogError("Unknown dictionary operation.");
-                break;
+            return;
         }
+
+        while (BlockChanges.Count > 0)
+        {
+            var (coord, syncBlock, op) = BlockChanges.Dequeue();
+
+            switch (op)
+            {
+                case BlockDictOp.OP_ADD:
+                    if (!_meshBlocks.ContainsKey(coord))
+                    {
+                        AddBlockToMesh(syncBlock.id, coord, BlockUtility.ByteToQuaternion(syncBlock.rotation));
+                    }
+
+                    break;
+                case BlockDictOp.OP_REMOVE:
+                    if (_meshBlocks.ContainsKey(coord))
+                    {
+                        RemoveBlockFromMesh(coord);
+                    }
+
+                    break;
+                default:
+                    Debug.LogError("Unknown dictionary operation.");
+                    break;
+            }
+        }
+
+        UpdateMesh();
     }
 
     [Command(ignoreAuthority = true)]
@@ -229,7 +262,7 @@ public partial class BlockObject : NetworkBehaviour
         Blocks.Add(coord, new SyncBlock(id, BlockUtility.QuaternionToByte(rotation)));
     }
 
-    private void AddBlockToMesh(byte id, Vector3Int coord, Quaternion rotation, bool updateTheMesh)
+    private void AddBlockToMesh(byte id, Vector3Int coord, Quaternion rotation)
     {
         if (_meshBlocks.ContainsKey(coord))
         {
@@ -258,15 +291,10 @@ public partial class BlockObject : NetworkBehaviour
         // }
 
         _meshBlocks.Add(coord, new MeshBlock(_meshBlocks.Count));
-
-        if (updateTheMesh)
-        {
-            UpdateMesh(UpdateType.AddBlock);
-        }
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdRemoveBlock(Vector3Int coord)
+    private void CmdRemoveBlock(Vector3Int coord, uint identityId)
     {
         if (!Blocks.ContainsKey(coord))
         {
@@ -277,52 +305,83 @@ public partial class BlockObject : NetworkBehaviour
         if (Blocks.Count <= 1)
         {
             _autoAuthority.ServerStripOwnerAndDestroy();
+            return;
         }
-        else
+
+        //flood fill blocks surrounding the block which will be removed so we can know if removing this block
+        //should result in the block object splitting into 2 or more block objects
+        var filledBlocksGroups = new List<Dictionary<Vector3Int, SyncBlock>>();
+
+        var surroundingBlocks = BlockUtility.GetSurroundingBlocks(coord, Blocks);
+        foreach (var block in surroundingBlocks)
         {
-            var filledBlocksGroups = new List<Dictionary<Vector3Int, SyncBlock>>();
-
-            var surroundingBlocks = BlockUtility.GetSurroundingBlocks(coord, Blocks);
-            foreach (var block in surroundingBlocks)
+            bool blockAlreadyFilled = false;
+            for (int i = 0; i < filledBlocksGroups.Count; i++)
             {
-                bool blockAlreadyFilled = false;
-                for (int i = 0; i < filledBlocksGroups.Count; i++)
+                if (filledBlocksGroups[i].ContainsKey(block))
                 {
-                    if (filledBlocksGroups[i].ContainsKey(block))
-                    {
-                        blockAlreadyFilled = true;
-                        break;
-                    }
-                }
-
-                if (!blockAlreadyFilled)
-                {
-                    filledBlocksGroups.Add(BlockUtility.FloodFill(block, coord, Blocks));
+                    blockAlreadyFilled = true;
+                    break;
                 }
             }
 
-            //if there is only one group of filled blocks, just remove the block
-            if (filledBlocksGroups.Count <= 1)
+            if (!blockAlreadyFilled)
             {
-                Blocks.Remove(coord);
+                filledBlocksGroups.Add(BlockUtility.FloodFill(block, coord, Blocks));
             }
-            else //if there are 2 or more groups of filled blocks, we must delete this object and create 2 or more new objects
+        }
+
+        //if there is only one group of filled blocks, just remove the block
+        if (filledBlocksGroups.Count <= 1)
+        {
+            Blocks.Remove(coord);
+        }
+        else //if there are 2 or more groups of filled blocks, we must split this object into 2 or more objects
+        {
+            //find the largest block group
+            int indexOfLargest = 0;
+            for (int i = 1; i < filledBlocksGroups.Count; i++)
             {
-                _autoAuthority.ServerStripOwnerAndDestroy();
-
-                foreach (var filledBlocks in filledBlocksGroups)
+                if (filledBlocksGroups[i].Count > filledBlocksGroups[indexOfLargest].Count)
                 {
-                    var newBlockObject = Instantiate(StaticPrefabs.instance.blockObjectPrefab, transform.position,
-                        transform.rotation);
-
-                    var newBlockObjectScript = newBlockObject.GetComponent<BlockObject>();
-                    foreach (var pair in filledBlocks)
-                    {
-                        newBlockObjectScript.Blocks.Add(pair.Key, pair.Value);
-                    }
-                    
-                    NetworkServer.Spawn(newBlockObject);
+                    indexOfLargest = i;
                 }
+            }
+
+            //renmove largest block group from the list
+            var largestGroup = filledBlocksGroups[indexOfLargest];
+            filledBlocksGroups.RemoveAt(0);
+
+            //every block that is not a part of the largest group will be removed and spawned as a new block
+            //this way the largest group of blocks can be reused instead of regenerated
+            Blocks.Remove(coord);
+            foreach (var filledBlocks in filledBlocksGroups)
+            {
+                foreach (var pair in filledBlocks)
+                {
+                    Blocks.Remove(pair.Key);
+                }
+            }
+            
+            //immediately remove the blocks so the newly spawned blocks to not clip
+            //this will only happen for the server/host, so hopefully it does not glitch on the client
+            ProcessBlockChanges();
+
+            //generate the new block objects from the remaining blocks groups
+            foreach (var filledBlocks in filledBlocksGroups)
+            {
+                var newBlockObject = Instantiate(StaticPrefabs.instance.blockObjectPrefab, transform.position,
+                    transform.rotation);
+
+                var newBlockObjectScript = newBlockObject.GetComponent<BlockObject>();
+                foreach (var pair in filledBlocks)
+                {
+                    newBlockObjectScript.Blocks.Add(pair.Key, pair.Value);
+                }
+
+                NetworkServer.Spawn(newBlockObject);
+                newBlockObject.GetComponent<AutoAuthority>()
+                    .ServerForceNewOwner(identityId, NetworkTime.time, false);
             }
         }
     }
@@ -380,8 +439,6 @@ public partial class BlockObject : NetworkBehaviour
 
         //finally remove the block from the mesh blocks
         _meshBlocks.Remove(coord);
-
-        UpdateMesh(UpdateType.RemoveBlock);
     }
 
     private void DamageBlock(Vector3Int coord)
@@ -407,7 +464,21 @@ public partial class BlockObject : NetworkBehaviour
         if (meshBlock.health < 0)
         {
             _damagedBlocks.Remove(coord);
-            CmdRemoveBlock(coord);
+
+            var nId = uint.MaxValue;
+            if (NetworkClient.connection != null && NetworkClient.connection.identity)
+            {
+                nId = NetworkClient.connection.identity.netId;
+            }
+
+            CmdRemoveBlock(coord, nId);
+
+            //client side prediction - remove block locally
+            if (_meshBlocks.ContainsKey(coord))
+            {
+                BlockChanges.Enqueue((coord, new SyncBlock(), BlockDictOp.OP_REMOVE));
+            }
+
             return;
         }
 
@@ -459,20 +530,26 @@ public partial class BlockObject : NetworkBehaviour
         RemoveBlock
     }
 
-    private void UpdateMesh(UpdateType updateType)
+    private void UpdateMesh()
     {
         //the order of updating the mesh matters depending on if adding or removing parts of the mesh
-        switch (updateType)
-        {
-            case UpdateType.AddBlock:
-                _mesh.vertices = _vertices.ToArray();
-                _mesh.triangles = _triangles.ToArray();
-                break;
-            case UpdateType.RemoveBlock:
-                _mesh.triangles = _triangles.ToArray();
-                _mesh.vertices = _vertices.ToArray();
-                break;
-        }
+        // switch (updateType)
+        // {
+        //     case UpdateType.AddBlock:
+        //         _mesh.vertices = _vertices.ToArray();
+        //         _mesh.triangles = _triangles.ToArray();
+        //         break;
+        //     case UpdateType.RemoveBlock:
+        //         _mesh.triangles = _triangles.ToArray();
+        //         _mesh.vertices = _vertices.ToArray();
+        //         //_mesh.SetVertices()
+        //         break;
+        // }
+
+        //first set triangles to empty so we can update the vertices without triangles referencing (now) invalid vertices
+        _mesh.triangles = new int[0];
+        _mesh.vertices = _vertices.ToArray();
+        _mesh.triangles = _triangles.ToArray();
 
         _mesh.uv = _uv.ToArray();
         _mesh.uv2 = _uv2.ToArray();
@@ -515,10 +592,10 @@ public partial class BlockObject : NetworkBehaviour
     {
         foreach (var block in Blocks)
         {
-            AddBlockToMesh(block.Value.id, block.Key, BlockUtility.ByteToQuaternion(block.Value.rotation), false);
+            AddBlockToMesh(block.Value.id, block.Key, BlockUtility.ByteToQuaternion(block.Value.rotation));
         }
 
-        UpdateMesh(UpdateType.AddBlock);
+        UpdateMesh();
     }
 
     private Vector3Int GetOnlyBlockCoord()

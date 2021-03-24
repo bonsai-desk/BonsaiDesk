@@ -14,7 +14,7 @@ public class WebNavBrowserController : MonoBehaviour {
 		_browser.BrowserReady   += SetupBrowser;
 	}
 
-	private void SetupBrowser() {
+	private void SetupBrowser(object sender, EventArgs eventArgs) {
 		_browser.SetHidden(true);
 	}
 

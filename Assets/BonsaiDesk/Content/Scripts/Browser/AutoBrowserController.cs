@@ -41,7 +41,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		// so the server runs a browser but does not sync it yet
 		// it will need to be synced for streamer mode
 		_autoBrowser              =  GetComponent<AutoBrowser>();
-		_autoBrowser.BrowserReady += () => { SetupBrowser(); };
+		_autoBrowser.BrowserReady += (object _, EventArgs e) => { SetupBrowser(); };
 	}
 
 	private void Update() {
@@ -66,13 +66,13 @@ public class AutoBrowserController : NetworkBehaviour {
 		base.OnStartServer();
 		_contentInfo                                  =  new ContentInfo(false, "", new Vector2(1, 1));
 		
-		NetworkManagerGame.Singleton.ServerAddPlayer  -= HandleServerAddPlayer;
-		NetworkManagerGame.Singleton.ServerDisconnect -= HandleServerDisconnect;
+		NetworkManagerGame.ServerAddPlayer  -= HandleServerAddPlayer;
+		NetworkManagerGame.ServerDisconnect -= HandleServerDisconnect;
 		togglePause.CmdSetPausedServer                -= HandleCmdSetPausedServer;
 		TableBrowserMenu.Singleton.VolumeChange       -= HandleVolumeChange;
 		
-		NetworkManagerGame.Singleton.ServerAddPlayer  += HandleServerAddPlayer;
-		NetworkManagerGame.Singleton.ServerDisconnect += HandleServerDisconnect;
+		NetworkManagerGame.ServerAddPlayer  += HandleServerAddPlayer;
+		NetworkManagerGame.ServerDisconnect += HandleServerDisconnect;
 		togglePause.CmdSetPausedServer                += HandleCmdSetPausedServer;
 		TableBrowserMenu.Singleton.VolumeChange       += HandleVolumeChange;
 
@@ -108,7 +108,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		}
 	}
 
-	private void HandleServerAddPlayer(NetworkConnection newConn) {
+	private void HandleServerAddPlayer(object _, NetworkConnection newConn) {
 		var newId = newConn.identity.netId;
 		TLog($"AutoBrowserController add player [{newId}]");
 		_clientsJoinedNetworkTime.Add(newId, NetworkTime.time);
@@ -124,7 +124,7 @@ public class AutoBrowserController : NetworkBehaviour {
 		}
 	}
 
-	private void HandleServerDisconnect(NetworkConnection conn) {
+	private void HandleServerDisconnect(object _, NetworkConnection conn) {
 		var id = conn.identity.netId;
 		TLog($"AutoBrowserController remove player [{id}]");
 		_clientsJoinedNetworkTime.Remove(id);
