@@ -29,6 +29,14 @@ public class TabletControl : NetworkBehaviour {
 		worldBox.sharedMaterial =
 			tabletCollider.NumFingersTouching >= 3 ? lowFrictionPhysicMaterial : _defaultPhysicMaterial;
 		tabletBody.mass = tabletCollider.NumFingersTouching >= 3 ? 0.050f : 0.300f;
+
+		//for testing
+		// if (Input.GetKeyDown(KeyCode.Space))
+		// {
+		// 	videoId = "tX5xCQcHbPE";
+		// 	StartCoroutine(LoadThumbnail(videoId));
+		// 	SetInteractable(!_serverLerping);
+		// }
 	}
 
 	public override void OnStartClient() {
@@ -84,12 +92,22 @@ public class TabletControl : NetworkBehaviour {
 					Debug.LogError("Could not get thumbnail: " + uwr.error);
 				}
 			}
-			else {
+			else
+			{
 				var texture = DownloadHandlerTexture.GetContent(uwr);
 
 				//generate new texture with mipmaps
-				var newTexture = new Texture2D(texture.width, texture.height);
-				newTexture.LoadImage(uwr.downloadHandler.data);
+				var newTexture = new Texture2D(texture.width, texture.height, texture.format, true);
+
+				if (SystemInfo.copyTextureSupport != CopyTextureSupport.None)
+				{
+					Graphics.CopyTexture(texture, 0, 0, newTexture, 0, 0);
+				}
+				else
+				{
+					newTexture.LoadImage(uwr.downloadHandler.data);
+				}
+
 				newTexture.filterMode = FilterMode.Trilinear;
 				newTexture.Apply();
 
