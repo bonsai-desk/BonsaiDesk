@@ -13,7 +13,7 @@ public class NetworkControl : MonoBehaviour
 
     public GameObject server;
 
-    public OVRInputModule oVRInputModule;
+    //public OVRInputModule oVRInputModule;
 
     // Start is called before the first frame update
     private void Awake()
@@ -28,8 +28,8 @@ public class NetworkControl : MonoBehaviour
             {
                 server.SetActive(true);
                 player.SetActive(false);
-                oVRInputModule.enabled = false;
-                oVRInputModule.gameObject.AddComponent<StandaloneInputModule>();
+                //oVRInputModule.enabled = false;
+                //oVRInputModule.gameObject.AddComponent<StandaloneInputModule>();
             }
             init();
         }

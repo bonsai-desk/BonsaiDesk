@@ -42,6 +42,10 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 
 	private bool _roomJoinInProgress;
 
+	public GameObject player;
+	public GameObject server;
+	public GameObject gameManager;
+
 	public EventHandler InfoChange;
 
 	public ConnectionState State {
@@ -68,6 +72,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		{
 			Singleton = this;
 		}
+		
+		
 	}
 
 	public override void Start() {
@@ -81,11 +87,18 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		TableBrowserMenu.CloseRoom        += HandleCloseRoom;
 
 		// todo _comms = GetComponent<DissonanceComms>();
-
+		
 		if (Application.isEditor && !serverOnlyIfEditor)
 		{
 			StartCoroutine(StartXR());
 		}
+		else
+		{
+			server.SetActive(true);
+			player.SetActive(false);
+			gameManager.SetActive(false);
+		}
+
 	}
 
 	public override void Update() {
@@ -98,7 +111,7 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 			return;
 		}
 
-		if (serverOnlyIfEditor)
+		if (Application.isEditor && serverOnlyIfEditor)
 		{
 			if (mode != NetworkManagerMode.ServerOnly)
 			{

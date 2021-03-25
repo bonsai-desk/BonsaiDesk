@@ -21,7 +21,8 @@ public class ScreenShotManager : MonoBehaviour
         new Phone("6.5 inch iPhone", 2688, 1242),
         new Phone("5.5 inch iPhone", 2208, 1242),
         new Phone("12.9 inch iPad 3rd Gen", 2732, 2048),
-        new Phone("12.9 inch iPad 2rd Gen", 2732, 2048)
+        new Phone("12.9 inch iPad 2rd Gen", 2732, 2048),
+        new Phone("1440p", 2560, 1440)
     };
     
     void Start()
