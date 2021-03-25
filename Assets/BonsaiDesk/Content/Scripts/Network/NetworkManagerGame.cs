@@ -87,18 +87,20 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		TableBrowserMenu.CloseRoom        += HandleCloseRoom;
 
 		// todo _comms = GetComponent<DissonanceComms>();
-		
-		if (Application.isEditor && !serverOnlyIfEditor)
-		{
-			StartCoroutine(StartXR());
-		}
-		else
-		{
-			server.SetActive(true);
-			player.SetActive(false);
-			gameManager.SetActive(false);
-		}
 
+		if (Application.isEditor)
+		{
+			if (serverOnlyIfEditor)
+			{
+				server.SetActive(true);
+				player.SetActive(false);
+				gameManager.SetActive(false);
+			}
+			else
+			{
+				StartCoroutine(StartXR());
+			}
+		}
 	}
 
 	public override void Update() {
@@ -449,7 +451,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	}
 
 	private int OpenSpotId() {
-		var spots = new List<int> {0, 1};
+		// todo remove the third spot
+		var spots = new List<int> {0, 1, 2};
 		foreach (var info in PlayerInfos.Values)
 		{
 			spots.Remove(info.Spot);
