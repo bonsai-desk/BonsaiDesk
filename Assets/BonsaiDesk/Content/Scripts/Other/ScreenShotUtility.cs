@@ -21,8 +21,8 @@ public class ScreenShotUtility : MonoBehaviour
     bool optimizeForManyScreenshots = false;
 
     // configure with raw, jpg, png, or ppm (simple raw format)
-    enum Format { RAW, JPG, PNG, PPM };
-    Format format = Format.PNG;
+    public enum Format { RAW, JPG, PNG, PPM };
+    public Format format = Format.PNG;
 
     // folder to write output (defaults to data path)
     [System.NonSerialized]

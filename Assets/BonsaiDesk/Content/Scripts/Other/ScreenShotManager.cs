@@ -12,6 +12,8 @@ public class ScreenShotManager : MonoBehaviour
     public int xResolution;
     public int yResolution;
     public string singleScreenShotName;
+    public int numBurst;
+    public float burstEvery;
 
     Phone[] phones =
     {
@@ -40,10 +42,30 @@ public class ScreenShotManager : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.K))
             takeAllScreenShots();
+
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            ScreenShotBurst();
+        }
         //if (Input.GetKeyDown(KeyCode.L))
         //    takeScreenshot(xResolution, yResolution, singleScreenShotName, false);
     }
-    
+
+    private void ScreenShotBurst() {
+        StartCoroutine(TakeBurst());
+    }
+
+    private IEnumerator TakeBurst() {
+        var i = 0;
+        while (i < numBurst)
+        {
+            Debug.Log("ScreenShot");
+            takeScreenshot(xResolution, yResolution, $"{singleScreenShotName}_{i}", false);
+            i++;
+            yield return new WaitForSeconds(burstEvery);
+        }
+    }
+
     void takeAllScreenShots()
     {
         for (int i = 0; i < phones.Length; i++)

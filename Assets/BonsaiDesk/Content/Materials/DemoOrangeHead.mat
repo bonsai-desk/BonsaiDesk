@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: HeadLambert
+  m_Name: DemoOrangeHead
   m_Shader: {fileID: 4800000, guid: 052c63ec8d31e454c9e564dbec94cd44, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
@@ -40,7 +40,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 46f3726beab835b47901bebc7d82e242, type: 3}
+        m_Texture: {fileID: 2800000, guid: 782220e135f370e4d905013dcf34377b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:

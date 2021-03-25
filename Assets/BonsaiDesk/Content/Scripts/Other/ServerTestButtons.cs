@@ -24,4 +24,8 @@ public class ServerTestButtons : MonoBehaviour
             first = false;
         }
     }
+
+    public void ScreenshotBurst() {
+        Debug.Log("[bonsai] begin screenshots");
+    }
 }
