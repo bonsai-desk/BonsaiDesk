@@ -11,8 +11,10 @@ using UnityEngine.XR.Management;
 // this is a modified version of NobleNetworkManager
 // this version cleans up AddListener properly
 
-public class NetworkManagerGame : BonsaiNetworkManager {
-	public enum ConnectionState {
+public class NetworkManagerGame : BonsaiNetworkManager
+{
+	public enum ConnectionState
+	{
 		RelayError,
 		Loading,
 		Hosting,
@@ -47,8 +49,10 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 
 	public EventHandler InfoChange;
 
-	public ConnectionState State {
-		get {
+	public ConnectionState State
+	{
+		get
+		{
 			switch (mode)
 			{
 				case NetworkManagerMode.Offline:
@@ -65,7 +69,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		}
 	}
 
-	public override void Awake() {
+	public override void Awake()
+	{
 		base.Awake();
 		if (Singleton == null)
 		{
@@ -73,7 +78,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		}
 	}
 
-	public override void Start() {
+	public override void Start()
+	{
 		base.Start();
 
 		// todo make these into EventHandler
@@ -91,7 +97,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		}
 	}
 
-	public override void Update() {
+	public override void Update()
+	{
 		base.Update();
 
 		if (isDisconnecting || _roomJoinInProgress)
@@ -131,23 +138,27 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		HandleCommsUpdate();
 	}
 
-	private void OnApplicationFocus(bool focus) {
+	private void OnApplicationFocus(bool focus)
+	{
 		_hasFocus = focus;
 	}
 
-	private void OnApplicationPause(bool pauseStatus) {
+	private void OnApplicationPause(bool pauseStatus)
+	{
 		if (pauseStatus)
 		{
 			SetCommsActive(false);
 		}
 	}
 
-	public override void OnApplicationQuit() {
+	public override void OnApplicationQuit()
+	{
 		base.OnApplicationQuit();
 		StopXR();
 	}
 
-	private void HandleCommsUpdate() {
+	private void HandleCommsUpdate()
+	{
 		if (mode == NetworkManagerMode.ClientOnly || mode == NetworkManagerMode.Host)
 		{
 			var oriented    = MoveToDesk.Singleton.oriented;
@@ -167,7 +178,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		}
 	}
 
-	private void SetCommsActive(bool active) {
+	private void SetCommsActive(bool active)
+	{
 		Debug.Log($"[BONSAI] Set Comms {active}");
 		if (_comms is null)
 		{
@@ -187,23 +199,27 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		}
 	}
 
-	private bool IsCommsActive() {
+	private bool IsCommsActive()
+	{
 		return !_comms.IsMuted && !_comms.IsDeafened;
 	}
 
-	private void HandleKickConnectionId(int id) {
+	private void HandleKickConnectionId(int id)
+	{
 		Debug.Log($"[Bonsai] NetworkManager Kick (id={id})");
 		StartCoroutine(KickClient(id));
 	}
 
-	private void HandleLeaveRoom() {
+	private void HandleLeaveRoom()
+	{
 		Debug.Log("[BONSAI] NetworkManager LeaveRoom");
 		Debug.Log("[BONSAI] StopClient");
 		StopClient();
 		// todo _lastStartHost = Time.time;
 	}
 
-	private void HandleJoinRoom(TableBrowserMenu.RoomData roomData) {
+	private void HandleJoinRoom(TableBrowserMenu.RoomData roomData)
+	{
 		if (!_roomJoinInProgress)
 		{
 			if (HostEndPoint.Address.ToString() == roomData.ip_address && HostEndPoint.Port == roomData.port)
@@ -221,7 +237,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		}
 	}
 
-	private IEnumerator JoinRoom(TableBrowserMenu.RoomData roomData) {
+	private IEnumerator JoinRoom(TableBrowserMenu.RoomData roomData)
+	{
 		Debug.Log("[BONSAI] NetworkManager Begin JoinRoom");
 		_roomJoinInProgress = true;
 		if (mode == NetworkManagerMode.Host || !(HostEndPoint is null))
@@ -251,26 +268,30 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		_roomJoinInProgress = false;
 	}
 
-	private void HandleCloseRoom() {
+	private void HandleCloseRoom()
+	{
 		Debug.Log("[BONSAI] NetworkManager CloseRoom");
 		roomOpen = false;
 		StartCoroutine(KickClients());
 		InfoChange?.Invoke(this, new EventArgs());
 	}
 
-	private void HandleOpenRoom() {
+	private void HandleOpenRoom()
+	{
 		Debug.Log("[BONSAI] NetworkManager OpenRoom");
 		roomOpen = true;
 		InfoChange?.Invoke(this, new EventArgs());
 	}
 
-	public override void OnServerConnect(NetworkConnection conn) {
+	public override void OnServerConnect(NetworkConnection conn)
+	{
 		base.OnServerConnect(conn);
 		Debug.Log("[BONSAI] NetworkManager ServerConnect");
 	}
 
 	//this doesn't call the base function because we need to instantiate and spawn the player ourselves here so we can change the spotId
-	public override void OnServerAddPlayer(NetworkConnection conn) {
+	public override void OnServerAddPlayer(NetworkConnection conn)
+	{
 		Debug.Log("[BONSAI] NetworkManager ServerAddPlayer");
 
 		var openSpot = OpenSpotId();
@@ -282,7 +303,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		InfoChange?.Invoke(this, new EventArgs());
 	}
 
-	private void SpawnPlayer(NetworkConnection conn, int spot) {
+	private void SpawnPlayer(NetworkConnection conn, int spot)
+	{
 		//instantiate player
 		var startPos = GetStartPosition();
 		var player = startPos != null
@@ -309,7 +331,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		rightHand.GetComponent<NetworkHand>().ownerIdentity = pid;
 	}
 
-	public override void OnServerDisconnect(NetworkConnection conn) {
+	public override void OnServerDisconnect(NetworkConnection conn)
+	{
 		Debug.Log("[BONSAI] ServerDisconnect");
 
 		ServerDisconnect?.Invoke(this, conn);
@@ -337,7 +360,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		InfoChange?.Invoke(this, new EventArgs());
 	}
 
-	public override void OnClientConnect(NetworkConnection conn) {
+	public override void OnClientConnect(NetworkConnection conn)
+	{
 		Debug.Log($"[BONSAI] OnClientConnect {conn.connectionId} {conn.isReady}");
 
 		base.OnClientConnect(conn);
@@ -345,7 +369,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		NetworkClient.RegisterHandler<ShouldDisconnectMessage>(OnShouldDisconnect);
 	}
 
-	public override void OnClientDisconnect(NetworkConnection conn) {
+	public override void OnClientDisconnect(NetworkConnection conn)
+	{
 		Debug.Log("[BONSAI] OnClientDisconnect");
 
 		NetworkClient.UnregisterHandler<ShouldDisconnectMessage>();
@@ -353,21 +378,25 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		base.OnClientDisconnect(conn);
 	}
 
-	public override void OnFatalError(string error) {
+	public override void OnFatalError(string error)
+	{
 		base.OnFatalError(error);
 		Debug.LogWarning($"[BONSAI] OnFatalError: {error}");
 	}
 
-	public override void OnServerPrepared(string hostAddress, ushort hostPort) {
+	public override void OnServerPrepared(string hostAddress, ushort hostPort)
+	{
 		Debug.Log($"[BONSAI] OnServerPrepared ({hostAddress} : {hostPort}) isLanOnly={isLANOnly}");
 	}
 
-	private void OnShouldDisconnect(ShouldDisconnectMessage _) {
+	private void OnShouldDisconnect(ShouldDisconnectMessage _)
+	{
 		Debug.Log("[BONSAI] NetworkManger ShouldDisconnect");
 		StopClient();
 	}
 
-	private static IEnumerator StartXR() {
+	private static IEnumerator StartXR()
+	{
 		Debug.Log("[BONSAI] Initializing XR");
 		yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
 
@@ -382,7 +411,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		}
 	}
 
-	private static void StopXR() {
+	private static void StopXR()
+	{
 		if (XRGeneralSettings.Instance.Manager.isInitializationComplete)
 		{
 			Debug.Log("[BONSAI] Stopping XR");
@@ -392,7 +422,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		}
 	}
 
-	public void UpdateUserInfo(uint netId, UserInfo userInfo) {
+	public void UpdateUserInfo(uint netId, UserInfo userInfo)
+	{
 		var updated = false;
 		foreach (var conn in PlayerInfos.Keys.ToList())
 		{
@@ -415,7 +446,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		InfoChange?.Invoke(this, new EventArgs());
 	}
 
-	private IEnumerator KickClients() {
+	private IEnumerator KickClients()
+	{
 		foreach (var conn in NetworkServer.connections.Values)
 		{
 			if (conn.connectionId != NetworkConnection.LocalConnectionId)
@@ -435,7 +467,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		}
 	}
 
-	private IEnumerator KickClient(int id) {
+	private IEnumerator KickClient(int id)
+	{
 		foreach (var conn in NetworkServer.connections.Values)
 		{
 			if (conn.connectionId == id)
@@ -455,7 +488,8 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		}
 	}
 
-	private int OpenSpotId() {
+	private int OpenSpotId()
+	{
 		var spots = new List<int>();
 		for (var i = 0; i < SpotManager.Instance.spotInfo.Length; i++)
 		{
@@ -476,15 +510,18 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 		return 0;
 	}
 
-	private void RequestDisconnectClient(NetworkConnection conn) {
+	private void RequestDisconnectClient(NetworkConnection conn)
+	{
 		conn.Send(new ShouldDisconnectMessage());
 	}
 
-	private void DisconnectClient(NetworkConnection conn) {
+	private void DisconnectClient(NetworkConnection conn)
+	{
 		conn.Disconnect();
 	}
 
-	private void MaybeStartHost() {
+	private void MaybeStartHost()
+	{
 		if (Time.time - _lastStartHost > StartHostCooldown)
 		{
 			Debug.Log("[BONSAI] NetworkManager StartHost");
@@ -494,20 +531,24 @@ public class NetworkManagerGame : BonsaiNetworkManager {
 	}
 
 	[Serializable]
-	public class PlayerInfo {
+	public class PlayerInfo
+	{
 		public int Spot;
 		public UserInfo User;
 
-		public PlayerInfo(int spot, string user) {
+		public PlayerInfo(int spot, string user)
+		{
 			Spot = spot;
 			User = new UserInfo(user);
 		}
 	}
 
-	public readonly struct UserInfo {
+	public readonly struct UserInfo
+	{
 		public readonly string DisplayName;
 
-		public UserInfo(string displayName) {
+		public UserInfo(string displayName)
+		{
 			DisplayName = displayName;
 		}
 	}
