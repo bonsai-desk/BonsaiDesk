@@ -27,7 +27,10 @@ public class NetworkBlockSpawn : NetworkBehaviour
             if (_readyToSpawnTime > SpawnCooldown)
             {
                 _readyToSpawnTime = 0f;
-                CmdSpawnObject(transform.position);
+                if (NetworkClient.connection != null && NetworkClient.connection.identity)
+                {
+                    CmdSpawnObject(transform.position, NetworkClient.connection.identity.netId);
+                }
             }
         }
         else
@@ -37,15 +40,11 @@ public class NetworkBlockSpawn : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdSpawnObject(Vector3 position)
+    private void CmdSpawnObject(Vector3 position, uint ownerId)
     {
         var spawnedObject = Instantiate(spawnObjectPrefab, position, Quaternion.identity);
         spawnedObject.GetComponent<BlockObject>().Blocks.Add(Vector3Int.zero, new SyncBlock(0, 0));
         NetworkServer.Spawn(spawnedObject);
-        if (NetworkClient.connection != null && NetworkClient.connection.identity)
-        {
-            spawnedObject.GetComponent<AutoAuthority>()
-                .ServerForceNewOwner(NetworkClient.connection.identity.netId, NetworkTime.time, false);
-        }
+        spawnedObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time, false);
     }
 }
