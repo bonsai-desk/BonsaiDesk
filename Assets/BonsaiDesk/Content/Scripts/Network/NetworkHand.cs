@@ -23,10 +23,6 @@ public class NetworkHand : NetworkBehaviour
 
     private float lastRotationsUpdateTime = 0;
 
-    // public SkinnedMeshRenderer meshRenderer;
-
-    // public Texture[] handTextures;
-
     public LineRenderer lineRenderer;
 
     [SyncVar] public NetworkIdentity ownerIdentity;
@@ -38,6 +34,9 @@ public class NetworkHand : NetworkBehaviour
 
     private GameObject physicsHand;
 
+    private Material _handMaterial;
+    private Texture _handTexture;
+
     private void Start()
     {
         mapper = GetComponent<OVRHandTransformMapper>();
@@ -47,8 +46,6 @@ public class NetworkHand : NetworkBehaviour
 
     public override void OnStartServer()
     {
-        base.OnStartServer();
-
         if (!isClient)
         {
             SetupPhysicsHand();
@@ -57,8 +54,6 @@ public class NetworkHand : NetworkBehaviour
 
     public override void OnStartClient()
     {
-        base.OnStartClient();
-
         if (!hasAuthority)
         {
             SetupPhysicsHand();
@@ -87,6 +82,21 @@ public class NetworkHand : NetworkBehaviour
         physicsMapper.moveBonesToTargets = true;
         physicsMapper.fixRotation = false;
         physicsHand = hand;
+
+        _handMaterial = physicsHand.GetComponentInChildren<SkinnedMeshRenderer>().material;
+        if (_handTexture)
+        {
+            _handMaterial.mainTexture = _handTexture;
+        }
+    }
+
+    public void ChangeHandTexture(Texture texture)
+    {
+        _handTexture = texture;
+        if (_handMaterial)
+        {
+            _handMaterial.mainTexture = texture;
+        }
     }
 
     public override void OnStopServer()

@@ -6,8 +6,8 @@ public class NetworkVRPlayer : NetworkBehaviour
     public GameObject networkHandLeftPrefab;
     public GameObject networkHandRightPrefab;
 
-    [SyncVar] private NetworkIdentity _leftHandId;
-    [SyncVar] private NetworkIdentity _rightHandId;
+    [SyncVar] public NetworkIdentity _leftHandId;
+    [SyncVar] public NetworkIdentity _rightHandId;
 
     [SyncVar(hook = nameof(SpotChange))] private int spotId;
 
@@ -21,7 +21,7 @@ public class NetworkVRPlayer : NetworkBehaviour
         InputManager.Hands.Left.SetHandTexture(spotInfo.handTexture);
         InputManager.Hands.Right.SetHandTexture(spotInfo.handTexture);
         
-        CmdSpawnHands();
+        // CmdSpawnHands();
     }
 
     [Server]
@@ -39,23 +39,18 @@ public class NetworkVRPlayer : NetworkBehaviour
 
     private void SpotChange(int oldValue, int newValue)
     {
-        //spo - 1 here again
+        //spot - 1 for same reason in SetSpot
         var spot = SpotManager.Instance.spotInfo[newValue - 1];
         GetComponentInChildren<MeshRenderer>().material.mainTexture = spot.headTexture;
+        _leftHandId.GetComponent<NetworkHand>().ChangeHandTexture(spot.handTexture);
+        _rightHandId.GetComponent<NetworkHand>().ChangeHandTexture(spot.handTexture);
     }
 
-    [Command]
-    private void CmdSpawnHands()
+    [Server]
+    public void SetHandIdentities(NetworkIdentity lid, NetworkIdentity rid)
     {
-        GameObject leftHand = Instantiate(networkHandLeftPrefab);
-        leftHand.GetComponent<NetworkHand>().ownerIdentity = connectionToClient.identity;
-        NetworkServer.Spawn(leftHand, connectionToClient);
-        _leftHandId = leftHand.GetComponent<NetworkIdentity>();
-
-        GameObject rightHand = Instantiate(networkHandRightPrefab);
-        rightHand.GetComponent<NetworkHand>().ownerIdentity = connectionToClient.identity;
-        NetworkServer.Spawn(rightHand, connectionToClient);
-        _rightHandId = rightHand.GetComponent<NetworkIdentity>();
+        _leftHandId = lid;
+        _rightHandId = rid;
     }
 
     public NetworkHand GetOtherHand(OVRSkeleton.SkeletonType skeletonType)

@@ -2325,6 +2325,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   targetName: Right_Physics_Hand_Local
+  body: {fileID: 0}
   renderBehaviour: 1
 --- !u!114 &-6516797576892926635
 MonoBehaviour:
@@ -2344,8 +2345,6 @@ MonoBehaviour:
   updateInterval: 0.05
   lineRenderer: {fileID: 1739789000737550386}
   ownerIdentity: {fileID: 0}
-  physicsHandPrefab: {fileID: 2085637040482604320, guid: c831f641b9568bd4ca96e5b8aa0fc896,
-    type: 3}
 --- !u!114 &5935409355740025897
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2751,8 +2750,7 @@ SkinnedMeshRenderer:
   m_RayTracingMode: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: c557bce9988bee14a9c1fab5d41232cf, type: 2}
+  m_Materials: []
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
