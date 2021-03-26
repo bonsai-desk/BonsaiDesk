@@ -18,6 +18,16 @@ injectScript (() => {
     }
   }
 
+  function bounceFromVideo () {
+    let params = (new URL (window.location)).searchParams;
+    let v = params.get ('v');
+    if (v) {
+      console.log ('nav to home');
+      window.location = 'https://m.youtube.com';
+    }
+
+  }
+
   function stripLinks () {
     let tag = document.activeElement.tagName;
 
@@ -47,7 +57,9 @@ injectScript (() => {
     }
   }
 
+  stripLinks ();
   setInterval (stripLinks, 100);
+  setInterval (bounceFromVideo, 100);
 });
 
 

@@ -862,12 +862,8 @@ let Menu = observer(() => {
               }} selected={active === i}>{info.name}</ListItem>;
             })}
           </SettingsList>
-          <div className={'w-screen bg-black absolute bottom-0 left-0'}>
-            <div className={'w-full'}>
-              <div className={'w-4/12'}>
-                <ExitButton/>
-              </div>
-            </div>
+          <div className={'w-full p-2'}>
+            <ExitButton/>
           </div>
         </div>
         <div className={'bg-gray-900 z-10 w-full overflow-auto scroll-host'}>
@@ -883,11 +879,14 @@ function ExitButton() {
     postCloseMenu();
   }
 
-  let buttonClass = 'h-16 py-4 px-8 bg-red-800 hover:bg-red-700 active:bg-red-600 hover:text-white cursor-pointer flex flex-wrap content-center';
+  let buttonClass = 'rounded h-16 py-4 px-8 bg-red-800 hover:bg-red-700 active:bg-red-600 hover:text-white cursor-pointer flex flex-wrap content-center';
 
-  return <ListItem buttonClass={buttonClass} handleClick={handleClick}
-                   className={'text-white'}>
-  </ListItem>;
+  return (
+      <ListItem buttonClass={buttonClass} handleClick={handleClick}
+                className={'text-white'}>
+        <span className={'text-white'}>Close Menu</span>
+      </ListItem>
+  );
 
 }
 
