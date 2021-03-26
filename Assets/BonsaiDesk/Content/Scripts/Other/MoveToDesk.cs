@@ -50,10 +50,11 @@ public class MoveToDesk : MonoBehaviour
 
 	public Transform handDemo;
 	public Transform tableGhost;
+    private MeshRenderer _tableGhostRenderer;
+    private Material _tableGhostMaterial;
 	public TextMeshProUGUI tableGhostText;
 	private bool _lastHandsOnEdge = false;
-	private List<Material> _tableMaterials;
-	private float _tableAlpha = 1f;
+    private float _tableAlpha = 1f;
 
 	public bool oriented
 	{
@@ -96,12 +97,8 @@ public class MoveToDesk : MonoBehaviour
 		//else
 		//    fixedTableHeight = false;
 
-		_tableMaterials = new List<Material>();
-		var tableRenderers = tableGhost.GetComponentsInChildren<MeshRenderer>();
-		foreach (var renderer in tableRenderers)
-		{
-			_tableMaterials.Add(renderer.material);
-		}
+        _tableGhostRenderer = tableGhost.GetComponentInChildren<MeshRenderer>();
+        _tableGhostMaterial = _tableGhostRenderer.material;
 
 		playerOrientations = new List<PlayerOrientation>();
 
@@ -283,8 +280,7 @@ public class MoveToDesk : MonoBehaviour
 		                                              rightAnimationHand.localPosition.y,
 		                                              rightAnimationHand.localPosition.z);
 
-		_tableMaterials[0].color = new Color(1f, 0.9561622f, 0.8726415f, _tableAlpha);
-		_tableMaterials[1].color = new Color(1f, 1f, 1f, _tableAlpha);
+        _tableGhostMaterial.color = new Color(1f, 0.96f, 0.86f, _tableAlpha);
 
 		_lastHandsOnEdge = handOnEdge;
 	}
