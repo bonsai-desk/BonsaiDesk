@@ -108,7 +108,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
             return;
         }
 
-        if (serverOnlyIfEditor)
+        if (Application.isEditor && serverOnlyIfEditor)
         {
             if (mode != NetworkManagerMode.ServerOnly)
             {
@@ -283,7 +283,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
         Debug.Log("[BONSAI] NetworkManager ServerConnect");
     }
 
-    //this doesn't call the base function because we need to instantiate and spawn the player here so we can change the spotId
+    //this doesn't call the base function because we need to instantiate and spawn the player ourselves here so we can change the spotId
     public override void OnServerAddPlayer(NetworkConnection conn)
     {
         Debug.Log("[BONSAI] NetworkManager ServerAddPlayer");
