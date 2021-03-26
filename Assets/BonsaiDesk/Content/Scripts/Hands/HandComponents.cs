@@ -229,7 +229,7 @@ public class HandComponents
 
     private void MakeMaterialTransparent()
     {
-        _handMaterial.SetInt("_SrcBlend", (int) UnityEngine.Rendering.BlendMode.One);
+        _handMaterial.SetInt("_SrcBlend", (int) UnityEngine.Rendering.BlendMode.SrcAlpha);
         _handMaterial.SetInt("_DstBlend", (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
         _handMaterial.DisableKeyword("_ALPHATEST_ON");
         _handMaterial.DisableKeyword("_ALPHABLEND_ON");

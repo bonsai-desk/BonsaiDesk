@@ -7637,7 +7637,7 @@ MonoBehaviour:
     type: 3}
   physicMaterial: {fileID: 13400000, guid: 0760bcba4a3eca444b757f5acf9dd5d3, type: 2}
   targetMaterial: {fileID: 2100000, guid: a3ca58f02478a0e45b3901539a52ae6d, type: 2}
-  physicsHandMaterial: {fileID: 2100000, guid: 65aaed2400500104f9c7f6f35f03133b, type: 2}
+  physicsHandMaterial: {fileID: 2100000, guid: db0a08e8cc02d0840b8230c5e0c90146, type: 2}
 --- !u!1 &609844616
 GameObject:
   m_ObjectHideFlags: 0
@@ -12038,9 +12038,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spotInfo:
   - tableEdge: {fileID: 1886693201}
-    playerColor: {r: 0, g: 1, b: 0, a: 0}
+    playerColor: {r: 0.1254902, g: 0.5921569, b: 0.3372549, a: 0}
   - tableEdge: {fileID: 1792445037}
-    playerColor: {r: 1, g: 0.5, b: 0, a: 0}
+    playerColor: {r: 1, g: 0.5176471, b: 0, a: 0}
 --- !u!1 &1247215177
 GameObject:
   m_ObjectHideFlags: 0
@@ -15816,7 +15816,7 @@ MonoBehaviour:
     type: 3}
   physicMaterial: {fileID: 13400000, guid: 0760bcba4a3eca444b757f5acf9dd5d3, type: 2}
   targetMaterial: {fileID: 2100000, guid: a3ca58f02478a0e45b3901539a52ae6d, type: 2}
-  physicsHandMaterial: {fileID: 2100000, guid: 65aaed2400500104f9c7f6f35f03133b, type: 2}
+  physicsHandMaterial: {fileID: 2100000, guid: db0a08e8cc02d0840b8230c5e0c90146, type: 2}
 --- !u!1 &1411696164
 GameObject:
   m_ObjectHideFlags: 0
