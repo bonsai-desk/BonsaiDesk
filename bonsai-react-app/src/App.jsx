@@ -13,9 +13,13 @@ import Menu from './pages/Menu';
 import Keyboard from './pages/Keyboard';
 import WebNav from './pages/WebNav';
 import {postJson} from './utilities';
+import {observer} from 'mobx-react-lite';
+import {useStore} from './DataProvider';
+import {BounceLoader} from 'react-spinners';
 
 function postListenersReady() {
-  postJson({Type: 'event', Message: 'listenersReady', Data: new Date().getTime()});
+  postJson(
+      {Type: 'event', Message: 'listenersReady', Data: new Date().getTime()});
 
 }
 
@@ -27,7 +31,7 @@ function genNavListeners(history) {
 
     if (json.type !== 'nav') return;
 
-    console.log("asdf")
+    console.log('asdf');
 
     switch (json.command) {
       case 'push':
@@ -44,7 +48,8 @@ function genNavListeners(history) {
   return _navListeners;
 }
 
-function Boot() {
+const Boot = observer(() => {
+  let {store} = useStore();
 
   console.log('Boot');
 
@@ -69,40 +74,48 @@ function Boot() {
     });
   }
 
-  return (
-      <div>
-        Boot
-        <ul>
-          <li>
-            <Link
-                to={'/youtube_test/qEfPBt9dU60/19.02890180001912?x=480&y=360'}>youtube_test
-              video</Link>
-          </li>
-          <li>
-            <Link to={'/spring'}>spring</Link>
-          </li>
-          <li>
-            <Link to={'/twitch'}>twitch</Link>
-          </li>
-          <li>
-            <Link to={'/menu'}>menu</Link>
-          </li>
-          <li>
-            <Link to={'/home'}>home</Link>
-          </li>
-          <li>
-            <Link to={'/keyboard'}>keyboard</Link>
-          </li>
-          <li>
-            <Link to={'/webnav'}>webnav</Link>
-          </li>
-        </ul>
-      </div>
-  );
-}
+  if (store.build === 'DEVELOPMENT') {
+    return (
+        <div>
+          Boot
+          <ul>
+            <li>
+              <Link
+                  to={'/youtube_test/qEfPBt9dU60/19.02890180001912?x=480&y=360'}>youtube_test
+                video</Link>
+            </li>
+            <li>
+              <Link to={'/spring'}>spring</Link>
+            </li>
+            <li>
+              <Link to={'/twitch'}>twitch</Link>
+            </li>
+            <li>
+              <Link to={'/menu'}>menu</Link>
+            </li>
+            <li>
+              <Link to={'/home'}>home</Link>
+            </li>
+            <li>
+              <Link to={'/keyboard'}>keyboard</Link>
+            </li>
+            <li>
+              <Link to={'/webnav'}>webnav</Link>
+            </li>
+          </ul>
+        </div>
+    );
+  } else {
+    return <div
+        className={'h-screen bg-gray-900 flex flex-wrap content-center justify-center w-full flex-wrap'}>
+      <BounceLoader size={200} color={'#737373'}/>
+    </div>;
+  }
+
+});
 
 function Home() {
-  return <div className={"w-full h-full bg-gray-900"}></div>;
+  return <div className={'w-full h-full bg-gray-900'}></div>;
 }
 
 function App() {
