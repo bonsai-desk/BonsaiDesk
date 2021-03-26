@@ -9,7 +9,7 @@ public class NetworkVRPlayer : NetworkBehaviour
     [SyncVar] private NetworkIdentity _leftHandId;
     [SyncVar] private NetworkIdentity _rightHandId;
 
-    [SyncVar(hook = nameof(SpotChange))] public int spotId;
+    [SyncVar(hook = nameof(SpotChange))] private int spotId;
 
     public override void OnStartClient()
     {
@@ -17,8 +17,6 @@ public class NetworkVRPlayer : NetworkBehaviour
             return;
 
         var spotInfo = GetSpot();
-        Debug.LogError(spotId);
-        Debug.LogError(spotInfo.tableEdge.name);
         GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(spotInfo.tableEdge);
         InputManager.Hands.Left.SetHandTexture(spotInfo.handTexture);
         InputManager.Hands.Right.SetHandTexture(spotInfo.handTexture);
@@ -41,11 +39,9 @@ public class NetworkVRPlayer : NetworkBehaviour
 
     private void SpotChange(int oldValue, int newValue)
     {
-        // Debug.LogError(Time.time + " " + newValue);
-        // Debug.LogError(SpotManager.Instance.spotInfo.Length);
-        // var spot = SpotManager.Instance.spotInfo[newValue - 1];
-        // //GetComponentInChildren<MeshRenderer>().material.mainTexture = spot.headTexture;
-        // Debug.LogError("done");
+        //spo - 1 here again
+        var spot = SpotManager.Instance.spotInfo[newValue - 1];
+        GetComponentInChildren<MeshRenderer>().material.mainTexture = spot.headTexture;
     }
 
     [Command]

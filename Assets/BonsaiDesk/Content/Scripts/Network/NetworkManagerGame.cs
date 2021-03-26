@@ -280,26 +280,25 @@ public class NetworkManagerGame : BonsaiNetworkManager
         Debug.Log("[BONSAI] NetworkManager ServerConnect");
     }
 
+    //this doesn't call the base function because we need to instantiate and spawn the player here so we can change the spotId
     public override void OnServerAddPlayer(NetworkConnection conn)
     {
+        Debug.Log("[BONSAI] NetworkManager ServerAddPlayer");
+        
         var openSpot = OpenSpotId();
         PlayerInfos.Add(conn, new PlayerInfo(openSpot, "NoName"));
         
-        
-        // base.OnServerAddPlayer(conn);
-        
+        //instantiate player
         Transform startPos = GetStartPosition();
         GameObject player = startPos != null
             ? Instantiate(playerPrefab, startPos.position, startPos.rotation)
             : Instantiate(playerPrefab);
         
+        //set player spot
         player.GetComponent<NetworkVRPlayer>().SetSpot(openSpot);
 
+        //spawn player
         NetworkServer.AddPlayerForConnection(conn, player);
-        
-        Debug.Log("[BONSAI] NetworkManager ServerAddPlayer");
-
-        
 
         ServerAddPlayer?.Invoke(this, conn);
         InfoChange?.Invoke(this, new EventArgs());
