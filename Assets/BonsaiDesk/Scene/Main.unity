@@ -8017,7 +8017,7 @@ MonoBehaviour:
   menuPrefab: {fileID: 6353729226846187926, guid: 90cb6687b85d3d340bca1fe573063731,
     type: 3}
   angleToHead: {fileID: 1189444693556535356}
-  tableBrowserParent: {fileID: 0}
+  tableBrowserParent: {fileID: 955373203}
 --- !u!1 &632686398
 GameObject:
   m_ObjectHideFlags: 0
