@@ -293,7 +293,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
             ? Instantiate(playerPrefab, startPos.position, startPos.rotation)
             : Instantiate(playerPrefab);
         
-        conn.identity.GetComponent<NetworkVRPlayer>().SetSpot(openSpot);
+        player.GetComponent<NetworkVRPlayer>().SetSpot(openSpot);
 
         NetworkServer.AddPlayerForConnection(conn, player);
         
