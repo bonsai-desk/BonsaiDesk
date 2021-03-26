@@ -282,12 +282,24 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public override void OnServerAddPlayer(NetworkConnection conn)
     {
-        base.OnServerAddPlayer(conn);
-        Debug.Log("[BONSAI] NetworkManager ServerAddPlayer");
-
         var openSpot = OpenSpotId();
         PlayerInfos.Add(conn, new PlayerInfo(openSpot, "NoName"));
+        
+        
+        // base.OnServerAddPlayer(conn);
+        
+        Transform startPos = GetStartPosition();
+        GameObject player = startPos != null
+            ? Instantiate(playerPrefab, startPos.position, startPos.rotation)
+            : Instantiate(playerPrefab);
+        
         conn.identity.GetComponent<NetworkVRPlayer>().SetSpot(openSpot);
+
+        NetworkServer.AddPlayerForConnection(conn, player);
+        
+        Debug.Log("[BONSAI] NetworkManager ServerAddPlayer");
+
+        
 
         ServerAddPlayer?.Invoke(this, conn);
         InfoChange?.Invoke(this, new EventArgs());
