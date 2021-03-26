@@ -47,6 +47,7 @@ injectScript (() => {
     }
   }
 
+  stripLinks ();
   setInterval (stripLinks, 100);
 });
 
