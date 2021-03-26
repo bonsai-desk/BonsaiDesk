@@ -45,6 +45,9 @@ public class NetworkManagerGame : BonsaiNetworkManager
     private bool _roomJoinInProgress;
 
     public EventHandler InfoChange;
+    
+    public GameObject networkHandLeftPrefab;
+    public GameObject networkHandRightPrefab;
 
     public ConnectionState State
     {
@@ -284,24 +287,42 @@ public class NetworkManagerGame : BonsaiNetworkManager
     public override void OnServerAddPlayer(NetworkConnection conn)
     {
         Debug.Log("[BONSAI] NetworkManager ServerAddPlayer");
-        
+
         var openSpot = OpenSpotId();
         PlayerInfos.Add(conn, new PlayerInfo(openSpot, "NoName"));
-        
+
+        SpawnPlayer(conn, openSpot);
+
+        ServerAddPlayer?.Invoke(this, conn);
+        InfoChange?.Invoke(this, new EventArgs());
+    }
+
+    private void SpawnPlayer(NetworkConnection conn, int spot)
+    {
         //instantiate player
         Transform startPos = GetStartPosition();
         GameObject player = startPos != null
             ? Instantiate(playerPrefab, startPos.position, startPos.rotation)
             : Instantiate(playerPrefab);
         
-        //set player spot
-        player.GetComponent<NetworkVRPlayer>().SetSpot(openSpot);
-
-        //spawn player
+        //setup player and spawn hands
+        var networkVRPlayer = player.GetComponent<NetworkVRPlayer>();
+        var pid = player.GetComponent<NetworkIdentity>();
+        
+        GameObject leftHand = Instantiate(networkHandLeftPrefab);
+        var lid = leftHand.GetComponent<NetworkIdentity>();
+        
+        GameObject rightHand = Instantiate(networkHandRightPrefab);
+        var rid = rightHand.GetComponent<NetworkIdentity>();
+        
+        NetworkServer.Spawn(leftHand, conn);
+        NetworkServer.Spawn(rightHand, conn);
+        networkVRPlayer.SetHandIdentities(lid, rid);
+        networkVRPlayer.SetSpot(spot);
         NetworkServer.AddPlayerForConnection(conn, player);
-
-        ServerAddPlayer?.Invoke(this, conn);
-        InfoChange?.Invoke(this, new EventArgs());
+        
+        leftHand.GetComponent<NetworkHand>().ownerIdentity = pid;
+        rightHand.GetComponent<NetworkHand>().ownerIdentity = pid;
     }
 
     public override void OnServerDisconnect(NetworkConnection conn)
