@@ -49,6 +49,7 @@ public class PhysicsHandController : MonoBehaviour
 
         if (PhysicsNaN())
         {
+            Debug.LogError("[Bonsai Desk] Physics was NaN");
             SetCapsulesActiveTarget(false);
             ResetFingerJoints();
         }
@@ -79,24 +80,29 @@ public class PhysicsHandController : MonoBehaviour
 
     private bool PhysicsNaN()
     {
-        if (float.IsNaN(transform.position.x) ||
-            float.IsNaN(transform.position.y) ||
-            float.IsNaN(transform.position.z))
+        if (InvalidTransform(transform))
         {
             return true;
         }
 
         for (int i = 0; i < fingerJointBodies.Length; i++)
         {
-            if (float.IsNaN(fingerJointBodies[i].transform.position.x) ||
-                float.IsNaN(fingerJointBodies[i].transform.position.y) ||
-                float.IsNaN(fingerJointBodies[i].transform.position.z))
+            if (InvalidTransform(fingerJointBodies[i].transform) ||
+                InvalidTransform(fingerJointBodies[i].transform.GetChild(0)))
             {
                 return true;
             }
         }
 
         return false;
+    }
+
+    private bool InvalidTransform(Transform t)
+    {
+        return float.IsNaN(t.position.x) || float.IsNaN(t.position.y) || float.IsNaN(t.position.z) ||
+               float.IsInfinity(t.position.x) || float.IsInfinity(t.position.y) || float.IsInfinity(t.position.z) ||
+               float.IsNaN(t.rotation.x) || float.IsNaN(t.rotation.y) || float.IsNaN(t.rotation.z) ||
+               float.IsNaN(t.rotation.w);
     }
 
     public void SetHandScale(float scale)
