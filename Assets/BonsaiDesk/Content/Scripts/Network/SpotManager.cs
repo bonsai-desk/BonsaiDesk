@@ -13,7 +13,8 @@ public class SpotManager : MonoBehaviour
     public struct SpotInfo
     {
         public Transform tableEdge;
-        public Color playerColor;
+        public Texture handTexture;
+        public Texture headTexture;
     }
     
     private void Awake()
