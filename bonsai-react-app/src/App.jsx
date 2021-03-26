@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   Link,
   MemoryRouter as Router,
@@ -50,6 +50,7 @@ function genNavListeners(history) {
 
 const Boot = observer(() => {
   let {store} = useStore();
+  let [showDev, setShowDev] = useState(false);
 
   console.log('Boot');
 
@@ -74,7 +75,13 @@ const Boot = observer(() => {
     });
   }
 
-  if (store.build === 'DEVELOPMENT') {
+  function handleKeyPress (e) {
+    if (e.key === "x"){
+      setShowDev(true)
+    }
+  }
+
+  if (store.build === 'DEVELOPMENT' || showDev) {
     return (
         <div>
           Boot
@@ -107,6 +114,8 @@ const Boot = observer(() => {
     );
   } else {
     return <div
+        onKeyDown={handleKeyPress}
+        tabIndex={0}
         className={'h-screen bg-gray-900 flex flex-wrap content-center justify-center w-full flex-wrap'}>
       <BounceLoader size={200} color={'#737373'}/>
     </div>;
