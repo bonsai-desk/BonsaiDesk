@@ -83,7 +83,9 @@ public class NetworkHand : NetworkBehaviour
         physicsMapper.fixRotation = false;
         physicsHand = hand;
 
-        _handMaterial = physicsHand.GetComponentInChildren<SkinnedMeshRenderer>().material;
+        var physicsHandRenderer = physicsHand.GetComponentInChildren<SkinnedMeshRenderer>();
+        physicsHandRenderer.gameObject.layer = LayerMask.NameToLayer("networkPlayer");
+        _handMaterial = physicsHandRenderer.material;
         if (_handTexture)
         {
             _handMaterial.mainTexture = _handTexture;
