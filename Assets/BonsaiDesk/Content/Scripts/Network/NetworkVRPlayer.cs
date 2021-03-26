@@ -20,8 +20,6 @@ public class NetworkVRPlayer : NetworkBehaviour
         GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(spotInfo.tableEdge);
         InputManager.Hands.Left.SetHandTexture(spotInfo.handTexture);
         InputManager.Hands.Right.SetHandTexture(spotInfo.handTexture);
-        
-        // CmdSpawnHands();
     }
 
     [Server]
@@ -29,6 +27,7 @@ public class NetworkVRPlayer : NetworkBehaviour
     {
         //set spot to spot + 1 so the hook updates even if you have spot 0 which is the default value so it wouldn't call the hook
         spotId = spot + 1;
+        SetTextures(spotId);
     }
 
     public SpotManager.SpotInfo GetSpot()
@@ -39,11 +38,16 @@ public class NetworkVRPlayer : NetworkBehaviour
 
     private void SpotChange(int oldValue, int newValue)
     {
+        SetTextures(newValue);
+    }
+
+    private void SetTextures(int spot)
+    {
         //spot - 1 for same reason in SetSpot
-        var spot = SpotManager.Instance.spotInfo[newValue - 1];
-        GetComponentInChildren<MeshRenderer>().material.mainTexture = spot.headTexture;
-        _leftHandId.GetComponent<NetworkHand>().ChangeHandTexture(spot.handTexture);
-        _rightHandId.GetComponent<NetworkHand>().ChangeHandTexture(spot.handTexture);
+        var spotInfo = SpotManager.Instance.spotInfo[spot - 1];
+        GetComponentInChildren<MeshRenderer>().material.mainTexture = spotInfo.headTexture;
+        _leftHandId.GetComponent<NetworkHand>().ChangeHandTexture(spotInfo.handTexture);
+        _rightHandId.GetComponent<NetworkHand>().ChangeHandTexture(spotInfo.handTexture);
     }
 
     [Server]
