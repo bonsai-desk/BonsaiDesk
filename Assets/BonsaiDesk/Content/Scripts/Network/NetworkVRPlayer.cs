@@ -39,7 +39,7 @@ public class NetworkVRPlayer : NetworkBehaviour
 
     private void SpotChange(int oldValue, int newValue)
     {
-        var spot = GetSpot();
+        var spot = SpotManager.Instance.spotInfo[newValue - 1];
         GetComponentInChildren<MeshRenderer>().material.mainTexture = spot.headTexture;
     }
 
