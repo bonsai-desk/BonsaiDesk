@@ -6,7 +6,13 @@ using UnityEngine;
 
 public class LogToText : MonoBehaviour
 {
-    private int numLogsToStore = 5;
+    private const int NumLogsToStore = 5;
+    private const int MaxLogsPerFile = 5000;
+    private const int NumLogsBeforeSave = 100;
+    private const int LogUpdateInterval = 10;
+
+    private int _numLogged = 0;
+    private float _lastLogSaveTime = 0;
 
     private static LogToText _instance;
 
@@ -62,6 +68,15 @@ public class LogToText : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        if (Time.realtimeSinceStartup - _lastLogSaveTime > LogUpdateInterval || logs.Count >= NumLogsBeforeSave)
+        {
+            _lastLogSaveTime = Time.realtimeSinceStartup;
+            appendLogQueueToFile();
+        }
+    }
+
     void OnEnable()
     {
         Application.logMessageReceived += LogCallBack;
@@ -103,7 +118,7 @@ public class LogToText : MonoBehaviour
             }
         }
 
-        int numToDelete = sortedLogs.Count - (numLogsToStore - 1);
+        int numToDelete = sortedLogs.Count - (NumLogsToStore - 1);
         for (int i = 0; i < numToDelete; i++)
         {
             File.Delete(sortedLogs.Values[i]);
@@ -112,8 +127,9 @@ public class LogToText : MonoBehaviour
     
     void appendLogQueueToFile()
     {
-        if (logs.Count == 0)
+        if (logs.Count == 0 || _numLogged >= MaxLogsPerFile)
             return;
+        
         print("Updating log at: " + logPath);
         using (StreamWriter sw = File.AppendText(logPath))
         {
@@ -123,6 +139,11 @@ public class LogToText : MonoBehaviour
                 sw.WriteLine(log.type.ToString());
                 sw.WriteLine(log.condition);
                 sw.WriteLine(log.stackTrace);
+                _numLogged++;
+                if (_numLogged >= MaxLogsPerFile)
+                {
+                    break;
+                }
             }
         }
     }
