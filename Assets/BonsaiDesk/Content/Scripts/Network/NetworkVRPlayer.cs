@@ -9,14 +9,19 @@ public class NetworkVRPlayer : NetworkBehaviour
     [SyncVar] private NetworkIdentity _leftHandId;
     [SyncVar] private NetworkIdentity _rightHandId;
 
-    private void Start()
+    [SyncVar] public int spotId;
+
+    public override void OnStartClient()
     {
         if (!isLocalPlayer)
             return;
-
+        
         CmdSpawnHands();
+
+        var spotInfo = SpotManager.Instance.spotInfo[spotId];
+        GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(spotInfo.tableEdge);
     }
-    
+
     // private void SetBeamPoints(Vector3 p1, Vector3 p2, Vector3 connectedAnchor, Transform connectedTo, float ropeLength)
     // {
     //     Vector3 connectedPosition = connectedTo.TransformPoint(connectedAnchor);
