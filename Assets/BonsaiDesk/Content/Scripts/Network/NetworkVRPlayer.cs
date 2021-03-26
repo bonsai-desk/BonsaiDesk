@@ -9,17 +9,38 @@ public class NetworkVRPlayer : NetworkBehaviour
     [SyncVar] private NetworkIdentity _leftHandId;
     [SyncVar] private NetworkIdentity _rightHandId;
 
-    [SyncVar] public int spotId;
+    [SyncVar(hook = nameof(SpotChange))] public int spotId;
 
     public override void OnStartClient()
     {
         if (!isLocalPlayer)
             return;
+
+        var spotInfo = GetSpot();
+        GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(spotInfo.tableEdge);
+        InputManager.Hands.Left.SetHandTexture(spotInfo.handTexture);
+        InputManager.Hands.Right.SetHandTexture(spotInfo.handTexture);
         
         CmdSpawnHands();
+    }
 
-        var spotInfo = SpotManager.Instance.spotInfo[spotId];
-        GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(spotInfo.tableEdge);
+    [Server]
+    public void SetSpot(int spot)
+    {
+        //set spot to spot + 1 so the hook updates even if you have spot 0 which is the default value so it wouldn't call the hook
+        spotId = spot + 1;
+    }
+
+    public SpotManager.SpotInfo GetSpot()
+    {
+        //spot - 1 for same reason in SetSpot
+        return SpotManager.Instance.spotInfo[spotId - 1];
+    }
+
+    private void SpotChange(int oldValue, int newValue)
+    {
+        var spot = GetSpot();
+        GetComponentInChildren<MeshRenderer>().material.mainTexture = spot.headTexture;
     }
 
     [Command]

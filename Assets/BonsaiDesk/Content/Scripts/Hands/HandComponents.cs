@@ -145,6 +145,11 @@ public class HandComponents
         UpdateRendererTransparency();
     }
 
+    public void SetHandTexture(Texture texture)
+    {
+        _handMaterial.mainTexture = texture;
+    }
+
     private void UpdateRendererTransparency()
     {
         bool isTransparent =

@@ -12038,9 +12038,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spotInfo:
   - tableEdge: {fileID: 1886693201}
-    playerColor: {r: 0.1254902, g: 0.5921569, b: 0.3372549, a: 0}
+    handTexture: {fileID: 2800000, guid: 6c616d597d4410d47b1d678d57de9989, type: 3}
+    headTexture: {fileID: 2800000, guid: 46f3726beab835b47901bebc7d82e242, type: 3}
   - tableEdge: {fileID: 1792445037}
-    playerColor: {r: 1, g: 0.5176471, b: 0, a: 0}
+    handTexture: {fileID: 2800000, guid: d467a056034d59b48bd9cf6549379506, type: 3}
+    headTexture: {fileID: 2800000, guid: 782220e135f370e4d905013dcf34377b, type: 3}
 --- !u!1 &1247215177
 GameObject:
   m_ObjectHideFlags: 0

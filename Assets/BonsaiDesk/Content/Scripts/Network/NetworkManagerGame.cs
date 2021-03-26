@@ -287,8 +287,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
         var openSpot = OpenSpotId();
         PlayerInfos.Add(conn, new PlayerInfo(openSpot, "NoName"));
-
-        conn.identity.GetComponent<NetworkVRPlayer>().spotId = openSpot;
+        conn.identity.GetComponent<NetworkVRPlayer>().SetSpot(openSpot);
 
         ServerAddPlayer?.Invoke(this, conn);
         InfoChange?.Invoke(this, new EventArgs());
