@@ -67,6 +67,11 @@ public class AutoBrowserController : NetworkBehaviour {
 	public override void OnStartServer() {
 		TLog("On Start Server");
 		base.OnStartServer();
+        
+		_clientsJoinedNetworkTime.Clear();
+		_clientsLastPing.Clear();
+		_clientsPlayerStatus.Clear();
+        
 		_serverContentInfo = new ContentInfo(false, "", new Vector2(1, 1));
 		_contentActive     = false;
 
