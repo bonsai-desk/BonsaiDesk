@@ -107,6 +107,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
         HandleNetworkUpdate();
 
         HandleCommsUpdate();
+        
     }
 
     private void OnApplicationFocus(bool focus)
@@ -293,14 +294,20 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
 
         var t0 = Time.time;
-        while (!(HostEndPoint is null) || Time.time - t0 < 2f)
+        while (!(HostEndPoint is null))
         {
             Debug.Log(
                 $"[BONSAI] JoinRoom: wait for HostEndPoint to be null {HostEndPoint.Address} {HostEndPoint.Port}");
             if (HostEndPoint.Address.ToString() == "127.0.0.1" || HostEndPoint.Address.ToString() == "localhost")
             {
                 // This happens when you are a LAN host then try to join a room
-                Debug.Log("[bonsai] Breaking HostEndPoint null check since localhost");
+                Debug.Log("[bonsai] NetworkManager breaking HostEndPoint null check since localhost");
+                break;
+            }
+
+            if (Time.time - t0 > 2f)
+            {
+                Debug.Log("[bonsai] NetworkManager breaking loop since spent too long waiting for HostEndPoint to be null");
                 break;
             }
 
@@ -434,8 +441,8 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public override void OnFatalError(string error)
     {
-        base.OnFatalError(error);
         Debug.LogWarning($"[BONSAI] OnFatalError: {error}");
+        base.OnFatalError(error);
     }
 
     public override void OnServerPrepared(string hostAddress, ushort hostPort)
