@@ -529,6 +529,7 @@ namespace NobleConnect.Mirror
         /// </remarks>
         virtual public void OnFatalError(string error)
         {
+            Debug.Log("xx fatal");
             StopHost();
         }
 

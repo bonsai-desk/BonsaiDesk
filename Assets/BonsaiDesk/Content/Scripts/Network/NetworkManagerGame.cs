@@ -2,11 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
+using System.Net.NetworkInformation;
 using Dissonance;
 using Mirror;
 using NobleConnect.Mirror;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.XR.Management;
 
 // this is a modified version of NobleNetworkManager
@@ -24,9 +25,10 @@ public class NetworkManagerGame : BonsaiNetworkManager
     }
 
     private const double StartHostCooldown = 0.5f;
-    private const double CheckRelayCooldown = 1.0f;
 
     private const float HardKickDelay = 0.5f;
+    private const float PingNetCooldown = 1.0f;
+    private const float PingTimeoutBeforeDisconnect = 2.0f;
 
     public static NetworkManagerGame Singleton;
     public static EventHandler<NetworkConnection> ServerAddPlayer;
@@ -45,7 +47,9 @@ public class NetworkManagerGame : BonsaiNetworkManager
         new Dictionary<NetworkConnection, PlayerInfo>();
 
     private bool _hasFocus = true;
-    private float _lastCheckRelay = Mathf.NegativeInfinity;
+
+    private double _lastGoodPingRecieved = Mathf.NegativeInfinity;
+    private float _lastPingNet = Mathf.NegativeInfinity;
     private float _lastStartHost = Mathf.NegativeInfinity;
 
     private bool _roomJoinInProgress;
@@ -92,8 +96,6 @@ public class NetworkManagerGame : BonsaiNetworkManager
         TableBrowserMenu.OpenRoom += HandleOpenRoom;
         TableBrowserMenu.CloseRoom += HandleCloseRoom;
 
-        // todo _comms = GetComponent<DissonanceComms>();
-
         if (Application.isEditor && !serverOnlyIfEditor)
         {
             StartCoroutine(StartXR());
@@ -104,10 +106,11 @@ public class NetworkManagerGame : BonsaiNetworkManager
     {
         base.Update();
 
+        HandlePingUpdate();
+
         HandleNetworkUpdate();
 
         HandleCommsUpdate();
-        
     }
 
     private void OnApplicationFocus(bool focus)
@@ -127,6 +130,25 @@ public class NetworkManagerGame : BonsaiNetworkManager
     {
         base.OnApplicationQuit();
         StopXR();
+    }
+
+    private IEnumerator CheckInternetAccess()
+    {
+        var req = new UnityWebRequest("http://google.com/generate_204");
+        yield return req.SendWebRequest();
+        if (req.responseCode == 204 && Time.realtimeSinceStartup > _lastGoodPingRecieved)
+        {
+            _lastGoodPingRecieved = Time.realtimeSinceStartup;
+        }
+    }
+
+    private void HandlePingUpdate()
+    {
+        if (Time.time - _lastPingNet > PingNetCooldown)
+        {
+            _lastPingNet = Time.time;
+            StartCoroutine(CheckInternetAccess());
+        }
     }
 
     public override void OnStartServer()
@@ -154,6 +176,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
         else
         {
+            var pingTimeout = Time.time - _lastGoodPingRecieved > PingTimeoutBeforeDisconnect;
             switch (mode)
             {
                 case NetworkManagerMode.Offline:
@@ -162,11 +185,22 @@ public class NetworkManagerGame : BonsaiNetworkManager
                 case NetworkManagerMode.ServerOnly:
                     break;
                 case NetworkManagerMode.ClientOnly:
+                    if (pingTimeout)
+                    {
+                        Debug.Log("[bonsai] Ping timeout as client");
+                        StopClient();
+                    }
+
                     break;
                 case NetworkManagerMode.Host:
                     if (isLANOnly)
                     {
-                        TryGetRelay();
+                        StopClientIfGoodPing();
+                    }
+                    else if (pingTimeout)
+                    {
+                        Debug.Log("[bonsai] Ping timeout as host");
+                        StopHost();
                     }
 
                     break;
@@ -176,29 +210,13 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
     }
 
-    private void TryGetRelay()
+    private void StopClientIfGoodPing()
     {
-        if (Time.time - _lastCheckRelay > CheckRelayCooldown)
+        if (Time.time - _lastGoodPingRecieved < 1.0f)
         {
-            Debug.Log("[bonsai] Try get relay");
-            _lastCheckRelay = Time.time;
-            try
-            {
-                NobleServer.relayLifetime = relayLifetime;
-                NobleServer.maxAllocationResends = maxRelayRefreshAttempts;
-                NobleServer.allocationResendTimeout = relayRefreshTimeout;
-                NobleServer.relayRefreshTime = relayRefreshTime;
-                var port = NobleServer.GetTransportPort();
-                NobleServer.InitializeHosting(port, region, OnServerPrepared, OnFatalError, forceRelayConnection);
-                Debug.Log("[bonsai] Got a relay");
-                isLANOnly = false;
-                StopClient();
-            }
-            catch (SocketException)
-            {
-                isLANOnly = true;
-                Debug.Log("[bonsai] Failed to resolve relay server address.");
-            }
+            Debug.Log("[bonsai] Got a good ping, disconnecting from LAN");
+            isLANOnly = false;
+            StopClient();
         }
     }
 
@@ -307,7 +325,8 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
             if (Time.time - t0 > 2f)
             {
-                Debug.Log("[bonsai] NetworkManager breaking loop since spent too long waiting for HostEndPoint to be null");
+                Debug.Log(
+                    "[bonsai] NetworkManager breaking loop since spent too long waiting for HostEndPoint to be null");
                 break;
             }
 
