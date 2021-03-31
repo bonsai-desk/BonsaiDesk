@@ -144,13 +144,10 @@ public class MoveToDesk : MonoBehaviour
         //move ghost table
         MoveTableGhost();
 
+        //controller oriented is handled inside move table ghost, but with hand tracking the ghost and swipe are calculated separately
         if (InputManager.Hands.UsingHandTracking)
         {
             HandleHandTrackingGesture();
-        }
-        else
-        {
-            HandleControllerGesture();
         }
     }
 
@@ -221,7 +218,7 @@ public class MoveToDesk : MonoBehaviour
 
         var distanceValid = Vector3.Distance(leftControllerBase, rightControllerBase) > 0.1f;
 
-        var heightDifferenceValid = Mathf.Abs(leftControllerBase.y - rightControllerBase.y) < 0.01f;
+        var heightDifferenceValid = Mathf.Abs(leftControllerBase.y - rightControllerBase.y) < 0.015f;
 
         var leftAngleUp = Vector3.Angle(InputManager.Hands.leftControllerModel.transform.GetChild(0).up, Vector3.up);
         var rightAngleUp = Vector3.Angle(InputManager.Hands.rightControllerModel.transform.GetChild(0).up, Vector3.up);
@@ -289,6 +286,34 @@ public class MoveToDesk : MonoBehaviour
             var (tablePosition, tableRotation) = InputManager.Hands.UsingHandTracking
                 ? GetTableTargetHands()
                 : GetTableTargetControllers();
+
+            if (!InputManager.Hands.UsingHandTracking)
+            {
+                var inputTrigger =
+                    OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.LTouch) > 0.9f ||
+                    OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.RTouch) > 0.9f;
+
+                if (inputTrigger)
+                {
+                    calculatedTablePosition = oVRCameraRig.position;
+                    calculatedTableRotation = oVRCameraRig.rotation;
+                    
+                    var leftControllerBase = InputManager.Hands.leftControllerModel.transform.GetChild(0).position;
+                    var rightControllerBase = InputManager.Hands.rightControllerModel.transform.GetChild(0).position;
+                    var avg = (leftControllerBase + rightControllerBase) / 2f;
+                    calculatedTablePosition += new Vector3(-avg.x, -centerEyeAnchor.localPosition.y + (centerEyeAnchor.position.y - avg.y) + tableParent.position.y, -avg.z);
+                    calculatedTablePosition = Quaternion.Inverse(tableRotation) * calculatedTablePosition;
+                    calculatedTableRotation = Quaternion.Inverse(tableRotation) * calculatedTableRotation;
+
+                    ApplyCalculatedTableOrientation(true);
+
+                    blackOverlay.SetActive(false);
+                    handDemo.gameObject.SetActive(false);
+                    tableGhost.gameObject.SetActive(false);
+                    oriented = true;
+                    return;
+                }
+            }
 
             if (_lastHandsOnEdge)
             {
@@ -384,10 +409,6 @@ public class MoveToDesk : MonoBehaviour
         tableGhost.rotation = tableRotation;
 
         return (tablePosition, tableRotation);
-    }
-
-    private void HandleControllerGesture()
-    {
     }
 
     private void HandleHandTrackingGesture()

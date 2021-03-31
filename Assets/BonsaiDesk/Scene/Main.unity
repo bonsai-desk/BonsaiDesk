@@ -11677,6 +11677,7 @@ MonoBehaviour:
   handDemo: {fileID: 454429992}
   tableGhost: {fileID: 285651792}
   tableGhostText: {fileID: 329180642}
+  test: {fileID: 0}
 --- !u!114 &1212259450
 MonoBehaviour:
   m_ObjectHideFlags: 0
