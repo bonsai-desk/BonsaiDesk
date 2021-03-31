@@ -131,21 +131,16 @@ public class Browser : MonoBehaviour {
 				switch (message.Message) {
 					case "listenersReady":
 						Debug.Log($"[BONSAI] invoke listeners ready ... {_postedListenersReady}");
-						if (!useBuiltHtml) {
 							// todo: for some reason when using a hot reload url
 							// the app posts listeners-ready twice so we just check it here
 							if (!_postedListenersReady) {
 								ListenersReady?.Invoke();
+                                _postedListenersReady = true;
 							}
 							else {
 								Debug.LogWarning("[BONSAI] Browser trying to post listeners twice, ignoring");
-							}
-						}
-						else {
-							ListenersReady?.Invoke();
 						}
 
-						_postedListenersReady = true;
 
 						break;
 				}
