@@ -1476,7 +1476,7 @@ MonoBehaviour:
   onlineScene: 
   transport: {fileID: 217350385}
   networkAddress: localhost
-  maxConnections: 4
+  maxConnections: 2
   disconnectInactiveConnections: 0
   disconnectInactiveTimeout: 60
   authenticator: {fileID: 217350389}
@@ -1494,7 +1494,7 @@ MonoBehaviour:
   networkPort: 0
   region: 0
   forceRelayConnection: 0
-  logLevel: 2
+  logLevel: 1
   relayRefreshTime: 30
   relayRefreshTimeout: 0.1
   maxRelayRefreshAttempts: 3
