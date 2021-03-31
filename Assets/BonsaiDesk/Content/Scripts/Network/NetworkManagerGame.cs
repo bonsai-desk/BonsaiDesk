@@ -26,8 +26,9 @@ public class NetworkManagerGame : BonsaiNetworkManager
     private const double StartHostCooldown = 0.5f;
 
     private const float HardKickDelay = 0.5f;
-    private const float PingNetCooldown = 1.0f;
-    private const float PingTimeoutBeforeDisconnect = 2.0f;
+    private const float PingInternetEvery = 2.0f;
+    private const int PingInternetRequestTimeout = 4;
+    private const float PingInternetTimeoutBeforeDisconnect = 5.0f;
 
     public static NetworkManagerGame Singleton;
     public static EventHandler<NetworkConnection> ServerAddPlayer;
@@ -47,7 +48,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     private bool _hasFocus = true;
 
-    private double _lastGoodPingRecieved = Mathf.NegativeInfinity;
+    private double _lastGoodPingReceived = Mathf.NegativeInfinity;
     private float _lastPingNet = Mathf.NegativeInfinity;
     private float _lastStartHost = Mathf.NegativeInfinity;
 
@@ -131,19 +132,24 @@ public class NetworkManagerGame : BonsaiNetworkManager
         StopXR();
     }
 
+    public bool IsInternetGood()
+    {
+        return Time.realtimeSinceStartup - _lastGoodPingReceived < PingInternetTimeoutBeforeDisconnect;
+    }
+
     private IEnumerator CheckInternetAccess()
     {
-        var req = new UnityWebRequest("http://google.com/generate_204");
-        yield return req.SendWebRequest();
-        if (req.responseCode == 204 && Time.realtimeSinceStartup > _lastGoodPingRecieved)
+        var uwr = new UnityWebRequest("http://google.com/generate_204") {timeout = PingInternetRequestTimeout};
+        yield return uwr.SendWebRequest();
+        if (uwr.responseCode == 204 && Time.realtimeSinceStartup > _lastGoodPingReceived)
         {
-            _lastGoodPingRecieved = Time.realtimeSinceStartup;
+            _lastGoodPingReceived = Time.realtimeSinceStartup;
         }
     }
 
     private void HandlePingUpdate()
     {
-        if (Time.realtimeSinceStartup - _lastPingNet > PingNetCooldown)
+        if (Time.realtimeSinceStartup - _lastPingNet > PingInternetEvery)
         {
             _lastPingNet = Time.realtimeSinceStartup;
             StartCoroutine(CheckInternetAccess());
@@ -175,7 +181,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
         else
         {
-            var pingTimeout = Time.realtimeSinceStartup - _lastGoodPingRecieved > PingTimeoutBeforeDisconnect;
+            var pingTimeout = Time.realtimeSinceStartup - _lastGoodPingReceived > PingInternetTimeoutBeforeDisconnect;
             switch (mode)
             {
                 case NetworkManagerMode.Offline:
@@ -211,7 +217,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     private void StopClientIfGoodPing()
     {
-        if (Time.realtimeSinceStartup - _lastGoodPingRecieved < 1.0f)
+        if (Time.realtimeSinceStartup - _lastGoodPingReceived < 1.0f)
         {
             Debug.Log("[bonsai] Got a good ping, disconnecting from LAN");
             isLANOnly = false;
