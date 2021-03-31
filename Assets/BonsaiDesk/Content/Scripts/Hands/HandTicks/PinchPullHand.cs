@@ -18,12 +18,17 @@ public class PinchPullHand : MonoBehaviour, IHandTick
     //how far apart your hands can be when starting the pinch pull action
     private const float PinchPullGestureStartDistance = 0.15f;
 
+    public bool pinchPullEnabled = false;
+
     public void Tick()
     {
-        //yo, just deal with the unreachable code warning. don't comment out giant blocks
-        return;
-        
         pinchPullJointBody.MovePosition(playerHand.PinchPosition());
+
+        //detach if pinch pull is not enabled
+        if (!pinchPullEnabled && pinchPullJoint.connectedBody)
+        {
+            DetachObject();
+        }
 
         //detach if object is inUse by someone else
         if (pinchPullJoint.connectedBody)
@@ -39,7 +44,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         bool drawLocal = false;
 
         //detach pinch pull object if both hands are not pinching
-        if (pinchPullJoint.connectedBody != null && (!playerHand.GetGesture(PlayerHand.Gesture.IndexPinching) ||
+        if (pinchPullJoint.connectedBody && (!playerHand.GetGesture(PlayerHand.Gesture.IndexPinching) ||
                                                      !playerHand.OtherHand
                                                          .GetGesture(PlayerHand.Gesture.IndexPinching)))
         {
@@ -47,7 +52,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         }
 
         //calculate joint length based on finger distance
-        if (pinchPullJoint.connectedBody != null)
+        if (pinchPullEnabled && pinchPullJoint.connectedBody != null)
         {
             var fingerDistance = Vector3.Distance(playerHand.PinchPosition(),
                 playerHand.OtherHand.PinchPosition());
@@ -58,7 +63,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         }
 
         //start pinch pull action. note that the action is started by the hand which grabs the rope
-        if (InputManager.Hands.TrackingRecently() && playerHand.GetGestureStart(PlayerHand.Gesture.IndexPinching) &&
+        if (pinchPullEnabled && InputManager.Hands.TrackingRecently() && playerHand.GetGestureStart(PlayerHand.Gesture.IndexPinching) &&
             playerHand.OtherHand.GetGesture(PlayerHand.Gesture.IndexPinching) &&
             Vector3.Distance(playerHand.PinchPosition(), playerHand.OtherHand.PinchPosition()) <
             PinchPullGestureStartDistance &&
@@ -73,7 +78,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         }
 
         //visualize pinch pull candidates
-        if (pinchPullJoint.connectedBody == null &&
+        if (pinchPullEnabled && pinchPullJoint.connectedBody == null &&
             playerHand.OtherHand.GetIHandTick<PinchPullHand>().pinchPullJoint.connectedBody == null)
         {
             //get pinch pull candidate each frame for visual indication
@@ -87,9 +92,10 @@ public class PinchPullHand : MonoBehaviour, IHandTick
             }
         }
 
+        //tell network hands how to render the rope
         if (InputManager.Hands.GetHand(playerHand.skeletonType).NetworkHand != null)
         {
-            if (pinchPullJoint.connectedBody != null &&
+            if (pinchPullEnabled && pinchPullJoint.connectedBody != null &&
                 NetworkIdentity.spawned.TryGetValue(_attachedToId, out NetworkIdentity value))
             {
                 var from = playerHand.OtherHand.PinchPosition();
