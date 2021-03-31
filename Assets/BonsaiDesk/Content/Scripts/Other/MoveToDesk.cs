@@ -204,7 +204,30 @@ public class MoveToDesk : MonoBehaviour
 
     private bool ControllersOnEdge()
     {
-        return true;
+        var leftControllerBase = InputManager.Hands.leftControllerModel.transform.GetChild(0).position;
+        var rightControllerBase = InputManager.Hands.rightControllerModel.transform.GetChild(0).position;
+
+        var left = leftControllerBase;
+        var right = rightControllerBase;
+        right.y = left.y;
+
+        var tableRotation = Quaternion.LookRotation(left - right, Vector3.up) *
+                            Quaternion.AngleAxis(90f, Vector3.up);
+        var forward = tableRotation * Vector3.forward;
+        var headForward = centerEyeAnchor.forward;
+        headForward.y = 0;
+        var angle = Vector3.Angle(forward, headForward);
+        var angleValid = angle < 45f;
+
+        var distanceValid = Vector3.Distance(leftControllerBase, rightControllerBase) > 0.1f;
+
+        var heightDifferenceValid = Mathf.Abs(leftControllerBase.y - rightControllerBase.y) < 0.01f;
+
+        var leftAngleUp = Vector3.Angle(InputManager.Hands.leftControllerModel.transform.GetChild(0).up, Vector3.up);
+        var rightAngleUp = Vector3.Angle(InputManager.Hands.rightControllerModel.transform.GetChild(0).up, Vector3.up);
+        var controllersPointingUp = leftAngleUp < 45f && rightAngleUp < 45f;
+
+        return angleValid && distanceValid && heightDifferenceValid && controllersPointingUp;
     }
 
     private void MoveTableGhost()
@@ -234,7 +257,13 @@ public class MoveToDesk : MonoBehaviour
 
         handDemo.position = Vector3.MoveTowards(handDemo.position, centerEyeAnchor.position,
             handDemoPositionDifference * 3f * Time.deltaTime);
-        
+
+        if (!InputManager.Hands.UsingHandTracking)
+        {
+            tableGhostText.text =
+                "Place your controllers on\n the edge of your <i><b>real</b></i> desk\nthen press either trigger";
+        }
+
         //if hands/controllers are on edge of real table
         bool handOnEdge = InputManager.Hands.UsingHandTracking && HandsOnEdge() ||
                           !InputManager.Hands.UsingHandTracking && ControllersOnEdge();
@@ -252,7 +281,10 @@ public class MoveToDesk : MonoBehaviour
             _tableAlpha = Mathf.MoveTowards(_tableAlpha, 1f, Time.deltaTime * (1f / TableLerpTime));
 
             tableGhost.gameObject.SetActive(true);
-            tableGhostText.text = "<--- swipe apart --->";
+            if (InputManager.Hands.UsingHandTracking)
+            {
+                tableGhostText.text = "<--- swipe apart --->";
+            }
 
             var (tablePosition, tableRotation) = InputManager.Hands.UsingHandTracking
                 ? GetTableTargetHands()
@@ -295,8 +327,11 @@ public class MoveToDesk : MonoBehaviour
 
             _tableLerp = CubicBezier.EaseOut.MoveTowards01(_tableLerp, TableLerpTime, false);
             tableGhost.position = Vector3.Lerp(_tableStartPosition, _tableEndPosition, _tableLerp);
-            
-            tableGhostText.text = "Place your thumbs on the\n edge of your <i><b>real</b></i> desk";
+
+            if (InputManager.Hands.UsingHandTracking)
+            {
+                tableGhostText.text = "Place your thumbs on the\n edge of your <i><b>real</b></i> desk";
+            }
         }
 
         leftAnimationHand.localPosition = new Vector3(-rightAnimationHand.localPosition.x,
