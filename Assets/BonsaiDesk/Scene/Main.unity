@@ -8046,6 +8046,7 @@ MonoBehaviour:
   pinchPullJoint: {fileID: 1994331529}
   pinchPullJointBody: {fileID: 1994331530}
   lineRenderer: {fileID: 1510384917}
+  pinchPullEnabled: 0
 --- !u!114 &630641734
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10396,6 +10397,7 @@ MonoBehaviour:
   pinchPullJoint: {fileID: 1293423861}
   pinchPullJointBody: {fileID: 1293423862}
   lineRenderer: {fileID: 649121919}
+  pinchPullEnabled: 0
 --- !u!114 &946290009
 MonoBehaviour:
   m_ObjectHideFlags: 0

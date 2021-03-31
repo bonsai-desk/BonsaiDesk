@@ -99,9 +99,6 @@ public class TabletCollider : MonoBehaviour
     {
         var localPoint = transform.InverseTransformPoint(point);
 
-        if (localPoint.y < 0)
-            return false;
-
         float distanceSquared = Vector2.SqrMagnitude(localPoint.xz());
         return distanceSquared < ButtonRadiusSquared;
     }
