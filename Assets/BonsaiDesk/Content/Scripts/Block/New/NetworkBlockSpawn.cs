@@ -20,7 +20,7 @@ public class NetworkBlockSpawn : NetworkBehaviour
         }
 
         const float halfBlock = BlockObject.CubeScale / 2f;
-        if (!Physics.CheckBox(transform.position, new Vector3(halfBlock, halfBlock, halfBlock), Quaternion.identity))
+        if (!Physics.CheckBox(transform.position, new Vector3(halfBlock, halfBlock, halfBlock), transform.rotation))
         {
             _readyToSpawnTime += Time.deltaTime;
 
@@ -29,7 +29,7 @@ public class NetworkBlockSpawn : NetworkBehaviour
                 _readyToSpawnTime = 0f;
                 if (NetworkClient.connection != null && NetworkClient.connection.identity)
                 {
-                    CmdSpawnObject(transform.position, NetworkClient.connection.identity.netId);
+                    CmdSpawnObject(transform.position, transform.rotation, NetworkClient.connection.identity.netId);
                 }
             }
         }
@@ -40,11 +40,15 @@ public class NetworkBlockSpawn : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdSpawnObject(Vector3 position, uint ownerId)
+    private void CmdSpawnObject(Vector3 position, Quaternion rotation, uint ownerId)
     {
-        var spawnedObject = Instantiate(spawnObjectPrefab, position, Quaternion.identity);
-        spawnedObject.GetComponent<BlockObject>().Blocks.Add(Vector3Int.zero, new SyncBlock(0, 0));
-        NetworkServer.Spawn(spawnedObject);
-        spawnedObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time, false);
+        const float halfBlock = BlockObject.CubeScale / 2f;
+        if (!Physics.CheckBox(position, new Vector3(halfBlock, halfBlock, halfBlock), rotation))
+        {
+            var spawnedObject = Instantiate(spawnObjectPrefab, position, rotation);
+            spawnedObject.GetComponent<BlockObject>().Blocks.Add(Vector3Int.zero, new SyncBlock(0, 0));
+            NetworkServer.Spawn(spawnedObject);
+            spawnedObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time, false);
+        }
     }
 }
