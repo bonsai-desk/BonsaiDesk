@@ -8,6 +8,8 @@ namespace Dissonance
     internal struct FrameSkipDetector
     {
         #region fields and properties
+        private static readonly string MetricFrameTime = Metrics.MetricName("FrameTime");
+
         private readonly float _maxFrameTime;
 
         private readonly float _minimumBreakerDuration;
@@ -45,6 +47,8 @@ namespace Dissonance
 
         public bool IsFrameSkip(float deltaTime)
         {
+            Metrics.Sample(MetricFrameTime, deltaTime);
+
             var skip = deltaTime > _maxFrameTime;
             var report = skip && _breakerClosed;
 

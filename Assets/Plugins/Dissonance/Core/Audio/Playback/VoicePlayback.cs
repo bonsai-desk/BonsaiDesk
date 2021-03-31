@@ -17,6 +17,17 @@ namespace Dissonance.Audio.Playback
         #region fields and properties
         private static readonly Log Log = Logs.Create(LogCategory.Playback, "Voice Playback Component");
 
+        private Transform _transformCache;
+        private Transform Transform
+        {
+            get
+            {
+                if (_transformCache == null)
+                    _transformCache = transform;
+                return _transformCache;
+            }
+        }
+
         private readonly SpeechSessionStream _sessions;
 
         private PlaybackOptions _cachedPlaybackOptions;
@@ -176,8 +187,6 @@ namespace Dissonance.Audio.Playback
             AudioSource.pitch = 1;          // Pitch has no effect on the audio
             AudioSource.dopplerLevel = 0;   // Pitch cannot be changed, so doppler makes no sense
             AudioSource.mute = false;       // Muting should be done through the player object, not the source
-
-            AudioSource.Play();
         }
 
         public void OnDisable()
@@ -196,12 +205,20 @@ namespace Dissonance.Audio.Playback
         {
             if (!_player.HasActiveSession)
             {
-                //We're not playing anything, so play the next session (if there is one ready)
+                // We're not playing anything at the moment. Try to get a session to play.
                 var s = _sessions.TryDequeueSession();
                 if (s.HasValue)
                 {
                     _cachedPlaybackOptions = s.Value.PlaybackOptions;
                     _player.Play(s.Value);
+                    AudioSource.Play();
+                }
+                else
+                {
+                    // No session was available to start playing. Stop the audio source playing to preserve
+                    // limited "real voices" in the Unity audio mixer.
+                    if (AudioSource.isPlaying)
+                        AudioSource.Stop();
                 }
             }
 
@@ -248,7 +265,7 @@ namespace Dissonance.Audio.Playback
 
         void IVoicePlaybackInternal.SetTransform(Vector3 pos, Quaternion rot)
         {
-            var t = transform;
+            var t = Transform;
             t.position = pos;
             t.rotation = rot;
         }

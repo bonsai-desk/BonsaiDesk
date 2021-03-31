@@ -5,14 +5,11 @@ PluginImporter:
   serializedVersion: 2
   iconMap: {}
   executionOrder: {}
-  defineConstraints: []
   isPreloaded: 1
   isOverridable: 0
-  isExplicitlyReferenced: 0
-  validateReferences: 1
   platformData:
   - first:
-      : Any
+      '': Any
     second:
       enabled: 0
       settings:
@@ -21,7 +18,6 @@ PluginImporter:
         Exclude Linux: 1
         Exclude Linux64: 1
         Exclude LinuxUniversal: 1
-        Exclude Lumin: 0
         Exclude OSXUniversal: 1
         Exclude Win: 1
         Exclude Win64: 1
@@ -59,11 +55,6 @@ PluginImporter:
       settings:
         CPU: AnyCPU
   - first:
-      Lumin: Lumin
-    second:
-      enabled: 1
-      settings: {}
-  - first:
       Standalone: Linux
     second:
       enabled: 0
@@ -74,7 +65,7 @@ PluginImporter:
     second:
       enabled: 0
       settings:
-        CPU: AnyCPU
+        CPU: x86_64
   - first:
       Standalone: LinuxUniversal
     second:
@@ -105,7 +96,7 @@ PluginImporter:
       enabled: 0
       settings:
         CPU: X86
-        DontProcess: false
+        DontProcess: False
         PlaceholderPath: 
         SDK: AnySDK
         ScriptingBackend: AnyScriptingBackend
@@ -114,8 +105,6 @@ PluginImporter:
     second:
       enabled: 0
       settings:
-        AddToEmbeddedBinaries: false
-        CPU: AnyCPU
         CompileFlags: 
         FrameworkDependencies: 
   userData: 

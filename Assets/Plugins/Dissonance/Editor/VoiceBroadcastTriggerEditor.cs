@@ -143,27 +143,41 @@ namespace Dissonance.Editor
                     MessageType.None
                 );
 
-                var player = transmitter.GetComponent<IDissonancePlayer>();
+                var player = transmitter.GetComponent<IDissonancePlayer>() ?? transmitter.GetComponentInParent<IDissonancePlayer>();
                 if (player == null)
                 {
                     EditorGUILayout.HelpBox(
-                        "This entity has no Dissonance player component!",
+                        "This GameObject (and it's parent) does not have a Dissonance player component!",
                         MessageType.Error
                     );
                 }
                 else
                 {
-                    if (!player.IsTracking)
+                    if (EditorApplication.isPlaying)
                     {
-                        EditorGUILayout.HelpBox("The trigger is disabled because the player tracker script is not yet tracking the player", MessageType.Warning);
-                    }
+                        if (!player.IsTracking)
+                        {
+                            EditorGUILayout.HelpBox(
+                                "The trigger is disabled because the player tracker script is not yet tracking the player",
+                                MessageType.Warning
+                            );
+                        }
 
-                    if (Application.isPlaying && player.Type == NetworkPlayerType.Local)
-                    {
-                        EditorGUILayout.HelpBox(
-                            "This trigger is disabled because the player tracker script represents the local player (cannot send voice to yourself).",
-                            MessageType.Info
-                        );
+                        if (player.Type == NetworkPlayerType.Local)
+                        {
+                            EditorGUILayout.HelpBox(
+                                "This trigger is disabled because the player tracker script represents the local player (cannot send voice to yourself).",
+                                MessageType.Info
+                            );
+                        }
+
+                        if (player.IsTracking && player.Type == NetworkPlayerType.Unknown)
+                        {
+                            EditorGUILayout.HelpBox(
+                                "This trigger is disabled because the player tracker script is tracking an 'Unknown' player type. This is probably a bug in your player tracker script.",
+                                MessageType.Error
+                            );
+                        }
                     }
                 }
             }

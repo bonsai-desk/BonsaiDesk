@@ -1,10 +1,36 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Dissonance.Audio.Capture;
+using JetBrains.Annotations;
 
 namespace Dissonance
 {
     public partial class DissonanceComms
     {
+        /// <summary>
+        /// Get or set the microphone device name to use for voice capture
+        /// </summary>
+        [CanBeNull] public string MicrophoneName
+        {
+            get { return _micName; }
+            set
+            {
+                if (_micName == value)
+                    return;
+
+                _capture.MicrophoneName = value;
+                _micName = value;
+            }
+        }
+
+        /// <summary>
+        /// Get the microphone capture object. Will be null if Dissonance has not yet started.
+        /// </summary>
+        [CanBeNull] public IMicrophoneCapture MicrophoneCapture
+        {
+            get { return _capture.Microphone; }
+        }
+
         /// <summary>
         /// Get a list of valid microphone devices that can be used.
         /// </summary>
@@ -27,6 +53,45 @@ namespace Dissonance
                 list.GetDevices(output);
             else
                 output.AddRange(UnityEngine.Microphone.devices);
+        }
+
+        /// <summary>
+        /// Force the microphone capture system to be reset
+        /// </summary>
+        /// <remarks>This will destroy and recreate the microphone, preprocessor and encoder.</remarks>
+        public void ResetMicrophoneCapture()
+        {
+            if (_capture != null)
+                _capture.ForceReset();
+        }
+
+        /// <summary>
+        ///     Subscribes to the stream of recorded audio data
+        /// </summary>
+        /// <param name="listener">
+        ///     The listener which is to receive microphone audio data.
+        /// </param>
+        public void SubscribeToRecordedAudio([NotNull] IMicrophoneSubscriber listener)
+        {
+            _capture.Subscribe(listener);
+        }
+
+        // Marked obsolete on 2020-03-31
+        [Obsolete("Use `SubscribeToRecordedAudio` instead")]
+        public void SubcribeToRecordedAudio([NotNull] IMicrophoneSubscriber listener)
+        {
+            // Deprecated due to misspelling in the name on 2020-03-31
+
+            SubscribeToRecordedAudio(listener);
+        }
+
+        /// <summary>
+        ///     Unsubscribes from the stream of recorded audio data
+        /// </summary>
+        /// <param name="listener"></param>
+        public void UnsubscribeFromRecordedAudio([NotNull] IMicrophoneSubscriber listener)
+        {
+            _capture.Unsubscribe(listener);
         }
     }
 }

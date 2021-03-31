@@ -81,7 +81,11 @@ namespace Dissonance.Datastructures
                 _writeHead += data.Count;
             }
 
+#pragma warning disable 420
+            // Justification: It's Interlocked, so volatile isn't important (See: http://stackoverflow.com/a/425150/108234 )
+            // Visual studio doesn't warn about this, but Unity 2018.4 does.
             Interlocked.Add(ref _unread, data.Count);
+#pragma warning restore 420
             return true;
         }
 
@@ -160,7 +164,12 @@ namespace Dissonance.Datastructures
                 _readHead += data.Count;
             }
 
+#pragma warning disable 420
+            // Justification: It's Interlocked, so volatile isn't important (See: http://stackoverflow.com/a/425150/108234 )
+            // Visual studio doesn't warn about this, but Unity 2018.4 does.
             Interlocked.Add(ref _unread, -data.Count);
+#pragma warning restore 420
+
             return true;
         }
         #endregion

@@ -99,14 +99,14 @@ namespace Dissonance.Audio.Playback
             // Convert stream of fixed size frames into a stream of samples taken in arbitrary chunks
             var samples = new FrameToSampleConverter(ramped);
 
-            // Resample the data to the output rate
-            var resampled = new Resampler(samples, this);
-
             // Monitor stream sync and adjust playback rate to stay close in sync
-            _synchronizer = new SynchronizerSampleSource(resampled, TimeSpan.FromSeconds(1), this);
+            _synchronizer = new SynchronizerSampleSource(samples, TimeSpan.FromSeconds(1));
+
+            // Resample the data to the output rate
+            var resampled = new Resampler(_synchronizer, this);
 
             // Chain a soft clip stage if necessary
-            _output = softClip ? (ISampleSource)new SoftClipSampleSource(_synchronizer) : _synchronizer;
+            _output = softClip ? (ISampleSource)new SoftClipSampleSource(resampled) : resampled;
         }
         #endregion
 
@@ -131,6 +131,11 @@ namespace Dissonance.Audio.Playback
             _output.Prepare(context);
 
             _prepared = true;
+        }
+
+        public void EnableDynamicSync()
+        {
+            _synchronizer.Enable();
         }
 
         public bool Read(ArraySegment<float> samples)

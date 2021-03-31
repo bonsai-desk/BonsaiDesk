@@ -33,7 +33,7 @@ namespace Dissonance.Audio
             var handle = GCHandle.Alloc(temp, GCHandleType.Pinned);
             try
             {
-                Dissonance_GetAecMetrics((IntPtr)handle, temp.Length);
+                Dissonance_GetAecMetrics(handle.AddrOfPinnedObject(), temp.Length);
             }
             finally
             {

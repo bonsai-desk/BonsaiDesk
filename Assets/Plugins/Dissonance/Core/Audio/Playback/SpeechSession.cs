@@ -39,12 +39,6 @@ namespace Dissonance.Audio.Playback
             get { return _creationTime + Delay; }
         }
 
-        private DateTime _startTime;
-        public DateTime ActivationTime
-        {
-            get { return _startTime + Delay; }
-        }
-
         public TimeSpan Delay
         {
             get
@@ -74,8 +68,6 @@ namespace Dissonance.Audio.Playback
             _creationTime = now;
             _jitter = jitter;
 
-            _startTime = now;
-
             _minimumDelay = (float)(MinimumDelayFactor * _pipeline.InputFrameTime.TotalSeconds);
 
             Log.Debug("Created speech session with min delay={0}s", _minimumDelay);
@@ -86,12 +78,11 @@ namespace Dissonance.Audio.Playback
             return new SpeechSession(context, jitter, pipeline, channels, now);
         }
 
-        public void Prepare(DateTime now, DateTime timeOfFirstDequeueAttempt)
+        public void Prepare(DateTime timeOfFirstDequeueAttempt)
         {
-            _startTime = now - Delay;
             _pipeline.Prepare(_context);
 
-            //Log a message if jitter is extremely large
+            // Log a message if jitter is extremely large
             if (_jitter.Confidence >= 0.75 && _jitter.Jitter >= MaximumDelay * 0.5f)
                 Log.Warn("Beginning playback with very large network jitter: {0}s {1}confidence", _jitter.Jitter, _jitter.Confidence);
 
@@ -135,6 +126,10 @@ namespace Dissonance.Audio.Playback
                 else
                     Log.Debug("...completed attempted discard {0}ms of audio, {1} could not be disposed", desyncTime.TotalMilliseconds, desyncSamples);
             }
+
+            // Now that the initial audio has been read enable dynamic sync. it cannot be done before this point because the huge read of audio that just happened
+            // would confuse dynamic sync (it would immediately think it's out of sync and try to "fix" it).
+            _pipeline.EnableDynamicSync();
         }
 
         /// <summary>

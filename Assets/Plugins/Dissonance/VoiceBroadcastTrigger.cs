@@ -411,9 +411,21 @@ namespace Dissonance
             return true;
         }
 
-        private bool IsUserActivated()
+        /// <summary>
+        /// Invert the `IsMuted` property. This is convenient for integration with UI elements.
+        /// e.g. a UI button can directly call this while in `Voice Activated` mode to enable/disable voice on click.
+        /// </summary>
+        public void ToggleMute()
         {
-            //Test the actual activation systems
+            IsMuted = !IsMuted;
+        }
+
+        /// <summary>
+        /// Get a value indicating if the user wants to speak
+        /// </summary>
+        /// <returns></returns>
+        protected virtual bool IsUserActivated()
+        {
             switch (Mode)
             {
                 case CommActivationMode.VoiceActivation:
@@ -422,8 +434,8 @@ namespace Dissonance
                 case CommActivationMode.PushToTalk:
                     return Input.GetAxis(InputName) > 0.5f;
 
-                //case CommActivationMode.Open:
-                //    return true;
+                case CommActivationMode.Open:
+                    return true;
 
                 case CommActivationMode.None:
                     return false;

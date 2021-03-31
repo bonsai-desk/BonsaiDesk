@@ -31,6 +31,7 @@ namespace Dissonance.Editor.Windows
         private static void Update()
         {
             Logs.WriteMultithreadedLogs();
+            Metrics.WriteMultithreadedMetrics();
 
             //Do nothing while a recompile is pending
             if (_recompiling)
