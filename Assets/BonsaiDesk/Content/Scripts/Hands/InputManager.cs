@@ -14,6 +14,8 @@ public class InputManager : MonoBehaviour
     public Transform leftHandAnchor;
 
     public Transform rightHandAnchor;
+    public GameObject leftControllerModel;
+    public GameObject rightControllerModel;
 
     [Header("PlayHand Scripts")]
     public PlayerHand leftPlayerHand;
@@ -44,6 +46,8 @@ public class InputManager : MonoBehaviour
     [HideInInspector] public Vector3[] targetFingerTipPositions = new Vector3[10];
 
     private IHandsTick[] _handsTicks;
+
+    public bool UsingHandTracking => OVRInput.GetConnectedControllers() == OVRInput.Controller.Hands;
 
     private void Awake()
     {
@@ -98,6 +102,11 @@ public class InputManager : MonoBehaviour
 
         Left.PlayerHand.UpdateLastGestures();
         Right.PlayerHand.UpdateLastGestures();
+        
+        //set controllers on/off
+        var controllersActive = !UsingHandTracking && !MoveToDesk.Singleton.oriented;
+        leftControllerModel.SetActive(controllersActive);
+        rightControllerModel.SetActive(controllersActive);
     }
 
     public void UpdateHandTargets(bool updateTracking = true)

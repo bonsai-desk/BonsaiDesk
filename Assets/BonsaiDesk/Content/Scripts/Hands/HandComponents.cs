@@ -158,7 +158,8 @@ public class HandComponents
         float handAlphaTarget = Tracking ? 1f : 0f;
         _handAlpha = Mathf.MoveTowards(_handAlpha, handAlphaTarget, Time.deltaTime / RecentTrackingThreshold);
         var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
-        if (!playing)
+        var controllersAndInVoid = !InputManager.Hands.UsingHandTracking && !MoveToDesk.Singleton.oriented;
+        if (!playing || controllersAndInVoid)
         {
             _handAlpha = 0;
         }
