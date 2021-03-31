@@ -33,6 +33,10 @@ public class PhysicsHandController : MonoBehaviour
     private bool _capsulesActive = false;
     private bool _capsulesActiveTarget = false;
 
+    //if true, "overrideCapsulesActiveTarget" will always be the target
+    public bool overrideCapsulesActive = false;
+    public bool overrideCapsulesActiveTarget = false;
+
     private float _handScale = 1f;
 
     private void Awake()
@@ -61,6 +65,10 @@ public class PhysicsHandController : MonoBehaviour
             ResetFingerJoints();
         }
 
+        if (overrideCapsulesActive)
+        {
+            _capsulesActiveTarget = overrideCapsulesActiveTarget;
+        }
         TrySetCapsulesActiveToTarget();
 
         UpdateJoint();
@@ -132,6 +140,11 @@ public class PhysicsHandController : MonoBehaviour
 
     public void SetCapsulesActiveTarget(bool active)
     {
+        if (overrideCapsulesActive)
+        {
+            return;
+        }
+        
         _capsulesActiveTarget = active;
         TrySetCapsulesActiveToTarget();
     }
