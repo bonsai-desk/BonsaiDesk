@@ -1,18 +1,5 @@
 # Release Notes
 
-## v7.3.0 (2021-03-08)
-
-**features**
- - Added a new system for capturing realtime metrics data and sending it to a metrics service (e.g. Unity Reporting). Disabled by default.
- - Simplified some warnings on VoiceBroadcastTrigger which were confusing users.
- - Added VoiceSettings.Reset method which resets all voice settings back to default values.
- - Stopping playback (instead of playing silence) when a user is not speaking. Significantly reducing the number of Unity audio mixer voices used by Dissonance.
-
-**bugfixes**
- - Fixed playback synchronisation system getting confused by certain badly behaved network backends.
- - Fixed playback synchronisation system measuring the wrong sample rate.
- - Fixed access violation exception caused by AecDiagnostics script.
-
 ## v7.2.1 (2021-02-12)
 
 **features**

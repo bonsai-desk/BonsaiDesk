@@ -197,14 +197,6 @@ namespace Dissonance.Config
 
         public VoiceSettings()
         {
-            LoadDefaults();
-        }
-
-        /// <summary>
-        /// Load defaults into fields, but do not clear prefs
-        /// </summary>
-        private void LoadDefaults()
-        {
             _quality = AudioQuality.Medium;
             _frameSize = FrameSize.Medium;
             _forwardErrorCorrection = Convert.ToInt32(true);
@@ -223,36 +215,6 @@ namespace Dissonance.Config
             _voiceDuckLevel = 0.75f;
         }
 
-        /// <summary>
-        /// Reset all options to default and clear the PlayerPrefs
-        /// </summary>
-        public void Reset()
-        {
-            // Clear all prefs
-            PlayerPrefs.DeleteKey(PersistName_Quality);
-            PlayerPrefs.DeleteKey(PersistName_FrameSize);
-            PlayerPrefs.DeleteKey(PersistName_Fec);
-
-            PlayerPrefs.DeleteKey(PersistName_DenoiseAmount);
-            PlayerPrefs.DeleteKey(PersistName_VadSensitivity);
-
-            PlayerPrefs.DeleteKey(PersistName_AecSuppressionAmount);
-            PlayerPrefs.DeleteKey(PersistName_AecDelayAgnostic);
-            PlayerPrefs.DeleteKey(PersistName_AecExtendedFilter);
-            PlayerPrefs.DeleteKey(PersistName_AecRefinedAdaptiveFilter);
-
-            PlayerPrefs.DeleteKey(PersistName_AecmRoutingMode);
-            PlayerPrefs.DeleteKey(PersistName_AecmComfortNoise);
-
-            PlayerPrefs.DeleteKey(PersistName_PttDuckAmount);
-
-            // Initialised cached values in fields back to defaults
-            LoadDefaults();
-        }
-
-        /// <summary>
-        /// Ensure that the `Instance` is loaded. Calling this ensures that the `Instance` won't be lazily loaded later.
-        /// </summary>
         public static void Preload()
         {
             if (_instance == null)

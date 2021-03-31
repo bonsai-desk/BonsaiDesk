@@ -53,10 +53,5 @@ namespace Dissonance.Audio.Playback
         /// <param name="samples">The array to read into, will always be filled with valid data</param>
         /// <returns>true, if the session is finished. Otherwise false.</returns>
         bool Read(ArraySegment<float> samples);
-
-        /// <summary>
-        /// Enable dynamic audio synchronisation.
-        /// </summary>
-        void EnableDynamicSync();
     }
 }

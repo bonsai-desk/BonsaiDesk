@@ -22,8 +22,6 @@ namespace Dissonance.Audio.Playback
     {
         #region fields and properties
         private static readonly Log Log = Logs.Create(LogCategory.Playback, typeof (SpeechSessionStream).Name);
-
-        private string _metricArrivalDelay;
         
         private readonly Queue<SpeechSession> _awaitingActivation;
         private readonly IVolumeProvider _volumeProvider;
@@ -44,8 +42,6 @@ namespace Dissonance.Audio.Playback
             {
                 if (_playerName != value)
                 {
-                    _metricArrivalDelay = Metrics.MetricName("PacketArrivalDelay", _playerName);
-
                     _playerName = value;
                     _arrivalJitterMeter.Clear();
                 }
@@ -107,7 +103,7 @@ namespace Dissonance.Audio.Playback
                 var next = _awaitingActivation.Peek();
                 if (next.TargetActivationTime < rNow)
                 {
-                    next.Prepare(_queueHeadFirstDequeueAttempt.Value);
+                    next.Prepare(rNow, _queueHeadFirstDequeueAttempt.Value);
 
                     _awaitingActivation.Dequeue();
                     _queueHeadFirstDequeueAttempt = null;
@@ -136,7 +132,6 @@ namespace Dissonance.Audio.Playback
             }
 
             var delay = _active.Push(packet, now ?? DateTime.UtcNow);
-            Metrics.Sample(_metricArrivalDelay, delay);
 
             _arrivalJitterMeter.Update(delay);
         }

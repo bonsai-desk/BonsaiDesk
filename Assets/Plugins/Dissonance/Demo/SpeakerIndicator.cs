@@ -21,7 +21,7 @@ namespace Dissonance.Demo
             get { return _player.Type == NetworkPlayerType.Remote && _state != null && _state.IsSpeaking; }
         }
 
-        private void OnEnable()
+        private void Start ()
         {
             //Get some bits from the indicator game object
             _indicator = Instantiate(Resources.Load<GameObject>("SpeechIndicator"));
@@ -35,11 +35,6 @@ namespace Dissonance.Demo
             _player = GetComponent<IDissonancePlayer>();
 
             StartCoroutine(FindPlayerState());
-        }
-
-        private void OnDisable()
-        {
-            StopAllCoroutines();
         }
 
         private IEnumerator FindPlayerState()
@@ -57,7 +52,7 @@ namespace Dissonance.Demo
             }
         }
 
-        private void Update()
+        private void Update ()
         {
             if (IsSpeaking)
             {

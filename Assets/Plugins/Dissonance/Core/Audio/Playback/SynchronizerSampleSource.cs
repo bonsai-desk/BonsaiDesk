@@ -13,9 +13,8 @@ namespace Dissonance.Audio.Playback
 
         private readonly ISampleSource _upstream;
         private readonly TimeSpan _resetDesyncTime;
+        private readonly IDecoderPipeline _pipeline;
         private readonly Stopwatch _timer = new Stopwatch();
-
-        private bool _enabled;
 
         private TimeSpan _aheadWarningLastSent = TimeSpan.MinValue;
 
@@ -57,14 +56,15 @@ namespace Dissonance.Audio.Playback
         {
             get
             {
-                return new SyncState(PlaybackPosition, IdealPlaybackPosition, Desync, PlaybackRate, _enabled);
+                return new SyncState(PlaybackPosition, IdealPlaybackPosition, Desync, PlaybackRate);
             }
         }
 
-        public SynchronizerSampleSource(ISampleSource upstream, TimeSpan resetDesyncTime)
+        public SynchronizerSampleSource(ISampleSource upstream, TimeSpan resetDesyncTime, IDecoderPipeline pipeline)
         {
             _upstream = upstream;
             _resetDesyncTime = resetDesyncTime;
+            _pipeline = pipeline;
         }
 
         public void Prepare(SessionContext context)
@@ -79,28 +79,15 @@ namespace Dissonance.Audio.Playback
             _upstream.Prepare(context);
         }
 
-        public void Enable()
-        {
-            _enabled = true;
-        }
-
         public void Reset()
         {
             _timer.Reset();
-            _enabled = false;
 
             _upstream.Reset();
         }
 
         public bool Read(ArraySegment<float> samples)
         {
-            // If synchroniser is not enabled just pass the request upstream with no playback rate adjustment
-            if (!_enabled)
-            {
-                PlaybackRate = 1;
-                return _upstream.Read(samples);
-            }
-
             // Start the timer when the first sample is read. All subsequent timing will be based off this.
             if (!_timer.IsRunning)
             {
@@ -155,8 +142,8 @@ namespace Dissonance.Audio.Playback
                 // Configure playback rate to normal speed before discarding the data to ensure we discard exactly as much data as we expect
                 PlaybackRate = 1;
 
-                // Read out a load of data and discard it, forcing ourselves back into sync
-                // If reading completes the session exit out.
+                //Read out a load of data and discard it, forcing ourselves back into sync
+                //If reading completes the session exit out.
                 var toRead = deltaSamples;
                 while (toRead > 0)
                 {
@@ -189,39 +176,18 @@ namespace Dissonance.Audio.Playback
 
     public struct SyncState
     {
-        /// <summary>
-        /// The position of playback, measured by number of samples played.
-        /// </summary>
         public readonly TimeSpan ActualPlaybackPosition;
-
-        /// <summary>
-        /// The ideal playback position, measured by a clock.
-        /// </summary>
         public readonly TimeSpan IdealPlaybackPosition;
-
-        /// <summary>
-        /// Desync between ideal/actual playback. Not always the difference between ideal/actual properties, because this value has some tolerance added in.
-        /// </summary>
         public readonly TimeSpan Desync;
-
-        /// <summary>
-        /// The speed which audio is being played back at, as determined by the desync value.
-        /// </summary>
         public readonly float CompensatedPlaybackSpeed;
 
-        /// <summary>
-        /// Indicates if synchronisation is enabled.
-        /// </summary>
-        public readonly bool Enabled;
-
-        public SyncState(TimeSpan actualPlaybackPosition, TimeSpan idealPlaybackPosition, TimeSpan desync, float compensatedPlaybackSpeed, bool enabled)
+        public SyncState(TimeSpan actualPlaybackPosition, TimeSpan idealPlaybackPosition, TimeSpan desync, float compensatedPlaybackSpeed)
             : this()
         {
             ActualPlaybackPosition = actualPlaybackPosition;
             IdealPlaybackPosition = idealPlaybackPosition;
             Desync = desync;
             CompensatedPlaybackSpeed = compensatedPlaybackSpeed;
-            Enabled = enabled;
         }
     }
 }
