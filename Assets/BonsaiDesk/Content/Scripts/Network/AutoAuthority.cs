@@ -62,10 +62,12 @@ public class AutoAuthority : NetworkBehaviour
 
         if (isServer && transform.position.y < -1f)
         {
-            ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
-            transform.position = new Vector3(0, 1, 0);
-            _body.velocity = Vector3.zero;
-            _body.angularVelocity = Vector3.zero;
+            // ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
+            // _body.velocity = Vector3.zero;
+            // _body.angularVelocity = Vector3.zero;
+            // GetComponent<SmoothSyncMirror>()
+            //     .teleportAnyObjectFromServer(new Vector3(0, 1, 0), Quaternion.identity, Vector3.one);
+            ServerStripOwnerAndDestroy();
             return;
         }
 
