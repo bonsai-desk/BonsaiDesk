@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.NetworkInformation;
 using Dissonance;
 using Mirror;
 using NobleConnect.Mirror;
@@ -144,9 +143,9 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     private void HandlePingUpdate()
     {
-        if (Time.time - _lastPingNet > PingNetCooldown)
+        if (Time.realtimeSinceStartup - _lastPingNet > PingNetCooldown)
         {
-            _lastPingNet = Time.time;
+            _lastPingNet = Time.realtimeSinceStartup;
             StartCoroutine(CheckInternetAccess());
         }
     }
@@ -176,7 +175,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
         else
         {
-            var pingTimeout = Time.time - _lastGoodPingRecieved > PingTimeoutBeforeDisconnect;
+            var pingTimeout = Time.realtimeSinceStartup - _lastGoodPingRecieved > PingTimeoutBeforeDisconnect;
             switch (mode)
             {
                 case NetworkManagerMode.Offline:
@@ -212,7 +211,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     private void StopClientIfGoodPing()
     {
-        if (Time.time - _lastGoodPingRecieved < 1.0f)
+        if (Time.realtimeSinceStartup - _lastGoodPingRecieved < 1.0f)
         {
             Debug.Log("[bonsai] Got a good ping, disconnecting from LAN");
             isLANOnly = false;
@@ -278,7 +277,6 @@ public class NetworkManagerGame : BonsaiNetworkManager
         Debug.Log("[BONSAI] NetworkManager LeaveRoom");
         Debug.Log("[BONSAI] StopClient");
         StopClient();
-        // todo _lastStartHost = Time.time;
     }
 
     private void HandleJoinRoom(TableBrowserMenu.RoomData roomData)
@@ -311,7 +309,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
             InfoChange?.Invoke(this, new EventArgs());
         }
 
-        var t0 = Time.time;
+        var t0 = Time.realtimeSinceStartup;
         while (!(HostEndPoint is null))
         {
             Debug.Log(
@@ -323,7 +321,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
                 break;
             }
 
-            if (Time.time - t0 > 2f)
+            if (Time.realtimeSinceStartup - t0 > 2f)
             {
                 Debug.Log(
                     "[bonsai] NetworkManager breaking loop since spent too long waiting for HostEndPoint to be null");
@@ -602,11 +600,11 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     private void MaybeStartHost()
     {
-        if (Time.time - _lastStartHost > StartHostCooldown)
+        if (Time.realtimeSinceStartup - _lastStartHost > StartHostCooldown)
         {
             Debug.Log("[BONSAI] NetworkManager StartHost");
             StartHost();
-            _lastStartHost = Time.time;
+            _lastStartHost = Time.realtimeSinceStartup;
         }
     }
 
