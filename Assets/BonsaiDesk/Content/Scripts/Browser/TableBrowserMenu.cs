@@ -6,6 +6,7 @@ using Mirror;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Android;
 using UnityEngine.Serialization;
 using Vuplex.WebView;
 
@@ -122,6 +123,9 @@ public class TableBrowserMenu : MonoBehaviour
             case "command":
                 switch (message.Message)
                 {
+                    case "requestMicrophone":
+                        RequestMicrophone();
+                        break;
                     case "togglePinchPull":
                         TogglePinchPull();
                         _postRoomInfoLast = Mathf.NegativeInfinity;
@@ -210,6 +214,11 @@ public class TableBrowserMenu : MonoBehaviour
         }
     }
 
+    private static void RequestMicrophone()
+    {
+        Permission.RequestUserPermission(Permission.Microphone);
+    }
+
     private void TogglePinchPull()
     {
         var pinchPullEnabled = InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled; 
@@ -256,12 +265,19 @@ public class TableBrowserMenu : MonoBehaviour
 
     private class AppInfo
     {
-        public int BundleVersionCode;
+        public string Version;
+        public int BuildId;
+        public bool MicrophonePermission;
     }
 
     private void PostAppInfo()
     {
-        var appInfo = new AppInfo() {BundleVersionCode = PlayerSettings.Android.bundleVersionCode};
+        var appInfo = new AppInfo()
+        {
+            Version = Application.version,
+            BuildId = NetworkManagerGame.Singleton.BuildId,
+            MicrophonePermission = Permission.HasUserAuthorizedPermission(Permission.Microphone)
+        };
         var kvs = new KeyType<AppInfo> {Key = "app_info", Val = appInfo};
         var jsMessage = new CsMessageKeyType<AppInfo>() {Data = kvs};
         var message = JsonConvert.SerializeObject(jsMessage);
