@@ -53,7 +53,9 @@ public class TableBrowserMenu : MonoBehaviour
         if (Time.time - _postRoomInfoLast > PostRoomInfoEvery)
         {
             PostNetworkInfo();
+            PostExperimentalInfo();
         }
+        
     }
 
     private void HandleNetworkInfoChange(object sender, EventArgs e)
@@ -81,6 +83,7 @@ public class TableBrowserMenu : MonoBehaviour
             {
                 new KeyVal {Key = "build", Val = build}
             });
+            PostIsInternetGood();
             PostNetworkState(State.ToString());
             PostPlayerInfo(PlayerInfos);
             PostRoomOpen(roomOpen);
@@ -116,6 +119,14 @@ public class TableBrowserMenu : MonoBehaviour
             case "command":
                 switch (message.Message)
                 {
+                    case "togglePinchPull":
+                        TogglePinchPull();
+                        _postRoomInfoLast = Mathf.NegativeInfinity;
+                        break;
+                    case "toggleBlockBreak":
+                        ToggleBlockBreak();
+                        _postRoomInfoLast = Mathf.NegativeInfinity;
+                        break;
                     case "closeMenu":
                         CloseMenu?.Invoke(this, new EventArgs());
                         break;
@@ -196,6 +207,19 @@ public class TableBrowserMenu : MonoBehaviour
         }
     }
 
+    private void TogglePinchPull()
+    {
+        var pinchPullEnabled = InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled; 
+        InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled = !pinchPullEnabled;
+        InputManager.Hands.Right.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled = !pinchPullEnabled;
+    }
+    
+    private void ToggleBlockBreak()
+    {
+        var blockBreakActive = InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().BreakModeActive;
+        InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().SetBreakMode(!blockBreakActive);
+    }
+
     public void PostNetworkState(string state)
     {
         KeyVal[] kvs =
@@ -217,6 +241,34 @@ public class TableBrowserMenu : MonoBehaviour
         {
             Data = kv
         };
+        var message = JsonConvert.SerializeObject(jsMessage);
+        browser.PostMessage(message);
+    }
+
+    private class ExperimentalInfo
+    {
+        public bool PinchPullEnabled;
+        public bool BlockBreakEnabled;
+    }
+
+    private void PostExperimentalInfo()
+    {
+        var experimentalInfo = new ExperimentalInfo()
+        {
+            PinchPullEnabled = InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled,
+            BlockBreakEnabled = InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().BreakModeActive
+        };
+
+        var kvs = new KeyType<ExperimentalInfo>() {Key = "experimental_info", Val = experimentalInfo};
+        var jsMessage = new CsMessageKeyType<ExperimentalInfo> {Data = kvs};
+        var message = JsonConvert.SerializeObject(jsMessage);
+        browser.PostMessage(message);
+    }
+
+    private void PostIsInternetGood()
+    {
+        var kv = new KeyType<bool> {Key = "is_internet_good", Val = NetworkManagerGame.Singleton.IsInternetGood()};
+        var jsMessage = new CsMessageKeyType<bool> {Data = kv};
         var message = JsonConvert.SerializeObject(jsMessage);
         browser.PostMessage(message);
     }
