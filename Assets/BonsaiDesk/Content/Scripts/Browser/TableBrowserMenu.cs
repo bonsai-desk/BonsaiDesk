@@ -97,7 +97,6 @@ public class TableBrowserMenu : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("[bonsai] HostEndPoint is null");
                 PostRoomInfo("", "");
             }
         }

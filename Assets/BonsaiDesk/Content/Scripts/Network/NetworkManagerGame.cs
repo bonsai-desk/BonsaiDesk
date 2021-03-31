@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Dissonance;
+//using Dissonance;
 using Mirror;
 using NobleConnect.Mirror;
 using UnityEngine;
@@ -38,7 +38,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public bool visualizeAuthority;
 
-    public DissonanceComms _comms;
+    //public DissonanceComms _comms;
 
     public GameObject networkHandLeftPrefab;
     public GameObject networkHandRightPrefab;
@@ -114,7 +114,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
         HandleNetworkUpdate();
 
-        HandleCommsUpdate();
+        //HandleCommsUpdate();
     }
 
     private void OnApplicationFocus(bool focus)
@@ -126,7 +126,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
     {
         if (pauseStatus)
         {
-            SetCommsActive(false);
+            // todo SetCommsActive(false);
         }
         else
         {
@@ -233,52 +233,52 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
     }
 
-    private void HandleCommsUpdate()
-    {
-        if (mode == NetworkManagerMode.ClientOnly || mode == NetworkManagerMode.Host)
-        {
-            var oriented = MoveToDesk.Singleton.oriented;
-            var commsActive = IsCommsActive();
-            if (_hasFocus && oriented && !commsActive)
-            {
-                SetCommsActive(true);
-            }
-            else if ((!_hasFocus || !oriented) && commsActive)
-            {
-                SetCommsActive(false);
-            }
-        }
-        else if (IsCommsActive())
-        {
-            SetCommsActive(false);
-        }
-    }
+   //private void HandleCommsUpdate()
+   //{
+   //    if (mode == NetworkManagerMode.ClientOnly || mode == NetworkManagerMode.Host)
+   //    {
+   //        var oriented = MoveToDesk.Singleton.oriented;
+   //        var commsActive = IsCommsActive();
+   //        if (_hasFocus && oriented && !commsActive)
+   //        {
+   //            SetCommsActive(true);
+   //        }
+   //        else if ((!_hasFocus || !oriented) && commsActive)
+   //        {
+   //            SetCommsActive(false);
+   //        }
+   //    }
+   //    else if (IsCommsActive())
+   //    {
+   //        SetCommsActive(false);
+   //    }
+   //}
 
-    private void SetCommsActive(bool active)
-    {
-        Debug.Log($"[BONSAI] Set Comms {active}");
-        if (_comms is null)
-        {
-            Debug.LogWarning("[BONSAI] Trying to set active on comms when null");
-            return;
-        }
+   //private void SetCommsActive(bool active)
+   //{
+   //    Debug.Log($"[BONSAI] Set Comms {active}");
+   //    if (_comms is null)
+   //    {
+   //        Debug.LogWarning("[BONSAI] Trying to set active on comms when null");
+   //        return;
+   //    }
 
-        if (active)
-        {
-            _comms.IsMuted = false;
-            _comms.IsDeafened = false;
-        }
-        else
-        {
-            _comms.IsMuted = true;
-            _comms.IsDeafened = true;
-        }
-    }
+   //    if (active)
+   //    {
+   //        _comms.IsMuted = false;
+   //        _comms.IsDeafened = false;
+   //    }
+   //    else
+   //    {
+   //        _comms.IsMuted = true;
+   //        _comms.IsDeafened = true;
+   //    }
+   //}
 
-    private bool IsCommsActive()
-    {
-        return !_comms.IsMuted && !_comms.IsDeafened;
-    }
+   //private bool IsCommsActive()
+   //{
+   //    return !_comms.IsMuted && !_comms.IsDeafened;
+   //}
 
     private void HandleKickConnectionId(int id)
     {

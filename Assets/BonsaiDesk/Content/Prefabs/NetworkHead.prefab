@@ -145,7 +145,6 @@ GameObject:
   - component: {fileID: 2482834880378478163}
   - component: {fileID: 9215190182876982407}
   - component: {fileID: 3765429293320518224}
-  - component: {fileID: 5398283379296536956}
   m_Layer: 23
   m_Name: NetworkHead
   m_TagString: Untagged
@@ -308,20 +307,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &5398283379296536956
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8502092791694960064}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ae0fc7e5ceca1c440b7b759812c6a0cd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  syncMode: 0
-  syncInterval: 0.1
 --- !u!1001 &3843194958250371987
 PrefabInstance:
   m_ObjectHideFlags: 0
