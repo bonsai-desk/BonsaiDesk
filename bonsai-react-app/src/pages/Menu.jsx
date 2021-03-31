@@ -12,6 +12,8 @@ import PlayImg from '../static/play.svg';
 import MinusImg from '../static/minus.svg';
 import PlusImg from '../static/plus.svg';
 
+import DotsImg from '../static/dots-vertical.svg';
+
 import EjectImg from '../static/eject-fill.svg';
 import {KeySVG} from '../components/Keys';
 import YtImg from '../static/yt-small.png';
@@ -30,6 +32,10 @@ const grayButtonClass = 'py-4 px-8 font-bold bg-gray-800 active:bg-gray-700 hove
 const grayButtonClassInert = 'py-4 px-8 font-bold bg-gray-800 rounded flex flex-wrap content-center';
 
 // post data
+
+function postRequestMicrophone() {
+    postJson({Type: 'command', Message: 'requestMicrophone'});
+}
 
 function postTogglePinchPull() {
     postJson({Type: 'command', Message: 'togglePinchPull'});
@@ -795,7 +801,7 @@ const SettingsPage = observer(() => {
             </ToggleButton>
         </InfoItem>
         <div className={'text-xl'}>
-            Code Bundle: {store.app_info.BundleVersionCode}
+            Version: {store.app_info.Version}{'b'}{store.app_info.BuildId}
         </div>
     </MenuContent>;
 });
@@ -880,6 +886,10 @@ let Menu = observer(() => {
 
     let joinDeskActive = store.network_state === 'Hosting' && !store._room_open;
 
+    if (!store.app_info.MicrophonePermission) {
+        return <NoMicPage/>;
+    }
+
     return (
             <div className={'flex text-lg text-gray-500 h-full static'}>
                 {!store.is_internet_good ?
@@ -944,6 +954,39 @@ function ExitButton() {
                       className={'text-white'}>
                 <span className={'text-white'}>Close Menu</span>
             </ListItem>
+    );
+
+}
+
+function NoMicPage() {
+
+    const className = 'py-4 px-8 font-bold bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
+
+    function handleClick() {
+        postRequestMicrophone();
+    }
+
+    return (
+            <div className={'flex flex-wrap content-center justify-center bg-black w-full h-screen'}>
+                <div className={''}>
+                    <div className={'flex justify-center'}>
+                        <div className={'text-2xl p-4 flex flex-wrap content-center text-white bg-red-800 rounded'}>
+                            No Access to Microphone
+                        </div>
+                    </div>
+                    <div className={'h-4'}/>
+                    <div className={'flex justify-center'}>
+                        <div className={'text-2xl font-normal text-white '}>
+                            <Button className={className} handleClick={handleClick}>Request</Button>
+                        </div>
+                    </div>
+                    <div className={'h-4'}/>
+                    <div className={'flex text-white'}>
+                        <span>If that does not work, check your app permissions under </span>
+                        <img src={DotsImg} alt={''}/>
+                    </div>
+                </div>
+            </div>
     );
 
 }

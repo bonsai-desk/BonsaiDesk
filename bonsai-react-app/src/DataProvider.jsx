@@ -31,7 +31,9 @@ class Store {
         PinchPullEnabled: false
     }
     app_info = {
-        BundleVersionCode:-1
+        MicrophonePermission:false,
+        Version: "?",
+        BuildId: -1
     }
 
     constructor() {

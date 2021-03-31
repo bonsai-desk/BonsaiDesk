@@ -56,6 +56,8 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public EventHandler InfoChange;
 
+    public int BuildId;
+
     public ConnectionState State
     {
         get
