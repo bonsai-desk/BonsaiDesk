@@ -58,6 +58,8 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public int BuildId;
 
+    private float _unpausedAt = Mathf.NegativeInfinity;
+
     public ConnectionState State
     {
         get
@@ -125,6 +127,10 @@ public class NetworkManagerGame : BonsaiNetworkManager
         if (pauseStatus)
         {
             SetCommsActive(false);
+        }
+        else
+        {
+            _unpausedAt = Time.realtimeSinceStartup;
         }
     }
 
@@ -204,7 +210,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
                     {
                         StopClientIfGoodPing();
                     }
-                    else if (pingTimeout)
+                    else if (pingTimeout && Time.realtimeSinceStartup - _unpausedAt > 5.0f)
                     {
                         Debug.Log("[bonsai] Ping timeout as host");
                         StopHost();
