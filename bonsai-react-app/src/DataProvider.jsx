@@ -30,6 +30,9 @@ class Store {
         BlockBreakEnabled: false,
         PinchPullEnabled: false
     }
+    app_info = {
+        BundleVersionCode:-1
+    }
 
     constructor() {
         makeAutoObservable(this);

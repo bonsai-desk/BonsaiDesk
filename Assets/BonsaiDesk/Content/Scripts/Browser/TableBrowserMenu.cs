@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Schema;
 using Mirror;
 using Newtonsoft.Json;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Vuplex.WebView;
@@ -54,6 +56,7 @@ public class TableBrowserMenu : MonoBehaviour
         {
             PostNetworkInfo();
             PostExperimentalInfo();
+            PostAppInfo();
         }
         
     }
@@ -249,6 +252,20 @@ public class TableBrowserMenu : MonoBehaviour
     {
         public bool PinchPullEnabled;
         public bool BlockBreakEnabled;
+    }
+
+    private class AppInfo
+    {
+        public int BundleVersionCode;
+    }
+
+    private void PostAppInfo()
+    {
+        var appInfo = new AppInfo() {BundleVersionCode = PlayerSettings.Android.bundleVersionCode};
+        var kvs = new KeyType<AppInfo> {Key = "app_info", Val = appInfo};
+        var jsMessage = new CsMessageKeyType<AppInfo>() {Data = kvs};
+        var message = JsonConvert.SerializeObject(jsMessage);
+        browser.PostMessage(message);
     }
 
     private void PostExperimentalInfo()

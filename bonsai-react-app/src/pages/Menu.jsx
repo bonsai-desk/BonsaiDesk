@@ -794,6 +794,9 @@ const SettingsPage = observer(() => {
                 toggle
             </ToggleButton>
         </InfoItem>
+        <div className={'text-xl'}>
+            Code Bundle: {store.app_info.BundleVersionCode}
+        </div>
     </MenuContent>;
 });
 
