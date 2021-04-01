@@ -1448,6 +1448,7 @@ GameObject:
   - component: {fileID: 217350383}
   - component: {fileID: 217350389}
   - component: {fileID: 217350385}
+  - component: {fileID: 217350382}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -1455,6 +1456,18 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &217350382
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 217350381}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c274cfbc6c7cca42b7750567ea4c585, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &217350383
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1500,6 +1513,10 @@ MonoBehaviour:
   maxRelayRefreshAttempts: 3
   relayLifetime: 30
   isDisconnecting: 0
+  _server: https://mt1s.www.vivox.com/api2
+  _domain: mt1s.vivox.com
+  _tokenIssuer: bonsai8334-bo47-dev
+  _tokenKey: daze715
   roomOpen: 0
   serverOnlyIfEditor: 0
   visualizeAuthority: 0

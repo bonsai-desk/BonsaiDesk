@@ -32,6 +32,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
     public static NetworkManagerGame Singleton;
     public static EventHandler<NetworkConnection> ServerAddPlayer;
     public static EventHandler<NetworkConnection> ServerDisconnect;
+
     [HideInInspector] public bool roomOpen;
     public bool serverOnlyIfEditor;
 
@@ -132,6 +133,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
     public override void OnApplicationQuit()
     {
         base.OnApplicationQuit();
+
         StopXR();
     }
 
