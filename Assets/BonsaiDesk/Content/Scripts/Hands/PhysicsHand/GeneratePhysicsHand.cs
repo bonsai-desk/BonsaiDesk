@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 
 public class GeneratePhysicsHand : MonoBehaviour
@@ -11,6 +12,7 @@ public class GeneratePhysicsHand : MonoBehaviour
     public PhysicMaterial physicMaterial;
     public Material targetMaterial;
     public Material physicsHandMaterial;
+    public RuntimeAnimatorController animationController;
 
     private OVRPlugin.Skeleton2 _skeleton;
     private bool initialized = false;
@@ -68,6 +70,7 @@ public class GeneratePhysicsHand : MonoBehaviour
                 var handTarget = Instantiate(handMeshPrefab, hand.transform);
                 DestroyImmediate(handTarget.GetComponent<Animator>());
                 handTarget.name = HandName() + "_Physics_Hand_Target";
+
                 var targetMapper = handTarget.AddComponent<OVRHandTransformMapper>();
                 targetMapper.moveObjectToTarget = false;
                 targetMapper.moveBonesToTargets = false;
@@ -75,6 +78,7 @@ public class GeneratePhysicsHand : MonoBehaviour
                 targetMapper.TryAutoMapBonesByName();
                 targetMapper.targetObject = oVRSkeleton.transform;
                 targetMapper.TryAutoMapBoneTargetsAPIHand();
+
                 var renderer = handTarget.GetComponentInChildren<SkinnedMeshRenderer>();
                 renderer.sharedMaterial = targetMaterial;
                 renderer.enabled = false;

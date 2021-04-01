@@ -37,7 +37,7 @@ public class HandComponents
     private float _handAlpha = 1f;
     private bool _zTestOverlay = false;
 
-    public HandComponents(PlayerHand playerHand, Transform handAnchor, Transform handObject)
+    public HandComponents(PlayerHand playerHand, Transform handAnchor, Transform handObject, RuntimeAnimatorController animationController)
     {
         PlayerHand = playerHand;
         PlayerHand.HandComponents = this;
@@ -95,6 +95,17 @@ public class HandComponents
         }
 
         _touchScreenSurfaceLayer = LayerMask.NameToLayer("TouchScreenSurface");
+
+        var handTargetAnimator = TargetHand.gameObject.AddComponent<Animator>();
+        handTargetAnimator.runtimeAnimatorController = animationController;
+        handTargetAnimator.enabled = false;
+        
+        var targetHandAnimatorController = TargetHand.gameObject.AddComponent<HandAnimatorController>();
+        targetHandAnimatorController.controller =
+            PlayerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft
+                ? OVRInput.Controller.LTouch
+                : OVRInput.Controller.RTouch;
+        targetHandAnimatorController.animator = handTargetAnimator;
     }
 
     public void SetPhysicsLayerRegular()

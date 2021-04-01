@@ -29,7 +29,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_index1
+    path: b_l_wrist/b_l_index1
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -45,7 +45,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_index1/b_r_index2
+    path: b_l_wrist/b_l_index1/b_l_index2
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -61,7 +61,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_index1/b_r_index2/b_r_index3
+    path: b_l_wrist/b_l_index1/b_l_index2/b_l_index3
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -77,7 +77,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_middle1
+    path: b_l_wrist/b_l_middle1
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -93,7 +93,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_middle1/b_r_middle2
+    path: b_l_wrist/b_l_middle1/b_l_middle2
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -109,7 +109,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_middle1/b_r_middle2/b_r_middle3
+    path: b_l_wrist/b_l_middle1/b_l_middle2/b_l_middle3
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -125,7 +125,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_ring1
+    path: b_l_wrist/b_l_ring1
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -141,7 +141,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_ring1/b_r_ring2
+    path: b_l_wrist/b_l_ring1/b_l_ring2
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -157,7 +157,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_ring1/b_r_ring2/b_r_ring3
+    path: b_l_wrist/b_l_ring1/b_l_ring2/b_l_ring3
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -173,7 +173,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_pinky0/b_r_pinky1
+    path: b_l_wrist/b_l_pinky0/b_l_pinky1
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -189,7 +189,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_pinky0/b_r_pinky1/b_r_pinky2
+    path: b_l_wrist/b_l_pinky0/b_l_pinky1/b_l_pinky2
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -205,7 +205,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_pinky0/b_r_pinky1/b_r_pinky2/b_r_pinky3
+    path: b_l_wrist/b_l_pinky0/b_l_pinky1/b_l_pinky2/b_l_pinky3
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -221,7 +221,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_thumb0/b_r_thumb1
+    path: b_l_wrist/b_l_thumb0/b_l_thumb1
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -237,7 +237,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_thumb0/b_r_thumb1/b_r_thumb2
+    path: b_l_wrist/b_l_thumb0/b_l_thumb1/b_l_thumb2
   - curve:
       serializedVersion: 2
       m_Curve:
@@ -253,7 +253,7 @@ AnimationClip:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-    path: b_r_wrist/b_r_thumb0/b_r_thumb1/b_r_thumb2/b_r_thumb3
+    path: b_l_wrist/b_l_thumb0/b_l_thumb1/b_l_thumb2/b_l_thumb3
   m_PositionCurves: []
   m_ScaleCurves: []
   m_FloatCurves: []

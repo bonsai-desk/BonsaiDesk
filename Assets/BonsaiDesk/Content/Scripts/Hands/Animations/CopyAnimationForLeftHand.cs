@@ -33,7 +33,7 @@ public class CopyAnimationForLeftHand : MonoBehaviour
 
                 //editing the key value wasn't working so just make a new keys array
                 animationCurve.keys = new[] {new Keyframe(animationCurve.keys[0].time, animationCurve.keys[0].value)};
-                clip.SetCurve(bindings[i].path, bindings[i].type, bindings[i].propertyName, animationCurve);
+                clip.SetCurve(bindings[i].path.Replace("r_", "l_"), bindings[i].type, bindings[i].propertyName, animationCurve);
             }
 
             var name = animation.name.Substring(0, animation.name.Length - "Right".Length);

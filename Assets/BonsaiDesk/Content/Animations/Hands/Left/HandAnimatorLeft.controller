@@ -54,7 +54,7 @@ AnimatorController:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: RightHand
+  m_Name: HandAnimatorLeft
   serializedVersion: 5
   m_AnimatorParameters:
   - m_Name: DefaultFistBlend
@@ -85,7 +85,7 @@ BlendTree:
   m_Name: Blend Tree
   m_Childs:
   - serializedVersion: 2
-    m_Motion: {fileID: 7400000, guid: 65e97ccb8693ff048b5e507da0a710d9, type: 2}
+    m_Motion: {fileID: 7400000, guid: 6b76ec0ab4ce7c74baeaabbd6c29fe09, type: 2}
     m_Threshold: 0
     m_Position: {x: 0, y: 0}
     m_TimeScale: 1
@@ -93,7 +93,7 @@ BlendTree:
     m_DirectBlendParameter: Blend
     m_Mirror: 0
   - serializedVersion: 2
-    m_Motion: {fileID: 7400000, guid: 58197b301864fec4db9e854eb171aa75, type: 2}
+    m_Motion: {fileID: 7400000, guid: 38396e882f00b4c419a0ce528eb20ad4, type: 2}
     m_Threshold: 1
     m_Position: {x: 0, y: 0}
     m_TimeScale: 1

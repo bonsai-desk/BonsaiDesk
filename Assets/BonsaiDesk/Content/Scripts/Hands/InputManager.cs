@@ -21,6 +21,8 @@ public class InputManager : MonoBehaviour
     public PlayerHand leftPlayerHand;
 
     public PlayerHand rightPlayerHand;
+    public RuntimeAnimatorController leftAnimationController;
+    public RuntimeAnimatorController rightAnimationController;
 
     [Header("")]
     public Transform cameraRig;
@@ -73,8 +75,8 @@ public class InputManager : MonoBehaviour
         Transform rightHandObject = Instantiate(Resources.Load<GameObject>("Right_Hand"), transform).transform;
         rightHandObject.name = "Right_Hand";
 
-        Left = new HandComponents(leftPlayerHand, leftHandAnchor, leftHandObject);
-        Right = new HandComponents(rightPlayerHand, rightHandAnchor, rightHandObject);
+        Left = new HandComponents(leftPlayerHand, leftHandAnchor, leftHandObject, leftAnimationController);
+        Right = new HandComponents(rightPlayerHand, rightHandAnchor, rightHandObject, rightAnimationController);
 
         Left.SetHandColliderActiveForScreen(false);
         Right.SetHandColliderActiveForScreen(false);
