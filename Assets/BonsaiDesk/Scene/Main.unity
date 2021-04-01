@@ -7661,7 +7661,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   oVRSkeleton: {fileID: 768559157}
-  handMeshPrefab: {fileID: 100158, guid: 442d5b4503ed83c4897ef44659446587, type: 3}
+  handMeshPrefab: {fileID: 919132149155446097, guid: 3e64b172cbdf9034fbb190e7e9529d2c,
+    type: 3}
   handPalmPrefab: {fileID: 5930084828825535406, guid: b9e46fc6657bda44aa3703d4f4519db1,
     type: 3}
   physicMaterial: {fileID: 13400000, guid: 0760bcba4a3eca444b757f5acf9dd5d3, type: 2}
@@ -13395,7 +13396,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   oVRSkeleton: {fileID: 1123713195}
-  handMeshPrefab: {fileID: 100048, guid: 88e2e1bfe11ec6c438b0ade27eaeded1, type: 3}
+  handMeshPrefab: {fileID: 919132149155446097, guid: 7b2e5f23f1bd5b044b50022a88bc534e,
+    type: 3}
   handPalmPrefab: {fileID: 6529683963274320009, guid: 4b0a2f9ec3fc8614b94b30e6fd3d00df,
     type: 3}
   physicMaterial: {fileID: 13400000, guid: 0760bcba4a3eca444b757f5acf9dd5d3, type: 2}
