@@ -40,6 +40,8 @@ public class NetworkManagerGame : BonsaiNetworkManager
     public GameObject networkHandLeftPrefab;
     public GameObject networkHandRightPrefab;
 
+    public int BuildId;
+
     public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos =
         new Dictionary<NetworkConnection, PlayerInfo>();
 
@@ -51,11 +53,9 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     private bool _roomJoinInProgress;
 
-    public EventHandler InfoChange;
-
-    public int BuildId;
-
     private float _unpausedAt = Mathf.NegativeInfinity;
+
+    public EventHandler InfoChange;
 
     public ConnectionState State
     {
@@ -169,7 +169,8 @@ public class NetworkManagerGame : BonsaiNetworkManager
     {
         if (isDisconnecting || _roomJoinInProgress)
         {
-            BonsaiLog($"Prevent Update while isDisconnecting={isDisconnecting} _roomJoinInProgress={_roomJoinInProgress}");
+            BonsaiLog(
+                $"Prevent Update while isDisconnecting={isDisconnecting} _roomJoinInProgress={_roomJoinInProgress}");
             return;
         }
 
@@ -227,31 +228,31 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
     }
 
-   //private void HandleCommsUpdate()
-   //{
-   //    if (mode == NetworkManagerMode.ClientOnly || mode == NetworkManagerMode.Host)
-   //    {
-   //        var oriented = MoveToDesk.Singleton.oriented;
-   //        var commsActive = IsCommsActive();
-   //        if (_hasFocus && oriented && !commsActive)
-   //        {
-   //            SetCommsActive(true);
-   //        }
-   //        else if ((!_hasFocus || !oriented) && commsActive)
-   //        {
-   //            SetCommsActive(false);
-   //        }
-   //    }
-   //    else if (IsCommsActive())
-   //    {
-   //        SetCommsActive(false);
-   //    }
-   //}
+    //private void HandleCommsUpdate()
+    //{
+    //    if (mode == NetworkManagerMode.ClientOnly || mode == NetworkManagerMode.Host)
+    //    {
+    //        var oriented = MoveToDesk.Singleton.oriented;
+    //        var commsActive = IsCommsActive();
+    //        if (_hasFocus && oriented && !commsActive)
+    //        {
+    //            SetCommsActive(true);
+    //        }
+    //        else if ((!_hasFocus || !oriented) && commsActive)
+    //        {
+    //            SetCommsActive(false);
+    //        }
+    //    }
+    //    else if (IsCommsActive())
+    //    {
+    //        SetCommsActive(false);
+    //    }
+    //}
 
-   //private bool IsCommsActive()
-   //{
-   //    return !_comms.IsMuted && !_comms.IsDeafened;
-   //}
+    //private bool IsCommsActive()
+    //{
+    //    return !_comms.IsMuted && !_comms.IsDeafened;
+    //}
 
     private void HandleKickConnectionId(int id)
     {
@@ -591,6 +592,21 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
     }
 
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiNetwork: </color>: " + msg);
+    }
+
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiNetwork: </color>: " + msg);
+    }
+
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiNetwork: </color>: " + msg);
+    }
+
     [Serializable]
     public class PlayerInfo
     {
@@ -615,17 +631,4 @@ public class NetworkManagerGame : BonsaiNetworkManager
     }
 
     private struct ShouldDisconnectMessage : NetworkMessage { }
-
-    private void BonsaiLog(string msg)
-    {
-        Debug.Log("<color=orange>BonsaiNetwork: </color>: " + msg);
-    }
-    private void BonsaiLogWarning(string msg)
-    {
-        Debug.LogWarning("<color=orange>BonsaiNetwork: </color>: " + msg);
-    }
-    private void BonsaiLogError(string msg)
-    {
-        Debug.LogError("<color=orange>BonsaiNetwork: </color>: " + msg);
-    }
 }
