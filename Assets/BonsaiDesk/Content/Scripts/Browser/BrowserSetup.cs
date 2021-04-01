@@ -14,7 +14,7 @@ public class BrowserSetup : MonoBehaviour {
 	private void Update() { }
 
 	private void PreConfigureWebView() {
-		Debug.Log("[BONSAI] Preconfigure WebView");
+        BonsaiLog("Preconfigure WebView");
 		Web.SetUserAgent(true);
 		if (forceEnableDebugging) {
 	#if UNITY_ANDROID && !UNITY_EDITOR
@@ -50,4 +50,17 @@ public class BrowserSetup : MonoBehaviour {
 		StandaloneWebView.SetCommandLineArguments("--autoplay-policy=no-user-gesture-required");
 	#endif
 	}
+    
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiBrowserSetup: </color>: " + msg);
+    }
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiBrowserSetup: </color>: " + msg);
+    }
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiBrowserSetup: </color>: " + msg);
+    }
 }

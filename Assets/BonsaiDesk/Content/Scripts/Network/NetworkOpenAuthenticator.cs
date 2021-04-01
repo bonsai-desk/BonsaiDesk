@@ -14,7 +14,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 	/// </summary>
 	public override void OnStartServer() {
 		// do nothing
-		Debug.Log("[BONSAI] OnStartServer");
+        BonsaiLog("OnStartServer");
 	}
 
 	/// <summary>
@@ -22,13 +22,12 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 	/// </summary>
 	/// <param name="conn">Connection to client.</param>
 	public override void OnServerAuthenticate(NetworkConnection conn) {
-		Debug.Log("[BONSAI] OnServerAuthenticate");
 		if (NetworkManagerGame.Singleton.roomOpen ||
 		    conn.connectionId == NetworkServer.localConnection.connectionId) {
 			var authResponseMessage = new AuthResponseMessage {
 				Code = 100
 			};
-			Debug.Log("[BONSAI] ServerAuthenticate Accept");
+            BonsaiLog("Server Accept");
 			conn.Send(authResponseMessage);
 			ServerAccept(conn);
 		}
@@ -36,7 +35,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 			var authResponseMessage = new AuthResponseMessage {
 				Code = 200
 			};
-			Debug.Log("[BONSAI] ServerAuthenticate Reject");
+            BonsaiLog("Server Reject");
 			conn.Send(authResponseMessage);
 			conn.isAuthenticated = false;
 			ServerReject(conn);
@@ -48,7 +47,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 	///     <para>Client message handlers should be registered in this method.</para>
 	/// </summary>
 	public override void OnStartClient() {
-		Debug.Log("[BONSAI] OnStartClient");
+        BonsaiLog("OnStartClient");
 		// register a handler for the authentication response we expect from server
 		NetworkClient.RegisterHandler<AuthResponseMessage>(OnAuthResponseMessage, false);
 	}
@@ -58,7 +57,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 	/// </summary>
 	/// <param name="conn">Connection of the client.</param>
 	public override void OnClientAuthenticate(NetworkConnection conn) {
-		Debug.Log("[BONSAI] OnClientAuthenticate");
+        BonsaiLog("OnClientAuthenticate");
 		// do nothing just wait for AuthMessageResponse
 	}
 
@@ -66,11 +65,11 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 		switch (msg.Code) {
 			// Invoke the event to complete a successful authentication
 			case 100:
-				Debug.Log("[BONSAI] Authenticator Accepted");
+                BonsaiLog("Authenticator Accepted");
 				ClientAccept(conn);
 				break;
 			case 200:
-				Debug.Log("[BONSAI] Authenticator Rejected");
+                BonsaiLog("Authenticator Rejected");
 				ClientReject(conn);
 				break;
 		}
@@ -81,4 +80,17 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator {
 		// 200 : reject
 		public byte Code;
 	}
+    
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiAuth: </color>: " + msg);
+    }
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiAuth: </color>: " + msg);
+    }
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiAuth: </color>: " + msg);
+    }
 }
