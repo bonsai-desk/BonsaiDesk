@@ -57,6 +57,8 @@ public class MoveToDesk : MonoBehaviour
     private Vector3 _tableStartPosition;
     private Vector3 _tableEndPosition;
 
+    public MoveToDeskTutorialSwap moveToDeskTutorialSwap;
+
     public bool oriented
     {
         get => _oriented;
@@ -231,7 +233,7 @@ public class MoveToDesk : MonoBehaviour
     {
         //set instructions active
         handDemo.gameObject.SetActive(true);
-
+        
         //calculate rotation of the hand demo
         var eyeForward = centerEyeAnchor.forward;
         eyeForward.y = 0;
@@ -254,6 +256,11 @@ public class MoveToDesk : MonoBehaviour
 
         handDemo.position = Vector3.MoveTowards(handDemo.position, centerEyeAnchor.position,
             handDemoPositionDifference * 3f * Time.deltaTime);
+
+        if (!InputManager.Hands.UsingHandTracking && !moveToDeskTutorialSwap.PopupDismissed)
+        {
+            return;
+        }
 
         if (!InputManager.Hands.UsingHandTracking)
         {
@@ -311,6 +318,9 @@ public class MoveToDesk : MonoBehaviour
                     handDemo.gameObject.SetActive(false);
                     tableGhost.gameObject.SetActive(false);
                     oriented = true;
+                    
+                    SaveSystem.Instance.BoolPairs["OrientWithControllers"] = true;
+                    SaveSystem.Instance.Save();
                     return;
                 }
             }
