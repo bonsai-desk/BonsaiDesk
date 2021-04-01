@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-//using Dissonance;
 using Mirror;
 using NobleConnect.Mirror;
 using UnityEngine;
@@ -37,8 +36,6 @@ public class NetworkManagerGame : BonsaiNetworkManager
     public bool serverOnlyIfEditor;
 
     public bool visualizeAuthority;
-
-    //public DissonanceComms _comms;
 
     public GameObject networkHandLeftPrefab;
     public GameObject networkHandRightPrefab;
@@ -113,8 +110,6 @@ public class NetworkManagerGame : BonsaiNetworkManager
         HandlePingUpdate();
 
         HandleNetworkUpdate();
-
-        //HandleCommsUpdate();
     }
 
     private void OnApplicationFocus(bool focus)
@@ -174,8 +169,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
     {
         if (isDisconnecting || _roomJoinInProgress)
         {
-            Debug.Log(
-                $"[BONSAI] NetworkManager prevent Update while isDisconnecting={isDisconnecting} _roomJoinInProgress={_roomJoinInProgress}");
+            BonsaiLog($"Prevent Update while isDisconnecting={isDisconnecting} _roomJoinInProgress={_roomJoinInProgress}");
             return;
         }
 
@@ -200,7 +194,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
                 case NetworkManagerMode.ClientOnly:
                     if (pingTimeout)
                     {
-                        Debug.Log("[bonsai] Ping timeout as client");
+                        BonsaiLog("Ping timeout as client");
                         StopClient();
                     }
 
@@ -212,7 +206,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
                     }
                     else if (pingTimeout && Time.realtimeSinceStartup - _unpausedAt > 5.0f)
                     {
-                        Debug.Log("[bonsai] Ping timeout as host");
+                        BonsaiLog("Ping timeout as host");
                         StopHost();
                     }
 
@@ -227,7 +221,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
     {
         if (Time.realtimeSinceStartup - _lastGoodPingReceived < 1.0f)
         {
-            Debug.Log("[bonsai] Got a good ping, disconnecting from LAN");
+            BonsaiLog("Got a good ping, disconnecting from LAN");
             isLANOnly = false;
             StopClient();
         }
@@ -254,27 +248,6 @@ public class NetworkManagerGame : BonsaiNetworkManager
    //    }
    //}
 
-   //private void SetCommsActive(bool active)
-   //{
-   //    Debug.Log($"[BONSAI] Set Comms {active}");
-   //    if (_comms is null)
-   //    {
-   //        Debug.LogWarning("[BONSAI] Trying to set active on comms when null");
-   //        return;
-   //    }
-
-   //    if (active)
-   //    {
-   //        _comms.IsMuted = false;
-   //        _comms.IsDeafened = false;
-   //    }
-   //    else
-   //    {
-   //        _comms.IsMuted = true;
-   //        _comms.IsDeafened = true;
-   //    }
-   //}
-
    //private bool IsCommsActive()
    //{
    //    return !_comms.IsMuted && !_comms.IsDeafened;
@@ -282,14 +255,13 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     private void HandleKickConnectionId(int id)
     {
-        Debug.Log($"[Bonsai] NetworkManager Kick (id={id})");
+        BonsaiLog($"Kick (id={id})");
         StartCoroutine(KickClient(id));
     }
 
     private void HandleLeaveRoom()
     {
-        Debug.Log("[BONSAI] NetworkManager LeaveRoom");
-        Debug.Log("[BONSAI] StopClient");
+        BonsaiLog("LeaveRoom and StopClient");
         StopClient();
     }
 
@@ -299,7 +271,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
         {
             if (HostEndPoint.Address.ToString() == roomData.ip_address && HostEndPoint.Port == roomData.port)
             {
-                Debug.LogWarning("[BONSAI] Tried to join own hosted room as client, ignoring");
+                BonsaiLogWarning("Tried to join own hosted room as client, ignoring");
             }
             else
             {
@@ -308,17 +280,17 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
         else
         {
-            Debug.LogWarning("[BONSAI] Ignoring attempt to join room while room join is in progress");
+            BonsaiLogWarning("Ignoring attempt to join room while room join is in progress");
         }
     }
 
     private IEnumerator JoinRoom(TableBrowserMenu.RoomData roomData)
     {
-        Debug.Log("[BONSAI] NetworkManager Begin JoinRoom");
+        BonsaiLog("Begin JoinRoom");
         _roomJoinInProgress = true;
         if (mode == NetworkManagerMode.Host || !(HostEndPoint is null))
         {
-            Debug.Log("[bonsai] NetworkManger StopHost before join room");
+            BonsaiLog("StopHost before join room");
             StopHost();
             InfoChange?.Invoke(this, new EventArgs());
         }
@@ -326,19 +298,17 @@ public class NetworkManagerGame : BonsaiNetworkManager
         var t0 = Time.realtimeSinceStartup;
         while (!(HostEndPoint is null))
         {
-            Debug.Log(
-                $"[BONSAI] JoinRoom: wait for HostEndPoint to be null {HostEndPoint.Address} {HostEndPoint.Port}");
+            BonsaiLog($"Wait for HostEndPoint to be null in JoinRoom {HostEndPoint.Address} {HostEndPoint.Port}");
             if (HostEndPoint.Address.ToString() == "127.0.0.1" || HostEndPoint.Address.ToString() == "localhost")
             {
                 // This happens when you are a LAN host then try to join a room
-                Debug.Log("[bonsai] NetworkManager breaking HostEndPoint null check since localhost");
+                BonsaiLog("Breaking HostEndPoint null check in JoinRoom since localhost");
                 break;
             }
 
             if (Time.realtimeSinceStartup - t0 > 2f)
             {
-                Debug.Log(
-                    "[bonsai] NetworkManager breaking loop since spent too long waiting for HostEndPoint to be null");
+                BonsaiLog("Breaking loop since spent too long waiting for HostEndPoint to be null in JionRoom");
                 break;
             }
 
@@ -354,7 +324,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
         else
         {
-            Debug.LogWarning("[Bonsai] NetworkManager tried to join room while a hosting/client, ignoring");
+            BonsaiLogWarning("Tried to join room while a hosting/client, ignoring");
         }
 
         _roomJoinInProgress = false;
@@ -362,7 +332,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     private void HandleCloseRoom()
     {
-        Debug.Log("[BONSAI] NetworkManager CloseRoom");
+        BonsaiLog("CloseRoom");
         roomOpen = false;
         StartCoroutine(KickClients());
         InfoChange?.Invoke(this, new EventArgs());
@@ -370,7 +340,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     private void HandleOpenRoom()
     {
-        Debug.Log("[BONSAI] NetworkManager OpenRoom");
+        BonsaiLog("OpenRoom");
         roomOpen = true;
         InfoChange?.Invoke(this, new EventArgs());
     }
@@ -378,13 +348,13 @@ public class NetworkManagerGame : BonsaiNetworkManager
     public override void OnServerConnect(NetworkConnection conn)
     {
         base.OnServerConnect(conn);
-        Debug.Log("[BONSAI] NetworkManager ServerConnect");
+        BonsaiLog("ServerConnect");
     }
 
     //this doesn't call the base function because we need to instantiate and spawn the player ourselves here so we can change the spotId
     public override void OnServerAddPlayer(NetworkConnection conn)
     {
-        Debug.Log("[BONSAI] NetworkManager ServerAddPlayer");
+        BonsaiLog("ServerAddPlayer");
 
         var openSpot = OpenSpotId();
         PlayerInfos.Add(conn, new PlayerInfo(openSpot, "NoName"));
@@ -425,7 +395,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public override void OnServerDisconnect(NetworkConnection conn)
     {
-        Debug.Log("[BONSAI] ServerDisconnect");
+        BonsaiLog("ServerDisconnect");
 
         ServerDisconnect?.Invoke(this, conn);
 
@@ -454,7 +424,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public override void OnClientConnect(NetworkConnection conn)
     {
-        Debug.Log($"[BONSAI] OnClientConnect {conn.connectionId} {conn.isReady}");
+        BonsaiLog($"OnClientConnect {conn.connectionId} {conn.isReady}");
 
         base.OnClientConnect(conn);
 
@@ -463,7 +433,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public override void OnClientDisconnect(NetworkConnection conn)
     {
-        Debug.Log("[BONSAI] OnClientDisconnect");
+        BonsaiLog("OnClientDisconnect");
 
         NetworkClient.UnregisterHandler<ShouldDisconnectMessage>();
 
@@ -472,45 +442,44 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public override void OnFatalError(string error)
     {
-        Debug.LogWarning($"[BONSAI] OnFatalError: {error}");
+        BonsaiLogWarning($"OnFatalError: {error}");
         base.OnFatalError(error);
     }
 
     public override void OnServerPrepared(string hostAddress, ushort hostPort)
     {
-        Debug.Log($"[BONSAI] OnServerPrepared ({hostAddress} : {hostPort}) isLanOnly={isLANOnly}");
+        BonsaiLog($"OnServerPrepared ({hostAddress} : {hostPort}) isLanOnly={isLANOnly}");
     }
 
     private void OnShouldDisconnect(ShouldDisconnectMessage _)
     {
-        Debug.Log("[BONSAI] NetworkManger ShouldDisconnect");
+        BonsaiLog("ShouldDisconnect");
         StopClient();
     }
 
-    private static IEnumerator StartXR()
+    private IEnumerator StartXR()
     {
-        Debug.Log("[BONSAI] Initializing XR");
+        BonsaiLog("Initializing XR");
         yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
 
         if (XRGeneralSettings.Instance.Manager.activeLoader == null)
         {
-            Debug.LogError("[BONSAI] Initializing XR Failed. Check Editor or Player log for details.");
+            BonsaiLogError("Initializing XR Failed. Check Editor or Player log for details.");
         }
         else
         {
-            Debug.Log("[BONSAI] Starting XR");
+            BonsaiLog("Starting XR");
             XRGeneralSettings.Instance.Manager.StartSubsystems();
         }
     }
 
-    private static void StopXR()
+    private void StopXR()
     {
         if (XRGeneralSettings.Instance.Manager.isInitializationComplete)
         {
-            Debug.Log("[BONSAI] Stopping XR");
+            BonsaiLog("Stopping XR");
             XRGeneralSettings.Instance.Manager.StopSubsystems();
             XRGeneralSettings.Instance.Manager.DeinitializeLoader();
-            Debug.Log("[BONSAI] Stopped XR");
         }
     }
 
@@ -528,11 +497,11 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
         if (updated)
         {
-            Debug.Log($"[BONSAI] Updated UserInfo in PlayerInfos -> {userInfo.DisplayName}");
+            BonsaiLog($"Updated UserInfo in PlayerInfos -> {userInfo.DisplayName}");
         }
         else
         {
-            Debug.LogWarning("[BONSAI] Tried to update PlayerInfos but failed");
+            BonsaiLogWarning("Tried to update PlayerInfos but failed");
         }
 
         InfoChange?.Invoke(this, new EventArgs());
@@ -598,7 +567,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
             return spots[0];
         }
 
-        Debug.LogError("[BONSAI] No open spot");
+        BonsaiLogError("No open spot");
         return 0;
     }
 
@@ -616,7 +585,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
     {
         if (Time.realtimeSinceStartup - _lastStartHost > StartHostCooldown)
         {
-            Debug.Log("[BONSAI] NetworkManager StartHost");
+            BonsaiLog("StartHost");
             StartHost();
             _lastStartHost = Time.realtimeSinceStartup;
         }
@@ -646,4 +615,17 @@ public class NetworkManagerGame : BonsaiNetworkManager
     }
 
     private struct ShouldDisconnectMessage : NetworkMessage { }
+
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiNetwork: </color>: " + msg);
+    }
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiNetwork: </color>: " + msg);
+    }
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiNetwork: </color>: " + msg);
+    }
 }
