@@ -57,13 +57,13 @@ public class TableBrowserParent : MonoBehaviour {
 				WebBrowserParent.SetAllHidden(true);
 				break;
 			default:
-				Debug.LogWarning($"[BONSAI] set browser {browser} active not handled");
+                BonsaiLogWarning($"Set browser {browser} active not handled");
 				break;
 		}
 	}
 
 	public void Sleep() {
-		Debug.Log("[BONSAI] Sleep all table browsers");
+        BonsaiLog("Sleep");
 		sleeped = true;
 		TableBrowser.SetHidden(true);
 		WebBrowserParent.SetAllHidden(true);
@@ -97,4 +97,17 @@ public class TableBrowserParent : MonoBehaviour {
 		Web,
 		Table
 	}
+    
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiTableBrowserParent: </color>: " + msg);
+    }
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiTableBrowserParent: </color>: " + msg);
+    }
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiTableBrowserParent: </color>: " + msg);
+    }
 }

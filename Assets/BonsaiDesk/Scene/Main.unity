@@ -1494,7 +1494,7 @@ MonoBehaviour:
   networkPort: 0
   region: 0
   forceRelayConnection: 0
-  logLevel: 1
+  logLevel: 2
   relayRefreshTime: 30
   relayRefreshTimeout: 0.1
   maxRelayRefreshAttempts: 3

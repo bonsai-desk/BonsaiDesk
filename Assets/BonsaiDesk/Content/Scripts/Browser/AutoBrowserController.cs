@@ -343,7 +343,7 @@ public class AutoBrowserController : NetworkBehaviour
 
     private void SetupBrowser(bool restart = false)
     {
-        Debug.Log("setup browser");
+        BonsaiLog("SetupBrowser");
         if (!restart)
         {
             _autoBrowser.OnMessageEmitted(HandleJavascriptMessage);
@@ -625,12 +625,12 @@ public class AutoBrowserController : NetworkBehaviour
         {
             case true when isServer:
                 return NetworkClient.connection.isReady
-                    ? $"[BONSAI HOST {NetworkClient.connection.identity.netId}] "
-                    : "[BONSAI HOST] ";
+                    ? $"<color=orange>BonsaiABC (host_{NetworkClient.connection.identity.netId}):</color> "
+                    : "<color=orange>BonsaiABC (host):</color> ";
             case true:
                 return NetworkClient.connection.isReady
-                    ? $"[BONSAI CLIENT {NetworkClient.connection.identity.netId}] "
-                    : "[BONSAI CLIENT] ";
+                    ? $"<color=orange>BonsaiABC (client_{NetworkClient.connection.identity.netId}):</color> "
+                    : "<color=orange>BonsaiABC (client):</color> ";
             default:
                 return "[BONSAI SERVER] ";
         }
@@ -639,6 +639,19 @@ public class AutoBrowserController : NetworkBehaviour
     private void TLog(string message)
     {
         Debug.Log(Tag() + message);
+    }
+    
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiAuth: </color>: " + msg);
+    }
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiAuth: </color>: " + msg);
+    }
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiAuth: </color>: " + msg);
     }
 
     public MediaInfo GetMediaInfo()

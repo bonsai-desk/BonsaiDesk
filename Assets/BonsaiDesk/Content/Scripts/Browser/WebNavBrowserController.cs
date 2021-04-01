@@ -34,7 +34,6 @@ public class WebNavBrowserController : MonoBehaviour {
 
 	private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs) {
 		var message = JsonConvert.DeserializeObject<Browser.JsMessageString>(eventArgs.Value);
-		Debug.Log(eventArgs.Value);
 		if (message.Type == "command") {
 			switch (message.Message) {
 				case "closeWeb":

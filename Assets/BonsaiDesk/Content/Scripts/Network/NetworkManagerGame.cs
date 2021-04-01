@@ -448,7 +448,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public override void OnServerPrepared(string hostAddress, ushort hostPort)
     {
-        BonsaiLog($"OnServerPrepared ({hostAddress} : {hostPort}) isLanOnly={isLANOnly}");
+        BonsaiLog($"OnServerPrepared ({hostAddress}:{hostPort}) isLanOnly={isLANOnly}");
     }
 
     private void OnShouldDisconnect(ShouldDisconnectMessage _)
