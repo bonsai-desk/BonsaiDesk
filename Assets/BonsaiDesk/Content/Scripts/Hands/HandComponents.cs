@@ -13,6 +13,7 @@ public class HandComponents
     public readonly OVRSkeleton OVRSkeleton;
     public readonly OVRHand OVRHand;
     public readonly PhysicsHandController PhysicsHandController;
+    public readonly HandAnimatorController TargetHandAnimatorController;
 
     //0 - thumb, 1 - index, 2 - middle, 3 - ring, 4 - pinky
     public readonly Transform[] PhysicsFingerTips;
@@ -37,7 +38,7 @@ public class HandComponents
     private float _handAlpha = 1f;
     private bool _zTestOverlay = false;
 
-    public HandComponents(PlayerHand playerHand, Transform handAnchor, Transform handObject)
+    public HandComponents(PlayerHand playerHand, Transform handAnchor, Transform handObject, RuntimeAnimatorController animationController)
     {
         PlayerHand = playerHand;
         PlayerHand.HandComponents = this;
@@ -95,6 +96,17 @@ public class HandComponents
         }
 
         _touchScreenSurfaceLayer = LayerMask.NameToLayer("TouchScreenSurface");
+
+        var handTargetAnimator = TargetHand.gameObject.AddComponent<Animator>();
+        handTargetAnimator.runtimeAnimatorController = animationController;
+        handTargetAnimator.enabled = false;
+        
+        TargetHandAnimatorController = TargetHand.gameObject.AddComponent<HandAnimatorController>();
+        TargetHandAnimatorController.controller =
+            PlayerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft
+                ? OVRInput.Controller.LTouch
+                : OVRInput.Controller.RTouch;
+        TargetHandAnimatorController.animator = handTargetAnimator;
     }
 
     public void SetPhysicsLayerRegular()
@@ -107,6 +119,7 @@ public class HandComponents
     {
         SetLayerRecursive(PhysicsHand, _onlyScreenLayer);
         SetLayerRecursive(PhysicsMapper.BoneTargets[(int) OVRSkeleton.BoneId.Hand_Index3], _indexForScreenPhysicsLayer);
+        PlayerHand.stylus.gameObject.layer = _indexForScreenPhysicsLayer;
     }
 
     private static Transform[] GetFingerTips(OVRHandTransformMapper mapper)
@@ -158,7 +171,8 @@ public class HandComponents
         float handAlphaTarget = Tracking ? 1f : 0f;
         _handAlpha = Mathf.MoveTowards(_handAlpha, handAlphaTarget, Time.deltaTime / RecentTrackingThreshold);
         var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
-        if (!playing)
+        var controllersAndInVoid = !InputManager.Hands.UsingHandTracking && !MoveToDesk.Singleton.oriented;
+        if (!playing || controllersAndInVoid)
         {
             _handAlpha = 0;
         }

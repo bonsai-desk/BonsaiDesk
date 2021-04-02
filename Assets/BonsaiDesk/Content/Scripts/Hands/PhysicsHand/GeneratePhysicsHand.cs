@@ -68,6 +68,7 @@ public class GeneratePhysicsHand : MonoBehaviour
                 var handTarget = Instantiate(handMeshPrefab, hand.transform);
                 DestroyImmediate(handTarget.GetComponent<Animator>());
                 handTarget.name = HandName() + "_Physics_Hand_Target";
+
                 var targetMapper = handTarget.AddComponent<OVRHandTransformMapper>();
                 targetMapper.moveObjectToTarget = false;
                 targetMapper.moveBonesToTargets = false;
@@ -75,6 +76,7 @@ public class GeneratePhysicsHand : MonoBehaviour
                 targetMapper.TryAutoMapBonesByName();
                 targetMapper.targetObject = oVRSkeleton.transform;
                 targetMapper.TryAutoMapBoneTargetsAPIHand();
+
                 var renderer = handTarget.GetComponentInChildren<SkinnedMeshRenderer>();
                 renderer.sharedMaterial = targetMaterial;
                 renderer.enabled = false;

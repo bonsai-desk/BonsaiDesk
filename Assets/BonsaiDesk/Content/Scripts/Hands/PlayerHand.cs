@@ -21,6 +21,7 @@ public class PlayerHand : MonoBehaviour
     public Transform pinchPullPointer;
     public Transform wrist;
     public Transform thumbDirection;
+    public Transform stylus;
 
     public static int AllButHandsMask;
     public static int HandsMask;
@@ -29,6 +30,7 @@ public class PlayerHand : MonoBehaviour
     public enum Gesture
     {
         IndexPinching,
+        IndexTargetPinching,
         Fist,
         FlatFist,
         WeakFist,
@@ -171,6 +173,7 @@ public class PlayerHand : MonoBehaviour
         float flatFistStrength = FlatFistStrength();
 
         UpdateGesture(Gesture.IndexPinching, IndexPinching());
+        UpdateGesture(Gesture.IndexTargetPinching, IndexTargetPinching());
         UpdateGesture(Gesture.Fist, fistStrength > 0.7f);
         UpdateGesture(Gesture.FlatFist, flatFistStrength > 0.7f);
         UpdateGesture(Gesture.WeakFist, fistStrength > 0.5f);
@@ -209,6 +212,22 @@ public class PlayerHand : MonoBehaviour
         else
         {
             return PinchStrength(OVRSkeleton.BoneId.Hand_IndexTip) > 0.99f;
+        }
+    }
+
+    public bool IndexTargetPinching()
+    {
+        if (OVRInput.GetConnectedControllers() == OVRInput.Controller.Hands)
+        {
+            return InputManager.Hands.GetHand(skeletonType).OVRHand.GetFingerIsPinching(OVRHand.HandFinger.Index);
+        }
+        else
+        {
+            var controller = skeletonType == OVRSkeleton.SkeletonType.HandLeft
+                ? OVRInput.Controller.LTouch
+                : OVRInput.Controller.RTouch;
+            var pinch = OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, controller);
+            return pinch > 0.9f;
         }
     }
 

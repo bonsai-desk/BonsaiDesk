@@ -14,11 +14,15 @@ public class InputManager : MonoBehaviour
     public Transform leftHandAnchor;
 
     public Transform rightHandAnchor;
+    public GameObject leftControllerModel;
+    public GameObject rightControllerModel;
 
     [Header("PlayHand Scripts")]
     public PlayerHand leftPlayerHand;
 
     public PlayerHand rightPlayerHand;
+    public RuntimeAnimatorController leftAnimationController;
+    public RuntimeAnimatorController rightAnimationController;
 
     [Header("")]
     public Transform cameraRig;
@@ -45,6 +49,8 @@ public class InputManager : MonoBehaviour
 
     private IHandsTick[] _handsTicks;
 
+    public bool UsingHandTracking => OVRInput.GetConnectedControllers() == OVRInput.Controller.Hands;
+
     private void Awake()
     {
         if (Hands != null)
@@ -69,8 +75,8 @@ public class InputManager : MonoBehaviour
         Transform rightHandObject = Instantiate(Resources.Load<GameObject>("Right_Hand"), transform).transform;
         rightHandObject.name = "Right_Hand";
 
-        Left = new HandComponents(leftPlayerHand, leftHandAnchor, leftHandObject);
-        Right = new HandComponents(rightPlayerHand, rightHandAnchor, rightHandObject);
+        Left = new HandComponents(leftPlayerHand, leftHandAnchor, leftHandObject, leftAnimationController);
+        Right = new HandComponents(rightPlayerHand, rightHandAnchor, rightHandObject, rightAnimationController);
 
         Left.SetHandColliderActiveForScreen(false);
         Right.SetHandColliderActiveForScreen(false);
@@ -98,6 +104,11 @@ public class InputManager : MonoBehaviour
 
         Left.PlayerHand.UpdateLastGestures();
         Right.PlayerHand.UpdateLastGestures();
+        
+        //set controllers on/off
+        var controllersActive = !UsingHandTracking && !MoveToDesk.Singleton.oriented;
+        leftControllerModel.SetActive(controllersActive);
+        rightControllerModel.SetActive(controllersActive);
     }
 
     public void UpdateHandTargets(bool updateTracking = true)
