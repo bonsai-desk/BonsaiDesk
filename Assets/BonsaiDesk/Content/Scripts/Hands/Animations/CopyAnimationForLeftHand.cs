@@ -15,11 +15,12 @@ public class CopyAnimationForLeftHand : MonoBehaviour
             return;
         }
 
+#if UNITY_EDITOR
         for (int n = 0; n < animationClips.Length; n++)
         {
             var animation = animationClips[n];
 
-            var clip = new AnimationClip();
+            var clip = Instantiate(animation);
 
             var bindings = AnimationUtility.GetCurveBindings(animation);
             for (int i = 0; i < bindings.Length; i++)
@@ -30,7 +31,7 @@ public class CopyAnimationForLeftHand : MonoBehaviour
                     Debug.LogError($"Keys length {animationCurve.keys.Length} does not equal 1.");
                     return;
                 }
-
+            
                 //editing the key value wasn't working so just make a new keys array
                 animationCurve.keys = new[] {new Keyframe(animationCurve.keys[0].time, animationCurve.keys[0].value)};
                 clip.SetCurve(bindings[i].path.Replace("r_", "l_"), bindings[i].type, bindings[i].propertyName, animationCurve);
@@ -41,5 +42,6 @@ public class CopyAnimationForLeftHand : MonoBehaviour
         }
 
         print("Finished converting animations for left hand.");
+#endif
     }
 }
