@@ -32,7 +32,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
         }
 
         if (joint && (!playerHand.HandComponents.TrackingRecently ||
-                      !playerHand.GetGesture(PlayerHand.Gesture.IndexPinching) &&
+                      !playerHand.GetGesture(PlayerHand.Gesture.IndexTargetPinching) &&
                       !playerHand.GetGesture(PlayerHand.Gesture.Fist)))
         {
             DetachObject();
@@ -43,8 +43,8 @@ public class LockObjectHand : MonoBehaviour, IHandTick
             return;
 
         //code below here if not holding object
-
-        if (playerHand.GetGestureStart(PlayerHand.Gesture.IndexPinching) ||
+        
+        if (playerHand.GetGestureStart(PlayerHand.Gesture.IndexTargetPinching) ||
             playerHand.GetGestureStart(PlayerHand.Gesture.Fist))
         {
             var hitAutoAuthority = GetLockObjectCandidate();
@@ -59,7 +59,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
     {
         //TODO use overlap sphere non alloc
         Collider[] pinchHits = new Collider[0];
-        if (playerHand.GetGestureStart(PlayerHand.Gesture.IndexPinching))
+        if (playerHand.GetGestureStart(PlayerHand.Gesture.IndexTargetPinching))
             pinchHits = Physics.OverlapSphere(playerHand.PinchPosition(), 0, PlayerHand.AllButHandsMask,
                 QueryTriggerInteraction.Ignore);
         Collider[] fistHits = new Collider[0];

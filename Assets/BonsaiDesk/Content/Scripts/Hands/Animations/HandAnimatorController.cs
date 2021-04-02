@@ -8,6 +8,11 @@ public class HandAnimatorController : MonoBehaviour
     public OVRInput.Controller controller;
     public Animator animator;
 
+    private float _grab = 0;
+    private float _pinch = 0;
+    private const float GrabAnimationTime = 0.1f;
+    private const float PinchAnimationTime = 0.075f;
+
     private int _grabBlendHash;
     private int _pinchBlendHash;
 
@@ -22,9 +27,15 @@ public class HandAnimatorController : MonoBehaviour
         animator.enabled = !InputManager.Hands.UsingHandTracking;
 
         var grab = OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger, controller);
-        animator.SetFloat(_grabBlendHash, grab);
+        _grab = Mathf.MoveTowards(_grab, grab, Time.deltaTime / GrabAnimationTime);
+        animator.SetFloat(_grabBlendHash, _grab);
 
         var pinch = OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, controller);
-        animator.SetFloat(_pinchBlendHash, pinch);
+        if (OVRInput.Get(OVRInput.Touch.PrimaryIndexTrigger, controller))
+        {
+            pinch = Mathf.Max(pinch, grab);
+        }
+        _pinch = Mathf.MoveTowards(_pinch, pinch, Time.deltaTime / PinchAnimationTime);
+        animator.SetFloat(_pinchBlendHash, _pinch);
     }
 }
