@@ -57,7 +57,13 @@ AnimatorController:
   m_Name: HandAnimatorRight
   serializedVersion: 5
   m_AnimatorParameters:
-  - m_Name: DefaultFistBlend
+  - m_Name: GrabBlend
+    m_Type: 1
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+    m_Controller: {fileID: 0}
+  - m_Name: PinchBlend
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
@@ -125,16 +131,32 @@ BlendTree:
     m_Mirror: 0
   - serializedVersion: 2
     m_Motion: {fileID: 7400000, guid: 70d12cdab0a8a8041a02e30f1b43e5e3, type: 2}
-    m_Threshold: 1
-    m_Position: {x: 0, y: 0}
+    m_Threshold: 0.33333334
+    m_Position: {x: 1, y: 1}
     m_TimeScale: 1
     m_CycleOffset: 0
     m_DirectBlendParameter: DefaultFistBlend
     m_Mirror: 0
-  m_BlendParameter: DefaultFistBlend
-  m_BlendParameterY: Blend
+  - serializedVersion: 2
+    m_Motion: {fileID: 7400000, guid: 9f4b6ab0410d17f44b57e39a920c8fbe, type: 2}
+    m_Threshold: 0.6666667
+    m_Position: {x: 1, y: 0}
+    m_TimeScale: 1
+    m_CycleOffset: 0
+    m_DirectBlendParameter: DefaultFistBlend
+    m_Mirror: 0
+  - serializedVersion: 2
+    m_Motion: {fileID: 7400000, guid: 55e1d64062c0ea84face4ca7cb09c875, type: 2}
+    m_Threshold: 1
+    m_Position: {x: 0, y: 1}
+    m_TimeScale: 1
+    m_CycleOffset: 0
+    m_DirectBlendParameter: DefaultFistBlend
+    m_Mirror: 0
+  m_BlendParameter: GrabBlend
+  m_BlendParameterY: PinchBlend
   m_MinThreshold: 0
   m_MaxThreshold: 1
   m_UseAutomaticThresholds: 1
   m_NormalizedBlendValues: 0
-  m_BlendType: 0
+  m_BlendType: 3
