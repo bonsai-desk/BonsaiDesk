@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.ComponentModel;
 using UnityEngine;
+using UnityEngine.Serialization;
 using VivoxUnity;
 
 public class VoiceManager : MonoBehaviour
@@ -13,6 +15,10 @@ public class VoiceManager : MonoBehaviour
 
     public delegate void ParticipantValueUpdatedHandler(string username, ChannelId channel, double value);
 
+    public static VoiceManager Singleton;
+
+    [FormerlySerializedAs("headPosition")] public Transform headTransform;
+
     [SerializeField] private string _server = "https://GETFROMPORTAL.www.vivox.com/api2";
     [SerializeField] private string _domain = "GET VALUE FROM VIVOX DEVELOPER PORTAL";
     [SerializeField] private string _tokenIssuer = "GET VALUE FROM VIVOX DEVELOPER PORTAL";
@@ -20,10 +26,15 @@ public class VoiceManager : MonoBehaviour
     private readonly TimeSpan _tokenExpiration = TimeSpan.FromSeconds(90);
     private AccountId _accountId;
     private Client _client = new Client();
+    private bool _hasFocus = true;
+    private Coroutine _joinChannelRoutine;
+
+    private float _nextPosUpdate;
+    private IChannelSession _positionalChannelSession;
 
     private ILoginSession LoginSession;
     private IReadOnlyDictionary<ChannelId, IChannelSession> ActiveChannels => LoginSession?.ChannelSessions;
-    private LoginState LoginState { get; set; }
+    public LoginState LoginState { get; private set; }
 
     private Uri _serverUri
     {
@@ -32,15 +43,75 @@ public class VoiceManager : MonoBehaviour
         set => _server = value.ToString();
     }
 
+    private void Awake()
+    {
+        if (Singleton == null)
+        {
+            Singleton = this;
+        }
+    }
+
     // Start is called before the first frame update
     private void Start()
     {
+        //OnUserLoggedInEvent += HandleLoggedIn;
+        //var _config = new VivoxConfig {InitialLogLevel = vx_log_level.log_debug};
         _client.Uninitialize();
         _client.Initialize();
+        Login("displayName");
     }
 
     // Update is called once per frame
-    private void Update() { }
+    private void Update()
+    {
+        HandleMuteUpdate();
+
+        if (Time.realtimeSinceStartup > _nextPosUpdate)
+        {
+            _nextPosUpdate += 0.3f;
+            if (!(_positionalChannelSession is null) &&
+                _positionalChannelSession.AudioState == ConnectionState.Connected)
+            {
+                var position = headTransform.position;
+                var forward = headTransform.forward;
+                var up = headTransform.up;
+                _positionalChannelSession?.Set3DPosition(
+                    position,
+                    position,
+                    forward,
+                    up);
+            }
+        }
+    }
+
+    private void OnApplicationFocus(bool focus)
+    {
+        _hasFocus = focus;
+    }
+
+    private void OnApplicationPause(bool pauseStatus)
+    {
+        BonsaiLog($"OnApplicationPause {pauseStatus}");
+        if (!pauseStatus)
+        {
+            BonsaiLog("Unpause");
+            _client.Uninitialize();
+            _client = new Client();
+            _client.Initialize();
+            Login("displayName");
+        }
+        else
+        {
+            BonsaiLog("Pause");
+            if (LoginState == LoginState.LoggedIn)
+            {
+                DisconnectAllChannels();
+            }
+
+            Logout();
+            LoginState = LoginState.LoggedOut;
+        }
+    }
 
     public void OnApplicationQuit()
     {
@@ -50,6 +121,94 @@ public class VoiceManager : MonoBehaviour
             _client.Uninitialize();
             _client = null;
         }
+    }
+
+    public void DisconnectAllChannels()
+    {
+        BonsaiLog("Disconnect all channels");
+        // stop any routines to join a channel
+        if (!(_joinChannelRoutine is null))
+        {
+            BonsaiLog("Stopping join channel coroutine in progress");
+            StopCoroutine(_joinChannelRoutine);
+            _joinChannelRoutine = null;
+        }
+
+        if (!(_positionalChannelSession is null))
+        {
+            BonsaiLog(
+                $"Removing positional channel handler for ({_positionalChannelSession.Channel.Name})");
+            _positionalChannelSession = null;
+        }
+
+        if (ActiveChannels?.Count > 0)
+        {
+            foreach (var channelSession in ActiveChannels)
+            {
+                BonsaiLog($"Disconnect ({channelSession.Channel.Name})");
+                channelSession.Disconnect();
+            }
+        }
+    }
+
+    private void DisconnectFromChannel(string oldName)
+    {
+        if (oldName != "") // time to disconnect from old channel
+        {
+            // stop any routines to join a channel
+            if (!(_joinChannelRoutine is null))
+            {
+                BonsaiLog("Stopping join channel coroutine in progress");
+                StopCoroutine(_joinChannelRoutine);
+                _joinChannelRoutine = null;
+            }
+
+            // disconnect from oldName channel
+            foreach (var channelSession in ActiveChannels)
+            {
+                if (channelSession.Channel.Name == oldName)
+                {
+                    if (_positionalChannelSession.Channel.Name == channelSession.Channel.Name)
+                    {
+                        BonsaiLog(
+                            $"Removing positional channel handler for ({_positionalChannelSession.Channel.Name})");
+                        _positionalChannelSession = null;
+                    }
+
+                    BonsaiLog($"Disconnecting from ({oldName})");
+                    channelSession?.Disconnect();
+                }
+            }
+        }
+    }
+
+    public void StartJoinChannel(string newName)
+    {
+        if (newName != "") // time to join a new voice channel
+        {
+            if (!(_joinChannelRoutine is null))
+            {
+                BonsaiLog("Stopping join channel coroutine before joining a new channel");
+                StopCoroutine(_joinChannelRoutine);
+            }
+
+            _joinChannelRoutine = StartCoroutine(JoinChannelWhenReady(newName));
+        }
+    }
+
+    private IEnumerator JoinChannelWhenReady(string lobbyName)
+    {
+        // todo start logging in if not in the process now 
+
+        while (LoginState != LoginState.LoggedIn)
+        {
+            BonsaiLog(
+                $"Wait before voice join voice channel ({LoginState})");
+            yield return new WaitForSeconds(0.25f);
+        }
+
+        _joinChannelRoutine = null;
+        JoinChannel(lobbyName, ChannelType.Positional, properties: new Channel3DProperties());
     }
 
     public event LoginStatusChangedHandler OnUserLoggedOutEvent;
@@ -102,8 +261,9 @@ public class VoiceManager : MonoBehaviour
         OnParticipantAddedEvent?.Invoke(username, channel, participant);
     }
 
-    private void LoginVoice(string displayName)
+    private void Login(string displayName)
     {
+        BonsaiLog("Begin login");
         var uniqueId = Guid.NewGuid().ToString();
         _accountId = new AccountId(_tokenIssuer, uniqueId, _domain, displayName);
         LoginSession = _client.GetLoginSession(_accountId);
@@ -114,6 +274,7 @@ public class VoiceManager : MonoBehaviour
                                 {
                                     try
                                     {
+                                        BonsaiLog("End login");
                                         LoginSession.EndLogin(ar);
                                     }
                                     catch (Exception e)
@@ -125,30 +286,23 @@ public class VoiceManager : MonoBehaviour
                                 });
     }
 
-    private void LogoutVoice()
+    private void Logout()
     {
+        BonsaiLog("Maybe Logout");
         if (LoginSession != null && LoginState != LoginState.LoggedOut && LoginState != LoginState.LoggingOut)
         {
+            BonsaiLog("Logout");
             OnUserLoggedOutEvent?.Invoke();
             LoginSession.PropertyChanged -= OnLoginSessionPropertyChanged;
             LoginSession.Logout();
         }
     }
 
-    public void DisconnectAllChannels()
+    private void JoinChannel(string channelName, ChannelType channelType, bool switchTransmission = true,
+                             Channel3DProperties properties = null)
     {
-        if (ActiveChannels?.Count > 0)
-        {
-            foreach (var channelSession in ActiveChannels)
-            {
-                channelSession?.Disconnect();
-            }
-        }
-    }
+        BonsaiLog($"JoinChannel: {channelName}");
 
-    private void JoinVoiceChannel(string channelName, ChannelType channelType, bool switchTransmission = true,
-                                  Channel3DProperties properties = null)
-    {
         if (LoginState == LoginState.LoggedIn)
         {
             var channelId = new ChannelId(_tokenIssuer, channelName, _domain, channelType, properties);
@@ -163,7 +317,13 @@ public class VoiceManager : MonoBehaviour
                                         {
                                             try
                                             {
+                                                // todo this is not getting called on android
+                                                BonsaiLog("End JoinChannel");
                                                 channelSession.EndConnect(ar);
+                                                if (!(properties is null))
+                                                {
+                                                    _positionalChannelSession = channelSession;
+                                                }
                                             }
                                             catch (Exception e)
                                             {
@@ -171,6 +331,11 @@ public class VoiceManager : MonoBehaviour
                                                 BonsaiLogError($"Could not connect to voice channel: {e.Message}");
                                             }
                                         });
+        }
+        else
+        {
+            // todo handle this
+            BonsaiLogWarning("Tried to join a channel when not logged in");
         }
     }
 
@@ -225,7 +390,6 @@ public class VoiceManager : MonoBehaviour
             }
             case LoginState.LoggedIn:
             {
-                BonsaiLog("Connected to voice server and logged in.");
                 OnUserLoggedInEvent?.Invoke();
                 break;
             }
@@ -282,16 +446,72 @@ public class VoiceManager : MonoBehaviour
 
     private void BonsaiLog(string msg)
     {
-        Debug.Log("<color=orange>BonsaiComms: </color>: " + msg);
+        Debug.Log("<color=green>BonsaiVoice: </color>: " + msg);
     }
 
     private void BonsaiLogWarning(string msg)
     {
-        Debug.LogWarning("<color=orange>BonsaiComms: </color>: " + msg);
+        Debug.LogWarning("<color=green>BonsaiVoice: </color>: " + msg);
     }
 
     private void BonsaiLogError(string msg)
     {
-        Debug.LogError("<color=orange>BonsaiComms: </color>: " + msg);
+        Debug.LogError("<color=green>BonsaiVoice: </color>: " + msg);
+    }
+
+    private void LogMicrophoneDevices()
+    {
+        BonsaiLog("Connected to voice server and logged in.");
+        BonsaiLog($"SystemDevice: {_client.AudioInputDevices.SystemDevice.Name}");
+        BonsaiLog(
+            $"ActiveDevice: {_client.AudioInputDevices.ActiveDevice.Name}");
+        BonsaiLog(
+            $"EffectiveDevice: {_client.AudioInputDevices.EffectiveDevice.Name}");
+        BonsaiLog($"Logging ({Microphone.devices.Length}) Microphone.devices now...");
+        foreach (var device in Microphone.devices)
+        {
+            BonsaiLog($"Microphone Name: {device}");
+        }
+
+        BonsaiLog(
+            $"Logging ({_client.AudioInputDevices.AvailableDevices.Count}) Vivox client available devices now...");
+        var devices = _client.AudioInputDevices.AvailableDevices;
+        foreach (var entry in devices)
+        {
+            BonsaiLog($"Device {entry.Key} {devices[entry.Key].Name}");
+        }
+    }
+
+    private void HandleMuteUpdate()
+    {
+        var oriented = MoveToDesk.Singleton.oriented;
+        var outputActive = !_client.AudioOutputDevices.Muted;
+        var inputActive = !_client.AudioInputDevices.Muted;
+
+        if (_hasFocus && oriented)
+        {
+            if (!outputActive)
+            {
+                _client.AudioOutputDevices.Muted = false;
+            }
+
+            if (!inputActive)
+            {
+                _client.AudioInputDevices.Muted = false;
+            }
+        }
+
+        if (!_hasFocus || !oriented)
+        {
+            if (outputActive)
+            {
+                _client.AudioOutputDevices.Muted = true;
+            }
+
+            if (inputActive)
+            {
+                _client.AudioInputDevices.Muted = true;
+            }
+        }
     }
 }

@@ -32,6 +32,9 @@ public class NetworkManagerGame : BonsaiNetworkManager
     public static NetworkManagerGame Singleton;
     public static EventHandler<NetworkConnection> ServerAddPlayer;
     public static EventHandler<NetworkConnection> ServerDisconnect;
+    public static EventHandler ServerPrepared;
+    public static EventHandler<NetworkConnection> ClientConnect;
+    public static EventHandler<NetworkConnection> ClientDisconnect;
 
     [HideInInspector] public bool roomOpen;
     public bool serverOnlyIfEditor;
@@ -45,8 +48,6 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos =
         new Dictionary<NetworkConnection, PlayerInfo>();
-
-    private bool _hasFocus = true;
 
     private double _lastGoodPingReceived = Mathf.NegativeInfinity;
     private float _lastPingNet = Mathf.NegativeInfinity;
@@ -113,16 +114,20 @@ public class NetworkManagerGame : BonsaiNetworkManager
         HandleNetworkUpdate();
     }
 
-    private void OnApplicationFocus(bool focus)
-    {
-        _hasFocus = focus;
-    }
-
     private void OnApplicationPause(bool pauseStatus)
     {
         if (pauseStatus)
         {
-            // todo SetCommsActive(false);
+            if (mode == NetworkManagerMode.ClientOnly)
+            {
+                HandleLeaveRoom();
+            }
+
+            if (mode == NetworkManagerMode.Host)
+            {
+                BonsaiLog("Stop Client/Server");
+                StopHost();
+            }
         }
         else
         {
@@ -229,32 +234,6 @@ public class NetworkManagerGame : BonsaiNetworkManager
             StopClient();
         }
     }
-
-    //private void HandleCommsUpdate()
-    //{
-    //    if (mode == NetworkManagerMode.ClientOnly || mode == NetworkManagerMode.Host)
-    //    {
-    //        var oriented = MoveToDesk.Singleton.oriented;
-    //        var commsActive = IsCommsActive();
-    //        if (_hasFocus && oriented && !commsActive)
-    //        {
-    //            SetCommsActive(true);
-    //        }
-    //        else if ((!_hasFocus || !oriented) && commsActive)
-    //        {
-    //            SetCommsActive(false);
-    //        }
-    //    }
-    //    else if (IsCommsActive())
-    //    {
-    //        SetCommsActive(false);
-    //    }
-    //}
-
-    //private bool IsCommsActive()
-    //{
-    //    return !_comms.IsMuted && !_comms.IsDeafened;
-    //}
 
     private void HandleKickConnectionId(int id)
     {
@@ -427,11 +406,13 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public override void OnClientConnect(NetworkConnection conn)
     {
-        BonsaiLog($"OnClientConnect {conn.connectionId} {conn.isReady}");
-
         base.OnClientConnect(conn);
 
+        BonsaiLog($"OnClientConnect {conn.connectionId} {conn.isReady}");
+
         NetworkClient.RegisterHandler<ShouldDisconnectMessage>(OnShouldDisconnect);
+
+        ClientConnect?.Invoke(this, conn);
     }
 
     public override void OnClientDisconnect(NetworkConnection conn)
@@ -439,6 +420,8 @@ public class NetworkManagerGame : BonsaiNetworkManager
         BonsaiLog("OnClientDisconnect");
 
         NetworkClient.UnregisterHandler<ShouldDisconnectMessage>();
+
+        ClientDisconnect?.Invoke(this, conn);
 
         base.OnClientDisconnect(conn);
     }
@@ -452,6 +435,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
     public override void OnServerPrepared(string hostAddress, ushort hostPort)
     {
         BonsaiLog($"OnServerPrepared ({hostAddress}:{hostPort}) isLanOnly={isLANOnly}");
+        ServerPrepared?.Invoke(this, new EventArgs());
     }
 
     private void OnShouldDisconnect(ShouldDisconnectMessage _)
@@ -586,11 +570,16 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     private void MaybeStartHost()
     {
-        if (Time.realtimeSinceStartup - _lastStartHost > StartHostCooldown)
+        if (Time.realtimeSinceStartup - _lastStartHost > StartHostCooldown && HostEndPoint is null)
         {
-            BonsaiLog("StartHost");
+            BonsaiLog($"StartHost {mode} {State} ({HostEndPoint})");
             StartHost();
             _lastStartHost = Time.realtimeSinceStartup;
+        }
+        else if (!(HostEndPoint is null))
+        {
+            // todo this can get stuck if somehow host mode is offline but HostEndPoint is not null
+            BonsaiLog("HostEndpoint is not null");
         }
     }
 
