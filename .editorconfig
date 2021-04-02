@@ -34,10 +34,12 @@ dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggest
 
 # ReSharper properties
 resharper_autodetect_indent_settings = true
-resharper_enforce_line_ending_style = true
+resharper_csharp_max_line_length = 160
 resharper_indent_preprocessor_directives = normal
 resharper_keep_existing_attribute_arrangement = true
 resharper_keep_existing_linebreaks = false
+resharper_resx_max_line_length = 2147483647
+resharper_resx_wrap_lines = false
 resharper_show_autodetect_configure_formatting_tip = false
 resharper_use_indent_from_vs = false
 resharper_wrap_lines = true
