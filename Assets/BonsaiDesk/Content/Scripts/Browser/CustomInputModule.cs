@@ -14,7 +14,7 @@ public class CustomInputModule : StandaloneInputModule {
 	public bool drawcursor;
 	[FormerlySerializedAs("screens")] public List<Browser> Browsers;
 	private float hoverDistance = 0.15f;
-    private float clickDistance = 0.075f / 2f;
+    private float clickDistance = 0.015f;
 	public Camera mainCamera;
 	public float angleDragThreshold = 1;
 	private readonly MouseState m_MouseState = new MouseState();
@@ -67,14 +67,28 @@ public class CustomInputModule : StandaloneInputModule {
 		prevInClickRegion = inClickRegion;
 		inClickRegion     = false;
 
+        var leftHover = false;
+        var rightHover = false;
+
 		var foundScreen = false;
 		foreach (var browser in Browsers) {
 			if (browser.hidden) {
 				continue;
 			}
 			var screen = browser.WebViewTransform;
-			var leftFingerInScreen  = screen.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[1]);
-			var rightFingerInScreen = screen.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[6]);
+
+            Vector3 leftFingerInScreen;
+            Vector3 rightFingerInScreen;
+            if (InputManager.Hands.UsingHandTracking)
+            {
+                leftFingerInScreen  = screen.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[1]);
+                rightFingerInScreen = screen.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[6]);
+            }
+            else
+            {
+                leftFingerInScreen = screen.InverseTransformPoint(InputManager.Hands.Left.PlayerHand.stylus.position);
+                rightFingerInScreen = screen.InverseTransformPoint(InputManager.Hands.Right.PlayerHand.stylus.position);
+            }
 
 			var leftInBounds  = FingerInBounds(leftFingerInScreen);
 			var rightInBounds = FingerInBounds(rightFingerInScreen);
@@ -82,8 +96,8 @@ public class CustomInputModule : StandaloneInputModule {
             var leftValid  = leftFingerInScreen.z <= 0.04 && leftInBounds;
 			var rightValid = rightFingerInScreen.z <= 0.04 && rightInBounds;
 
-			var leftHover  = -leftFingerInScreen.z < hoverDistance && leftValid;
-			var rightHover = -rightFingerInScreen.z < hoverDistance && rightValid;
+            leftHover  = -leftFingerInScreen.z < hoverDistance && leftValid;
+            rightHover = -rightFingerInScreen.z < hoverDistance && rightValid;
 
 			var leftInClick  = -leftFingerInScreen.z < clickDistance && leftValid;
 			var rightInClick = -rightFingerInScreen.z < clickDistance && rightValid;
@@ -105,11 +119,11 @@ public class CustomInputModule : StandaloneInputModule {
 				inClickRegion = true;
 			}
 
-			if (!leftValid && rightValid || rightClick) {
+			if (!leftHover && rightHover || rightClick) {
 				handActive = Active.Right;
 			}
 			
-			if (leftValid && !rightValid || leftClick) {
+			if (leftHover && !rightHover || leftClick) {
 				handActive = Active.Left;
 			}
 
@@ -138,7 +152,12 @@ public class CustomInputModule : StandaloneInputModule {
 
 			InputManager.Hands.Left.SetHandColliderActiveForScreen(true);
 			InputManager.Hands.Right.SetHandColliderActiveForScreen(true);
-		}
+        }
+
+        InputManager.Hands.Left.PlayerHand.stylus.parent.gameObject.SetActive(!InputManager.Hands.UsingHandTracking && foundScreen && leftHover);
+        InputManager.Hands.Right.PlayerHand.stylus.parent.gameObject.SetActive(!InputManager.Hands.UsingHandTracking && foundScreen && rightHover);
+        InputManager.Hands.Left.TargetHandAnimatorController.overScreen = !InputManager.Hands.UsingHandTracking && foundScreen && leftHover;
+        InputManager.Hands.Right.TargetHandAnimatorController.overScreen = !InputManager.Hands.UsingHandTracking && foundScreen && rightHover;
 
 		//Populate some default values
 		leftData.button = PointerEventData.InputButton.Left;

@@ -16,7 +16,7 @@ public class CloseGestureHand : MonoBehaviour, IHandTick
     public void Tick()
     {
         if (playerHand.GetGestureStart(PlayerHand.Gesture.Fist) &&
-            angleToHead.AngleBelowThreshold())
+            angleToHead.AngleBelowThreshold() && !playerHand.stylus.gameObject.activeInHierarchy)
             // Vector3.Angle(-angleToHead.transform.forward, head.forward) < AngleToHeadThreshold)
         {
             action?.Invoke();

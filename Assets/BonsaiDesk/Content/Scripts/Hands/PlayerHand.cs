@@ -21,6 +21,7 @@ public class PlayerHand : MonoBehaviour
     public Transform pinchPullPointer;
     public Transform wrist;
     public Transform thumbDirection;
+    public Transform stylus;
 
     public static int AllButHandsMask;
     public static int HandsMask;
