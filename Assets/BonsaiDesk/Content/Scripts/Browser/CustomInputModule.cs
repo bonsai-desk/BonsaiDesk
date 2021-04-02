@@ -14,8 +14,7 @@ public class CustomInputModule : StandaloneInputModule {
 	public bool drawcursor;
 	[FormerlySerializedAs("screens")] public List<Browser> Browsers;
 	private float hoverDistance = 0.15f;
-    private float clickDistance = 0.015f;
-	public Camera mainCamera;
+    public Camera mainCamera;
 	public float angleDragThreshold = 1;
 	private readonly MouseState m_MouseState = new MouseState();
 	private Active handActive = Active.Right;
@@ -99,6 +98,7 @@ public class CustomInputModule : StandaloneInputModule {
             leftHover  = -leftFingerInScreen.z < hoverDistance && leftValid;
             rightHover = -rightFingerInScreen.z < hoverDistance && rightValid;
 
+            float clickDistance = InputManager.Hands.UsingHandTracking ? 0.015f : 0.005f;
 			var leftInClick  = -leftFingerInScreen.z < clickDistance && leftValid;
 			var rightInClick = -rightFingerInScreen.z < clickDistance && rightValid;
 
