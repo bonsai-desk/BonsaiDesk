@@ -13,8 +13,8 @@ public class CustomInputModule : StandaloneInputModule {
 	public OVRCursor m_Cursor;
 	public bool drawcursor;
 	[FormerlySerializedAs("screens")] public List<Browser> Browsers;
-	public float hoverDistance = 0.1f;
-	public float clickDistance = 0.075f / 2;
+	private float hoverDistance = 0.15f;
+    private float clickDistance = 0.075f / 2f;
 	public Camera mainCamera;
 	public float angleDragThreshold = 1;
 	private readonly MouseState m_MouseState = new MouseState();
@@ -79,7 +79,7 @@ public class CustomInputModule : StandaloneInputModule {
 			var leftInBounds  = FingerInBounds(leftFingerInScreen);
 			var rightInBounds = FingerInBounds(rightFingerInScreen);
 
-			var leftValid  = leftFingerInScreen.z <= 0.04 && leftInBounds;
+            var leftValid  = leftFingerInScreen.z <= 0.04 && leftInBounds;
 			var rightValid = rightFingerInScreen.z <= 0.04 && rightInBounds;
 
 			var leftHover  = -leftFingerInScreen.z < hoverDistance && leftValid;

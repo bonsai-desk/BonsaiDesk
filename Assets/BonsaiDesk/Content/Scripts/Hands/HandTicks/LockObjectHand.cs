@@ -43,7 +43,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
             return;
 
         //code below here if not holding object
-        
+
         if (playerHand.GetGestureStart(PlayerHand.Gesture.IndexTargetPinching) ||
             playerHand.GetGestureStart(PlayerHand.Gesture.Fist))
         {
@@ -63,7 +63,8 @@ public class LockObjectHand : MonoBehaviour, IHandTick
             pinchHits = Physics.OverlapSphere(playerHand.PinchPosition(), 0, PlayerHand.AllButHandsMask,
                 QueryTriggerInteraction.Ignore);
         Collider[] fistHits = new Collider[0];
-        if (playerHand.GetGestureStart(PlayerHand.Gesture.Fist))
+        if (playerHand.GetGestureStart(PlayerHand.Gesture.Fist) ||
+            playerHand.GetGestureStart(PlayerHand.Gesture.IndexTargetPinching))
             fistHits = Physics.OverlapSphere(playerHand.palm.position, 0.02f, PlayerHand.AllButHandsMask,
                 QueryTriggerInteraction.Ignore);
         Collider[] hits = new Collider[pinchHits.Length + fistHits.Length];

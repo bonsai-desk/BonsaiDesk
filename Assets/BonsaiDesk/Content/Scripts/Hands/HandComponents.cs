@@ -37,6 +37,8 @@ public class HandComponents
     private float _handAlpha = 1f;
     private bool _zTestOverlay = false;
 
+    private HandAnimatorController _targetHandAnimatorController;
+
     public HandComponents(PlayerHand playerHand, Transform handAnchor, Transform handObject, RuntimeAnimatorController animationController)
     {
         PlayerHand = playerHand;
@@ -100,12 +102,12 @@ public class HandComponents
         handTargetAnimator.runtimeAnimatorController = animationController;
         handTargetAnimator.enabled = false;
         
-        var targetHandAnimatorController = TargetHand.gameObject.AddComponent<HandAnimatorController>();
-        targetHandAnimatorController.controller =
+        _targetHandAnimatorController = TargetHand.gameObject.AddComponent<HandAnimatorController>();
+        _targetHandAnimatorController.controller =
             PlayerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft
                 ? OVRInput.Controller.LTouch
                 : OVRInput.Controller.RTouch;
-        targetHandAnimatorController.animator = handTargetAnimator;
+        _targetHandAnimatorController.animator = handTargetAnimator;
     }
 
     public void SetPhysicsLayerRegular()
@@ -277,6 +279,8 @@ public class HandComponents
     {
         Physics.IgnoreLayerCollision(_touchScreenSurfaceLayer, _physicsLayer, !active);
         Physics.IgnoreLayerCollision(_touchScreenSurfaceLayer, _onlyScreenLayer, !active);
+
+        _targetHandAnimatorController.overScreen = !active;
     }
 
     private static void SetLayerRecursive(Transform go, int layer)

@@ -12,7 +12,6 @@ public class GeneratePhysicsHand : MonoBehaviour
     public PhysicMaterial physicMaterial;
     public Material targetMaterial;
     public Material physicsHandMaterial;
-    public RuntimeAnimatorController animationController;
 
     private OVRPlugin.Skeleton2 _skeleton;
     private bool initialized = false;
