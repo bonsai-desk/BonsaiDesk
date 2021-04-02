@@ -62,12 +62,20 @@ public class AutoAuthority : NetworkBehaviour
 
         if (isServer && transform.position.y < -1f)
         {
-            // ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
-            // _body.velocity = Vector3.zero;
-            // _body.angularVelocity = Vector3.zero;
-            // GetComponent<SmoothSyncMirror>()
-            //     .teleportAnyObjectFromServer(new Vector3(0, 1, 0), Quaternion.identity, Vector3.one);
-            ServerStripOwnerAndDestroy();
+            var blockObject = GetComponent<BlockObject>();
+            if (blockObject && blockObject.Blocks.Count == 1)
+            {
+                ServerStripOwnerAndDestroy();
+            }
+            else
+            {
+                ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
+                _body.velocity = Vector3.zero;
+                _body.angularVelocity = Vector3.zero;
+                GetComponent<SmoothSyncMirror>()
+                    .teleportAnyObjectFromServer(new Vector3(0, 2, 0), Quaternion.identity, transform.localScale);
+            }
+
             return;
         }
 
