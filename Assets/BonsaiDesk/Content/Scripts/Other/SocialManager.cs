@@ -37,7 +37,7 @@ public class SocialManager : NetworkBehaviour {
 					return;
 				}
 
-				Debug.Log($"[BONSAI] Report as user : {msg.Data.OculusID}");
+                BonsaiLog($"Logged in with Oculus as user: {msg.Data.OculusID}");
 				CmdSetUserInfo(new NetworkManagerGame.UserInfo(msg.Data.OculusID));
 			});
 			reportWhenReady = false;
@@ -73,8 +73,8 @@ public class SocialManager : NetworkBehaviour {
 		Users.GetLoggedInUser().OnComplete(HandleGetLoggedInUser);
 	}
 
-	private static void TerminateWithError(Message msg) {
-		Debug.LogError($"[BONSAI] Error {msg.GetError().Message}");
+	private void TerminateWithError(Message msg) {
+        BonsaiLogError($"Error {msg.GetError().Message}");
 		Application.Quit();
 	}
 
@@ -82,7 +82,7 @@ public class SocialManager : NetworkBehaviour {
 	private void TargetReportUserInfo(NetworkConnection conn) {
 		var id = NetworkClient.connection.identity.netId;
 		if (User != null) {
-			Debug.Log($"[BONSAI] Report as user : {User.OculusID}");
+            BonsaiLog($"Report as user : {User.OculusID}");
 			CmdSetUserInfo(new NetworkManagerGame.UserInfo(User.OculusID));
 		}
 		else {
@@ -94,10 +94,23 @@ public class SocialManager : NetworkBehaviour {
 	private void CmdSetUserInfo(NetworkManagerGame.UserInfo user, NetworkConnectionToClient sender = null) {
 		var id = sender.identity.netId;
 		NetworkManagerGame.Singleton.UpdateUserInfo(id, user);
-		Debug.Log($"[BONSAI] Recieved user info (id={id}) ({user.DisplayName})");
+        BonsaiLog($"Received user info (id={id}) ({user.DisplayName})");
 	}
 
 	private void HandleServerAddPlayer(object _, NetworkConnection conn) {
 		TargetReportUserInfo(conn);
 	}
+    
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiSocial: </color>: " + msg);
+    }
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiSocial: </color>: " + msg);
+    }
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiSocial: </color>: " + msg);
+    }
 }

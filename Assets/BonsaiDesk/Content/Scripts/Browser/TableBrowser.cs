@@ -31,7 +31,7 @@ public class TableBrowser : Browser {
 		};
 		ListenersReady += () =>
 		{
-			Debug.Log("[BONSAI] TableBrowser listeners ready");
+            BonsaiLog("TableBrowser listeners ready");
 		};
 	}
 
@@ -84,7 +84,7 @@ public class TableBrowser : Browser {
 		WebViewPrefab.WebView.SetResolution(resScaled);
 		WebViewPrefab.Resize(Bounds.x, Bounds.y);
 
-		Debug.Log($"[BONSAI] ChangeAspect resolution {resolution}");
+        BonsaiLog($"ChangeAspect {resolution}");
 
 		boundsTransform.localScale = localScale;
 
@@ -136,4 +136,17 @@ public class TableBrowser : Browser {
 		RebuildOverlay(res);
 	#endif
 	}
+    
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiTableBrowser: </color>: " + msg);
+    }
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiTableBrowser: </color>: " + msg);
+    }
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiTableBrowser: </color>: " + msg);
+    }
 }

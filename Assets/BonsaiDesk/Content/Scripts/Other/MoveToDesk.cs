@@ -102,7 +102,7 @@ public class MoveToDesk : MonoBehaviour
 
 		playerOrientations = new List<PlayerOrientation>();
 
-		ResetPosition("Start");
+		ResetPosition("Script start");
 	}
 
 	private void HandleHMDUnmounted()
@@ -464,7 +464,7 @@ public class MoveToDesk : MonoBehaviour
 	public void ResetPosition(string reason = "")
 	{
 		var reasonStr = reason.Length > 0 ? reason : "Reason not provided";
-		Debug.Log($"[BONSAI] Resetting position: {reasonStr}");
+        BonsaiLog($"Resetting position: {reasonStr}");
 		oriented = false;
 		blackOverlay.SetActive(true);
 		instructions.SetActive(true);
@@ -519,7 +519,7 @@ public class MoveToDesk : MonoBehaviour
 		}
 		else
 		{
-			Debug.LogError("No table edge");
+            BonsaiLogError("No table edge");
 		}
 
 		InputManager.Hands.UpdateHandTargets(false);
@@ -554,4 +554,17 @@ public class MoveToDesk : MonoBehaviour
 			ResetPosition("OnApplicationPause");
 		}
 	}
+    
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiMove: </color>: " + msg);
+    }
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiMove: </color>: " + msg);
+    }
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiMove: </color>: " + msg);
+    }
 }

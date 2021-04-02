@@ -109,7 +109,7 @@ public class TableBrowserMenu : MonoBehaviour
 
     private void HandleListnersReady()
     {
-        Debug.Log("[BONSAI] nav to menu");
+        BonsaiLog("Navigate to menu");
         browser.PostMessage(Browser.BrowserMessage.NavToMenu);
         canPost = true;
     }
@@ -139,7 +139,7 @@ public class TableBrowserMenu : MonoBehaviour
                         break;
                     case "joinRoom":
                         var roomData = JsonConvert.DeserializeObject<RoomData>(message.Data);
-                        Debug.Log($"[BONSAI] Event JoinRoom {message.Data}");
+                        BonsaiLog($"[BONSAI] Message JoinRoom {message.Data}");
                         JoinRoom?.Invoke(roomData);
                         break;
                     case "leaveRoom":
@@ -422,5 +422,19 @@ public class TableBrowserMenu : MonoBehaviour
     public struct UserInfo
     {
         public string UserName;
+    }
+    
+    
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiTableBrowserMenu: </color>: " + msg);
+    }
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiTableBrowserMenu: </color>: " + msg);
+    }
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiTableBrowserMenu: </color>: " + msg);
     }
 }

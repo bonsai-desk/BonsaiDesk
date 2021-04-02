@@ -49,7 +49,7 @@ public class WebBrowserParent : MonoBehaviour {
 	}
 
 	private void HandleWebNavBrowserReady(object sender, EventArgs eventArgs) {
-		Debug.Log("[BONSAI] SetupWebWebNavBrowser");
+        BonsaiLog("SetupWebWebNavBrowser");
 		webNavBrowserController.GoBack          += HandleGoBack;
 		webNavBrowserController.GoForward       += HandleGoForward;
 		webNavBrowserController.SpawnKeyboard   += HandleSpawnKeyboard;
@@ -69,13 +69,13 @@ public class WebBrowserParent : MonoBehaviour {
 	}
 
 	private void HandleSpawnYt(object sender, EventArgs<string> e) {
-		Debug.Log($"[BONSAI] Spawn YT {e.Value}");
+        BonsaiLog($"Spawn YouTube ({e.Value})");
 		YouTubeSpawner.Singleton.CmdSpawnYT(videoSpawnLocation.position, headTransform.position, e.Value);
 		tableBrowserParent.Sleep();
 	}
 
 	private void SetupKeyboardBrowser() {
-		Debug.Log("[BONSAI] SetupKeyboardBrowser");
+        BonsaiLog("SetupKeyboardBrowser");
 		keyboardBrowser.InputRecieved += (sender, e) => webBrowser.HandleKeyboardInput(e.Value);
 	}
 
@@ -110,4 +110,17 @@ public class WebBrowserParent : MonoBehaviour {
 	public void DummySpawn() {
 		YouTubeSpawner.Singleton.CmdSpawnYT(videoSpawnLocation.position, headTransform.position, "niS_Fpy_2-U");
 	}
+    
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiWebBrowserParent: </color>: " + msg);
+    }
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiWebBrowserParent: </color>: " + msg);
+    }
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiWebBrowserParent: </color>: " + msg);
+    }
 }

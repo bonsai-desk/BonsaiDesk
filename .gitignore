@@ -14,6 +14,7 @@
 # Third party libraries
 /[Aa]ssets/[Oo]culus/
 /[Aa]ssets/[Vv]uplex/
+/[Aa]ssets/[Vv]ivox/
 
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta

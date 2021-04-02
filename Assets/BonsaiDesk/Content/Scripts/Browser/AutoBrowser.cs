@@ -9,7 +9,7 @@ public class AutoBrowser : Browser
 
 	protected override void Start() {
 		base.Start();
-		Debug.Log("auto browser start");
+        BonsaiLog("Start");
 		_defaultLocalPosition      = transform.localPosition;
 		_belowTableLocalPosition   = _defaultLocalPosition;
 		_belowTableLocalPosition.y = -Bounds.y / 2f;
@@ -36,7 +36,7 @@ public class AutoBrowser : Browser
 
 		WebViewPrefab.WebView.Resize(resolution.x, resolution.y);
 
-		Debug.Log($"[BONSAI] ChangeAspect resolution {resolution}");
+        BonsaiLog($"ChangeAspect {resolution}");
 
 		boundsTransform.localScale = localScale;
 
@@ -87,4 +87,17 @@ public class AutoBrowser : Browser
 		WebViewPrefab.Initialized += (sender, eventArgs) => { ChangeAspect(startingAspect); };
 		base.SetupWebViewPrefab();
 	}
+    
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiAutoBrowser: </color>: " + msg);
+    }
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiAutoBrowser: </color>: " + msg);
+    }
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiAutoBrowser: </color>: " + msg);
+    }
 }

@@ -30,7 +30,7 @@ public class Browser : MonoBehaviour {
 	public Transform WebViewTransform;
 
 	protected virtual void Start() {
-		Debug.Log("browser start");
+        BonsaiLog("Start browser");
 
 		holePuncherMaterial = new Material(Resources.Load<Material>("OnTopUnderlay"));
 
@@ -96,13 +96,13 @@ public class Browser : MonoBehaviour {
 	#if UNITY_ANDROID && !UNITY_EDITOR
         while (_overlay.externalSurfaceObject == IntPtr.Zero || WebViewPrefab.WebView == null)
         {
-            Debug.Log("[BONSAI] while WebView not setup\nexternalSurfaceObject: <" + _overlay.externalSurfaceObject + ">\nWebView: <" + WebViewPrefab.WebView + ">");
+            BonsaiLog("While WebView not setup\nexternalSurfaceObject: <" + _overlay.externalSurfaceObject + ">\nWebView: <" + WebViewPrefab.WebView + ">");
             yield return null;
         }
 
-        Debug.Log("[BONSAI] SetSurface" + _overlay.externalSurfaceObject + ", WebView " + WebViewPrefab.WebView);
+        BonsaiLog("SetSurface" + _overlay.externalSurfaceObject + ", WebView " + WebViewPrefab.WebView);
         (WebViewPrefab.WebView as AndroidGeckoWebView).SetSurface(_overlay.externalSurfaceObject);
-        Debug.Log("[BONSAI] Done SetSurface");
+        BonsaiLog("SetSurface complete");
 	#endif
 		yield break;
 	}
@@ -110,7 +110,7 @@ public class Browser : MonoBehaviour {
 	protected virtual void SetupWebViewPrefab() {
 		WebViewPrefab.Initialized += (sender, eventArgs) =>
 		{
-			Debug.Log("[BONSAI] Browser Initialized");
+            BonsaiLog("Browser initialized");
 			WebViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
 			WebViewPrefab.DragMode               =  dragMode;
 			BrowserReady?.Invoke(this, new EventArgs());
@@ -130,7 +130,6 @@ public class Browser : MonoBehaviour {
 			case "event":
 				switch (message.Message) {
 					case "listenersReady":
-						Debug.Log($"[BONSAI] invoke listeners ready ... {_postedListenersReady}");
 							// todo: for some reason when using a hot reload url
 							// the app posts listeners-ready twice so we just check it here
 							if (!_postedListenersReady) {
@@ -138,7 +137,7 @@ public class Browser : MonoBehaviour {
                                 _postedListenersReady = true;
 							}
 							else {
-								Debug.LogWarning("[BONSAI] Browser trying to post listeners twice, ignoring");
+                                BonsaiLogWarning("Browser trying to post listeners twice, ignoring");
 						}
 
 
@@ -170,12 +169,11 @@ public class Browser : MonoBehaviour {
 			WebViewPrefab.WebView.LoadUrl(url);
 		}
 		else {
-			Debug.LogWarning("[BONSAI] Tried to load url when WebView is null");
+            BonsaiLogWarning("Tried to load url when WebView is null");
 		}
 	}
 
 	public void LoadHtml(string html) {
-		Debug.Log("load html");
 		WebViewPrefab.WebView.LoadHtml(html);
 	}
 
@@ -192,7 +190,7 @@ public class Browser : MonoBehaviour {
 	}
 
 	public void HandleKeyboardInput(string key) {
-		Debug.Log($"[BONSAI] HandleKeyboardInput {key} {WebViewPrefab.WebView}");
+        BonsaiLog($"HandleKeyboardInput {key} {WebViewPrefab.WebView}");
 		WebViewPrefab.WebView.HandleKeyboardInput(key);
 	}
 
@@ -265,4 +263,17 @@ public class Browser : MonoBehaviour {
 		public string Message;
 		public string Type;
 	}
+    
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiBrowser: </color>: " + msg);
+    }
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiBrowser: </color>: " + msg);
+    }
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiBrowser: </color>: " + msg);
+    }
 }
