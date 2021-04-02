@@ -7,7 +7,8 @@
     //     {3, new Block(4)},
     // };
 
-    public static readonly Block[] blocks = new Block[] {
+    public static readonly Block[] blocks = new Block[]
+    {
         // new Block(0, 3, 2),         //0, grass
         // new Block(2),               //1, dirt
         // new Block(1),               //2, stone
@@ -25,7 +26,7 @@
         new Block(6),
         new Block(7),
 
-        new Block("Bearing", Block.BlockType.bearing),       //8, bearing
+        new Block("Bearing", Block.BlockType.bearing), //8, bearing
 
         // new Block(17),
         // new Block(18),

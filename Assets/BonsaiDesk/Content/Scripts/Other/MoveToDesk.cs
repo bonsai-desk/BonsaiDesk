@@ -99,8 +99,8 @@ public class MoveToDesk : MonoBehaviour
 
         playerOrientations = new List<PlayerOrientation>();
 
-		ResetPosition("Script start");
-	}
+        ResetPosition("Script start");
+    }
 
     private void HandleHMDUnmounted()
     {
@@ -171,8 +171,7 @@ public class MoveToDesk : MonoBehaviour
         var left = InputManager.Hands.Left.PlayerHand.thumbDirection.forward;
         var right = InputManager.Hands.Right.PlayerHand.thumbDirection.forward;
 
-        var toRight = InputManager.Hands.Right.PlayerHand.thumbDirection.position
-                      - InputManager.Hands.Left.PlayerHand.thumbDirection.position;
+        var toRight = InputManager.Hands.Right.PlayerHand.thumbDirection.position - InputManager.Hands.Left.PlayerHand.thumbDirection.position;
 
         var toLeft = -toRight;
 
@@ -185,16 +184,15 @@ public class MoveToDesk : MonoBehaviour
         var rp = InputManager.Hands.Left.PlayerHand.palm;
 
         const float palmAngle = 20f;
-        var palmsOriented = Vector3.Angle(lp.forward, Vector3.down) < palmAngle &&
-                            Vector3.Angle(rp.forward, Vector3.down) < palmAngle;
+        var palmsOriented = Vector3.Angle(lp.forward, Vector3.down) < palmAngle && Vector3.Angle(rp.forward, Vector3.down) < palmAngle;
 
         var palmDifferenceValid = Mathf.Abs(lp.position.y - rp.position.y) < 0375f;
 
         var wristsValid = WristsPointedOut();
         var handsPointing = HandsPointedTowards();
 
-        var palm = InputManager.Hands.Left.PlayerHand.GetGesture(PlayerHand.Gesture.WeakPalm)
-                   && InputManager.Hands.Right.PlayerHand.GetGesture(PlayerHand.Gesture.WeakPalm);
+        var palm = InputManager.Hands.Left.PlayerHand.GetGesture(PlayerHand.Gesture.WeakPalm) &&
+                   InputManager.Hands.Right.PlayerHand.GetGesture(PlayerHand.Gesture.WeakPalm);
 
         var handsValid = palmsOriented && palmDifferenceValid && wristsValid && handsPointing && palm;
 
@@ -210,8 +208,7 @@ public class MoveToDesk : MonoBehaviour
         var right = rightControllerBase;
         right.y = left.y;
 
-        var tableRotation = Quaternion.LookRotation(left - right, Vector3.up) *
-                            Quaternion.AngleAxis(90f, Vector3.up);
+        var tableRotation = Quaternion.LookRotation(left - right, Vector3.up) * Quaternion.AngleAxis(90f, Vector3.up);
         var forward = tableRotation * Vector3.forward;
         var headForward = centerEyeAnchor.forward;
         headForward.y = 0;
@@ -233,7 +230,7 @@ public class MoveToDesk : MonoBehaviour
     {
         //set instructions active
         handDemo.gameObject.SetActive(true);
-        
+
         //calculate rotation of the hand demo
         var eyeForward = centerEyeAnchor.forward;
         eyeForward.y = 0;
@@ -245,8 +242,7 @@ public class MoveToDesk : MonoBehaviour
 
         var handDemoTargetRotation = Quaternion.LookRotation(eyeForward, Vector3.up);
 
-        handDemo.rotation =
-            Quaternion.RotateTowards(handDemo.rotation, handDemoTargetRotation, angle * 1.75f * Time.deltaTime);
+        handDemo.rotation = Quaternion.RotateTowards(handDemo.rotation, handDemoTargetRotation, angle * 1.75f * Time.deltaTime);
         // handDemo.position = centerEyeAnchor.position;
         var handDemoPositionDifference = Vector3.Distance(handDemo.position, centerEyeAnchor.position);
         if (handDemoPositionDifference > 1f)
@@ -254,8 +250,7 @@ public class MoveToDesk : MonoBehaviour
             handDemo.position = centerEyeAnchor.position;
         }
 
-        handDemo.position = Vector3.MoveTowards(handDemo.position, centerEyeAnchor.position,
-            handDemoPositionDifference * 3f * Time.deltaTime);
+        handDemo.position = Vector3.MoveTowards(handDemo.position, centerEyeAnchor.position, handDemoPositionDifference * 3f * Time.deltaTime);
 
         if (!InputManager.Hands.UsingHandTracking && !moveToDeskTutorialSwap.PopupDismissed)
         {
@@ -264,13 +259,11 @@ public class MoveToDesk : MonoBehaviour
 
         if (!InputManager.Hands.UsingHandTracking)
         {
-            tableGhostText.text =
-                "Place your controllers on\n the edge of your <i><b>real</b></i> desk\nthen press either trigger";
+            tableGhostText.text = "Place your controllers on\n the edge of your <i><b>real</b></i> desk\nthen press either trigger";
         }
 
         //if hands/controllers are on edge of real table
-        bool handOnEdge = InputManager.Hands.UsingHandTracking && HandsOnEdge() ||
-                          !InputManager.Hands.UsingHandTracking && ControllersOnEdge();
+        bool handOnEdge = InputManager.Hands.UsingHandTracking && HandsOnEdge() || !InputManager.Hands.UsingHandTracking && ControllersOnEdge();
         if (handOnEdge)
         {
             if (InputManager.Hands.UsingHandTracking)
@@ -290,25 +283,23 @@ public class MoveToDesk : MonoBehaviour
                 tableGhostText.text = "<--- swipe apart --->";
             }
 
-            var (tablePosition, tableRotation) = InputManager.Hands.UsingHandTracking
-                ? GetTableTargetHands()
-                : GetTableTargetControllers();
+            var (tablePosition, tableRotation) = InputManager.Hands.UsingHandTracking ? GetTableTargetHands() : GetTableTargetControllers();
 
             if (!InputManager.Hands.UsingHandTracking)
             {
-                var inputTrigger =
-                    OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.LTouch) > 0.9f ||
-                    OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.RTouch) > 0.9f;
+                var inputTrigger = OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.LTouch) > 0.9f ||
+                                   OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.RTouch) > 0.9f;
 
                 if (inputTrigger)
                 {
                     calculatedTablePosition = oVRCameraRig.position;
                     calculatedTableRotation = oVRCameraRig.rotation;
-                    
+
                     var leftControllerBase = InputManager.Hands.leftControllerModel.transform.GetChild(0).position;
                     var rightControllerBase = InputManager.Hands.rightControllerModel.transform.GetChild(0).position;
                     var avg = (leftControllerBase + rightControllerBase) / 2f;
-                    calculatedTablePosition += new Vector3(-avg.x, -centerEyeAnchor.localPosition.y + (centerEyeAnchor.position.y - avg.y) + tableParent.position.y, -avg.z);
+                    calculatedTablePosition += new Vector3(-avg.x,
+                        -centerEyeAnchor.localPosition.y + (centerEyeAnchor.position.y - avg.y) + tableParent.position.y, -avg.z);
                     calculatedTablePosition = Quaternion.Inverse(tableRotation) * calculatedTablePosition;
                     calculatedTableRotation = Quaternion.Inverse(tableRotation) * calculatedTableRotation;
 
@@ -318,7 +309,7 @@ public class MoveToDesk : MonoBehaviour
                     handDemo.gameObject.SetActive(false);
                     tableGhost.gameObject.SetActive(false);
                     oriented = true;
-                    
+
                     SaveSystem.Instance.BoolPairs["OrientWithControllers"] = true;
                     SaveSystem.Instance.Save();
                     return;
@@ -336,8 +327,7 @@ public class MoveToDesk : MonoBehaviour
                 // tableGhost.position = Vector3.MoveTowards(tableGhost.position, tablePosition,
                 //     tablePositionDifference * 3f * Time.deltaTime);
                 float tableAngleDifference = Quaternion.Angle(tableGhost.rotation, tableRotation);
-                tableGhost.rotation = Quaternion.RotateTowards(tableGhost.rotation, tableRotation,
-                    tableAngleDifference * 3f * Time.deltaTime);
+                tableGhost.rotation = Quaternion.RotateTowards(tableGhost.rotation, tableRotation, tableAngleDifference * 3f * Time.deltaTime);
             }
             else
             {
@@ -370,8 +360,7 @@ public class MoveToDesk : MonoBehaviour
         }
 
         leftAnimationHand.localPosition = new Vector3(-rightAnimationHand.localPosition.x,
-            rightAnimationHand.localPosition.y,
-            rightAnimationHand.localPosition.z);
+            rightAnimationHand.localPosition.y, rightAnimationHand.localPosition.z);
 
         _tableGhostMaterial.color = new Color(1f, 0.96f, 0.86f, _tableAlpha);
 
@@ -384,15 +373,13 @@ public class MoveToDesk : MonoBehaviour
         var rightThumb = InputManager.Hands.physicsFingerTipPositions[5];
         rightThumb.y = leftThumb.y;
 
-        var tableRotation = Quaternion.LookRotation(leftThumb - rightThumb, Vector3.up) *
-                            Quaternion.AngleAxis(90f, Vector3.up);
+        var tableRotation = Quaternion.LookRotation(leftThumb - rightThumb, Vector3.up) * Quaternion.AngleAxis(90f, Vector3.up);
 
         var averageThumbPosition = (leftThumb + rightThumb) / 2f;
         var tableDepthOffset = tableRotation * (Vector3.forward * 0.75f / 2f);
 
         var tablePosition = averageThumbPosition + tableDepthOffset;
-        tablePosition.y = (InputManager.Hands.Left.PlayerHand.palm.position.y +
-                           InputManager.Hands.Right.PlayerHand.palm.position.y) / 2f;
+        tablePosition.y = (InputManager.Hands.Left.PlayerHand.palm.position.y + InputManager.Hands.Right.PlayerHand.palm.position.y) / 2f;
 
         return (tablePosition, tableRotation);
     }
@@ -406,8 +393,7 @@ public class MoveToDesk : MonoBehaviour
         var right = rightControllerBase;
         right.y = left.y;
 
-        var tableRotation = Quaternion.LookRotation(left - right, Vector3.up) *
-                            Quaternion.AngleAxis(90f, Vector3.up);
+        var tableRotation = Quaternion.LookRotation(left - right, Vector3.up) * Quaternion.AngleAxis(90f, Vector3.up);
 
         var averagePosition = (left + right) / 2f;
         var tableDepthOffset = tableRotation * (Vector3.forward * 0.75f / 2f);
@@ -433,12 +419,10 @@ public class MoveToDesk : MonoBehaviour
             var oVRCameraRigRotation = oVRCameraRig.rotation;
 
             //move player position and rotation to the desk
-            var thumbDifference = InputManager.Hands.targetFingerTipPositions[0] -
-                                  InputManager.Hands.targetFingerTipPositions[5];
+            var thumbDifference = InputManager.Hands.targetFingerTipPositions[0] - InputManager.Hands.targetFingerTipPositions[5];
             var angle = Mathf.Atan2(thumbDifference.x, thumbDifference.z) * Mathf.Rad2Deg + 90f;
             var angleRotation = Quaternion.AngleAxis(-angle, Vector3.up);
-            var averageThumbPosition =
-                (InputManager.Hands.targetFingerTipPositions[0] + InputManager.Hands.targetFingerTipPositions[5]) / 2f;
+            var averageThumbPosition = (InputManager.Hands.targetFingerTipPositions[0] + InputManager.Hands.targetFingerTipPositions[5]) / 2f;
 
             oVRCameraRigPosition += new Vector3(-averageThumbPosition.x, 0, -averageThumbPosition.z);
             oVRCameraRigPosition = angleRotation * oVRCameraRigPosition;
@@ -492,8 +476,7 @@ public class MoveToDesk : MonoBehaviour
                 orientatingSelf = false;
                 if (playerOrientations.Count >= 4)
                 {
-                    var totalDistance = playerOrientations[playerOrientations.Count - 1].thumbDistance -
-                                        playerOrientations[0].thumbDistance;
+                    var totalDistance = playerOrientations[playerOrientations.Count - 1].thumbDistance - playerOrientations[0].thumbDistance;
                     if (totalDistance >= 0.08f)
                     {
                         var start = Mathf.RoundToInt(playerOrientations.Count * 0.25f) + 1;
@@ -588,8 +571,7 @@ public class MoveToDesk : MonoBehaviour
 
     private void ApplyCalculatedTableOrientation(bool updateCenterEyeAnchor)
     {
-        if (calculatedTablePosition == null || calculatedTableRotation == null ||
-            calculatedCenterEyeAnchor == null && !updateCenterEyeAnchor)
+        if (calculatedTablePosition == null || calculatedTableRotation == null || calculatedCenterEyeAnchor == null && !updateCenterEyeAnchor)
             return;
 
         InputManager.Hands.Left.PhysicsHandController.SetCapsulesActiveTarget(false);
@@ -652,10 +634,12 @@ public class MoveToDesk : MonoBehaviour
     {
         Debug.Log("<color=orange>BonsaiMove: </color>: " + msg);
     }
+
     private void BonsaiLogWarning(string msg)
     {
         Debug.LogWarning("<color=orange>BonsaiMove: </color>: " + msg);
     }
+
     private void BonsaiLogError(string msg)
     {
         Debug.LogError("<color=orange>BonsaiMove: </color>: " + msg);

@@ -111,6 +111,7 @@ public class DeskController : MonoBehaviour
             holePositions[i].x = holes[i].holeObject.position.x;
             holePositions[i].y = holes[i].holeObject.position.z;
         }
+
         tableMaterial.SetVectorArray("holePositions", holePositions);
         canvasMaterial.SetVectorArray("holePositions", holePositions);
     }

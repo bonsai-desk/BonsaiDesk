@@ -10,10 +10,7 @@ public class BlockSpawner : MonoBehaviour
 
     public int BlockId
     {
-        get
-        {
-            return _blockId;
-        }
+        get { return _blockId; }
         set
         {
             _blockId = value;
@@ -35,11 +32,13 @@ public class BlockSpawner : MonoBehaviour
                 aboutToSpawnObject = false;
             }
         }
+
         if (!objectPresent && !aboutToSpawnObject && BlockId != -1)
         {
             aboutToSpawnObject = true;
             coroutine = StartCoroutine(SpawnObject());
         }
+
         objectPresent = false;
     }
 

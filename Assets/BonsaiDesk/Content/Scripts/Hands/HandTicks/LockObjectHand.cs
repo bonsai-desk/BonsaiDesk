@@ -32,8 +32,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
         }
 
         if (joint && (!playerHand.HandComponents.TrackingRecently ||
-                      !playerHand.GetGesture(PlayerHand.Gesture.IndexTargetPinching) &&
-                      !playerHand.GetGesture(PlayerHand.Gesture.Fist)))
+                      !playerHand.GetGesture(PlayerHand.Gesture.IndexTargetPinching) && !playerHand.GetGesture(PlayerHand.Gesture.Fist)))
         {
             DetachObject();
             return;
@@ -44,8 +43,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
 
         //code below here if not holding object
 
-        if (playerHand.GetGestureStart(PlayerHand.Gesture.IndexTargetPinching) ||
-            playerHand.GetGestureStart(PlayerHand.Gesture.Fist))
+        if (playerHand.GetGestureStart(PlayerHand.Gesture.IndexTargetPinching) || playerHand.GetGestureStart(PlayerHand.Gesture.Fist))
         {
             var hitAutoAuthority = GetLockObjectCandidate();
             if (hitAutoAuthority && !hitAutoAuthority.isKinematic && !hitAutoAuthority.InUse)
@@ -60,13 +58,10 @@ public class LockObjectHand : MonoBehaviour, IHandTick
         //TODO use overlap sphere non alloc
         Collider[] pinchHits = new Collider[0];
         if (playerHand.GetGestureStart(PlayerHand.Gesture.IndexTargetPinching))
-            pinchHits = Physics.OverlapSphere(playerHand.PinchPosition(), 0, PlayerHand.AllButHandsMask,
-                QueryTriggerInteraction.Ignore);
+            pinchHits = Physics.OverlapSphere(playerHand.PinchPosition(), 0, PlayerHand.AllButHandsMask, QueryTriggerInteraction.Ignore);
         Collider[] fistHits = new Collider[0];
-        if (playerHand.GetGestureStart(PlayerHand.Gesture.Fist) ||
-            playerHand.GetGestureStart(PlayerHand.Gesture.IndexTargetPinching))
-            fistHits = Physics.OverlapSphere(playerHand.palm.position, 0.02f, PlayerHand.AllButHandsMask,
-                QueryTriggerInteraction.Ignore);
+        if (playerHand.GetGestureStart(PlayerHand.Gesture.Fist) || playerHand.GetGestureStart(PlayerHand.Gesture.IndexTargetPinching))
+            fistHits = Physics.OverlapSphere(playerHand.palm.position, 0.02f, PlayerHand.AllButHandsMask, QueryTriggerInteraction.Ignore);
         Collider[] hits = new Collider[pinchHits.Length + fistHits.Length];
         pinchHits.CopyTo(hits, 0);
         fistHits.CopyTo(hits, pinchHits.Length);
@@ -109,8 +104,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
     {
         autoAuthority.CmdSetNewOwner(NetworkClient.connection.identity.netId, NetworkTime.time, true);
 
-        joint = InputManager.Hands.GetHand(playerHand.skeletonType).PhysicsHand.gameObject
-            .AddComponent<ConfigurableJoint>();
+        joint = InputManager.Hands.GetHand(playerHand.skeletonType).PhysicsHand.gameObject.AddComponent<ConfigurableJoint>();
         joint.anchor = playerHand.transform.InverseTransformPoint(autoAuthority.transform.position);
         joint.autoConfigureConnectedAnchor = false;
         joint.connectedAnchor = Vector3.zero;

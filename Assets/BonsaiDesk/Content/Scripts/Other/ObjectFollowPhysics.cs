@@ -114,8 +114,7 @@ public class ObjectFollowPhysics : MonoBehaviour
         //float distance = Vector3.Distance(transform.position, target.position);
 
         //if already at target or have enough velocity to overshoot target this update tick, allow unlimited force to decelerate (not realistic)
-        if (Mathf.Approximately(distance, 0) || body.velocity.magnitude * Time.deltaTime > distance ||
-            Mathf.Approximately(moveForce, 0))
+        if (Mathf.Approximately(distance, 0) || body.velocity.magnitude * Time.deltaTime > distance || Mathf.Approximately(moveForce, 0))
             body.AddForce(targetForce, ForceMode.Force);
         else //clamp target force to moveForce
             body.AddForce(Vector3.ClampMagnitude(targetForce, moveForce), ForceMode.Force);
@@ -148,13 +147,10 @@ public class ObjectFollowPhysics : MonoBehaviour
             Vector3 angularVelocityDifference = targetAngularVelocity - body.angularVelocity;
 
             Quaternion q = transform.rotation * body.inertiaTensorRotation;
-            Vector3 targetTorque =
-                q * Vector3.Scale(body.inertiaTensor, (Quaternion.Inverse(q) * angularVelocityDifference)) /
-                Time.deltaTime; // / 2f;
+            Vector3 targetTorque = q * Vector3.Scale(body.inertiaTensor, (Quaternion.Inverse(q) * angularVelocityDifference)) / Time.deltaTime; // / 2f;
 
             //if already at target or have enough angular velocity to overshoot target this update tick, allow unlimited torque to decelerate (not realistic)
-            if (Mathf.Approximately(angle, 0) ||
-                body.angularVelocity.magnitude * Mathf.Rad2Deg * Time.deltaTime > angle ||
+            if (Mathf.Approximately(angle, 0) || body.angularVelocity.magnitude * Mathf.Rad2Deg * Time.deltaTime > angle ||
                 Mathf.Approximately(rotationTorque, 0))
                 body.AddTorque(targetTorque, ForceMode.Force);
             else //clamp target torque to rotationForce

@@ -16,7 +16,8 @@ public class AngleToObject : MonoBehaviour
         {
             cachedOnFrame = Time.frameCount;
             Vector3 targetVector = targetObject.position - transform.position;
-            cachedAngle = Vector3.Angle(transform.forward, targetVector); ;
+            cachedAngle = Vector3.Angle(transform.forward, targetVector);
+            ;
         }
 
         return cachedAngle;

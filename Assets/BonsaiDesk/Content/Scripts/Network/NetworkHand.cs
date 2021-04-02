@@ -129,11 +129,10 @@ public class NetworkHand : NetworkBehaviour
                 SetFingerRotations( /*hand*/);
 
             //maxvalue if attached to nothing, so don't draw
-            if (_pinchPullAttachedToId != uint.MaxValue &&
-                NetworkIdentity.spawned.TryGetValue(_pinchPullAttachedToId, out NetworkIdentity value))
+            if (_pinchPullAttachedToId != uint.MaxValue && NetworkIdentity.spawned.TryGetValue(_pinchPullAttachedToId, out NetworkIdentity value))
             {
-                var from = ownerIdentity.GetComponent<NetworkVRPlayer>().GetOtherHand(_skeletonType)
-                    .GetComponent<OVRHandTransformMapper>().CustomBones[20].position;
+                var from = ownerIdentity.GetComponent<NetworkVRPlayer>().GetOtherHand(_skeletonType).GetComponent<OVRHandTransformMapper>().CustomBones[20]
+                    .position;
                 var to = GetComponent<OVRHandTransformMapper>().CustomBones[20].position;
                 var end = value.transform.TransformPoint(_pinchPullLocalHitPoint);
                 RenderPinchPullLine(from, to, end);
@@ -146,9 +145,7 @@ public class NetworkHand : NetworkBehaviour
             return;
         }
 
-        HandComponents hand = _skeletonType == OVRSkeleton.SkeletonType.HandLeft
-            ? InputManager.Hands.Left
-            : InputManager.Hands.Right;
+        HandComponents hand = _skeletonType == OVRSkeleton.SkeletonType.HandLeft ? InputManager.Hands.Left : InputManager.Hands.Right;
 
         if (!hand.Tracking)
             return;
@@ -165,8 +162,7 @@ public class NetworkHand : NetworkBehaviour
     }
 
     [Command]
-    public void CmdSetPinchPullInfo(uint pinchPullAttachedToId, Vector3 pinchPullLocalHitPoint,
-        float pinchPullRopeLength)
+    public void CmdSetPinchPullInfo(uint pinchPullAttachedToId, Vector3 pinchPullLocalHitPoint, float pinchPullRopeLength)
     {
         _pinchPullAttachedToId = pinchPullAttachedToId;
         _pinchPullLocalHitPoint = pinchPullLocalHitPoint;
@@ -329,23 +325,18 @@ public class NetworkHand : NetworkBehaviour
             rotations >>= 8;
             float rotation1 = (rotation1Byte / 255f) * 90f;
 
-            renderedFingerRotations[fingerIndex] += (rotation1 - oldRenderedFingerRotations[fingerIndex]) *
-                Time.deltaTime / updateInterval;
-            renderedFingerRotations[fingerIndex + 1] += (rotation2 - oldRenderedFingerRotations[fingerIndex + 1]) *
-                Time.deltaTime / updateInterval;
+            renderedFingerRotations[fingerIndex] += (rotation1 - oldRenderedFingerRotations[fingerIndex]) * Time.deltaTime / updateInterval;
+            renderedFingerRotations[fingerIndex + 1] += (rotation2 - oldRenderedFingerRotations[fingerIndex + 1]) * Time.deltaTime / updateInterval;
 
             // mapper.CustomBones[fingerIndex].localRotation = hand.oVRSkeleton.BindPoses[fingerIndex].Transform.localRotation * Quaternion.Euler(0, 0, -renderedFingerRotations[fingerIndex]);
             // mapper.CustomBones[fingerIndex + 1].localRotation = hand.oVRSkeleton.BindPoses[fingerIndex + 1].Transform.localRotation * Quaternion.Euler(0, 0, -renderedFingerRotations[fingerIndex + 1]);
             // mapper.CustomBones[fingerIndex + 2].localRotation = hand.oVRSkeleton.BindPoses[fingerIndex + 2].Transform.localRotation * Quaternion.Euler(0, 0, -renderedFingerRotations[fingerIndex + 1]);
 
-            mapper.CustomBones[fingerIndex].localEulerAngles = new Vector3(
-                mapper.CustomBones[fingerIndex].localRotation.x, mapper.CustomBones[fingerIndex].localRotation.y,
-                -renderedFingerRotations[fingerIndex]);
-            mapper.CustomBones[fingerIndex + 1].localEulerAngles = new Vector3(
-                mapper.CustomBones[fingerIndex + 1].localRotation.x,
+            mapper.CustomBones[fingerIndex].localEulerAngles = new Vector3(mapper.CustomBones[fingerIndex].localRotation.x,
+                mapper.CustomBones[fingerIndex].localRotation.y, -renderedFingerRotations[fingerIndex]);
+            mapper.CustomBones[fingerIndex + 1].localEulerAngles = new Vector3(mapper.CustomBones[fingerIndex + 1].localRotation.x,
                 mapper.CustomBones[fingerIndex + 1].localRotation.y, -renderedFingerRotations[fingerIndex + 1]);
-            mapper.CustomBones[fingerIndex + 2].localEulerAngles = new Vector3(
-                mapper.CustomBones[fingerIndex + 2].localRotation.x,
+            mapper.CustomBones[fingerIndex + 2].localEulerAngles = new Vector3(mapper.CustomBones[fingerIndex + 2].localRotation.x,
                 mapper.CustomBones[fingerIndex + 2].localRotation.y, -renderedFingerRotations[fingerIndex + 1]);
         }
 
@@ -360,10 +351,8 @@ public class NetworkHand : NetworkBehaviour
         tRotations >>= 8;
         //float rotationThumb1 = (rotationThumb1Byte / 255f) * 90f;
 
-        renderedFingerRotations[thumbIndex + 1] += (rotationThumb2 - oldRenderedFingerRotations[thumbIndex + 1]) *
-            Time.deltaTime / updateInterval;
-        renderedFingerRotations[thumbIndex + 2] += (rotationThumb2 - oldRenderedFingerRotations[thumbIndex + 2]) *
-            Time.deltaTime / updateInterval;
+        renderedFingerRotations[thumbIndex + 1] += (rotationThumb2 - oldRenderedFingerRotations[thumbIndex + 1]) * Time.deltaTime / updateInterval;
+        renderedFingerRotations[thumbIndex + 2] += (rotationThumb2 - oldRenderedFingerRotations[thumbIndex + 2]) * Time.deltaTime / updateInterval;
 
         Quaternion localRotation = Quaternion.identity;
         for (int i = 3; i >= 0; i--)
@@ -374,19 +363,16 @@ public class NetworkHand : NetworkBehaviour
         }
 
         renderedThumbRotation = Quaternion.RotateTowards(renderedThumbRotation, localRotation,
-            Vector3.Angle(oldRenderedThumbRotation * Vector3.right, localRotation * Vector3.right) * Time.deltaTime /
-            updateInterval);
+            Vector3.Angle(oldRenderedThumbRotation * Vector3.right, localRotation * Vector3.right) * Time.deltaTime / updateInterval);
 
         mapper.CustomBones[thumbIndex].localRotation = renderedThumbRotation;
 
         // mapper.CustomBones[thumbIndex + 1].localRotation = hand.oVRSkeleton.BindPoses[thumbIndex + 1].Transform.localRotation * Quaternion.Euler(0, 0, -renderedFingerRotations[thumbIndex + 1]);
         // mapper.CustomBones[thumbIndex + 2].localRotation = hand.oVRSkeleton.BindPoses[thumbIndex + 2].Transform.localRotation * Quaternion.Euler(0, 0, -renderedFingerRotations[thumbIndex + 2]);
 
-        mapper.CustomBones[thumbIndex + 1].localEulerAngles = new Vector3(
-            mapper.CustomBones[thumbIndex + 1].localEulerAngles.x,
+        mapper.CustomBones[thumbIndex + 1].localEulerAngles = new Vector3(mapper.CustomBones[thumbIndex + 1].localEulerAngles.x,
             mapper.CustomBones[thumbIndex + 1].localEulerAngles.y, -renderedFingerRotations[thumbIndex + 1]);
-        mapper.CustomBones[thumbIndex + 2].localEulerAngles = new Vector3(
-            mapper.CustomBones[thumbIndex + 2].localEulerAngles.x,
+        mapper.CustomBones[thumbIndex + 2].localEulerAngles = new Vector3(mapper.CustomBones[thumbIndex + 2].localEulerAngles.x,
             mapper.CustomBones[thumbIndex + 2].localEulerAngles.y, -renderedFingerRotations[thumbIndex + 2]);
     }
 }

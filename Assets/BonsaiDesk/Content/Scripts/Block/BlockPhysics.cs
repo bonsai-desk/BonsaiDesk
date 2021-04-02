@@ -32,8 +32,7 @@ public class BlockPhysics : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         //TODO cache layer int
-        if (collision.gameObject.layer == LayerMask.NameToLayer("LeftHand") ||
-            collision.gameObject.layer == LayerMask.NameToLayer("RightHand") ||
+        if (collision.gameObject.layer == LayerMask.NameToLayer("LeftHand") || collision.gameObject.layer == LayerMask.NameToLayer("RightHand") ||
             collision.gameObject.layer == LayerMask.NameToLayer("IndexTip"))
         {
             touchingHand = true;
@@ -43,8 +42,7 @@ public class BlockPhysics : MonoBehaviour
     private void OnCollisionStay(Collision collision)
     {
         //TODO cache layer int
-        if (collision.gameObject.layer == LayerMask.NameToLayer("LeftHand") ||
-            collision.gameObject.layer == LayerMask.NameToLayer("RightHand") ||
+        if (collision.gameObject.layer == LayerMask.NameToLayer("LeftHand") || collision.gameObject.layer == LayerMask.NameToLayer("RightHand") ||
             collision.gameObject.layer == LayerMask.NameToLayer("IndexTip"))
         {
             touchingHand = true;
@@ -99,8 +97,7 @@ public class BlockPhysics : MonoBehaviour
                 if (inArea.isNearHole)
                     isNearHole = true;
                 isInCubeArea = inArea.isInCubeArea;
-                isInCubeArea = isInCubeArea && ((transform.parent == initialParent && touchingHand) ||
-                                                transform.parent == blockAreaTransform);
+                isInCubeArea = isInCubeArea && ((transform.parent == initialParent && touchingHand) || transform.parent == blockAreaTransform);
                 if (isInCubeArea)
                 {
                     Vector3 bearingOffset = Vector3.zero;
@@ -108,8 +105,7 @@ public class BlockPhysics : MonoBehaviour
                     {
                         if (Blocks.blocks[block.id].blockType == Block.BlockType.bearing)
                         {
-                            bearingOffset = blockArea.transform.rotation *
-                                            BlockArea.IntToQuat(block.forward, block.up) * Vector3.up * 0.1f *
+                            bearingOffset = blockArea.transform.rotation * BlockArea.IntToQuat(block.forward, block.up) * Vector3.up * 0.1f *
                                             BlockArea.cubeScale;
                         }
                     }
@@ -154,8 +150,7 @@ public class BlockPhysics : MonoBehaviour
             transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer("block");
             SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("block"));
         }
-        else if (isInCubeArea && !touchingHand &&
-                 Blocks.blocks[myBlockArea.blocks[myBlockArea.OnlyBlock()].id].blockType == Block.BlockType.bearing)
+        else if (isInCubeArea && !touchingHand && Blocks.blocks[myBlockArea.blocks[myBlockArea.OnlyBlock()].id].blockType == Block.BlockType.bearing)
         {
             transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer("onlyHands");
             SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("onlyHands"));
@@ -280,8 +275,7 @@ public class BlockPhysics : MonoBehaviour
         float distance = Vector3.Distance(blockPosition, position);
 
         //if already at target or have enough velocity to overshoot target this update tick, allow unlimited force to decelerate (not realistic)
-        if (Mathf.Approximately(distance, 0) || body.velocity.magnitude * Time.deltaTime > distance ||
-            Mathf.Approximately(moveForce, 0))
+        if (Mathf.Approximately(distance, 0) || body.velocity.magnitude * Time.deltaTime > distance || Mathf.Approximately(moveForce, 0))
             body.AddForce(targetForce, ForceMode.Force);
         else //clamp target force to moveForce
             body.AddForce(Vector3.ClampMagnitude(targetForce, moveForce), ForceMode.Force);
@@ -312,9 +306,7 @@ public class BlockPhysics : MonoBehaviour
             Vector3 angularVelocityDifference = targetAngularVelocity - body.angularVelocity;
 
             Quaternion q = transform.rotation * body.inertiaTensorRotation;
-            Vector3 targetTorque =
-                q * Vector3.Scale(body.inertiaTensor, (Quaternion.Inverse(q) * angularVelocityDifference)) /
-                Time.deltaTime; // / 2f;
+            Vector3 targetTorque = q * Vector3.Scale(body.inertiaTensor, (Quaternion.Inverse(q) * angularVelocityDifference)) / Time.deltaTime; // / 2f;
 
             //if already at target, allow unlimited torque to decelerate (not realistic)
             if (Mathf.Approximately(angle, 0) || Mathf.Approximately(rotationTorque, 0))

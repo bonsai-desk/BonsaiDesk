@@ -46,8 +46,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public int BuildId;
 
-    public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos =
-        new Dictionary<NetworkConnection, PlayerInfo>();
+    public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos = new Dictionary<NetworkConnection, PlayerInfo>();
 
     private double _lastGoodPingReceived = Mathf.NegativeInfinity;
     private float _lastPingNet = Mathf.NegativeInfinity;
@@ -176,8 +175,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
     {
         if (isDisconnecting || _roomJoinInProgress)
         {
-            BonsaiLog(
-                $"Prevent Update while isDisconnecting={isDisconnecting} _roomJoinInProgress={_roomJoinInProgress}");
+            BonsaiLog($"Prevent Update while isDisconnecting={isDisconnecting} _roomJoinInProgress={_roomJoinInProgress}");
             return;
         }
 
@@ -351,9 +349,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
     {
         //instantiate player
         var startPos = GetStartPosition();
-        var player = startPos != null
-            ? Instantiate(playerPrefab, startPos.position, startPos.rotation)
-            : Instantiate(playerPrefab);
+        var player = startPos != null ? Instantiate(playerPrefab, startPos.position, startPos.rotation) : Instantiate(playerPrefab);
 
         //setup player and spawn hands
         var networkVRPlayer = player.GetComponent<NetworkVRPlayer>();
@@ -621,5 +617,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
     }
 
-    private struct ShouldDisconnectMessage : NetworkMessage { }
+    private struct ShouldDisconnectMessage : NetworkMessage
+    {
+    }
 }

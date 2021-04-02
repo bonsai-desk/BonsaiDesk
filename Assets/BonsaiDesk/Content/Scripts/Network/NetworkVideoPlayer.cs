@@ -15,7 +15,7 @@ public class NetworkVideoPlayer : NetworkBehaviour
 
 
     [SyncVar(hook = nameof(SetState))] public VideoPlayerState state;
-    
+
     public void Start()
     {
         SetState(state, state);

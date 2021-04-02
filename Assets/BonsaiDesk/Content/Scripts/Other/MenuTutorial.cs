@@ -11,7 +11,7 @@ public class MenuTutorial : MonoBehaviour
             gameObject.SetActive(!finished);
         }
     }
-    
+
     public void DisableSelf()
     {
         gameObject.SetActive(false);

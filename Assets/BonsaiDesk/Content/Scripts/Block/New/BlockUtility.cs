@@ -51,12 +51,10 @@ public static partial class BlockUtility
         var forward = rotation * Vector3.forward;
         var up = rotation * Vector3.up;
 
-        var forwardRounded = new Vector3Int(Mathf.RoundToInt(forward.x), Mathf.RoundToInt(forward.y),
-            Mathf.RoundToInt(forward.z));
+        var forwardRounded = new Vector3Int(Mathf.RoundToInt(forward.x), Mathf.RoundToInt(forward.y), Mathf.RoundToInt(forward.z));
         var upRounded = new Vector3Int(Mathf.RoundToInt(up.x), Mathf.RoundToInt(up.y), Mathf.RoundToInt(up.z));
 
-        if (!DirectionToByte.TryGetValue(forwardRounded, out var forwardByte) ||
-            !DirectionToByte.TryGetValue(upRounded, out var upByte))
+        if (!DirectionToByte.TryGetValue(forwardRounded, out var forwardByte) || !DirectionToByte.TryGetValue(upRounded, out var upByte))
         {
             Debug.LogError("Invalid direction. Maybe snap the angle before using this function?");
             return 0;
@@ -81,8 +79,7 @@ public static partial class BlockUtility
             return Quaternion.identity;
         }
 
-        return Quaternion.LookRotation(ByteToDirection[(byte) (rotationByte & 0b_1111)],
-            ByteToDirection[(byte) ((rotationByte >> 4) & 0b_1111)]);
+        return Quaternion.LookRotation(ByteToDirection[(byte) (rotationByte & 0b_1111)], ByteToDirection[(byte) ((rotationByte >> 4) & 0b_1111)]);
     }
 
     //these two dictionaries allow you to convert a world axis direction to a byte and vice versa for light weight storage
@@ -117,8 +114,8 @@ public static partial class BlockUtility
         new Vector3Int(0, 0, -1)
     };
 
-    public static (Vector3[] vertices, Vector2[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(int id,
-        Vector3Int coord, Quaternion rotation, float texturePadding)
+    public static (Vector3[] vertices, Vector2[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(int id, Vector3Int coord, Quaternion rotation,
+        float texturePadding)
     {
         if (id < 0)
         {
@@ -151,12 +148,9 @@ public static partial class BlockUtility
             else
                 blockuv = bottomBlockuv;
             uv[face * 4 + 0] = blockuv + new Vector2(texturePadding, texturePadding);
-            uv[face * 4 + 1] = blockuv + new Vector2(Block.textureWidth, 0) +
-                               new Vector2(-texturePadding, texturePadding);
-            uv[face * 4 + 2] = blockuv + new Vector2(Block.textureWidth, Block.textureWidth) +
-                               new Vector2(-texturePadding, -texturePadding);
-            uv[face * 4 + 3] = blockuv + new Vector2(0, Block.textureWidth) +
-                               new Vector2(texturePadding, -texturePadding);
+            uv[face * 4 + 1] = blockuv + new Vector2(Block.textureWidth, 0) + new Vector2(-texturePadding, texturePadding);
+            uv[face * 4 + 2] = blockuv + new Vector2(Block.textureWidth, Block.textureWidth) + new Vector2(-texturePadding, -texturePadding);
+            uv[face * 4 + 3] = blockuv + new Vector2(0, Block.textureWidth) + new Vector2(texturePadding, -texturePadding);
 
             uv2[face * 4 + 0] = new Vector2(0, 0);
             uv2[face * 4 + 1] = new Vector2(Block.breakTextureWidth, 0);
@@ -228,10 +222,9 @@ public static partial class BlockUtility
         new Vector3(-0.5f, -0.5f, -0.5f)
     };
 
-    public static (Queue<BoxCollider> boxCollidersNotNeeded, float mass, bool destroySphere) UpdateHitBox(
-        SyncDictionary<Vector3Int, SyncBlock> blocks,
-        Queue<BoxCollider> boxCollidersInUse, Transform boxesParent, Transform sphereObject,
-        PhysicMaterial blockPhysicMaterial, PhysicMaterial spherePhysicMaterial)
+    public static (Queue<BoxCollider> boxCollidersNotNeeded, float mass, bool destroySphere) UpdateHitBox(SyncDictionary<Vector3Int, SyncBlock> blocks,
+        Queue<BoxCollider> boxCollidersInUse, Transform boxesParent, Transform sphereObject, PhysicMaterial blockPhysicMaterial,
+        PhysicMaterial spherePhysicMaterial)
     {
         if (blocks.Count < 1)
         {
@@ -260,8 +253,7 @@ public static partial class BlockUtility
                 bool canSpreadForward = true;
                 bool canSpreadBackward = true;
 
-                while (canSpreadRight || canSpreadLeft || canSpreadUp || canSpreadDown || canSpreadForward ||
-                       canSpreadBackward)
+                while (canSpreadRight || canSpreadLeft || canSpreadUp || canSpreadDown || canSpreadForward || canSpreadBackward)
                 {
                     if (canSpreadRight)
                         canSpreadRight = expandBoxBoundsRight(block.Key, ref boxBounds, ref assymilated, ref blocks);
@@ -272,11 +264,9 @@ public static partial class BlockUtility
                     if (canSpreadDown)
                         canSpreadDown = expandBoxBoundsDown(block.Key, ref boxBounds, ref assymilated, ref blocks);
                     if (canSpreadForward)
-                        canSpreadForward =
-                            expandBoxBoundsForward(block.Key, ref boxBounds, ref assymilated, ref blocks);
+                        canSpreadForward = expandBoxBoundsForward(block.Key, ref boxBounds, ref assymilated, ref blocks);
                     if (canSpreadBackward)
-                        canSpreadBackward =
-                            expandBoxBoundsBackward(block.Key, ref boxBounds, ref assymilated, ref blocks);
+                        canSpreadBackward = expandBoxBoundsBackward(block.Key, ref boxBounds, ref assymilated, ref blocks);
                 }
 
                 boxes.Add(block.Key, boxBounds);
@@ -334,8 +324,7 @@ public static partial class BlockUtility
             destroySphere = true;
         }
 
-        float mass = Mathf.Clamp((BlockObject.CubeMass * blocks.Count) - (BlockObject.CubeMass * blocks.Count),
-            BlockObject.CubeMass, Mathf.Infinity);
+        float mass = Mathf.Clamp((BlockObject.CubeMass * blocks.Count) - (BlockObject.CubeMass * blocks.Count), BlockObject.CubeMass, Mathf.Infinity);
         return (boxCollidersNotNeeded, mass, destroySphere);
     }
 
@@ -344,8 +333,7 @@ public static partial class BlockUtility
         return blockObject.Blocks.ContainsKey(testPosition);
     }
 
-    public static (bool isInCubeArea, bool isNearHole) InCubeArea(BlockObject blockObject,
-        Vector3Int testPosition, int id)
+    public static (bool isInCubeArea, bool isNearHole) InCubeArea(BlockObject blockObject, Vector3Int testPosition, int id)
     {
         if (ContainsBlock(blockObject, testPosition))
         {
@@ -355,41 +343,26 @@ public static partial class BlockUtility
         //don't @ me
         bool isNearHole =
             (!ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 0)) &&
-             (ContainsBlock(blockObject, testPosition + new Vector3Int(1, -1, 0)) &&
-              ContainsBlock(blockObject, testPosition + new Vector3Int(1, 1, 0)) ||
-              ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, -1)) &&
-              ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 1)))) ||
+             (ContainsBlock(blockObject, testPosition + new Vector3Int(1, -1, 0)) && ContainsBlock(blockObject, testPosition + new Vector3Int(1, 1, 0)) ||
+              ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, -1)) && ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 1)))) ||
             (!ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 0)) &&
-             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, -1, 0)) &&
-              ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 1, 0)) ||
-              ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, -1)) &&
-              ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 1)))) ||
+             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, -1, 0)) && ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 1, 0)) ||
+              ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, -1)) && ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 1)))) ||
             (!ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, 0)) &&
-             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 1, 0)) &&
-              ContainsBlock(blockObject, testPosition + new Vector3Int(1, 1, 0)) ||
-              ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, -1)) &&
-              ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, 1)))) ||
+             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 1, 0)) && ContainsBlock(blockObject, testPosition + new Vector3Int(1, 1, 0)) ||
+              ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, -1)) && ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, 1)))) ||
             (!ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, 0)) &&
-             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, -1, 0)) &&
-              ContainsBlock(blockObject, testPosition + new Vector3Int(1, -1, 0)) ||
-              ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, -1)) &&
-              ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, 1)))) ||
+             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, -1, 0)) && ContainsBlock(blockObject, testPosition + new Vector3Int(1, -1, 0)) ||
+              ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, -1)) && ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, 1)))) ||
             (!ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, 1)) &&
-             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 1)) &&
-              ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 1)) ||
-              ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, 1)) &&
-              ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, 1)))) ||
+             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 1)) && ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 1)) ||
+              ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, 1)) && ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, 1)))) ||
             (!ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, -1)) &&
-             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, -1)) &&
-              ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, -1)) ||
-              ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, -1)) &&
-              ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, -1)))) ||
-            (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 0)) &&
-             ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 0)) ||
-             ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, 0)) &&
-             ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, 0)) ||
-             ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, -1)) &&
-             ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, 1)));
+             (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, -1)) && ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, -1)) ||
+              ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, -1)) && ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, -1)))) ||
+            (ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 0)) && ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 0)) ||
+             ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, 0)) && ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, 0)) ||
+             ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, -1)) && ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, 1)));
 
         bool inCubeAreaBearing = true;
         // if (Blocks.blocks[id].blockType == Block.BlockType.bearing)
@@ -401,13 +374,12 @@ public static partial class BlockUtility
         //     }
         // }
 
-        bool isInCubeArea = inCubeAreaBearing && (
-            ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 0)) ||
-            ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 0)) ||
-            ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, 0)) ||
-            ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, 0)) ||
-            ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, 1)) ||
-            ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, -1)));
+        bool isInCubeArea = inCubeAreaBearing && (ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 0)) ||
+                                                  ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 0)) ||
+                                                  ContainsBlock(blockObject, testPosition + new Vector3Int(0, 1, 0)) ||
+                                                  ContainsBlock(blockObject, testPosition + new Vector3Int(0, -1, 0)) ||
+                                                  ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, 1)) ||
+                                                  ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, -1)));
 
         return (isInCubeArea, isNearHole);
     }
@@ -451,8 +423,7 @@ public static partial class BlockUtility
         return filledBlocks;
     }
 
-    public static HashSet<Vector3Int> GetSurroundingBlocks(Vector3Int coord,
-        SyncDictionary<Vector3Int, SyncBlock> blocks)
+    public static HashSet<Vector3Int> GetSurroundingBlocks(Vector3Int coord, SyncDictionary<Vector3Int, SyncBlock> blocks)
     {
         var surroundingBlocks = new HashSet<Vector3Int>();
         foreach (var direction in Directions)

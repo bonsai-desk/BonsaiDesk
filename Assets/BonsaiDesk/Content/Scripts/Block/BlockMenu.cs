@@ -19,6 +19,7 @@ public class BlockMenu : MonoBehaviour
                     localPosition.y -= BlockArea.cubeScale + gap;
                 }
             }
+
             CreateBlock(i, localPosition);
         }
     }

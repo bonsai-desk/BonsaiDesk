@@ -162,8 +162,7 @@ public class OVRHandTransformMapper : MonoBehaviour
         {
             for (int bi = (int) start; bi < (int) end; ++bi)
             {
-                if (!((OVRSkeleton.BoneId) bi >= OVRSkeleton.BoneId.Hand_ThumbTip &&
-                      (OVRSkeleton.BoneId) bi <= OVRSkeleton.BoneId.Hand_PinkyTip))
+                if (!((OVRSkeleton.BoneId) bi >= OVRSkeleton.BoneId.Hand_ThumbTip && (OVRSkeleton.BoneId) bi <= OVRSkeleton.BoneId.Hand_PinkyTip))
                 {
                     string fbxBoneName = _fbxBoneNames[(int) bi];
                     // print(fbxBoneName);
@@ -233,8 +232,7 @@ public class OVRHandTransformMapper : MonoBehaviour
     {
         if (bi >= OVRSkeleton.BoneId.Hand_ThumbTip && bi <= OVRSkeleton.BoneId.Hand_PinkyTip)
         {
-            return _handPrefix[(int) skeletonType] +
-                   _fbxFingerNames[(int) bi - (int) OVRSkeleton.BoneId.Hand_ThumbTip] + "_finger_tip_marker";
+            return _handPrefix[(int) skeletonType] + _fbxFingerNames[(int) bi - (int) OVRSkeleton.BoneId.Hand_ThumbTip] + "_finger_tip_marker";
         }
         else
         {

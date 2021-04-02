@@ -32,9 +32,8 @@ public class MoveToDeskTutorialSwap : MonoBehaviour
         leftController.SetActive(!handTracking);
         rightController.SetActive(!handTracking);
 
-        if (!_popupDismissed && !handTracking &&
-            (OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.LTouch) ||
-             OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.RTouch)))
+        if (!_popupDismissed && !handTracking && (OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.LTouch) ||
+                                                  OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.RTouch)))
         {
             _popupDismissed = true;
         }

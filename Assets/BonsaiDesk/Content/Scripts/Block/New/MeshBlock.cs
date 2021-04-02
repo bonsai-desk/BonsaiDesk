@@ -6,6 +6,7 @@ public class MeshBlock
 {
     public int positionInList;
     public float health;
+
     public int framesSinceLastDamage;
     // public GameObject blockObject;
     // public MeshRenderer meshRenderer;

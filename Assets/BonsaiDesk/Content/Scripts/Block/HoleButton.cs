@@ -92,6 +92,7 @@ public class HoleButton : MonoBehaviour
                 }
             }
         }
+
         holeRadiusLerp = Mathf.Clamp01(holeRadiusLerp);
         hole.radius = Mathf.Lerp(0, 0.05f, holeRadiusLerp);
         deskController.UpdateHoleRadiiInShader();
@@ -116,7 +117,7 @@ public class HoleButton : MonoBehaviour
             {
                 checkPosition = InputManager.Hands.physicsFingerTipPositions[i];
             }
-            
+
             float activationRadius = 0.1f;
 
             float heightDistance = (checkPosition.y - 0.025f) - transform.position.y;
@@ -176,6 +177,7 @@ public class HoleButton : MonoBehaviour
                             ActivatedAction(index);
                         }
                     }
+
                     pressed = true;
                 }
             }
@@ -199,11 +201,13 @@ public class HoleButton : MonoBehaviour
                         }
                     }
                 }
+
                 if (!activated)
                     buttonMeshRenderer.sharedMaterial = defaultMaterial;
                 enteredFromFlat = false;
             }
         }
+
         lastIsPressRange = inPressRange;
         lastHeightValid = heightValid;
     }
@@ -278,24 +282,30 @@ public class HoleButton : MonoBehaviour
                 rightAction.Invoke();
         }
     }
-    
-	public static IEnumerator DelayActivateButtons(GameObject buttons, float seconds) {
-		yield return new WaitForSeconds(seconds);
-		foreach (Transform child in buttons.transform) {
-			var button = child.gameObject;
 
-			if (button != null) {
-				button.SetActive(true);
-			}
-		}
-	}
-    
-	public static void DisableButtons(GameObject buttons) {
-		foreach (Transform child in buttons.transform) {
-			var button = child.GetComponent<HoleButton>();
-			if (button != null) {
-				button.DisableButton();
-			}
-		}
-	}
+    public static IEnumerator DelayActivateButtons(GameObject buttons, float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        foreach (Transform child in buttons.transform)
+        {
+            var button = child.gameObject;
+
+            if (button != null)
+            {
+                button.SetActive(true);
+            }
+        }
+    }
+
+    public static void DisableButtons(GameObject buttons)
+    {
+        foreach (Transform child in buttons.transform)
+        {
+            var button = child.GetComponent<HoleButton>();
+            if (button != null)
+            {
+                button.DisableButton();
+            }
+        }
+    }
 }

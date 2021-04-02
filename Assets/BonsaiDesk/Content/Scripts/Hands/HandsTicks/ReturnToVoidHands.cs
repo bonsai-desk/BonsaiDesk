@@ -18,8 +18,7 @@ public class ReturnToVoidHands : MonoBehaviour, IHandsTick
     public void Tick()
     {
         if (HandValid(leftPlayerHand, angleToHeadLeft) && HandValid(rightPlayerHand, angleToHeadRight) &&
-            (leftPlayerHand.GetGestureStart(PlayerHand.Gesture.Fist) ||
-             rightPlayerHand.GetGestureStart(PlayerHand.Gesture.Fist)))
+            (leftPlayerHand.GetGestureStart(PlayerHand.Gesture.Fist) || rightPlayerHand.GetGestureStart(PlayerHand.Gesture.Fist)))
         {
             action?.Invoke();
         }
@@ -27,8 +26,7 @@ public class ReturnToVoidHands : MonoBehaviour, IHandsTick
 
     private bool HandValid(PlayerHand playerHand, AngleToObject angleToHead)
     {
-        return playerHand.GetGesture(PlayerHand.Gesture.Fist) &&
-               angleToHead.AngleBelowThreshold() &&
+        return playerHand.GetGesture(PlayerHand.Gesture.Fist) && angleToHead.AngleBelowThreshold() &&
                Vector3.Angle(-angleToHead.transform.forward, head.forward) < AngleToHeadThreshold;
     }
 }

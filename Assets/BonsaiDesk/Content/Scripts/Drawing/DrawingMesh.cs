@@ -77,6 +77,7 @@ public class DrawingMesh : MonoBehaviour
                     if (tipPositionLastFrame[i] != InputManager.Hands.targetFingerTipPositions[i])
                         addLineSegment(i);
                 }
+
                 tipDownLastFrame[i] = true;
                 tipPositionLastFrame[i] = InputManager.Hands.targetFingerTipPositions[i];
             }
@@ -110,6 +111,7 @@ public class DrawingMesh : MonoBehaviour
         {
             backWidth = lastWidth[index].Value;
         }
+
         float bwo2 = backWidth / 2f;
 
         Vector3 start = tipPositionLastFrame[index];

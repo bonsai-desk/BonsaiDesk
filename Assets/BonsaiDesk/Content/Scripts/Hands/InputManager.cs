@@ -31,14 +31,11 @@ public class InputManager : MonoBehaviour
 
     private static readonly Vector3 RightControllerOffset = new Vector3(0.02288249f, -0.03249159f, -0.11621020f);
 
-    private static readonly Quaternion RightControllerRotationOffset =
-        new Quaternion(0.55690630f, 0.41798240f, 0.49228620f, -0.52230300f);
+    private static readonly Quaternion RightControllerRotationOffset = new Quaternion(0.55690630f, 0.41798240f, 0.49228620f, -0.52230300f);
 
-    private static readonly Vector3 LeftControllerOffset =
-        new Vector3(-RightControllerOffset.x, RightControllerOffset.y, RightControllerOffset.z);
+    private static readonly Vector3 LeftControllerOffset = new Vector3(-RightControllerOffset.x, RightControllerOffset.y, RightControllerOffset.z);
 
-    private static readonly Quaternion LeftControllerRotationOffset =
-        FlipRotationX(RightControllerRotationOffset) * Quaternion.AngleAxis(180f, Vector3.up);
+    private static readonly Quaternion LeftControllerRotationOffset = FlipRotationX(RightControllerRotationOffset) * Quaternion.AngleAxis(180f, Vector3.up);
 
     public HandComponents Left { get; private set; }
     public HandComponents Right { get; private set; }
@@ -104,7 +101,7 @@ public class InputManager : MonoBehaviour
 
         Left.PlayerHand.UpdateLastGestures();
         Right.PlayerHand.UpdateLastGestures();
-        
+
         //set controllers on/off
         var controllersActive = !UsingHandTracking && !MoveToDesk.Singleton.oriented;
         leftControllerModel.SetActive(controllersActive);
@@ -126,14 +123,12 @@ public class InputManager : MonoBehaviour
         }
     }
 
-    private void UpdateHandTarget(HandComponents handComponents, Vector3 controllerOffset, Quaternion rotationOffset,
-        bool updateTracking = true)
+    private void UpdateHandTarget(HandComponents handComponents, Vector3 controllerOffset, Quaternion rotationOffset, bool updateTracking = true)
     {
         var controller = OVRInput.GetConnectedControllers();
         if (controller == OVRInput.Controller.Hands)
         {
-            bool tracking = handComponents.OVRSkeleton.IsInitialized &&
-                            handComponents.OVRSkeleton.IsDataValid &&
+            bool tracking = handComponents.OVRSkeleton.IsInitialized && handComponents.OVRSkeleton.IsDataValid &&
                             handComponents.OVRSkeleton.IsDataHighConfidence;
             if (tracking)
             {
@@ -144,8 +139,7 @@ public class InputManager : MonoBehaviour
                     handComponents.TargetMapper.UpdateBonesToTargets();
                 }
 
-                handComponents.PhysicsHandController.SetHandScale(
-                    handComponents.OVRSkeleton.transform.localScale.x);
+                handComponents.PhysicsHandController.SetHandScale(handComponents.OVRSkeleton.transform.localScale.x);
             }
 
             if (updateTracking)

@@ -69,17 +69,12 @@ public class VoiceManager : MonoBehaviour
         if (Time.realtimeSinceStartup > _nextPosUpdate)
         {
             _nextPosUpdate += 0.3f;
-            if (!(_positionalChannelSession is null) &&
-                _positionalChannelSession.AudioState == ConnectionState.Connected)
+            if (!(_positionalChannelSession is null) && _positionalChannelSession.AudioState == ConnectionState.Connected)
             {
                 var position = headTransform.position;
                 var forward = headTransform.forward;
                 var up = headTransform.up;
-                _positionalChannelSession?.Set3DPosition(
-                    position,
-                    position,
-                    forward,
-                    up);
+                _positionalChannelSession?.Set3DPosition(position, position, forward, up);
             }
         }
     }
@@ -136,8 +131,7 @@ public class VoiceManager : MonoBehaviour
 
         if (!(_positionalChannelSession is null))
         {
-            BonsaiLog(
-                $"Removing positional channel handler for ({_positionalChannelSession.Channel.Name})");
+            BonsaiLog($"Removing positional channel handler for ({_positionalChannelSession.Channel.Name})");
             _positionalChannelSession = null;
         }
 
@@ -170,8 +164,7 @@ public class VoiceManager : MonoBehaviour
                 {
                     if (_positionalChannelSession.Channel.Name == channelSession.Channel.Name)
                     {
-                        BonsaiLog(
-                            $"Removing positional channel handler for ({_positionalChannelSession.Channel.Name})");
+                        BonsaiLog($"Removing positional channel handler for ({_positionalChannelSession.Channel.Name})");
                         _positionalChannelSession = null;
                     }
 
@@ -202,8 +195,7 @@ public class VoiceManager : MonoBehaviour
 
         while (LoginState != LoginState.LoggedIn)
         {
-            BonsaiLog(
-                $"Wait before voice join voice channel ({LoginState})");
+            BonsaiLog($"Wait before voice join voice channel ({LoginState})");
             yield return new WaitForSeconds(0.25f);
         }
 
@@ -268,22 +260,20 @@ public class VoiceManager : MonoBehaviour
         _accountId = new AccountId(_tokenIssuer, uniqueId, _domain, displayName);
         LoginSession = _client.GetLoginSession(_accountId);
         LoginSession.PropertyChanged += OnLoginSessionPropertyChanged;
-        LoginSession.BeginLogin(_serverUri, LoginSession.GetLoginToken(_tokenKey, _tokenExpiration),
-                                SubscriptionMode.Accept, null, null, null,
-                                ar =>
-                                {
-                                    try
-                                    {
-                                        BonsaiLog("End login");
-                                        LoginSession.EndLogin(ar);
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        // todo handle error
-                                        BonsaiLogError(nameof(e));
-                                        LoginSession.PropertyChanged -= OnLoginSessionPropertyChanged;
-                                    }
-                                });
+        LoginSession.BeginLogin(_serverUri, LoginSession.GetLoginToken(_tokenKey, _tokenExpiration), SubscriptionMode.Accept, null, null, null, ar =>
+        {
+            try
+            {
+                BonsaiLog("End login");
+                LoginSession.EndLogin(ar);
+            }
+            catch (Exception e)
+            {
+                // todo handle error
+                BonsaiLogError(nameof(e));
+                LoginSession.PropertyChanged -= OnLoginSessionPropertyChanged;
+            }
+        });
     }
 
     private void Logout()
@@ -298,8 +288,7 @@ public class VoiceManager : MonoBehaviour
         }
     }
 
-    private void JoinChannel(string channelName, ChannelType channelType, bool switchTransmission = true,
-                             Channel3DProperties properties = null)
+    private void JoinChannel(string channelName, ChannelType channelType, bool switchTransmission = true, Channel3DProperties properties = null)
     {
         BonsaiLog($"JoinChannel: {channelName}");
 
@@ -311,26 +300,24 @@ public class VoiceManager : MonoBehaviour
             channelSession.Participants.AfterKeyAdded += OnParticipantAdded;
             channelSession.Participants.BeforeKeyRemoved += OnParticipantRemoved;
             channelSession.Participants.AfterValueUpdated += OnParticipantValueUpdated;
-            channelSession.BeginConnect(true, false, switchTransmission,
-                                        channelSession.GetConnectToken(_tokenKey, _tokenExpiration),
-                                        ar =>
-                                        {
-                                            try
-                                            {
-                                                // todo this is not getting called on android
-                                                BonsaiLog("End JoinChannel");
-                                                channelSession.EndConnect(ar);
-                                                if (!(properties is null))
-                                                {
-                                                    _positionalChannelSession = channelSession;
-                                                }
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                // todo handle error
-                                                BonsaiLogError($"Could not connect to voice channel: {e.Message}");
-                                            }
-                                        });
+            channelSession.BeginConnect(true, false, switchTransmission, channelSession.GetConnectToken(_tokenKey, _tokenExpiration), ar =>
+            {
+                try
+                {
+                    // todo this is not getting called on android
+                    BonsaiLog("End JoinChannel");
+                    channelSession.EndConnect(ar);
+                    if (!(properties is null))
+                    {
+                        _positionalChannelSession = channelSession;
+                    }
+                }
+                catch (Exception e)
+                {
+                    // todo handle error
+                    BonsaiLogError($"Could not connect to voice channel: {e.Message}");
+                }
+            });
         }
         else
         {
@@ -463,18 +450,15 @@ public class VoiceManager : MonoBehaviour
     {
         BonsaiLog("Connected to voice server and logged in.");
         BonsaiLog($"SystemDevice: {_client.AudioInputDevices.SystemDevice.Name}");
-        BonsaiLog(
-            $"ActiveDevice: {_client.AudioInputDevices.ActiveDevice.Name}");
-        BonsaiLog(
-            $"EffectiveDevice: {_client.AudioInputDevices.EffectiveDevice.Name}");
+        BonsaiLog($"ActiveDevice: {_client.AudioInputDevices.ActiveDevice.Name}");
+        BonsaiLog($"EffectiveDevice: {_client.AudioInputDevices.EffectiveDevice.Name}");
         BonsaiLog($"Logging ({Microphone.devices.Length}) Microphone.devices now...");
         foreach (var device in Microphone.devices)
         {
             BonsaiLog($"Microphone Name: {device}");
         }
 
-        BonsaiLog(
-            $"Logging ({_client.AudioInputDevices.AvailableDevices.Count}) Vivox client available devices now...");
+        BonsaiLog($"Logging ({_client.AudioInputDevices.AvailableDevices.Count}) Vivox client available devices now...");
         var devices = _client.AudioInputDevices.AvailableDevices;
         foreach (var entry in devices)
         {

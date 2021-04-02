@@ -59,7 +59,6 @@ public class TableBrowserMenu : MonoBehaviour
             PostExperimentalInfo();
             PostAppInfo();
         }
-        
     }
 
     private void HandleNetworkInfoChange(object sender, EventArgs e)
@@ -77,11 +76,11 @@ public class TableBrowserMenu : MonoBehaviour
         if (canPost)
         {
             _postRoomInfoLast = Time.time;
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             const string build = "DEVELOPMENT";
-        #else
+#else
 			const string build = "PRODUCTION";
-        #endif
+#endif
 
             PostKvs(new[]
             {
@@ -221,11 +220,11 @@ public class TableBrowserMenu : MonoBehaviour
 
     private void TogglePinchPull()
     {
-        var pinchPullEnabled = InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled; 
+        var pinchPullEnabled = InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled;
         InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled = !pinchPullEnabled;
         InputManager.Hands.Right.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled = !pinchPullEnabled;
     }
-    
+
     private void ToggleBlockBreak()
     {
         var blockBreakActive = InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().BreakModeActive;
@@ -341,13 +340,9 @@ public class TableBrowserMenu : MonoBehaviour
 
     public void PostPlayerInfo(Dictionary<NetworkConnection, NetworkManagerGame.PlayerInfo> playerInfos)
     {
-        var data = playerInfos
-                   .Select(entry => new PlayerData
-                               {Name = entry.Value.User.DisplayName, ConnectionId = entry.Key.connectionId})
-                   .ToArray();
+        var data = playerInfos.Select(entry => new PlayerData {Name = entry.Value.User.DisplayName, ConnectionId = entry.Key.connectionId}).ToArray();
 
-        var csMessage = new CsMessageKeyType<PlayerData[]>
-            {Data = new KeyType<PlayerData[]> {Key = "player_info", Val = data}};
+        var csMessage = new CsMessageKeyType<PlayerData[]> {Data = new KeyType<PlayerData[]> {Key = "player_info", Val = data}};
 
         var message = JsonConvert.SerializeObject(csMessage);
         browser.PostMessage(message);
@@ -423,16 +418,18 @@ public class TableBrowserMenu : MonoBehaviour
     {
         public string UserName;
     }
-    
-    
+
+
     private void BonsaiLog(string msg)
     {
         Debug.Log("<color=orange>BonsaiTableBrowserMenu: </color>: " + msg);
     }
+
     private void BonsaiLogWarning(string msg)
     {
         Debug.LogWarning("<color=orange>BonsaiTableBrowserMenu: </color>: " + msg);
     }
+
     private void BonsaiLogError(string msg)
     {
         Debug.LogError("<color=orange>BonsaiTableBrowserMenu: </color>: " + msg);

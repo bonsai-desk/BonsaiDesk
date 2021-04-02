@@ -72,8 +72,7 @@ public class AutoAuthority : NetworkBehaviour
                 ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
                 _body.velocity = Vector3.zero;
                 _body.angularVelocity = Vector3.zero;
-                GetComponent<SmoothSyncMirror>()
-                    .teleportAnyObjectFromServer(new Vector3(0, 2, 0), Quaternion.identity, transform.localScale);
+                GetComponent<SmoothSyncMirror>().teleportAnyObjectFromServer(new Vector3(0, 2, 0), Quaternion.identity, transform.localScale);
             }
 
             return;
@@ -101,8 +100,7 @@ public class AutoAuthority : NetworkBehaviour
     {
         if (!isClient)
             Debug.LogError("ClientHasAuthority is only valid when called from a client.");
-        return NetworkClient.connection != null && NetworkClient.connection.identity != null &&
-               _ownerIdentityId == NetworkClient.connection.identity.netId;
+        return NetworkClient.connection != null && NetworkClient.connection.identity != null && _ownerIdentityId == NetworkClient.connection.identity.netId;
     }
 
     //Hello function. I am a server. Do I have authority over this object?
@@ -136,8 +134,7 @@ public class AutoAuthority : NetworkBehaviour
             return;
 
         bool shouldVisualizeAuthority = NetworkManagerGame.Singleton.visualizeAuthority &&
-                                        (isServer && !isClient && ServerHasAuthority() ||
-                                         isClient && ClientHasAuthority());
+                                        (isServer && !isClient && ServerHasAuthority() || isClient && ClientHasAuthority());
 
         int newColorId = 0;
         if (_visualizePinchPull)

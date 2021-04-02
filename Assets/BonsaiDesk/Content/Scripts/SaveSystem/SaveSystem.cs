@@ -49,17 +49,17 @@ public class SaveSystem : MonoBehaviour
         {
             BoolPairs = (Dictionary<string, bool>) value;
         }
-        
+
         if (dictionaries.TryGetValue(typeof(int), out value))
         {
             IntPairs = (Dictionary<string, int>) value;
         }
-        
+
         if (dictionaries.TryGetValue(typeof(float), out value))
         {
             FloatPairs = (Dictionary<string, float>) value;
         }
-        
+
         if (dictionaries.TryGetValue(typeof(string), out value))
         {
             StringPairs = (Dictionary<string, string>) value;

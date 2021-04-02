@@ -21,6 +21,7 @@ public class SpawnedGolfBall : MonoBehaviour
             aboutToSpawnBall = true;
             StartCoroutine(SpawnGolfBall());
         }
+
         ballPresent = false;
     }
 

@@ -55,6 +55,7 @@ public class VRNetworkHUD : MonoBehaviour
             {
                 text = "Server: active. Transport: " + Transport.activeTransport + "\n";
             }
+
             if (NetworkClient.isConnected)
             {
                 text = "Client: address=" + manager.networkAddress + "\n";

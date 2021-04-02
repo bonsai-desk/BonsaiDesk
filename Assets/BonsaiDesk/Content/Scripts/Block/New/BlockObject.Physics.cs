@@ -38,8 +38,7 @@ public partial class BlockObject
             {
                 var leftHandLockedJoint = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>().joint;
                 var rightHandLockedJoint = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>().joint;
-                if (leftHandLockedJoint && leftHandLockedJoint.connectedBody == _body ||
-                    rightHandLockedJoint && rightHandLockedJoint.connectedBody == _body)
+                if (leftHandLockedJoint && leftHandLockedJoint.connectedBody == _body || rightHandLockedJoint && rightHandLockedJoint.connectedBody == _body)
                 {
                     _touchingHand = true;
                 }
@@ -80,14 +79,12 @@ public partial class BlockObject
                 Vector3 blockPosition = transform.TransformPoint(coord);
                 Vector3 positionLocalToCubeArea = blockObject.transform.InverseTransformPoint(blockPosition);
                 Vector3Int blockCoord = Vector3Int.RoundToInt(positionLocalToCubeArea);
-                var inArea = BlockUtility.InCubeArea(blockObject, blockCoord,
-                    Blocks[coord].id);
+                var inArea = BlockUtility.InCubeArea(blockObject, blockCoord, Blocks[coord].id);
                 if (inArea.isNearHole)
                     isNearHole = true;
                 isInCubeArea = inArea.isInCubeArea;
-                isInCubeArea = isInCubeArea &&
-                               ((transform.parent == null && _touchingHand && potentialBlocksParent.childCount == 0) ||
-                                transform.parent == blockObject.potentialBlocksParent);
+                isInCubeArea = isInCubeArea && ((transform.parent == null && _touchingHand && potentialBlocksParent.childCount == 0) ||
+                                                transform.parent == blockObject.potentialBlocksParent);
 
                 if (isInCubeArea)
                 {
@@ -103,11 +100,9 @@ public partial class BlockObject
                     // }
 
                     var position = blockObject.transform.TransformPoint(blockCoord);
-                    var rotation = blockObject.GetTargetRotation(transform.rotation, blockCoord,
-                        global::Blocks.blocks[Blocks[coord].id].blockType);
+                    var rotation = blockObject.GetTargetRotation(transform.rotation, blockCoord, global::Blocks.blocks[Blocks[coord].id].blockType);
 
-                    if (BlockUtility.AboutEquals(blockPosition, position) &&
-                        BlockUtility.AboutEquals(transform.rotation, rotation))
+                    if (BlockUtility.AboutEquals(blockPosition, position) && BlockUtility.AboutEquals(transform.rotation, rotation))
                     {
                         for (var i = blockObject.potentialBlocksParent.childCount - 1; i >= 0; i--)
                         {
@@ -118,8 +113,7 @@ public partial class BlockObject
                         gameObject.SetActive(false);
 
                         var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
-                        localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) *
-                                        BlockUtility.ByteToQuaternion(Blocks[coord].rotation);
+                        localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * BlockUtility.ByteToQuaternion(Blocks[coord].rotation);
                         blockObject.CmdAddBlock(Blocks[coord].id, blockCoord, localRotation, netIdentity);
 
                         //client side prediction
@@ -220,8 +214,7 @@ public partial class BlockObject
         }
 
         var skeletonType = physicsHandController.skeletonType;
-        var breakMoveActive = InputManager.Hands.GetHand(skeletonType).PlayerHand.GetIHandTick<BlockBreakHand>()
-            .BreakModeActive;
+        var breakMoveActive = InputManager.Hands.GetHand(skeletonType).PlayerHand.GetIHandTick<BlockBreakHand>().BreakModeActive;
 
         if (!breakMoveActive)
         {
@@ -259,8 +252,7 @@ public partial class BlockObject
         float distance = Vector3.Distance(blockPosition, targetPosition);
 
         //if already at target or have enough velocity to overshoot target this update tick, allow unlimited force to decelerate (not realistic)
-        if (Mathf.Approximately(distance, 0) || _body.velocity.magnitude * Time.deltaTime > distance ||
-            Mathf.Approximately(MoveForce, 0))
+        if (Mathf.Approximately(distance, 0) || _body.velocity.magnitude * Time.deltaTime > distance || Mathf.Approximately(MoveForce, 0))
             _body.AddForce(targetForce, ForceMode.Force);
         else //clamp target force to moveForce
             _body.AddForce(Vector3.ClampMagnitude(targetForce, MoveForce), ForceMode.Force);
@@ -291,9 +283,7 @@ public partial class BlockObject
             Vector3 angularVelocityDifference = targetAngularVelocity - _body.angularVelocity;
 
             Quaternion q = transform.rotation * _body.inertiaTensorRotation;
-            Vector3 targetTorque =
-                q * Vector3.Scale(_body.inertiaTensor, (Quaternion.Inverse(q) * angularVelocityDifference)) /
-                Time.deltaTime; // / 2f;
+            Vector3 targetTorque = q * Vector3.Scale(_body.inertiaTensor, (Quaternion.Inverse(q) * angularVelocityDifference)) / Time.deltaTime; // / 2f;
 
             //if already at target, allow unlimited torque to decelerate (not realistic)
             if (Mathf.Approximately(angle, 0) || Mathf.Approximately(RotationTorque, 0))

@@ -40,6 +40,7 @@ public class NetworkFollow : NetworkBehaviour
             if (renderBehaviour == RenderBehaviour.DissableRenderers)
                 r.enabled = false;
         }
+
         if (sr != null)
         {
             if (renderBehaviour == RenderBehaviour.DoNotRenderLayer)
@@ -47,6 +48,7 @@ public class NetworkFollow : NetworkBehaviour
             if (renderBehaviour == RenderBehaviour.DissableRenderers)
                 sr.enabled = false;
         }
+
         foreach (var rend in GetComponentsInChildren<MeshRenderer>())
         {
             if (renderBehaviour == RenderBehaviour.DoNotRenderLayer)
@@ -54,6 +56,7 @@ public class NetworkFollow : NetworkBehaviour
             if (renderBehaviour == RenderBehaviour.DissableRenderers)
                 rend.enabled = false;
         }
+
         foreach (var rend in GetComponentsInChildren<SkinnedMeshRenderer>())
         {
             if (renderBehaviour == RenderBehaviour.DoNotRenderLayer)

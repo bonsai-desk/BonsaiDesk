@@ -5,7 +5,7 @@ public class PinchSpawn : MonoBehaviour
     public GameObject blockPrefab;
 
     private Transform[] fingernails;
-    private float[] lastSpawnTime = new float[] { 0, 0 };
+    private float[] lastSpawnTime = new float[] {0, 0};
 
     public int leftSelectedBlockid = 0;
     public int rightSelectedBlockid = 0;

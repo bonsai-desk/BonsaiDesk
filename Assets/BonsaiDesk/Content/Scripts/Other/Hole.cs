@@ -7,10 +7,7 @@ public class Hole
 
     public float radius
     {
-        get
-        {
-            return _radius;
-        }
+        get { return _radius; }
         set
         {
             if (holeObject == null)

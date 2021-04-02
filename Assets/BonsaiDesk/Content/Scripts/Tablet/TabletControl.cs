@@ -30,8 +30,7 @@ public class TabletControl : NetworkBehaviour
 
     private void Update()
     {
-        worldBox.sharedMaterial =
-            tabletCollider.NumFingersTouching >= 3 ? lowFrictionPhysicMaterial : _defaultPhysicMaterial;
+        worldBox.sharedMaterial = tabletCollider.NumFingersTouching >= 3 ? lowFrictionPhysicMaterial : _defaultPhysicMaterial;
         tabletBody.mass = tabletCollider.NumFingersTouching >= 3 ? 0.050f : 0.300f;
 
         //for testing

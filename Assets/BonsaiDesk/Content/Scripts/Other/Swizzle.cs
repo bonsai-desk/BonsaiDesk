@@ -13,7 +13,10 @@ using UnityEngine;
 internal static class Vector2Swizzles
 {
     //swizzles of size 2
-    public static Vector2 xx(this Vector2 a) { return new Vector2(a.x, a.x); }
+    public static Vector2 xx(this Vector2 a)
+    {
+        return new Vector2(a.x, a.x);
+    }
 
     public static Vector2 yx(this Vector2 a)
     {
@@ -31,7 +34,10 @@ internal static class Vector2Swizzles
     }
 
     //swizzles of size 3
-    public static Vector3 xxx(this Vector2 a) { return new Vector3(a.x, a.x, a.x); }
+    public static Vector3 xxx(this Vector2 a)
+    {
+        return new Vector3(a.x, a.x, a.x);
+    }
 
     public static Vector3 yxx(this Vector2 a)
     {
@@ -69,7 +75,10 @@ internal static class Vector2Swizzles
     }
 
     //swizzles of size 4
-    public static Vector4 xxxx(this Vector2 a) { return new Vector4(a.x, a.x, a.x, a.x); }
+    public static Vector4 xxxx(this Vector2 a)
+    {
+        return new Vector4(a.x, a.x, a.x, a.x);
+    }
 
     public static Vector4 yxxx(this Vector2 a)
     {
@@ -150,7 +159,10 @@ internal static class Vector2Swizzles
 internal static class Vector3Swizzles
 {
     //swizzles of size 2
-    public static Vector2 xx(this Vector3 a) { return new Vector2(a.x, a.x); }
+    public static Vector2 xx(this Vector3 a)
+    {
+        return new Vector2(a.x, a.x);
+    }
 
     public static Vector2 yx(this Vector3 a)
     {
@@ -193,7 +205,10 @@ internal static class Vector3Swizzles
     }
 
     //swizzles of size 3
-    public static Vector3 xxx(this Vector3 a) { return new Vector3(a.x, a.x, a.x); }
+    public static Vector3 xxx(this Vector3 a)
+    {
+        return new Vector3(a.x, a.x, a.x);
+    }
 
     public static Vector3 yxx(this Vector3 a)
     {
@@ -326,7 +341,10 @@ internal static class Vector3Swizzles
     }
 
     //swizzles of size 4
-    public static Vector4 xxxx(this Vector3 a) { return new Vector4(a.x, a.x, a.x, a.x); }
+    public static Vector4 xxxx(this Vector3 a)
+    {
+        return new Vector4(a.x, a.x, a.x, a.x);
+    }
 
     public static Vector4 yxxx(this Vector3 a)
     {
@@ -732,7 +750,10 @@ internal static class Vector3Swizzles
 internal static class Vector4Swizzles
 {
     //swizzles of size 2
-    public static Vector2 xx(this Vector4 a) { return new Vector2(a.x, a.x); }
+    public static Vector2 xx(this Vector4 a)
+    {
+        return new Vector2(a.x, a.x);
+    }
 
     public static Vector2 yx(this Vector4 a)
     {
@@ -810,7 +831,10 @@ internal static class Vector4Swizzles
     }
 
     //swizzles of size 3
-    public static Vector3 xxx(this Vector4 a) { return new Vector3(a.x, a.x, a.x); }
+    public static Vector3 xxx(this Vector4 a)
+    {
+        return new Vector3(a.x, a.x, a.x);
+    }
 
     public static Vector3 yxx(this Vector4 a)
     {
@@ -1128,7 +1152,10 @@ internal static class Vector4Swizzles
     }
 
     //swizzles of size 4
-    public static Vector4 xxxx(this Vector4 a) { return new Vector4(a.x, a.x, a.x, a.x); }
+    public static Vector4 xxxx(this Vector4 a)
+    {
+        return new Vector4(a.x, a.x, a.x, a.x);
+    }
 
     public static Vector4 yxxx(this Vector4 a)
     {

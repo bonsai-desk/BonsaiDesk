@@ -16,8 +16,8 @@ public class CopyAnimationForLeftHandEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        var copyAnimationForLeftHand = (CopyAnimationForLeftHand)target;
-        
+        var copyAnimationForLeftHand = (CopyAnimationForLeftHand) target;
+
         if (GUILayout.Button("Make Copies"))
         {
             copyAnimationForLeftHand.GenerateAnimations();

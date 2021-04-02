@@ -12,8 +12,9 @@ public class TogglePause : NetworkBehaviour
 {
     [SyncVar(hook = nameof(OnSetInteractable))]
     private bool _interactable = true;
+
     public bool Interactable => _interactable;
-    
+
     // Cameron: made this public so that AutoBrowserController can determine whether to play after a ready up command
     // todo probably need to make this a private setter
     [SyncVar(hook = nameof(OnSetPaused))] public bool _paused = true;
@@ -111,7 +112,8 @@ public class TogglePause : NetworkBehaviour
         set
         {
             _pauseMorphLocal = value;
-            if (isServer && !isClient || isServer && isClient) {
+            if (isServer && !isClient || isServer && isClient)
+            {
                 // Cameron: added (isServer && isClient) condition
                 // this prevents "Send command attempted with no client running" which
                 // occurs sometimes when shutting down a room as a host
@@ -143,49 +145,52 @@ public class TogglePause : NetworkBehaviour
     {
         base.OnStartServer();
 
-        _paused                                       =  true;
-        _visibilitySynced                             =  1;
-        _positionSynced                               =  0;
-        
+        _paused = true;
+        _visibilitySynced = 1;
+        _positionSynced = 0;
+
         NetworkManagerGame.ServerDisconnect -= HandleServerDisconnect;
-        
+
         NetworkManagerGame.ServerDisconnect += HandleServerDisconnect;
     }
 
-    private void HandleServerDisconnect(object _, NetworkConnection conn) {
+    private void HandleServerDisconnect(object _, NetworkConnection conn)
+    {
         // Cameron: moved this here from NetworkManagerGame
-		if (conn.identity != null && AuthorityIdentityId == conn.identity.netId) {
-			RemoveClientAuthority();
-		}
+        if (conn.identity != null && AuthorityIdentityId == conn.identity.netId)
+        {
+            RemoveClientAuthority();
+        }
     }
 
     public override void OnStartClient()
     {
         base.OnStartClient();
-        
-		TableBrowserMenu.Singleton.PauseVideo   -= HandleMenuPauseVideo;
-		TableBrowserMenu.Singleton.PlayVideo    -= HandleMenuPlayVideo;
-        
-		TableBrowserMenu.Singleton.PauseVideo   += HandleMenuPauseVideo;
-		TableBrowserMenu.Singleton.PlayVideo    += HandleMenuPlayVideo;
-        
+
+        TableBrowserMenu.Singleton.PauseVideo -= HandleMenuPauseVideo;
+        TableBrowserMenu.Singleton.PlayVideo -= HandleMenuPlayVideo;
+
+        TableBrowserMenu.Singleton.PauseVideo += HandleMenuPauseVideo;
+        TableBrowserMenu.Singleton.PlayVideo += HandleMenuPlayVideo;
+
         updateIcons(_paused);
     }
-    
-	private void HandleMenuPlayVideo(object sender, EventArgs e) {
-		Debug.Log("[bonsai] Menu play video");
-		CmdSetPaused(false);
-	}
 
-	private void HandleMenuPauseVideo(object sender, EventArgs e) {
-		Debug.Log("[bonsai] Menu pause video");
-		CmdSetPaused(true);
-	}
+    private void HandleMenuPlayVideo(object sender, EventArgs e)
+    {
+        Debug.Log("[bonsai] Menu play video");
+        CmdSetPaused(false);
+    }
+
+    private void HandleMenuPauseVideo(object sender, EventArgs e)
+    {
+        Debug.Log("[bonsai] Menu pause video");
+        CmdSetPaused(true);
+    }
 
     private void Update()
     {
-        if (!(isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null &&
-            NetworkClient.connection.identity != null &&
+        if (!(isServer && _authorityIdentityId == uint.MaxValue || NetworkClient.connection != null && NetworkClient.connection.identity != null &&
             NetworkClient.connection.identity.netId == _authorityIdentityId))
         {
             _visibilityLocal = Mathf.MoveTowards(_visibilityLocal, _visibilitySynced,
@@ -203,8 +208,7 @@ public class TogglePause : NetworkBehaviour
             return;
         }
 
-        bool interacting = currentPointSkeleton != OVRSkeleton.SkeletonType.None ||
-                           currentGestureSkeleton != OVRSkeleton.SkeletonType.None;
+        bool interacting = currentPointSkeleton != OVRSkeleton.SkeletonType.None || currentGestureSkeleton != OVRSkeleton.SkeletonType.None;
 
         if (!interacting && _inUse)
         {
@@ -278,6 +282,7 @@ public class TogglePause : NetworkBehaviour
         {
             _paused = paused;
         }
+
         updateIcons(paused);
 
         //throw new NotImplementedException("[Bonsai] ServerSetPaused");
@@ -290,13 +295,14 @@ public class TogglePause : NetworkBehaviour
     public void CmdSetPaused(bool paused)
     {
         if (!_interactable) return;
-        
+
         // todo maybe everything should hold for this condtion
         if (_paused != paused)
         {
             CmdSetPausedServer?.Invoke(paused);
             _paused = paused;
         }
+
         updateIcons(paused);
     }
 

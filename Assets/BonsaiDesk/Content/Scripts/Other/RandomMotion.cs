@@ -15,7 +15,8 @@ public class RandomMotion : MonoBehaviour
 
     private void Update()
     {
-        transform.localPosition = startPosition + new Vector3(Mathf.Sin(Time.time / 2f + startTime) * 0.1f, Mathf.Sin(Time.time / 3f + startTime) * 0.1f, Mathf.Sin(Time.time + startTime) * 0.1f);
+        transform.localPosition = startPosition + new Vector3(Mathf.Sin(Time.time / 2f + startTime) * 0.1f, Mathf.Sin(Time.time / 3f + startTime) * 0.1f,
+            Mathf.Sin(Time.time + startTime) * 0.1f);
         transform.eulerAngles = startRotation + new Vector3(Mathf.Sin(Time.time / 2f) * 180f, Mathf.Sin(Time.time / 3f) * 180f, Mathf.Sin(Time.time) * 180f);
     }
 }

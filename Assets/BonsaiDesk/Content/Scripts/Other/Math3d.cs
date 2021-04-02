@@ -57,7 +57,8 @@ public class Math3d : MonoBehaviour
     //Find the line of intersection between two planes. The planes are defined by a normal and a point on that plane.
     //The outputs are a point on the line and a vector which indicates it's direction. If the planes are not parallel,
     //the function outputs true, otherwise false.
-    public static bool PlanePlaneIntersection(out Vector3 linePoint, out Vector3 lineVec, Vector3 plane1Normal, Vector3 plane1Position, Vector3 plane2Normal, Vector3 plane2Position)
+    public static bool PlanePlaneIntersection(out Vector3 linePoint, out Vector3 lineVec, Vector3 plane1Normal, Vector3 plane1Position, Vector3 plane2Normal,
+        Vector3 plane2Position)
     {
         linePoint = Vector3.zero;
         lineVec = Vector3.zero;
@@ -163,7 +164,8 @@ public class Math3d : MonoBehaviour
     //Two non-parallel lines which may or may not touch each other have a point on each line which are closest
     //to each other. This function finds those two points. If the lines are not parallel, the function
     //outputs true, otherwise false.
-    public static bool ClosestPointsOnTwoLines(out Vector3 closestPointLine1, out Vector3 closestPointLine2, Vector3 linePoint1, Vector3 lineVec1, Vector3 linePoint2, Vector3 lineVec2)
+    public static bool ClosestPointsOnTwoLines(out Vector3 closestPointLine1, out Vector3 closestPointLine2, Vector3 linePoint1, Vector3 lineVec1,
+        Vector3 linePoint2, Vector3 lineVec2)
     {
         closestPointLine1 = Vector3.zero;
         closestPointLine2 = Vector3.zero;
@@ -324,7 +326,7 @@ public class Math3d : MonoBehaviour
         dot = Vector3.Dot(vector, normal);
 
         //this is in radians
-        angle = (float)Math.Acos(dot);
+        angle = (float) Math.Acos(dot);
 
         return 1.570796326794897f - angle; //90 degrees - angle
     }
@@ -343,6 +345,7 @@ public class Math3d : MonoBehaviour
         {
             dot = -1.0f;
         }
+
         if (dot > 1.0f)
         {
             dot = 1.0f;
@@ -352,7 +355,7 @@ public class Math3d : MonoBehaviour
         //This step can be skipped for optimization...
         angle = Math.Acos(dot);
 
-        return (float)angle;
+        return (float) angle;
     }
 
     //Convert a plane defined by 3 points to a plane defined by a vector and a point.
@@ -422,7 +425,8 @@ public class Math3d : MonoBehaviour
     //customForward and customUp are in object space.
     //Usage: use alignWithVector and alignWithNormal as if you are using the default LookRotation function.
     //Set customForward and customUp to the vectors you wish to use instead of the default forward and up vectors.
-    public static void LookRotationExtended(ref GameObject gameObjectInOut, Vector3 alignWithVector, Vector3 alignWithNormal, Vector3 customForward, Vector3 customUp)
+    public static void LookRotationExtended(ref GameObject gameObjectInOut, Vector3 alignWithVector, Vector3 alignWithNormal, Vector3 customForward,
+        Vector3 customUp)
     {
         //Set the rotation of the destination
         Quaternion rotationA = Quaternion.LookRotation(alignWithVector, alignWithNormal);
@@ -442,7 +446,8 @@ public class Math3d : MonoBehaviour
     //Input: startChildRotation and startChildPosition: the transform of the child object at the time the objects are parented.
     //Output: childRotation and childPosition.
     //All transforms are in world space.
-    public static void TransformWithParent(out Quaternion childRotation, out Vector3 childPosition, Quaternion parentRotation, Vector3 parentPosition, Quaternion startParentRotation, Vector3 startParentPosition, Quaternion startChildRotation, Vector3 startChildPosition)
+    public static void TransformWithParent(out Quaternion childRotation, out Vector3 childPosition, Quaternion parentRotation, Vector3 parentPosition,
+        Quaternion startParentRotation, Vector3 startParentPosition, Quaternion startChildRotation, Vector3 startChildPosition)
     {
         childRotation = Quaternion.identity;
         childPosition = Vector3.zero;
@@ -474,7 +479,8 @@ public class Math3d : MonoBehaviour
     //triangleForward, triangleNormal, and trianglePosition are in object space.
     //trianglePosition is the mesh position of the triangle. The effect of the scale of the object is handled automatically.
     //trianglePosition can be set at any position, it does not have to be at a vertex or in the middle of the triangle.
-    public static void PreciseAlign(ref GameObject gameObjectInOut, Vector3 alignWithVector, Vector3 alignWithNormal, Vector3 alignWithPosition, Vector3 triangleForward, Vector3 triangleNormal, Vector3 trianglePosition)
+    public static void PreciseAlign(ref GameObject gameObjectInOut, Vector3 alignWithVector, Vector3 alignWithNormal, Vector3 alignWithPosition,
+        Vector3 triangleForward, Vector3 triangleNormal, Vector3 trianglePosition)
     {
         //Set the rotation.
         LookRotationExtended(ref gameObjectInOut, alignWithVector, alignWithNormal, triangleForward, triangleNormal);
@@ -741,7 +747,7 @@ public class Math3d : MonoBehaviour
         }
 
         //Average the values
-        float addDet = 1f / (float)addAmount;
+        float addDet = 1f / (float) addAmount;
         cumulative.w += newRotation.w;
         w = cumulative.w * addDet;
         cumulative.x += newRotation.x;

@@ -31,8 +31,7 @@ public class MenuHand : MonoBehaviour, IHandTick
         var menuOpen = tableBrowserParent && !tableBrowserParent.sleeped;
         var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
         var oriented = MoveToDesk.Singleton.oriented;
-        menuObject.SetActive(angleBelowThreshold && playerHand.HandComponents.TrackingRecently && !menuOpen &&
-                             playing && oriented);
+        menuObject.SetActive(angleBelowThreshold && playerHand.HandComponents.TrackingRecently && !menuOpen && playing && oriented);
     }
 
     public void TurnOffMenu()

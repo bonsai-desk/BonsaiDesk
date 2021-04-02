@@ -83,8 +83,7 @@ public partial class BlockObject : NetworkBehaviour
 
             for (int i = 1; i < 6; i++)
             {
-                Blocks.Add(new Vector3Int(0, 0, i),
-                    new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+                Blocks.Add(new Vector3Int(0, 0, i), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
             }
 
             // Blocks.Add(new Vector3Int(0, 0, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
@@ -206,8 +205,7 @@ public partial class BlockObject : NetworkBehaviour
         sphereObject.layer = LayerMask.NameToLayer("sphere");
     }
 
-    private void OnBlocksDictionaryChange(BlockDictOp op, Vector3Int key,
-        SyncBlock value)
+    private void OnBlocksDictionaryChange(BlockDictOp op, Vector3Int key, SyncBlock value)
     {
         BlockChanges.Enqueue((key, value, op));
     }
@@ -363,7 +361,7 @@ public partial class BlockObject : NetworkBehaviour
                     Blocks.Remove(pair.Key);
                 }
             }
-            
+
             //immediately remove the blocks so the newly spawned blocks to not clip
             //this will only happen for the server/host, so hopefully it does not glitch on the client
             ProcessBlockChanges();
@@ -371,8 +369,7 @@ public partial class BlockObject : NetworkBehaviour
             //generate the new block objects from the remaining blocks groups
             foreach (var filledBlocks in filledBlocksGroups)
             {
-                var newBlockObject = Instantiate(StaticPrefabs.instance.blockObjectPrefab, transform.position,
-                    transform.rotation);
+                var newBlockObject = Instantiate(StaticPrefabs.instance.blockObjectPrefab, transform.position, transform.rotation);
 
                 var newBlockObjectScript = newBlockObject.GetComponent<BlockObject>();
                 foreach (var pair in filledBlocks)
@@ -381,8 +378,7 @@ public partial class BlockObject : NetworkBehaviour
                 }
 
                 NetworkServer.Spawn(newBlockObject);
-                newBlockObject.GetComponent<AutoAuthority>()
-                    .ServerForceNewOwner(identityId, NetworkTime.time, false);
+                newBlockObject.GetComponent<AutoAuthority>().ServerForceNewOwner(identityId, NetworkTime.time, false);
             }
         }
     }
@@ -404,8 +400,7 @@ public partial class BlockObject : NetworkBehaviour
         //move the last block mesh into where the block you want to remove is
         for (int i = 0; i < 6 * 6; i++)
         {
-            _triangles[tStart + i] = _triangles[tLastStart + i] -
-                                     ((_meshBlocks.Count - 1 - _meshBlocks[coord].positionInList) * 6 * 4);
+            _triangles[tStart + i] = _triangles[tLastStart + i] - ((_meshBlocks.Count - 1 - _meshBlocks[coord].positionInList) * 6 * 4);
         }
 
         _triangles.RemoveRange(tLastStart, 6 * 6);
@@ -568,9 +563,8 @@ public partial class BlockObject : NetworkBehaviour
         //     }
         // }
 
-        var (boxCollidersNotNeeded, mass, destroySphere) = BlockUtility.UpdateHitBox(Blocks,
-            _boxCollidersInUse,
-            _physicsBoxesObject, _sphereObject, blockPhysicMaterial, spherePhysicMaterial);
+        var (boxCollidersNotNeeded, mass, destroySphere) = BlockUtility.UpdateHitBox(Blocks, _boxCollidersInUse, _physicsBoxesObject, _sphereObject,
+            blockPhysicMaterial, spherePhysicMaterial);
         while (boxCollidersNotNeeded.Count > 0)
         {
             Destroy(boxCollidersNotNeeded.Dequeue());
@@ -650,8 +644,7 @@ public partial class BlockObject : NetworkBehaviour
         // }
         // else
         // {
-        return transform.rotation *
-               BlockUtility.SnapToNearestRightAngle(Quaternion.Inverse(transform.rotation) * blockRotation);
+        return transform.rotation * BlockUtility.SnapToNearestRightAngle(Quaternion.Inverse(transform.rotation) * blockRotation);
         // }
     }
 }

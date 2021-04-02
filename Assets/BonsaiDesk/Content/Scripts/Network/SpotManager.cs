@@ -16,7 +16,7 @@ public class SpotManager : MonoBehaviour
         public Texture handTexture;
         public Texture headTexture;
     }
-    
+
     private void Awake()
     {
         Instance = this;

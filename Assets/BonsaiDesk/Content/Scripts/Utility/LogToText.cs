@@ -63,7 +63,7 @@ public class LogToText : MonoBehaviour
             StreamWriter sw = File.CreateText(logPath);
             sw.Close();
             print("Saving log to: " + logPath);
-            
+
             OVRManager.HMDUnmounted += OVRManagerOnHMDUnmounted;
         }
     }
@@ -124,12 +124,12 @@ public class LogToText : MonoBehaviour
             File.Delete(sortedLogs.Values[i]);
         }
     }
-    
+
     void appendLogQueueToFile()
     {
         if (logs.Count == 0 || _numLogged >= MaxLogsPerFile)
             return;
-        
+
         print("Updating log at: " + logPath);
         using (StreamWriter sw = File.AppendText(logPath))
         {
@@ -164,7 +164,7 @@ public class LogToText : MonoBehaviour
         if (pauseStatus)
             appendLogQueueToFile();
     }
-    
+
     private void OVRManagerOnHMDUnmounted()
     {
         appendLogQueueToFile();

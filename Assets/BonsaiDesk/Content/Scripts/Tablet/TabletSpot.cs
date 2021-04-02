@@ -13,7 +13,7 @@ public class TabletSpot : NetworkBehaviour
     private Vector3 _startPosition;
     private Quaternion _startRotation;
     private Vector3 _startScale;
-    
+
     public event Action<string> SetNewVideo;
 
     public event Action<string> PlayVideo;
@@ -24,24 +24,26 @@ public class TabletSpot : NetworkBehaviour
         base.OnStartServer();
         Instance = this;
     }
-    
+
     public override void OnStartClient()
     {
         base.OnStartClient();
-        
+
         TableBrowserMenu.Singleton.EjectVideo -= HandleEjectVideo;
 
         TableBrowserMenu.Singleton.EjectVideo += HandleEjectVideo;
-        
+
         Instance = this;
     }
 
-    private void HandleEjectVideo(object sender, EventArgs e) {
+    private void HandleEjectVideo(object sender, EventArgs e)
+    {
         CmdEjectCurrentTablet();
     }
 
-    [Command (ignoreAuthority = true)]
-    private void CmdEjectCurrentTablet() {
+    [Command(ignoreAuthority = true)]
+    private void CmdEjectCurrentTablet()
+    {
         if (_currentTabletIdentity)
         {
             EjectCurrentTablet();
@@ -79,7 +81,8 @@ public class TabletSpot : NetworkBehaviour
         }
     }
 
-    private void EjectCurrentTablet() {
+    private void EjectCurrentTablet()
+    {
         _currentTabletIdentity.GetComponent<TabletControl>().SetServerLerping(false);
         _currentTabletIdentity.GetComponent<AutoAuthority>().isKinematic = false;
         _currentTabletIdentity.GetComponent<AutoAuthority>().SetInUse(false);
@@ -90,11 +93,7 @@ public class TabletSpot : NetworkBehaviour
             var tabletBody = _currentTabletIdentity.GetComponent<Rigidbody>();
             tabletBody.isKinematic = false;
             tabletBody.angularVelocity = new Vector3(-Mathf.PI, Random.value - 0.5f, Random.value - 0.5f);
-            tabletBody.velocity = new Vector3(
-                (2 * Random.value - 1)/2,
-                1f + (Random.value * 0.15f), 
-                -(2f + (Random.value * 0.15f))
-            );
+            tabletBody.velocity = new Vector3((2 * Random.value - 1) / 2, 1f + (Random.value * 0.15f), -(2f + (Random.value * 0.15f)));
         }
     }
 

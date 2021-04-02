@@ -37,6 +37,7 @@ public class BlockSelect : MonoBehaviour
                 CreateBlock(x * height + y, localPosition, Quaternion.AngleAxis(-theta * Mathf.Rad2Deg, Vector3.up));
                 localPosition.y += BlockArea.cubeScale + gap;
             }
+
             if (x == width / 2)
             {
                 CreateBlock(-1, localPosition, Quaternion.AngleAxis(-theta * Mathf.Rad2Deg, Vector3.up));

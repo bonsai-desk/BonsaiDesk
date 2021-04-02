@@ -20,7 +20,7 @@ public class TogglePauseMorph : MonoBehaviour
     void Start()
     {
         var meshFilter = GetComponent<MeshFilter>();
-        
+
         var mesh = new Mesh();
         mesh.vertices = new[]
         {
@@ -28,7 +28,7 @@ public class TogglePauseMorph : MonoBehaviour
             new Vector3(-0.1f, 0.5f, 0),
             new Vector3(-0.1f, -0.5f, 0),
             new Vector3(-0.5f, -0.5f, 0),
-            
+
             new Vector3(0.1f, 0.5f, 0),
             new Vector3(0.5f, 0.5f, 0),
             new Vector3(0.5f, -0.5f, 0),
@@ -40,7 +40,7 @@ public class TogglePauseMorph : MonoBehaviour
             new Vector4(0, 0.25f, 0, 1),
             new Vector4(0, -0.25f, 0, 1),
             new Vector4(-0.5f, -0.5f, 0, 1),
-            
+
             new Vector4(0, 0.25f, 0, 1),
             new Vector4(0.5f, 0, 0, 1),
             new Vector4(0.5f, 0, 0, 1),
@@ -50,7 +50,7 @@ public class TogglePauseMorph : MonoBehaviour
         {
             0, 1, 2,
             3, 0, 2,
-            
+
             4, 5, 6,
             7, 4, 6
         };
@@ -63,10 +63,11 @@ public class TogglePauseMorph : MonoBehaviour
     /// </summary>
     public void SetPaused(float pauseLerp)
     {
-        
-        if (!material) {
+        if (!material)
+        {
             material = GetComponent<MeshRenderer>().material;
         }
+
         material.SetFloat(pausedId, Mathf.Clamp01(pauseLerp));
     }
 
@@ -75,9 +76,11 @@ public class TogglePauseMorph : MonoBehaviour
     /// </summary>
     public void SetVisibility(float visibility)
     {
-        if (!material) {
+        if (!material)
+        {
             material = GetComponent<MeshRenderer>().material;
         }
+
         material.SetFloat(visibilityId, Mathf.Clamp01(visibility));
     }
 }

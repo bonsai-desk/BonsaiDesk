@@ -100,12 +100,10 @@ public class HandComponents
         var handTargetAnimator = TargetHand.gameObject.AddComponent<Animator>();
         handTargetAnimator.runtimeAnimatorController = animationController;
         handTargetAnimator.enabled = false;
-        
+
         TargetHandAnimatorController = TargetHand.gameObject.AddComponent<HandAnimatorController>();
         TargetHandAnimatorController.controller =
-            PlayerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft
-                ? OVRInput.Controller.LTouch
-                : OVRInput.Controller.RTouch;
+            PlayerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft ? OVRInput.Controller.LTouch : OVRInput.Controller.RTouch;
         TargetHandAnimatorController.animator = handTargetAnimator;
     }
 
@@ -165,8 +163,7 @@ public class HandComponents
 
     private void UpdateRendererTransparency()
     {
-        bool isTransparent =
-            _handMaterial.GetInt("_DstBlend") == (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
+        bool isTransparent = _handMaterial.GetInt("_DstBlend") == (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
 
         float handAlphaTarget = Tracking ? 1f : 0f;
         _handAlpha = Mathf.MoveTowards(_handAlpha, handAlphaTarget, Time.deltaTime / RecentTrackingThreshold);
@@ -227,8 +224,7 @@ public class HandComponents
     {
         _zTestOverlay = false;
 
-        bool isTransparent =
-            _handMaterial.GetInt("_DstBlend") == (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
+        bool isTransparent = _handMaterial.GetInt("_DstBlend") == (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
 
         if (isTransparent)
         {

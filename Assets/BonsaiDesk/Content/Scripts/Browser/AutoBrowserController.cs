@@ -227,8 +227,8 @@ public class AutoBrowserController : NetworkBehaviour
 
         // ping the server with the current timestamp
         // todo _contentInfo.Active is always false on client
-        if (_contentActive && NetworkTime.time - _clientLastSentPing > ClientPingInterval &&
-            NetworkClient.connection != null && NetworkClient.connection.identity != null)
+        if (_contentActive && NetworkTime.time - _clientLastSentPing > ClientPingInterval && NetworkClient.connection != null &&
+            NetworkClient.connection.identity != null)
         {
             var id = NetworkClient.connection.identity.netId;
             var now = NetworkTime.time;
@@ -290,14 +290,12 @@ public class AutoBrowserController : NetworkBehaviour
             else if (NetworkTime.time - _beginReadyUpTime > MaxReadyUpPeriod)
             {
                 var (numFailed, failedIdsStr) = FailedToMatchStatus(_clientsPlayerStatus, PlayerState.Ready);
-                HardReload(
-                    $"[{numFailed}/{NetworkServer.connections.Count}] clients failed to ready up [{failedIdsStr}]");
+                HardReload($"[{numFailed}/{NetworkServer.connections.Count}] clients failed to ready up [{failedIdsStr}]");
             }
         }
     }
 
-    private static (int, string) FailedToMatchStatus(Dictionary<uint, PlayerState> _clientsPlayerStatus,
-                                                     PlayerState playerState)
+    private static (int, string) FailedToMatchStatus(Dictionary<uint, PlayerState> _clientsPlayerStatus, PlayerState playerState)
     {
         var failedNetIds = new HashSet<string>();
 
@@ -419,8 +417,7 @@ public class AutoBrowserController : NetworkBehaviour
         var synced = Math.Abs(whereTheyAre - whereTheyShouldBe) < VideoSyncTolerance;
         if (!synced)
         {
-            TLog(
-                $"Client reported timestamp {whereTheyAre} which is not within {VideoSyncTolerance} seconds of {whereTheyShouldBe}");
+            TLog($"Client reported timestamp {whereTheyAre} which is not within {VideoSyncTolerance} seconds of {whereTheyShouldBe}");
         }
 
         return synced;
@@ -640,15 +637,17 @@ public class AutoBrowserController : NetworkBehaviour
     {
         Debug.Log(Tag() + message);
     }
-    
+
     private void BonsaiLog(string msg)
     {
         Debug.Log("<color=orange>BonsaiAuth: </color>: " + msg);
     }
+
     private void BonsaiLogWarning(string msg)
     {
         Debug.LogWarning("<color=orange>BonsaiAuth: </color>: " + msg);
     }
+
     private void BonsaiLogError(string msg)
     {
         Debug.LogError("<color=orange>BonsaiAuth: </color>: " + msg);
@@ -693,11 +692,7 @@ public class AutoBrowserController : NetworkBehaviour
 
         private static string PushPath(string path)
         {
-            return "{" +
-                   "\"type\": \"nav\", " +
-                   "\"command\": \"push\", " +
-                   $"\"path\": \"{path}\"" +
-                   "}";
+            return "{" + "\"type\": \"nav\", " + "\"command\": \"push\", " + $"\"path\": \"{path}\"" + "}";
         }
 
         public static string LoadYouTube(string id, double ts, int x = 0, int y = 0)
@@ -708,29 +703,17 @@ public class AutoBrowserController : NetworkBehaviour
                 resQuery = $"?x={x}&y={y}";
             }
 
-            return "{" +
-                   "\"type\": \"nav\", " +
-                   "\"command\": \"push\", " +
-                   $"\"path\": \"/youtube/{id}/{ts}{resQuery}\"" +
-                   "}";
+            return "{" + "\"type\": \"nav\", " + "\"command\": \"push\", " + $"\"path\": \"/youtube/{id}/{ts}{resQuery}\"" + "}";
         }
 
         public static string ReadyUpAtTime(double timeStamp)
         {
-            return "{" +
-                   "\"type\": \"video\", " +
-                   "\"command\": \"readyUp\", " +
-                   $"\"timeStamp\": {timeStamp}" +
-                   "}";
+            return "{" + "\"type\": \"video\", " + "\"command\": \"readyUp\", " + $"\"timeStamp\": {timeStamp}" + "}";
         }
 
         public static string SetVolume(double level)
         {
-            return "{" +
-                   "\"type\": \"video\", " +
-                   "\"command\": \"setVolume\", " +
-                   $"\"level\": {level}" +
-                   "}";
+            return "{" + "\"type\": \"video\", " + "\"command\": \"setVolume\", " + $"\"level\": {level}" + "}";
         }
     }
 
@@ -768,9 +751,7 @@ public class AutoBrowserController : NetworkBehaviour
 
         public ScrubData Pause(double networkTime)
         {
-            return new ScrubData(
-                CurrentTimeStamp(networkTime), -1, false
-            );
+            return new ScrubData(CurrentTimeStamp(networkTime), -1, false);
         }
 
         public ScrubData UnPauseAtNetworkTime(double networkTime)

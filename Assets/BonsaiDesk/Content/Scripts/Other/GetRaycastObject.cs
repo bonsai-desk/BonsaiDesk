@@ -8,11 +8,10 @@ public class GetRaycastObject : MonoBehaviour
     public LayerMask raycastLayerMask;
 
     [HideInInspector] public Transform hitObject;
-    
+
     void Update()
     {
-        if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, 100f,
-            raycastLayerMask, QueryTriggerInteraction.Collide))
+        if (Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, 100f, raycastLayerMask, QueryTriggerInteraction.Collide))
         {
             hitObject = hit.transform;
         }

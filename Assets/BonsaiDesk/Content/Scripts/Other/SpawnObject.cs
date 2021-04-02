@@ -16,6 +16,7 @@ public class SpawnObject : MonoBehaviour
             aboutToSpawnObject = true;
             StartCoroutine(spawnObject());
         }
+
         objectPresent = false;
     }
 

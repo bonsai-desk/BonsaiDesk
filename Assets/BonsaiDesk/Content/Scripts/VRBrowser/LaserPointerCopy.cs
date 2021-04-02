@@ -15,9 +15,9 @@ public class LaserPointerCopy : OVRCursor
 {
     public enum LaserBeamBehavior
     {
-        On,        // laser beam always on
-        Off,        // laser beam always off
-        OnWhenHitTarget,  // laser beam only activates when hit valid target
+        On, // laser beam always on
+        Off, // laser beam always off
+        OnWhenHitTarget, // laser beam only activates when hit valid target
     }
 
     public GameObject cursorVisual;
@@ -39,10 +39,7 @@ public class LaserPointerCopy : OVRCursor
                 lineRenderer.enabled = true;
             }
         }
-        get
-        {
-            return _laserBeamBehavior;
-        }
+        get { return _laserBeamBehavior; }
     }
 
     private Vector3 _startPoint;

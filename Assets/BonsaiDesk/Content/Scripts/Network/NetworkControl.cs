@@ -31,6 +31,7 @@ public class NetworkControl : MonoBehaviour
                 oVRInputModule.enabled = false;
                 oVRInputModule.gameObject.AddComponent<StandaloneInputModule>();
             }
+
             init();
         }
     }

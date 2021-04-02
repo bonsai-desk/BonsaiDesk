@@ -6,11 +6,9 @@ using System.Reflection;
 using Mirror;
 using System.Net.NetworkInformation;
 using UnityEngine.Events;
-
 #if LITENETLIB_TRANSPORT
 using LiteNetLib;
 #endif
-
 using UnityEngine;
 
 namespace NobleConnect.Mirror
@@ -32,10 +30,9 @@ namespace NobleConnect.Mirror
         /// on the router, or an address on the relay. But you don't need to worry about any of that, it is all
         /// handled for you internally.
         /// </remarks>
-        public IPEndPoint HostEndPoint {
-            get {
-                return NobleServer.HostEndPoint;
-            }
+        public IPEndPoint HostEndPoint
+        {
+            get { return NobleServer.HostEndPoint; }
         }
 
         /// <summary>The geographic region to use when selecting a relay server.</summary>
@@ -90,6 +87,7 @@ namespace NobleConnect.Mirror
 
         /// <summary>We need to call the internal method that Mirror does not expose, so we get it via reflection</summary>
         MethodInfo registerClientMessagesMethod;
+
         PropertyInfo modeProperty;
         MethodInfo initSingletonMethod;
         UnityAction<NetworkConnection> onClientAuthenticated;
@@ -108,17 +106,17 @@ namespace NobleConnect.Mirror
         /// </remarks>
         public Action<NetworkConnection, DisconnectMessage> onClientDisconnectInternal;
 
-		/// <summary>True when in the middle of disconnecting</summary>
-		/// <remarks>
-		/// Disconnecting is asynchronous so that the disconnect message gets a chance to get sent out
-		/// before the network connection is disposed. This will be set to true when the disconnect message is sent out
-		/// and will remain true until the network connection is disposed.
-		/// </remarks>
-		public bool isDisconnecting;
+        /// <summary>True when in the middle of disconnecting</summary>
+        /// <remarks>
+        /// Disconnecting is asynchronous so that the disconnect message gets a chance to get sent out
+        /// before the network connection is disposed. This will be set to true when the disconnect message is sent out
+        /// and will remain true until the network connection is disposed.
+        /// </remarks>
+        public bool isDisconnecting;
 
-		const string TRANSPORT_WARNING_MESSAGE = "You must download and install a UDP transport in order to use Mirror with NobleConnect.\n" +
-                                    "I recommend LiteNet: https://github.com/MirrorNetworking/LiteNetLibTransport/";
-        
+        const string TRANSPORT_WARNING_MESSAGE = "You must download and install a UDP transport in order to use Mirror with NobleConnect.\n" +
+                                                 "I recommend LiteNet: https://github.com/MirrorNetworking/LiteNetLibTransport/";
+
         /// <summary>If the current connection is LAN only</summary>
         protected bool isLANOnly;
 
@@ -143,17 +141,23 @@ namespace NobleConnect.Mirror
             {
                 forceRelayConnection = true;
             }
-            
+
             registerClientMessagesMethod = typeof(NetworkManager).GetMethod("RegisterClientMessages", BindingFlags.Instance | BindingFlags.NonPublic);
             var onClientConnectInternalMethod = typeof(NetworkManager).GetMethod("OnClientConnectInternal", BindingFlags.Instance | BindingFlags.NonPublic);
-            var onClientDisconnectInternalMethod = typeof(NetworkManager).GetMethod("OnClientDisconnectInternal", BindingFlags.Instance | BindingFlags.NonPublic);
+            var onClientDisconnectInternalMethod =
+                typeof(NetworkManager).GetMethod("OnClientDisconnectInternal", BindingFlags.Instance | BindingFlags.NonPublic);
             var onClientAuthenticatedMethod = typeof(NetworkManager).GetMethod("OnClientAuthenticated", BindingFlags.Instance | BindingFlags.NonPublic);
             initSingletonMethod = typeof(NetworkManager).GetMethod("InitializeSingleton", BindingFlags.Instance | BindingFlags.NonPublic);
             modeProperty = typeof(NetworkManager).GetProperty("mode");
 
-            onClientConnectInternal = (Action<NetworkConnection, ConnectMessage>)Delegate.CreateDelegate(typeof(Action<NetworkConnection, ConnectMessage>), this, onClientConnectInternalMethod);
-            onClientDisconnectInternal = (Action<NetworkConnection, DisconnectMessage>)Delegate.CreateDelegate(typeof(Action<NetworkConnection, DisconnectMessage>), this, onClientDisconnectInternalMethod);
-            var onClientAuthenticatedAction = (Action<NetworkConnection>)Delegate.CreateDelegate(typeof(Action<NetworkConnection>), this, onClientAuthenticatedMethod);
+            onClientConnectInternal =
+                (Action<NetworkConnection, ConnectMessage>) Delegate.CreateDelegate(typeof(Action<NetworkConnection, ConnectMessage>), this,
+                    onClientConnectInternalMethod);
+            onClientDisconnectInternal =
+                (Action<NetworkConnection, DisconnectMessage>) Delegate.CreateDelegate(typeof(Action<NetworkConnection, DisconnectMessage>), this,
+                    onClientDisconnectInternalMethod);
+            var onClientAuthenticatedAction =
+                (Action<NetworkConnection>) Delegate.CreateDelegate(typeof(Action<NetworkConnection>), this, onClientAuthenticatedMethod);
             onClientAuthenticated = new UnityAction<NetworkConnection>(onClientAuthenticatedAction);
 
             base.Awake();
@@ -223,11 +227,11 @@ namespace NobleConnect.Mirror
         {
             NobleServer.Update();
             if (client != null) client.Update();
-			if (client != null)
-			{
-				if (isNetworkActive && !client.isConnecting && !client.isConnected && !isDisconnecting) StopClient();
-			}
-		}
+            if (client != null)
+            {
+                if (isNetworkActive && !client.isConnecting && !client.isConnected && !isDisconnecting) StopClient();
+            }
+        }
 
         #endregion Unity Stuff
 
@@ -356,7 +360,7 @@ namespace NobleConnect.Mirror
             isLANOnly = false;
 
             if (networkPort == 0) networkPort = UnityEngine.Random.Range(49152, 65536);
-            NobleServer.SetTransportPort((ushort)networkPort);
+            NobleServer.SetTransportPort((ushort) networkPort);
 
             base.StartHost();
         }
@@ -381,7 +385,7 @@ namespace NobleConnect.Mirror
             isLANOnly = false;
 
             if (networkPort == 0) networkPort = UnityEngine.Random.Range(49152, 65536);
-            NobleServer.SetTransportPort((ushort)networkPort);
+            NobleServer.SetTransportPort((ushort) networkPort);
 
             base.StartServer();
         }
@@ -405,18 +409,22 @@ namespace NobleConnect.Mirror
         new public void StopClient()
         {
             base.StopClient();
-            if (authenticator != null) {
+            if (authenticator != null)
+            {
                 Debug.Log("[xx] rm cliauthlist");
                 authenticator.OnClientAuthenticated.RemoveListener(onClientAuthenticated);
             }
+
             if (client != null)
             {
                 if (client.connection != null)
                 {
                     client.connection.InvokeHandler(new DisconnectMessage(), -1);
                 }
+
                 client.Dispose();
             }
+
             client = null;
         }
 
@@ -471,7 +479,7 @@ namespace NobleConnect.Mirror
             networkPort = NobleServer.GetTransportPort();
             networkAddress = localIP.ToString();
             NobleServer.HostEndPoint = new IPEndPoint(localIP, networkPort);
-            OnServerPrepared(localIP.ToString(), (ushort)networkPort);
+            OnServerPrepared(localIP.ToString(), (ushort) networkPort);
         }
 
         public IPAddress GetALANAddress()
@@ -495,7 +503,9 @@ namespace NobleConnect.Mirror
                 {
                     unicastAddresses = interfaceProperties.UnicastAddresses;
                 }
-                catch (Exception) { }
+                catch (Exception)
+                {
+                }
 
                 if (unicastAddresses == null) continue;
 
@@ -550,7 +560,7 @@ namespace NobleConnect.Mirror
             yield return 0;
             NobleServer.Dispose();
         }
-        
+
         public override void OnStopClient()
         {
             base.OnStopClient();
@@ -585,13 +595,13 @@ namespace NobleConnect.Mirror
 
         IEnumerator StopClientAfterDelay(NetworkConnection conn)
         {
-			isDisconnecting = true;
-			yield return new WaitForSeconds(40 / 1000.0f);
+            isDisconnecting = true;
+            yield return new WaitForSeconds(40 / 1000.0f);
             base.OnClientDisconnect(conn);
             client.Dispose();
             client = null;
             isDisconnecting = false;
-		}
+        }
 
         /// <summary>Called on the server when a client disconnects</summary>
         /// <remarks>
@@ -611,7 +621,9 @@ namespace NobleConnect.Mirror
         /// </remarks>
         /// <param name="hostAddress">The address of the HostEndPoint the clients should use when connecting to the host.</param>
         /// <param name="hostPort">The port of the HostEndPoint that clients should use when connecting to the host</param>
-        virtual public void OnServerPrepared(string hostAddress, ushort hostPort) { }
+        virtual public void OnServerPrepared(string hostAddress, ushort hostPort)
+        {
+        }
 
         /// <summary>Clean up the client and server.</summary>
         /// <remarks>

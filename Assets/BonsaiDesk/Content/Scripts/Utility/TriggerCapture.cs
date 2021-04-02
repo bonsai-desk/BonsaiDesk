@@ -92,6 +92,7 @@ public static class CaptureScreenshot
                 {
                     color = tex_black.GetPixel(x, y) / alpha;
                 }
+
                 color.a = alpha;
                 tex_transparent.SetPixel(x, y, color);
             }

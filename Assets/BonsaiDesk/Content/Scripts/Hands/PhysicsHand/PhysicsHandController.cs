@@ -58,9 +58,7 @@ public class PhysicsHandController : MonoBehaviour
             ResetFingerJoints();
         }
 
-        if (Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) >
-            SnapBackDistanceThresholdSquared
-            && !CheckHit())
+        if (Vector3.SqrMagnitude(transform.position - targetMapper.transform.position) > SnapBackDistanceThresholdSquared && !CheckHit())
         {
             ResetFingerJoints();
         }
@@ -69,6 +67,7 @@ public class PhysicsHandController : MonoBehaviour
         {
             _capsulesActiveTarget = overrideCapsulesActiveTarget;
         }
+
         TrySetCapsulesActiveToTarget();
 
         UpdateJoint();
@@ -95,8 +94,7 @@ public class PhysicsHandController : MonoBehaviour
 
         for (int i = 0; i < fingerJointBodies.Length; i++)
         {
-            if (InvalidTransform(fingerJointBodies[i].transform) ||
-                InvalidTransform(fingerJointBodies[i].transform.GetChild(0)))
+            if (InvalidTransform(fingerJointBodies[i].transform) || InvalidTransform(fingerJointBodies[i].transform.GetChild(0)))
             {
                 return true;
             }
@@ -107,10 +105,9 @@ public class PhysicsHandController : MonoBehaviour
 
     private bool InvalidTransform(Transform t)
     {
-        return float.IsNaN(t.position.x) || float.IsNaN(t.position.y) || float.IsNaN(t.position.z) ||
-               float.IsInfinity(t.position.x) || float.IsInfinity(t.position.y) || float.IsInfinity(t.position.z) ||
-               float.IsNaN(t.rotation.x) || float.IsNaN(t.rotation.y) || float.IsNaN(t.rotation.z) ||
-               float.IsNaN(t.rotation.w);
+        return float.IsNaN(t.position.x) || float.IsNaN(t.position.y) || float.IsNaN(t.position.z) || float.IsInfinity(t.position.x) ||
+               float.IsInfinity(t.position.y) || float.IsInfinity(t.position.z) || float.IsNaN(t.rotation.x) || float.IsNaN(t.rotation.y) ||
+               float.IsNaN(t.rotation.z) || float.IsNaN(t.rotation.w);
     }
 
     public void SetHandScale(float scale)
@@ -144,7 +141,7 @@ public class PhysicsHandController : MonoBehaviour
         {
             return;
         }
-        
+
         _capsulesActiveTarget = active;
         TrySetCapsulesActiveToTarget();
     }
@@ -183,8 +180,7 @@ public class PhysicsHandController : MonoBehaviour
 
         if (!active)
         {
-            var hits = Physics.OverlapSphere(palmCollider.transform.position, 0.1f, PlayerHand.AllButHandsMask,
-                QueryTriggerInteraction.Ignore);
+            var hits = Physics.OverlapSphere(palmCollider.transform.position, 0.1f, PlayerHand.AllButHandsMask, QueryTriggerInteraction.Ignore);
             for (int i = 0; i < hits.Length; i++)
             {
                 var body = hits[i].attachedRigidbody;
@@ -247,8 +243,7 @@ public class PhysicsHandController : MonoBehaviour
             //if thumb or pinky
             if (i == 0 || i == 12)
             {
-                ResetTransform(fingerJointBodies[i], joint.connectedAnchor,
-                    target.parent.localRotation * target.localRotation, true);
+                ResetTransform(fingerJointBodies[i], joint.connectedAnchor, target.parent.localRotation * target.localRotation, true);
             }
             else
             {

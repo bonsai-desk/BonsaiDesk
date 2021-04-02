@@ -46,6 +46,7 @@ public class ResetPositionFall : MonoBehaviour
                         break;
                     }
                 }
+
                 blockAreasToCheck.Push(rootBlockArea);
                 while (blockAreasToCheck.Count > 0)
                 {
@@ -62,6 +63,7 @@ public class ResetPositionFall : MonoBehaviour
                         }
                     }
                 }
+
                 Vector3 CoM = Vector3.zero;
                 float c = 0f;
                 foreach (var area in connectedBlockAreas)
@@ -69,6 +71,7 @@ public class ResetPositionFall : MonoBehaviour
                     CoM += area.body.worldCenterOfMass * area.body.mass;
                     c += area.body.mass;
                 }
+
                 CoM /= c;
 
                 Vector3 upperBounds = CoM;
@@ -77,7 +80,7 @@ public class ResetPositionFall : MonoBehaviour
                 {
                     foreach (var block in area.blocks)
                     {
-                        Vector3 blockPosition = area.transform.TransformPoint((Vector3)block.Key * BlockArea.cubeScale);
+                        Vector3 blockPosition = area.transform.TransformPoint((Vector3) block.Key * BlockArea.cubeScale);
                         for (int i = 0; i < 3; i++)
                         {
                             if (blockPosition[i] > upperBounds[i])
@@ -98,11 +101,12 @@ public class ResetPositionFall : MonoBehaviour
                     upperBounds[i] += padding;
                     lowerBounds[i] -= padding;
                 }
-                
+
                 Vector3 targetPosition = new Vector3(0, 0, 0.375f);
                 float additionalHeight = 0;
                 Vector3 boxPosition = targetPosition + new Vector3(0, upperBounds.y + additionalHeight + 0.005f, 0);
-                Vector3 boxHalfExtends = new Vector3((upperBounds.x - lowerBounds.x) / 2f, (upperBounds.y - lowerBounds.y) / 2f, (upperBounds.z - lowerBounds.z) / 2f);
+                Vector3 boxHalfExtends = new Vector3((upperBounds.x - lowerBounds.x) / 2f, (upperBounds.y - lowerBounds.y) / 2f,
+                    (upperBounds.z - lowerBounds.z) / 2f);
 
                 while (Physics.CheckBox(boxPosition, boxHalfExtends, Quaternion.identity, ~0, QueryTriggerInteraction.Ignore))
                 {

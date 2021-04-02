@@ -45,7 +45,7 @@ public class HandAnimatorController : MonoBehaviour
         {
             stylus = 1;
         }
-        
+
         _grab = Mathf.MoveTowards(_grab, grab, Time.deltaTime / GrabAnimationTime);
         _pinch = Mathf.MoveTowards(_pinch, pinch, Time.deltaTime / PinchAnimationTime);
         _stylus = Mathf.MoveTowards(_stylus, stylus, Time.deltaTime / StylusAnimationTime);

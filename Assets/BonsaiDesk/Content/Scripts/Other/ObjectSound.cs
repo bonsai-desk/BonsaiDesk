@@ -37,6 +37,7 @@ public class ObjectSound : MonoBehaviour
                     rollSource = GameObject.Find("SoundEmitter_" + emitterId.ToString()).GetComponent<AudioSource>();
                 }
             }
+
             if (emitterId > -1)
             {
                 Vector2 velocity = new Vector2(body.velocity.x, body.velocity.z);
@@ -44,6 +45,7 @@ public class ObjectSound : MonoBehaviour
                     rollSource.volume = Mathf.Clamp(velocity.magnitude, 0, 0.75f);
             }
         }
+
         if (transform.position.y < -10f)
         {
             StopSound();

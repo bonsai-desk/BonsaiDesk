@@ -23,8 +23,7 @@ public class GeneratePhysicsHand : MonoBehaviour
     {
         if (!Application.isEditor)
         {
-            Debug.LogError(
-                "This script is intended to be used to generate the hands which should be saved as a prefab.");
+            Debug.LogError("This script is intended to be used to generate the hands which should be saved as a prefab.");
             Destroy(this);
             return;
         }
@@ -89,11 +88,9 @@ public class GeneratePhysicsHand : MonoBehaviour
             }
 
 #if UNITY_EDITOR
-            PrefabUtility.SaveAsPrefabAsset(hand,
-                "Assets/BonsaiDesk/Content/Prefabs/Hand/Resources/" + hand.name + ".prefab");
+            PrefabUtility.SaveAsPrefabAsset(hand, "Assets/BonsaiDesk/Content/Prefabs/Hand/Resources/" + hand.name + ".prefab");
             print("Finished generating hands. Exiting play mode.");
-            Debug.LogError(
-                $"Generated hand {hand.name}. Stopping application. You can now disable this object in the scene.");
+            Debug.LogError($"Generated hand {hand.name}. Stopping application. You can now disable this object in the scene.");
             EditorApplication.isPlaying = false;
 #endif
         }
@@ -185,10 +182,8 @@ public class GeneratePhysicsHand : MonoBehaviour
                 boneIndexToCapsuleIndex.Add(boneIndex, i);
 
             bool pinkyOrThumbStart = false;
-            bool thumb = boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb0 ||
-                         boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb1 ||
-                         boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb2 ||
-                         boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb3;
+            bool thumb = boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb0 || boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb1 ||
+                         boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb2 || boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb3;
             Transform parentBoneTransform;
             short parentBoneIndex = bone.ParentBoneIndex;
             if (parentBoneIndex >= 0 && boneIndexToCapsuleIndex.TryGetValue(parentBoneIndex, out var value))
@@ -197,8 +192,7 @@ public class GeneratePhysicsHand : MonoBehaviour
             }
             else
             {
-                if (boneIndex == (short) OVRSkeleton.BoneId.Hand_Pinky1 ||
-                    boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb1)
+                if (boneIndex == (short) OVRSkeleton.BoneId.Hand_Pinky1 || boneIndex == (short) OVRSkeleton.BoneId.Hand_Thumb1)
                 {
                     var name = (OVRSkeleton.BoneId) parentBoneIndex;
                     var parent = new GameObject(name.ToString()).transform;
@@ -224,8 +218,7 @@ public class GeneratePhysicsHand : MonoBehaviour
                 capsuleGO.transform.SetParent(_capsulesGO.transform, false);
 
                 // capsuleGO.transform.localPosition = parentBoneTransform.TransformPoint(bone.Transform.localPosition);
-                capsuleGO.transform.localPosition = parentBoneTransform.localPosition +
-                                                    parentBoneTransform.localRotation * bone.Transform.localPosition;
+                capsuleGO.transform.localPosition = parentBoneTransform.localPosition + parentBoneTransform.localRotation * bone.Transform.localPosition;
                 capsuleGO.transform.localRotation = parentBoneTransform.localRotation * bone.Transform.localRotation;
             }
             else
@@ -253,8 +246,7 @@ public class GeneratePhysicsHand : MonoBehaviour
                 }
             }
 
-            capsule.CapsuleCollider = new GameObject((bone.Id).ToString() + "_CapsuleCollider")
-                .AddComponent<CapsuleCollider>();
+            capsule.CapsuleCollider = new GameObject((bone.Id).ToString() + "_CapsuleCollider").AddComponent<CapsuleCollider>();
             capsule.CapsuleCollider.sharedMaterial = physicMaterial;
 
             var p0 = _skeleton.BoneCapsules[i].StartPoint.FromFlippedXVector3f();

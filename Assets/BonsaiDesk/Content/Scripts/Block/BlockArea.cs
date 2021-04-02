@@ -20,8 +20,7 @@ public class BlockArea : NetworkBehaviour
 
     public static HashSet<NetworkIdentity> blockAreaIdentities = new HashSet<NetworkIdentity>();
 
-    public readonly SyncDictionaryVector3IntNetworkBlockInfo networkBlocks =
-        new SyncDictionaryVector3IntNetworkBlockInfo();
+    public readonly SyncDictionaryVector3IntNetworkBlockInfo networkBlocks = new SyncDictionaryVector3IntNetworkBlockInfo();
 
     // [SyncVar] public int startBlockId = 0;
     [SyncVar] public bool active = true;
@@ -77,8 +76,7 @@ public class BlockArea : NetworkBehaviour
         public MeshRenderer meshRenderer;
         public Joint connected;
 
-        public MeshBlock(int id, int positionInList, byte forward, byte up, GameObject blockObject,
-            MeshRenderer meshRenderer, Joint connected)
+        public MeshBlock(int id, int positionInList, byte forward, byte up, GameObject blockObject, MeshRenderer meshRenderer, Joint connected)
         {
             this.id = id;
             this.positionInList = positionInList;
@@ -159,8 +157,7 @@ public class BlockArea : NetworkBehaviour
 
             foreach (var bearingJoint in startBearingJoints)
             {
-                if (!blocks.ContainsKey(bearingJoint.Key) ||
-                    Blocks.blocks[blocks[bearingJoint.Key].id].blockType != Block.BlockType.bearing)
+                if (!blocks.ContainsKey(bearingJoint.Key) || Blocks.blocks[blocks[bearingJoint.Key].id].blockType != Block.BlockType.bearing)
                     Debug.LogError("Invalid bearing joint");
                 blocks[bearingJoint.Key].connected = bearingJoint.Value;
                 blocks[bearingJoint.Key].connected.connectedBody = body;
@@ -169,8 +166,7 @@ public class BlockArea : NetworkBehaviour
 
         foreach (var block in networkBlocks)
         {
-            CreateBlock(block.Value.id, block.Key, false, ByteRotationForward(block.Value.rotation),
-                ByteRotationUp(block.Value.rotation));
+            CreateBlock(block.Value.id, block.Key, false, ByteRotationForward(block.Value.rotation), ByteRotationUp(block.Value.rotation));
         }
 
         UpdateMesh(true);
@@ -340,11 +336,8 @@ public class BlockArea : NetworkBehaviour
 
         Vector3 forward = transform.InverseTransformDirection(physicsBlock.transform.forward);
         Vector3 up = transform.InverseTransformDirection(physicsBlock.transform.up);
-        byte forwardInt =
-            directionToInt[
-                new Vector3Int(Mathf.RoundToInt(forward.x), Mathf.RoundToInt(forward.y), Mathf.RoundToInt(forward.z))];
-        byte upInt =
-            directionToInt[new Vector3Int(Mathf.RoundToInt(up.x), Mathf.RoundToInt(up.y), Mathf.RoundToInt(up.z))];
+        byte forwardInt = directionToInt[new Vector3Int(Mathf.RoundToInt(forward.x), Mathf.RoundToInt(forward.y), Mathf.RoundToInt(forward.z))];
+        byte upInt = directionToInt[new Vector3Int(Mathf.RoundToInt(up.x), Mathf.RoundToInt(up.y), Mathf.RoundToInt(up.z))];
 
         if (!blocks.ContainsKey(coord))
         {
@@ -362,8 +355,7 @@ public class BlockArea : NetworkBehaviour
 
             physicsBlock.GetComponent<BlockPhysics>().enabled = false;
 
-            physicsBlock.transform.position = BlockCoordToPosition(coord) -
-                                              (physicsBlock.transform.rotation * ((Vector3) physicsCoord * cubeScale));
+            physicsBlock.transform.position = BlockCoordToPosition(coord) - (physicsBlock.transform.rotation * ((Vector3) physicsCoord * cubeScale));
             physicsBlock.transform.rotation = GetTargetRotation(physicsBlock.transform.rotation, coord,
                 Blocks.blocks[blockArea.blocks[blockArea.OnlyBlock()].id].blockType);
 
@@ -371,10 +363,8 @@ public class BlockArea : NetworkBehaviour
             joint.autoConfigureConnectedAnchor = false;
 
             Vector3 axis = physicsBlock.transform.InverseTransformDirection(transform.rotation *
-                                                                            Quaternion.LookRotation(
-                                                                                intToDirection[blocks[coord].forward],
-                                                                                intToDirection[blocks[coord].up]) *
-                                                                            Vector3.up);
+                                                                            Quaternion.LookRotation(intToDirection[blocks[coord].forward],
+                                                                                intToDirection[blocks[coord].up]) * Vector3.up);
             axis = new Vector3(Mathf.Round(axis.x), Mathf.Round(axis.y), Mathf.Round(axis.z));
             axis = axis.normalized;
             joint.axis = axis;
@@ -532,8 +522,7 @@ public class BlockArea : NetworkBehaviour
 
             for (int i = 0; i < 6 * 6; i++)
             {
-                triangles[tStart + i] = triangles[tLastStart + i] -
-                                        ((blocks.Count - 1 - blocks[coord].positionInList) * 6 * 4);
+                triangles[tStart + i] = triangles[tLastStart + i] - ((blocks.Count - 1 - blocks[coord].positionInList) * 6 * 4);
             }
 
             triangles.RemoveRange(tLastStart, 6 * 6);
@@ -560,8 +549,8 @@ public class BlockArea : NetworkBehaviour
                 }
             }
 
-            blocks[key] = new MeshBlock(blocks[key].id, blocks[coord].positionInList, blocks[key].forward,
-                blocks[key].up, blocks[key].blockObject, blocks[key].meshRenderer, blocks[key].connected);
+            blocks[key] = new MeshBlock(blocks[key].id, blocks[coord].positionInList, blocks[key].forward, blocks[key].up, blocks[key].blockObject,
+                blocks[key].meshRenderer, blocks[key].connected);
 
             if (blocks[coord].blockObject != null)
             {
@@ -603,9 +592,7 @@ public class BlockArea : NetworkBehaviour
                 {
                     if (Blocks.blocks[block.id].blockType == Block.BlockType.bearing)
                     {
-                        Vector3Int connectedTo = testBlock +
-                                                 Vector3Int.RoundToInt(block.blockObject.transform.localRotation *
-                                                                       Vector3.down);
+                        Vector3Int connectedTo = testBlock + Vector3Int.RoundToInt(block.blockObject.transform.localRotation * Vector3.down);
                         if (connectedTo == coord)
                         {
                             DeleteBlock(testBlock);
@@ -654,8 +641,7 @@ public class BlockArea : NetworkBehaviour
 
                     foreach (var structure in structures)
                     {
-                        if (!(structure.Count == 1 && Blocks.blocks[structure[OnlyBlock(structure)].id].blockType ==
-                            Block.BlockType.bearing))
+                        if (!(structure.Count == 1 && Blocks.blocks[structure[OnlyBlock(structure)].id].blockType == Block.BlockType.bearing))
                         {
                             GameObject blockArea = Instantiate(StaticPrefabs.instance.blockAreaPrefab);
                             blockArea.transform.parent = transform.parent;
@@ -673,12 +659,11 @@ public class BlockArea : NetworkBehaviour
 
                             BlockArea blockAreaBlockArea = blockArea.GetComponent<BlockArea>();
                             foreach (var block in structure)
-                                blockAreaBlockArea.networkBlocks.Add(block.Key,
-                                    new NetworkBlockInfo()
-                                    {
-                                        id = (byte) block.Value.id,
-                                        rotation = ForwardUpToByte(block.Value.forward, block.Value.up)
-                                    });
+                                blockAreaBlockArea.networkBlocks.Add(block.Key, new NetworkBlockInfo()
+                                {
+                                    id = (byte) block.Value.id,
+                                    rotation = ForwardUpToByte(block.Value.forward, block.Value.up)
+                                });
                             blockAreaBlockArea.startBlocks = structure;
                             blockAreaBlockArea.startBearingJoints = bearingJoints;
 
@@ -932,7 +917,7 @@ public class BlockArea : NetworkBehaviour
             KeyValuePair<Vector3Int, MeshBlock> block;
             foreach (var nextBlock in blocks)
                 block = nextBlock;
-            
+
             var s = transform.GetChild(2).gameObject.AddComponent<SphereCollider>();
             s.material = spherePhysicMaterial;
             s.center = block.Key;
@@ -945,8 +930,7 @@ public class BlockArea : NetworkBehaviour
                 Destroy(s);
         }
 
-        body.mass = Mathf.Clamp((BlockObject.CubeMass * blocks.Count) - (BlockObject.CubeMass * blockObjects.Count),
-            BlockObject.CubeMass, Mathf.Infinity);
+        body.mass = Mathf.Clamp((BlockObject.CubeMass * blocks.Count) - (BlockObject.CubeMass * blockObjects.Count), BlockObject.CubeMass, Mathf.Infinity);
     }
 
     private void CreateBlock(int id, Vector3Int coord, bool updateTheMesh, byte forward = 4, byte up = 2)
@@ -988,14 +972,12 @@ public class BlockArea : NetworkBehaviour
             blockPhysics.enabled = false;
     }
 
-    public static (Vector3[] vertices, Vector2[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(int id,
-        byte forward = 4, byte up = 2)
+    public static (Vector3[] vertices, Vector2[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(int id, byte forward = 4, byte up = 2)
     {
         return GetBlockMesh(id, Vector3Int.zero, forward, up);
     }
 
-    private static (Vector3[] vertices, Vector2[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(int id,
-        Vector3Int coord, byte forward = 4, byte up = 2)
+    private static (Vector3[] vertices, Vector2[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(int id, Vector3Int coord, byte forward = 4, byte up = 2)
     {
         if (id == -1)
         {
@@ -1029,12 +1011,9 @@ public class BlockArea : NetworkBehaviour
             else
                 blockuv = bottomBlockuv;
             uv[face * 4 + 0] = blockuv + new Vector2(texturePadding, texturePadding);
-            uv[face * 4 + 1] = blockuv + new Vector2(Block.textureWidth, 0) +
-                               new Vector2(-texturePadding, texturePadding);
-            uv[face * 4 + 2] = blockuv + new Vector2(Block.textureWidth, Block.textureWidth) +
-                               new Vector2(-texturePadding, -texturePadding);
-            uv[face * 4 + 3] = blockuv + new Vector2(0, Block.textureWidth) +
-                               new Vector2(texturePadding, -texturePadding);
+            uv[face * 4 + 1] = blockuv + new Vector2(Block.textureWidth, 0) + new Vector2(-texturePadding, texturePadding);
+            uv[face * 4 + 2] = blockuv + new Vector2(Block.textureWidth, Block.textureWidth) + new Vector2(-texturePadding, -texturePadding);
+            uv[face * 4 + 3] = blockuv + new Vector2(0, Block.textureWidth) + new Vector2(texturePadding, -texturePadding);
 
             uv2[face * 4 + 0] = new Vector2(0, 0);
             uv2[face * 4 + 1] = new Vector2(Block.breakTextureWidth, 0);
@@ -1108,41 +1087,26 @@ public class BlockArea : NetworkBehaviour
         //don't @ me
         bool isNearHole =
             (!ContainsBlock(testPosition + new Vector3Int(1, 0, 0)) &&
-             (ContainsBlock(testPosition + new Vector3Int(1, -1, 0)) &&
-              ContainsBlock(testPosition + new Vector3Int(1, 1, 0)) ||
-              ContainsBlock(testPosition + new Vector3Int(1, 0, -1)) &&
-              ContainsBlock(testPosition + new Vector3Int(1, 0, 1)))) ||
+             (ContainsBlock(testPosition + new Vector3Int(1, -1, 0)) && ContainsBlock(testPosition + new Vector3Int(1, 1, 0)) ||
+              ContainsBlock(testPosition + new Vector3Int(1, 0, -1)) && ContainsBlock(testPosition + new Vector3Int(1, 0, 1)))) ||
             (!ContainsBlock(testPosition + new Vector3Int(-1, 0, 0)) &&
-             (ContainsBlock(testPosition + new Vector3Int(-1, -1, 0)) &&
-              ContainsBlock(testPosition + new Vector3Int(-1, 1, 0)) ||
-              ContainsBlock(testPosition + new Vector3Int(-1, 0, -1)) &&
-              ContainsBlock(testPosition + new Vector3Int(-1, 0, 1)))) ||
+             (ContainsBlock(testPosition + new Vector3Int(-1, -1, 0)) && ContainsBlock(testPosition + new Vector3Int(-1, 1, 0)) ||
+              ContainsBlock(testPosition + new Vector3Int(-1, 0, -1)) && ContainsBlock(testPosition + new Vector3Int(-1, 0, 1)))) ||
             (!ContainsBlock(testPosition + new Vector3Int(0, 1, 0)) &&
-             (ContainsBlock(testPosition + new Vector3Int(-1, 1, 0)) &&
-              ContainsBlock(testPosition + new Vector3Int(1, 1, 0)) ||
-              ContainsBlock(testPosition + new Vector3Int(0, 1, -1)) &&
-              ContainsBlock(testPosition + new Vector3Int(0, 1, 1)))) ||
+             (ContainsBlock(testPosition + new Vector3Int(-1, 1, 0)) && ContainsBlock(testPosition + new Vector3Int(1, 1, 0)) ||
+              ContainsBlock(testPosition + new Vector3Int(0, 1, -1)) && ContainsBlock(testPosition + new Vector3Int(0, 1, 1)))) ||
             (!ContainsBlock(testPosition + new Vector3Int(0, -1, 0)) &&
-             (ContainsBlock(testPosition + new Vector3Int(-1, -1, 0)) &&
-              ContainsBlock(testPosition + new Vector3Int(1, -1, 0)) ||
-              ContainsBlock(testPosition + new Vector3Int(0, -1, -1)) &&
-              ContainsBlock(testPosition + new Vector3Int(0, -1, 1)))) ||
+             (ContainsBlock(testPosition + new Vector3Int(-1, -1, 0)) && ContainsBlock(testPosition + new Vector3Int(1, -1, 0)) ||
+              ContainsBlock(testPosition + new Vector3Int(0, -1, -1)) && ContainsBlock(testPosition + new Vector3Int(0, -1, 1)))) ||
             (!ContainsBlock(testPosition + new Vector3Int(0, 0, 1)) &&
-             (ContainsBlock(testPosition + new Vector3Int(-1, 0, 1)) &&
-              ContainsBlock(testPosition + new Vector3Int(1, 0, 1)) ||
-              ContainsBlock(testPosition + new Vector3Int(0, -1, 1)) &&
-              ContainsBlock(testPosition + new Vector3Int(0, 1, 1)))) ||
+             (ContainsBlock(testPosition + new Vector3Int(-1, 0, 1)) && ContainsBlock(testPosition + new Vector3Int(1, 0, 1)) ||
+              ContainsBlock(testPosition + new Vector3Int(0, -1, 1)) && ContainsBlock(testPosition + new Vector3Int(0, 1, 1)))) ||
             (!ContainsBlock(testPosition + new Vector3Int(0, 0, -1)) &&
-             (ContainsBlock(testPosition + new Vector3Int(-1, 0, -1)) &&
-              ContainsBlock(testPosition + new Vector3Int(1, 0, -1)) ||
-              ContainsBlock(testPosition + new Vector3Int(0, -1, -1)) &&
-              ContainsBlock(testPosition + new Vector3Int(0, 1, -1)))) ||
-            (ContainsBlock(testPosition + new Vector3Int(-1, 0, 0)) &&
-             ContainsBlock(testPosition + new Vector3Int(1, 0, 0)) ||
-             ContainsBlock(testPosition + new Vector3Int(0, -1, 0)) &&
-             ContainsBlock(testPosition + new Vector3Int(0, 1, 0)) ||
-             ContainsBlock(testPosition + new Vector3Int(0, 0, -1)) &&
-             ContainsBlock(testPosition + new Vector3Int(0, 0, 1)));
+             (ContainsBlock(testPosition + new Vector3Int(-1, 0, -1)) && ContainsBlock(testPosition + new Vector3Int(1, 0, -1)) ||
+              ContainsBlock(testPosition + new Vector3Int(0, -1, -1)) && ContainsBlock(testPosition + new Vector3Int(0, 1, -1)))) ||
+            (ContainsBlock(testPosition + new Vector3Int(-1, 0, 0)) && ContainsBlock(testPosition + new Vector3Int(1, 0, 0)) ||
+             ContainsBlock(testPosition + new Vector3Int(0, -1, 0)) && ContainsBlock(testPosition + new Vector3Int(0, 1, 0)) ||
+             ContainsBlock(testPosition + new Vector3Int(0, 0, -1)) && ContainsBlock(testPosition + new Vector3Int(0, 0, 1)));
 
         bool inCubeAreaBearing = true;
         if (Blocks.blocks[id].blockType == Block.BlockType.bearing)
@@ -1154,13 +1118,12 @@ public class BlockArea : NetworkBehaviour
             }
         }
 
-        bool isInCubeArea = inCubeAreaBearing && (
-            ContainsBlock(testPosition + new Vector3Int(1, 0, 0)) ||
-            ContainsBlock(testPosition + new Vector3Int(-1, 0, 0)) ||
-            ContainsBlock(testPosition + new Vector3Int(0, 1, 0)) ||
-            ContainsBlock(testPosition + new Vector3Int(0, -1, 0)) ||
-            ContainsBlock(testPosition + new Vector3Int(0, 0, 1)) ||
-            ContainsBlock(testPosition + new Vector3Int(0, 0, -1)));
+        bool isInCubeArea = inCubeAreaBearing && (ContainsBlock(testPosition + new Vector3Int(1, 0, 0)) ||
+                                                  ContainsBlock(testPosition + new Vector3Int(-1, 0, 0)) ||
+                                                  ContainsBlock(testPosition + new Vector3Int(0, 1, 0)) ||
+                                                  ContainsBlock(testPosition + new Vector3Int(0, -1, 0)) ||
+                                                  ContainsBlock(testPosition + new Vector3Int(0, 0, 1)) ||
+                                                  ContainsBlock(testPosition + new Vector3Int(0, 0, -1)));
 
         return (isInCubeArea, isNearHole);
     }
@@ -1191,8 +1154,7 @@ public class BlockArea : NetworkBehaviour
 
     private Vector3 SnapPosition(Vector3 currentPosition)
     {
-        currentPosition = new Vector3(
-            Mathf.Floor(currentPosition.x * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale),
+        currentPosition = new Vector3(Mathf.Floor(currentPosition.x * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale),
             Mathf.Floor(currentPosition.y * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale),
             Mathf.Floor(currentPosition.z * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale));
         currentPosition.x += BlockArea.cubeScale / 2f;
@@ -1293,8 +1255,7 @@ public class BlockArea : NetworkBehaviour
     }
 
     //finds the closest axis to the input rotations specified axis
-    private void Check(ref float highestDot, ref Vector3 closest, Quaternion currentRotation, Vector3 axis,
-        Vector3 checkDir)
+    private void Check(ref float highestDot, ref Vector3 closest, Quaternion currentRotation, Vector3 axis, Vector3 checkDir)
     {
         float dot = Vector3.Dot(currentRotation * axis, checkDir);
         if (dot > highestDot)
