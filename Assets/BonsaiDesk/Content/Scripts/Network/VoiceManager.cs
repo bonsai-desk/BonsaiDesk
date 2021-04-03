@@ -69,7 +69,7 @@ public class VoiceManager : MonoBehaviour
 
         if (Time.realtimeSinceStartup > _nextPosUpdate)
         {
-            _nextPosUpdate += 0.3f;
+            _nextPosUpdate += 0.1f;
             if (!(_positionalChannelSession is null) && _positionalChannelSession.AudioState == ConnectionState.Connected)
             {
                 var position = headTransform.position;
