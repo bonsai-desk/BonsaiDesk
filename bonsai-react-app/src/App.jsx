@@ -17,30 +17,30 @@ import {observer} from 'mobx-react-lite';
 import {useStore} from './DataProvider';
 import {BounceLoader} from 'react-spinners';
 
-function postListenersReady() {
-    postJson(
-            {Type: 'event', Message: 'listenersReady', Data: new Date().getTime()});
+function postListenersReady () {
+    postJson (
+            {Type: 'event', Message: 'listenersReady', Data: new Date ().getTime ()});
 
 }
 
-function genNavListeners(history) {
+function genNavListeners (history) {
 
-    function _navListeners(event) {
+    function _navListeners (event) {
 
-        let json = JSON.parse(event.data);
+        let json = JSON.parse (event.data);
 
         if (json.type !== 'nav') return;
 
-        console.log('asdf');
+        console.log ('asdf');
 
         switch (json.command) {
             case 'push':
-                console.log('command: nav ' + json.path);
-                history.push(json.path);
+                console.log ('command: nav ' + json.path);
+                history.push (json.path);
                 break;
             default:
-                console.log(
-                        'command: not handled (navListeners) ' + JSON.stringify(json));
+                console.log (
+                        'command: not handled (navListeners) ' + JSON.stringify (json));
                 break;
         }
     }
@@ -48,35 +48,43 @@ function genNavListeners(history) {
     return _navListeners;
 }
 
-const Boot = observer(() => {
-    let {store} = useStore();
-    console.log('Boot');
+const Boot = observer (() => {
+    let {store} = useStore ();
+    console.log ('Boot');
 
-    let history = useHistory();
+    let history = useHistory ();
 
-    let navListeners = genNavListeners(history);
+    let navListeners = genNavListeners (history);
 
     if (window.vuplex != null) {
 
-        console.log('bonsai: vuplex is not null -> navListeners');
-        window.vuplex.addEventListener('message', navListeners);
-        postListenersReady();
+        console.log ('bonsai: vuplex is not null -> navListeners');
+        window.vuplex.addEventListener ('message', navListeners);
+        postListenersReady ();
 
     } else {
-        console.log('bonsai: vuplex is null');
-        window.addEventListener('vuplexready', _ => {
+        console.log ('bonsai: vuplex is null');
+        window.addEventListener ('vuplexready', _ => {
 
-            console.log('bonsai: vuplexready -> navListeners');
-            window.vuplex.addEventListener('message', navListeners);
-            postListenersReady();
+            console.log ('bonsai: vuplexready -> navListeners');
+            window.vuplex.addEventListener ('message', navListeners);
+            postListenersReady ();
 
         });
     }
 
-    function handleKeyPress(e) {
+    function handleKeyPress (e) {
         if (e.key === 'x') {
             store.build = 'DEVELOPMENT';
-            //store.is_internet_good = true;
+        }
+        if (e.key === 'm') {
+            store.app_info.MicrophonePermission = true;
+        }
+
+        if (e.key === 'b') {
+            store.build = 'DEVELOPMENT';
+            store.app_info.MicrophonePermission = true;
+            store.is_internet_good = true;
         }
     }
 
@@ -122,12 +130,12 @@ const Boot = observer(() => {
 
 });
 
-function Home() {
+function Home () {
     return <div className={'w-full h-full bg-gray-900'}></div>;
 }
 
-function App() {
-    console.log('App');
+function App () {
+    console.log ('App');
     return (
             <Router>
                 <div className={'h-screen text-green-400 select-none'}>
