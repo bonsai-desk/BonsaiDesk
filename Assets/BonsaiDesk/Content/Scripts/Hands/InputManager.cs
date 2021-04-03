@@ -104,6 +104,7 @@ public class InputManager : MonoBehaviour
 
         //set controllers on/off
         var controllersActive = !UsingHandTracking && !MoveToDesk.Singleton.oriented;
+        var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
         leftControllerModel.SetActive(controllersActive);
         rightControllerModel.SetActive(controllersActive);
     }
@@ -236,6 +237,7 @@ public class InputManager : MonoBehaviour
         {
             Left.TurnOffHandForPause();
             Right.TurnOffHandForPause();
+
             var leftMenu = Left.PlayerHand.GetIHandTick<MenuHand>();
             if (leftMenu)
             {
@@ -247,6 +249,12 @@ public class InputManager : MonoBehaviour
             {
                 rightMenu.TurnOffMenu();
             }
+            
+            leftControllerModel.SetActive(false);
+            rightControllerModel.SetActive(false);
+            
+            Left.PlayerHand.stylus.parent.gameObject.SetActive(false);
+            Right.PlayerHand.stylus.parent.gameObject.SetActive(false);
         }
     }
 }

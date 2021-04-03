@@ -175,8 +175,9 @@ public class CustomInputModule : StandaloneInputModule
             InputManager.Hands.Right.SetHandColliderActiveForScreen(true);
         }
 
-        InputManager.Hands.Left.PlayerHand.stylus.parent.gameObject.SetActive(!InputManager.Hands.UsingHandTracking && foundScreen && leftHover);
-        InputManager.Hands.Right.PlayerHand.stylus.parent.gameObject.SetActive(!InputManager.Hands.UsingHandTracking && foundScreen && rightHover);
+        var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
+        InputManager.Hands.Left.PlayerHand.stylus.parent.gameObject.SetActive(!InputManager.Hands.UsingHandTracking && foundScreen && leftHover && playing);
+        InputManager.Hands.Right.PlayerHand.stylus.parent.gameObject.SetActive(!InputManager.Hands.UsingHandTracking && foundScreen && rightHover && playing);
         InputManager.Hands.Left.TargetHandAnimatorController.overScreen = !InputManager.Hands.UsingHandTracking && foundScreen && leftHover;
         InputManager.Hands.Right.TargetHandAnimatorController.overScreen = !InputManager.Hands.UsingHandTracking && foundScreen && rightHover;
 
