@@ -49,8 +49,8 @@ public class BrowserSetup : MonoBehaviour
             user_pref('media.geckoview.autoplay.request', false);
         ");
 		AndroidGeckoWebView.EnsureBuiltInExtension(
-			"resource://android/assets/ublock/",
-			"uBlock0@raymondhill.net"
+			"resource://android/assets/adguard-3.5.34/",
+			"adguardadblocker@adguard.com"
 		);
 		AndroidGeckoWebView.EnsureBuiltInExtension(
 			"resource://android/assets/bonsai-youtube/",
