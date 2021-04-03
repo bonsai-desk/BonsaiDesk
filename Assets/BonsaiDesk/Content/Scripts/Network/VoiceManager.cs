@@ -54,11 +54,12 @@ public class VoiceManager : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
-        //OnUserLoggedInEvent += HandleLoggedIn;
-        //var _config = new VivoxConfig {InitialLogLevel = vx_log_level.log_debug};
-        _client.Uninitialize();
-        _client.Initialize();
-        Login("displayName");
+        if (!_client.Initialized)
+        {
+            _client.Uninitialize();
+            _client.Initialize();
+            Login("displayName");
+        }
     }
 
     // Update is called once per frame
@@ -120,6 +121,12 @@ public class VoiceManager : MonoBehaviour
 
     public void DisconnectAllChannels()
     {
+        if (_client is null)
+        {
+            BonsaiLog("Client is null so no attempt to disconnect from channels will be made");
+            return;
+        }
+
         BonsaiLog("Disconnect all channels");
         // stop any routines to join a channel
         if (!(_joinChannelRoutine is null))
