@@ -124,7 +124,7 @@ PlayerSettings:
     16:10: 1
     16:9: 1
     Others: 1
-  bundleVersion: 0.1
+  bundleVersion: 0.1.1
   preloadedAssets:
   - {fileID: 3037764257804862999, guid: bd924ae76516622409195cfdda395f9d, type: 2}
   - {fileID: 11400000, guid: d57f92069e1343041ab4379c579b7279, type: 2}
@@ -172,7 +172,7 @@ PlayerSettings:
   applicationIdentifier:
     Android: com.HyperMesa.BonsaiDesk
   buildNumber: {}
-  AndroidBundleVersionCode: 11
+  AndroidBundleVersionCode: 13
   AndroidMinSdkVersion: 23
   AndroidTargetSdkVersion: 0
   AndroidPreferredInstallLocation: 0
