@@ -1587,7 +1587,7 @@ MonoBehaviour:
     type: 3}
   networkHandRightPrefab: {fileID: 278106068519379494, guid: de9f215c24e582e41bf246880e577b57,
     type: 3}
-  BuildId: 2
+  BuildId: 4
 --- !u!4 &217350384
 Transform:
   m_ObjectHideFlags: 0
