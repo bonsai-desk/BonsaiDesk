@@ -47,12 +47,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5166523701a8ee34da87d0b59437279f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.05
   blockObjectMaterial: {fileID: 2100000, guid: f78bd9a1577e22849b90e183503c527b, type: 2}
   blockPhysicMaterial: {fileID: 13400000, guid: 76d721a910635a648a5ce8963994bf63,
     type: 2}
   spherePhysicMaterial: {fileID: 13400000, guid: 2ce95ee1c6692e24b93fd320d0345b99,
     type: 2}
   potentialBlocksParent: {fileID: 0}
+  debug: 0
 --- !u!54 &1897995405423690379
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -123,10 +126,10 @@ MonoBehaviour:
   syncPosition: 0
   syncRotation: 0
   syncScale: 7
-  syncVelocity: 0
-  syncAngularVelocity: 0
-  isPositionCompressed: 0
-  isRotationCompressed: 0
+  syncVelocity: 7
+  syncAngularVelocity: 7
+  isPositionCompressed: 1
+  isRotationCompressed: 1
   isScaleCompressed: 0
   isVelocityCompressed: 0
   isAngularVelocityCompressed: 0

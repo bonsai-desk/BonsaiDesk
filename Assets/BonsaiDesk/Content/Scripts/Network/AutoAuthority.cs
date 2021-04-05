@@ -63,16 +63,16 @@ public class AutoAuthority : NetworkBehaviour
         if (isServer && transform.position.y < -1f)
         {
             var blockObject = GetComponent<BlockObject>();
-            if (blockObject && blockObject.Blocks.Count == 1)
-            {
-                ServerStripOwnerAndDestroy();
-            }
-            else
+            if (blockObject && blockObject.Blocks.Count > 4)
             {
                 ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
                 _body.velocity = Vector3.zero;
                 _body.angularVelocity = Vector3.zero;
                 GetComponent<SmoothSyncMirror>().teleportAnyObjectFromServer(new Vector3(0, 2, 0), Quaternion.identity, transform.localScale);
+            }
+            else
+            {
+                ServerStripOwnerAndDestroy();
             }
 
             return;
