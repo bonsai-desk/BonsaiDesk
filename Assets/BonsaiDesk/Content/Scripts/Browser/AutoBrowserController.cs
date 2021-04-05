@@ -386,6 +386,7 @@ public class AutoBrowserController : NetworkBehaviour
                         _clientPlayerStatus = PlayerState.Buffering;
                         break;
                     case "ENDED":
+                        CmdHandleVideoEnded();
                         _clientPlayerStatus = PlayerState.Ended;
                         break;
                 }
@@ -537,6 +538,13 @@ public class AutoBrowserController : NetworkBehaviour
         RpcReadyUp(_idealScrub.CurrentTimeStamp(NetworkTime.time));
     }
 
+    [Command(ignoreAuthority = true)]
+    private void CmdHandleVideoEnded()
+    {
+        TLog("Ejecting video because client reported ending");
+        tabletSpot.ServerEjectCurrentTablet();
+    }
+    
     [Command(ignoreAuthority = true)]
     public void CmdChangeVolumeLevel(float delta)
     {
