@@ -38,6 +38,7 @@ public class AutoBrowserController : NetworkBehaviour
     private ContentInfo _serverContentInfo;
     private float _setVolumeLevelLast;
     [SyncVar] private float _volumeLevel = 1.0f;
+    private bool _serverVideoEnded;
 
     private void Start()
     {
@@ -246,6 +247,7 @@ public class AutoBrowserController : NetworkBehaviour
     private void BeginSync(string reason = "no reason provided")
     {
         TLog($"Beginning the sync process because [{reason}]");
+        _serverVideoEnded = false;
         togglePause.SetInteractable(false);
         _allGood = false;
         _clientsLastPing.Clear();
@@ -260,7 +262,7 @@ public class AutoBrowserController : NetworkBehaviour
     [Server]
     private void HandlePlayerServer()
     {
-        if (_serverContentInfo.Active == false)
+        if (_serverContentInfo.Active == false || _serverVideoEnded)
         {
             return;
         }
@@ -386,7 +388,7 @@ public class AutoBrowserController : NetworkBehaviour
                         _clientPlayerStatus = PlayerState.Buffering;
                         break;
                     case "ENDED":
-                        CmdHandleVideoEnded();
+                        CmdHandleVideoEnded(_clientPlayerTimeStamp);
                         _clientPlayerStatus = PlayerState.Ended;
                         break;
                 }
@@ -503,6 +505,11 @@ public class AutoBrowserController : NetworkBehaviour
     {
         _clientsLastPing[id] = NetworkTime.time;
 
+        if (_serverVideoEnded)
+        {
+            return;
+        }
+
         // TODO could use networkTime of timeStamp to account for rtt
         if (_allGood && !ClientInGracePeriod(id) && !ClientVideoIsSynced(timeStamp))
         {
@@ -539,10 +546,12 @@ public class AutoBrowserController : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdHandleVideoEnded()
+    private void CmdHandleVideoEnded(float endingTimeStamp)
     {
         TLog("Ejecting video because client reported ending");
-        tabletSpot.ServerEjectCurrentTablet();
+        _serverVideoEnded = true;
+        _idealScrub = ScrubData.PausedAtScrub(endingTimeStamp);
+        //tabletSpot.ServerEjectCurrentTablet();
     }
     
     [Command(ignoreAuthority = true)]
