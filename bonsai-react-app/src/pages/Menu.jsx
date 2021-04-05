@@ -8,7 +8,7 @@ import LinkImg from '../static/link.svg';
 import LightImg from '../static/lightbulb.svg';
 import PauseImg from '../static/pause.svg';
 import PlayImg from '../static/play.svg';
-import {mpl, lgpl} from "../static/licenses"
+import {mpl, lgpl, apache} from '../static/licenses';
 
 import MinusImg from '../static/minus.svg';
 import PlusImg from '../static/plus.svg';
@@ -831,25 +831,33 @@ function AboutPage ({handleClickReturn}) {
     // 1 : MPL
     // 2 : LGPL
     let [view, setView] = useState (0);
-    
+
     function viewMain () {
-        setView(0)
+        setView (0);
     }
 
     function viewMpl () {
         setView (1);
     }
-    
+
     function viewLgpl () {
         setView (2);
     }
-    
+
+    function viewApache () {
+        setView (3);
+    }
+
     if (view === 1) {
-        return <MozillaPublicLicense handleClickReturn={viewMain}/>
+        return <MozillaPublicLicense handleClickReturn={viewMain}/>;
     }
 
     if (view === 2) {
-        return <LesserGlpl handleClickReturn={viewMain}/>
+        return <LesserGlpl handleClickReturn={viewMain}/>;
+    }
+
+    if (view === 3) {
+        return <ApacheLicense handleClickReturn={viewMain}/>;
     }
 
     return (
@@ -867,8 +875,8 @@ function AboutPage ({handleClickReturn}) {
                         View
                     </Button>
                 </InfoItem>
-                <InfoItem title={'PDF.js'} slug={'Mozilla Public License'}>
-                    <Button className={grayButtonClass} handleClick={viewMpl}>
+                <InfoItem title={'PDF.js'} slug={'Apache License'}>
+                    <Button className={grayButtonClass} handleClick={viewApache}>
                         View
                     </Button>
                 </InfoItem>
@@ -883,28 +891,41 @@ function AboutPage ({handleClickReturn}) {
 
 function MozillaPublicLicense ({handleClickReturn}) {
     return (
-            <MenuContent name={"Mozilla Public License Version 2.0"}>
-                <div className={"flex"}>
+            <MenuContent name={'Mozilla Public License Version 2.0'}>
+                <div className={'flex'}>
                     <Button className={grayButtonClass} handleClick={handleClickReturn}>
                         Return
                     </Button>
                 </div>
                 <div dangerouslySetInnerHTML={{__html: mpl}}/>
             </MenuContent>
-    )
+    );
 }
 
 function LesserGlpl ({handleClickReturn}) {
     return (
-            <MenuContent name={"GNU LESSER GENERAL PUBLIC LICENSE"}>
-                <div className={"flex"}>
+            <MenuContent name={'GNU LESSER GENERAL PUBLIC LICENSE'}>
+                <div className={'flex'}>
                     <Button className={grayButtonClass} handleClick={handleClickReturn}>
                         Return
                     </Button>
                 </div>
                 <div dangerouslySetInnerHTML={{__html: lgpl}}/>
             </MenuContent>
-    )
+    );
+}
+
+function ApacheLicense ({handleClickReturn}) {
+    return (
+            <MenuContent name={'APACHE LICENSE, VERSION 2.0'}>
+                <div className={'flex'}>
+                    <Button className={grayButtonClass} handleClick={handleClickReturn}>
+                        Return
+                    </Button>
+                </div>
+                <div dangerouslySetInnerHTML={{__html: apache}}/>
+            </MenuContent>
+    );
 }
 
 //
