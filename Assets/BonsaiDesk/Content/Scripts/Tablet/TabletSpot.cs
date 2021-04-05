@@ -50,6 +50,15 @@ public class TabletSpot : NetworkBehaviour
         }
     }
 
+    [Server]
+    public void ServerEjectCurrentTablet()
+    {
+        if (_currentTabletIdentity)
+        {
+            EjectCurrentTablet();
+        }
+    } 
+
     private void Update()
     {
         if (!_currentTabletIdentity)

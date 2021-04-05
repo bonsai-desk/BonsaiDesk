@@ -8,6 +8,7 @@ import LinkImg from '../static/link.svg';
 import LightImg from '../static/lightbulb.svg';
 import PauseImg from '../static/pause.svg';
 import PlayImg from '../static/play.svg';
+import ResetImg from '../static/reset.svg';
 import {mpl, lgpl, apache} from '../static/licenses';
 
 import MinusImg from '../static/minus.svg';
@@ -34,97 +35,101 @@ const grayButtonClassInert = 'py-4 px-8 font-bold bg-gray-800 rounded flex flex-
 
 // post data
 
-function postRequestMicrophone () {
-    postJson ({Type: 'command', Message: 'requestMicrophone'});
+function postRequestMicrophone() {
+    postJson({Type: 'command', Message: 'requestMicrophone'});
 }
 
-function postTogglePinchPull () {
-    postJson ({Type: 'command', Message: 'togglePinchPull'});
+function postTogglePinchPull() {
+    postJson({Type: 'command', Message: 'togglePinchPull'});
 }
 
-function postToggleBlockBreak () {
-    postJson ({Type: 'command', Message: 'toggleBlockBreak'});
+function postToggleBlockBreak() {
+    postJson({Type: 'command', Message: 'toggleBlockBreak'});
 }
 
-function postCloseMenu () {
-    postJson ({Type: 'command', Message: 'closeMenu'});
+function postCloseMenu() {
+    postJson({Type: 'command', Message: 'closeMenu'});
 }
 
-function postBrowseYouTube () {
-    postJson ({Type: 'command', Message: 'browseYouTube'});
+function postBrowseYouTube() {
+    postJson({Type: 'command', Message: 'browseYouTube'});
 }
 
-function postOpenRoom () {
-    postJson ({Type: 'command', Message: 'openRoom'});
+function postOpenRoom() {
+    postJson({Type: 'command', Message: 'openRoom'});
 }
 
-function postCloseRoom () {
-    postJson ({Type: 'command', Message: 'closeRoom'});
+function postCloseRoom() {
+    postJson({Type: 'command', Message: 'closeRoom'});
 }
 
-function postJoinRoom (data) {
-    postJson ({Type: 'command', Message: 'joinRoom', data: JSON.stringify (data)});
+function postJoinRoom(data) {
+    postJson({Type: 'command', Message: 'joinRoom', data: JSON.stringify(data)});
 }
 
-function postLeaveRoom () {
-    postJson ({Type: 'command', Message: 'leaveRoom'});
+function postLeaveRoom() {
+    postJson({Type: 'command', Message: 'leaveRoom'});
 
 }
 
-function postKickConnectionId (id) {
-    postJson ({Type: 'command', Message: 'kickConnectionId', Data: id});
+function postKickConnectionId(id) {
+    postJson({Type: 'command', Message: 'kickConnectionId', Data: id});
 }
 
-function postSeekPlayer (ts) {
-    postJson ({Type: 'command', Message: 'seekPlayer', Data: ts});
+function postSeekPlayer(ts) {
+    postJson({Type: 'command', Message: 'seekPlayer', Data: ts});
 }
 
-function postVolumeIncrement () {
-    postJson ({Type: 'command', Message: 'volumeIncrement'});
+function postVolumeIncrement() {
+    postJson({Type: 'command', Message: 'volumeIncrement'});
 }
 
-function postVolumeDecrement () {
-    postJson ({Type: 'command', Message: 'volumeDecrement'});
+function postVolumeDecrement() {
+    postJson({Type: 'command', Message: 'volumeDecrement'});
 }
 
-function postVideoPlay () {
-    postJson ({Type: 'command', Message: 'playVideo'});
+function postVideoPlay() {
+    postJson({Type: 'command', Message: 'playVideo'});
 }
 
-function postVideoPause () {
-    postJson ({Type: 'command', Message: 'pauseVideo'});
+function postVideoPause() {
+    postJson({Type: 'command', Message: 'pauseVideo'});
 }
 
-function postVideoEject () {
-    postJson ({Type: 'command', Message: 'ejectVideo'});
+function postVideoEject() {
+    postJson({Type: 'command', Message: 'ejectVideo'});
 }
 
-function postLightsChange (level) {
-    postJson ({Type: 'command', Message: 'lightsChange', Data: level});
+function postVideoRestart() {
+    postJson({Type: 'command', Message: 'restartVideo'});
+}
+
+function postLightsChange(level) {
+    postJson({Type: 'command', Message: 'lightsChange', Data: level});
 }
 
 // utils
 
-function showInfo (info) {
+function showInfo(info) {
     switch (info[0]) {
         case 'player_info':
-            return showPlayerInfo (info[1]);
+            return showPlayerInfo(info[1]);
         case 'user_info':
-            return JSON.stringify (info);
+            return JSON.stringify(info);
         default:
-            return info[1] ? JSON.stringify (info[1], null, 2) : '';
+            return info[1] ? JSON.stringify(info[1], null, 2) : '';
     }
 }
 
-function showPlayerInfo (playerInfo) {
-    return '[' + playerInfo.map (info => {
+function showPlayerInfo(playerInfo) {
+    return '[' + playerInfo.map(info => {
         return `(${info.Name}, ${info.ConnectionId})`;
-    }).join (' ') + ']';
+    }).join(' ') + ']';
 }
 
 //
 
-function ListItem (props) {
+function ListItem(props) {
     let {
         selected,
         handleClick,
@@ -160,7 +165,7 @@ function ListItem (props) {
     );
 }
 
-function SettingsList (props) {
+function SettingsList(props) {
     return (
             <div className={'space-y-1 px-2'}>
                 {props.children}
@@ -168,17 +173,17 @@ function SettingsList (props) {
 
 }
 
-function SettingsTitle (props) {
+function SettingsTitle(props) {
     return <div
             className={'text-white font-bold text-xl px-5 pt-5 pb-2'}>{props.children}</div>;
 }
 
-function JoinDeskButton (props) {
+function JoinDeskButton(props) {
     let {handleClick, char} = props;
 
     return (
             <Button className={roundButtonClass} handleClick={() => {
-                handleClick (char);
+                handleClick(char);
             }}>
             <span className={'w-full text-center'}>
                 {char}
@@ -187,7 +192,7 @@ function JoinDeskButton (props) {
     );
 }
 
-function ConnectedClient (props) {
+function ConnectedClient(props) {
     let {info} = props;
     let {Name, ConnectionId} = info;
 
@@ -211,7 +216,7 @@ function ConnectedClient (props) {
     } else {
         return (
                 <Button className={clientClass} handleClick={() => {
-                    postKickConnectionId (ConnectionId);
+                    postKickConnectionId(ConnectionId);
                 }}>
                     <div
                             className={'flex content-center p-2 space-x-4'}>
@@ -229,7 +234,7 @@ function ConnectedClient (props) {
 
 }
 
-function InfoItem ({imgSrc, title, slug, children}) {
+function InfoItem({imgSrc, title, slug, children}) {
     return (
             <div className={'flex w-full justify-between'}>
                 <div className={'flex w-auto'}>
@@ -253,7 +258,7 @@ function InfoItem ({imgSrc, title, slug, children}) {
     );
 }
 
-function MenuContent (props) {
+function MenuContent(props) {
     let {name} = props;
 
     return (
@@ -271,13 +276,13 @@ function MenuContent (props) {
 
 }
 
-function LoadingHomePage () {
+function LoadingHomePage() {
     return <div className={'flex justify-center w-full flex-wrap'}>
         <BounceLoader size={200} color={'#737373'}/>
     </div>;
 }
 
-function ClientHomePage () {
+function ClientHomePage() {
     return (
             <div className={'flex'}>
                 <InfoItem title={'Connected'} slug={'You are connected to a host'}
@@ -289,19 +294,19 @@ function ClientHomePage () {
     );
 }
 
-const RoomInfo = observer (() => {
-    let {store} = useStore ();
+const RoomInfo = observer(() => {
+    let {store} = useStore();
 
     let handleCloseRoom = () => {
-        axios ({
+        axios({
             method: 'delete',
             url: API_BASE + '/rooms/' + store._room_code,
-        }).then (r => {
+        }).then(r => {
             if (r.status === 200) {
-                console.log (`deleted room ${store._room_code}`);
+                console.log(`deleted room ${store._room_code}`);
             }
-        }).catch (console.log);
-        postCloseRoom ();
+        }).catch(console.log);
+        postCloseRoom();
     };
 
     let OpenRoom =
@@ -351,9 +356,9 @@ const RoomInfo = observer (() => {
 
 });
 
-const HostHomePage = observer (() => {
+const HostHomePage = observer(() => {
 
-    let {store} = useStore ();
+    let {store} = useStore();
 
     return (
             <React.Fragment>
@@ -362,7 +367,7 @@ const HostHomePage = observer (() => {
                         <React.Fragment>
                             <div className={'text-xl'}>People in Your Room</div>
                             <div className={'flex space-x-2'}>
-                                {store.player_info.map (info => <ConnectedClient info={info}/>)}
+                                {store.player_info.map(info => <ConnectedClient info={info}/>)}
                             </div>
                         </React.Fragment>
                         :
@@ -374,10 +379,12 @@ const HostHomePage = observer (() => {
 
 //
 
-const PlayerPage = observer (() => {
-    const {store} = useStore ();
+const PlayerPage = observer(() => {
+    const {store} = useStore();
     //const store = {media_info: {Active:true, Scrub: 10, Duration: 33}}
-    const ref = useRef (null);
+    const ref = useRef(null);
+
+    const finished = (store.media_info.Duration - store.media_info.Scrub) < 0.25;
 
     let media = store.media_info;
 
@@ -387,44 +394,55 @@ const PlayerPage = observer (() => {
         return '';
     }
 
-    function handleClick (e) {
+    function handleClick(e) {
         let pct = (e.clientX - ref.current.offsetLeft) / ref.current.offsetWidth;
         let ts = pct * store.media_info.Duration;
-        postSeekPlayer (ts);
+        postSeekPlayer(ts);
     }
 
-    function VolumeDecrement () {
-        postVolumeDecrement ();
+    function VolumeDecrement() {
+        postVolumeDecrement();
     }
 
-    function VolumeIncrement () {
-        postVolumeIncrement ();
+    function VolumeIncrement() {
+        postVolumeIncrement();
     }
 
-    function handlePause () {
-        postVideoPause ();
+    function handlePause() {
+        postVideoPause();
     }
 
-    function handlePlay () {
-        postVideoPlay ();
+    function handlePlay() {
+        postVideoPlay();
     }
 
-    function handleEject () {
-        postVideoEject ();
+    function handleEject() {
+        postVideoEject();
+    }
+
+    function handleRestart() {
+        postVideoRestart();
     }
 
     let mediaClass = 'flex rounded h-16 w-24';
     mediaClass = grayButtonClass;
 
+    function ControlButton() {
+        if (finished) {
+            return <KeySVG handleClick={handleRestart} imgSrc={ResetImg}/>;
+        } else {
+            if (store.media_info.Paused) {
+                return <KeySVG handleClick={handlePlay} imgSrc={PlayImg}/>;
+            } else {
+                return <KeySVG handleClick={handlePause} imgSrc={PauseImg}/>;
+            }
+        }
+    }
+
     return <MenuContent name={'Player'}>
         <div>Video Scrub</div>
         <div className={'flex space-x-2'}>
-            {store.media_info.Paused ?
-                    <KeySVG handleClick={handlePlay} imgSrc={PlayImg}/>
-                    :
-                    <KeySVG handleClick={handlePause} imgSrc={PauseImg}/>
-            }
-
+            <ControlButton/>
             <div ref={ref} onPointerDown={handleClick}
                  className={'relative bg-gray-600 rounded w-full'}>
 
@@ -436,7 +454,7 @@ const PlayerPage = observer (() => {
                     className={mediaClass}/>
 
         </div>
-        <div>Volume {parseInt (100 * media.VolumeLevel)}</div>
+        <div>Volume {parseInt(100 * media.VolumeLevel)}</div>
         <div className={'flex space-x-2'}>
             <KeySVG handleClick={VolumeDecrement} className={mediaClass}
                     imgSrc={MinusImg}/>
@@ -447,9 +465,9 @@ const PlayerPage = observer (() => {
 
 });
 
-const HomePage = observer (() => {
+const HomePage = observer(() => {
 
-    let {store} = useStore ();
+    let {store} = useStore();
 
     let Inner;
 
@@ -474,63 +492,63 @@ const HomePage = observer (() => {
     );
 });
 
-let JoinDeskPage = observer ((props) => {
+let JoinDeskPage = observer((props) => {
     let {navHome} = props;
-    let {store} = useStore ();
+    let {store} = useStore();
 
-    let [code, setCode] = useState ('');
-    let [posting, setPosting] = useState (false);
-    let [message, setMessage] = useState ('');
+    let [code, setCode] = useState('');
+    let [posting, setPosting] = useState(false);
+    let [message, setMessage] = useState('');
 
-    useEffect (() => {
+    useEffect(() => {
         if (posting) return;
 
         if (code.length === 4) {
-            setPosting (true);
+            setPosting(true);
             let url = API_BASE + `/rooms/${code}`;
-            axios ({
+            axios({
                 method: 'get',
                 url: url,
-            }).then (response => {
-                console.log (response.data);
-                console.log (store.ip_address, store.port);
-                if (response.data.ip_address.toString () ===
-                        store.ip_address.toString () &&
-                        response.data.port.toString () === store.port.toString ()) {
+            }).then(response => {
+                console.log(response.data);
+                console.log(store.ip_address, store.port);
+                if (response.data.ip_address.toString() ===
+                        store.ip_address.toString() &&
+                        response.data.port.toString() === store.port.toString()) {
                     // trying to join your own room
-                    setMessage (`Could not find ${code} try again`);
-                    setCode ('');
-                    setPosting (false);
+                    setMessage(`Could not find ${code} try again`);
+                    setCode('');
+                    setPosting(false);
                 } else {
-                    postJoinRoom (response.data);
-                    setCode ('');
-                    setPosting (false);
-                    navHome ();
+                    postJoinRoom(response.data);
+                    setCode('');
+                    setPosting(false);
+                    navHome();
                 }
-            }).catch (err => {
-                console.log (err);
-                setMessage (`Could not find ${code} try again`);
-                setCode ('');
-                setPosting (false);
+            }).catch(err => {
+                console.log(err);
+                setMessage(`Could not find ${code} try again`);
+                setCode('');
+                setPosting(false);
             });
         }
     }, [code, navHome, posting, store.ip_address, store.port]);
 
-    function handleClick (char) {
-        setMessage ('');
+    function handleClick(char) {
+        setMessage('');
         switch (code.length) {
             case 4:
-                setCode (char);
+                setCode(char);
                 break;
             default:
-                setCode (code + char);
+                setCode(code + char);
                 break;
         }
     }
 
-    function handleBackspace () {
+    function handleBackspace() {
         if (code.length > 0) {
-            setCode (code.slice (0, code.length - 1));
+            setCode(code.slice(0, code.length - 1));
         }
     }
 
@@ -581,7 +599,7 @@ let JoinDeskPage = observer ((props) => {
     );
 });
 
-function VideosPage () {
+function VideosPage() {
     return <MenuContent name={'Videos'}>
         <InfoItem imgSrc={YtImg} title={'YouTube'}
                   slug={'Find videos to watch on the big screen'}>
@@ -592,35 +610,35 @@ function VideosPage () {
     </MenuContent>;
 }
 
-const DebugPage = observer (() => {
-    let {store} = useStore ();
+const DebugPage = observer(() => {
+    let {store} = useStore();
 
-    let addFakeIpPort = action ((store) => {
+    let addFakeIpPort = action((store) => {
         store.ip_address = 1234;
         store.port = 4321;
     });
-    let rmFakeIpPort = action (store => {
+    let rmFakeIpPort = action(store => {
         store.ip_address = null;
         store.port = null;
     });
 
-    let setNetState = action ((store, netState) => {
+    let setNetState = action((store, netState) => {
         store.network_state = netState;
     });
 
-    let addFakeClient = action (store => {
+    let addFakeClient = action(store => {
         if (store.player_info.length > 0) {
-            store.player_info.push ({Name: 'cam', ConnectionId: 1});
+            store.player_info.push({Name: 'cam', ConnectionId: 1});
         } else {
-            store.player_info.push (
+            store.player_info.push(
                     {Name: 'loremIpsumLoremIpsumLorem', ConnectionId: 0});
         }
     });
-    let rmFakeClient = action (store => {
-        store.player_info.pop ();
+    let rmFakeClient = action(store => {
+        store.player_info.pop();
     });
 
-    let toggleRoomOpen = action (store => {
+    let toggleRoomOpen = action(store => {
         store.room_open = !store.room_open;
     });
 
@@ -665,10 +683,10 @@ const DebugPage = observer (() => {
 
                     <div className={'w-1/2'}>
                         <ul>
-                            {Object.entries (store).map (info => {
+                            {Object.entries(store).map(info => {
                                 return <li className={'mb-2'} key={info[0]}>
                                     <span className={'font-bold'}>{info[0]}</span>{': '}<span
-                                        className={'text-gray-400'}>{showInfo (info)}</span>
+                                        className={'text-gray-400'}>{showInfo(info)}</span>
                                 </li>;
                             })}
                         </ul>
@@ -679,19 +697,19 @@ const DebugPage = observer (() => {
                         <div>Host State</div>
                         <div className={containerClass}>
                             <Button handleClick={() => {
-                                setNetState (store, 'Neutral');
+                                setNetState(store, 'Neutral');
                             }} className={grayButtonClass}>Neutral
                             </Button>
                             <Button handleClick={() => {
-                                setNetState (store, 'HostWaiting');
+                                setNetState(store, 'HostWaiting');
                             }} className={grayButtonClass}>HostWaiting
                             </Button>
                             <Button handleClick={() => {
-                                setNetState (store, 'Hosting');
+                                setNetState(store, 'Hosting');
                             }} className={grayButtonClass}>Hosting
                             </Button>
                             <Button handleClick={() => {
-                                setNetState (store, 'ClientConnected');
+                                setNetState(store, 'ClientConnected');
                             }} className={grayButtonClass}>ClientConnected
                             </Button>
 
@@ -701,19 +719,19 @@ const DebugPage = observer (() => {
                         <div>Connection</div>
                         <div className={containerClass}>
                             <Button className={grayButtonClass} handleClick={() => {
-                                addFakeIpPort (store);
+                                addFakeIpPort(store);
                             }}>+ fake ip/port
                             </Button>
                             <Button className={grayButtonClass} handleClick={() => {
-                                rmFakeIpPort (store);
+                                rmFakeIpPort(store);
                             }}>- fake ip/port
                             </Button>
                             <Button handleClick={() => {
-                                addFakeClient (store);
+                                addFakeClient(store);
                             }} className={grayButtonClass}>+ fake client
                             </Button>
                             <Button handleClick={() => {
-                                rmFakeClient (store);
+                                rmFakeClient(store);
                             }} className={grayButtonClass}>- fake client
                             </Button>
                         </div>
@@ -722,7 +740,7 @@ const DebugPage = observer (() => {
 
                         <div className={containerClass}>
                             <Button handleClick={() => {
-                                toggleRoomOpen (store);
+                                toggleRoomOpen(store);
                             }} className={grayButtonClass}>
                                 toggle
                             </Button>
@@ -744,30 +762,30 @@ const DebugPage = observer (() => {
     );
 });
 
-const SettingsPage = observer (() => {
-    let {store} = useStore ();
+const SettingsPage = observer(() => {
+    let {store} = useStore();
 
-    let [about, setAbout] = useState (false);
+    let [about, setAbout] = useState(false);
 
-    function handleClickVibes () {
-        postLightsChange ('vibes');
+    function handleClickVibes() {
+        postLightsChange('vibes');
     }
 
-    function handleClickBright () {
-        postLightsChange ('bright');
+    function handleClickBright() {
+        postLightsChange('bright');
     }
 
-    function handleClickPinchPull () {
-        postTogglePinchPull ();
+    function handleClickPinchPull() {
+        postTogglePinchPull();
     }
 
-    function handleClickBlockBreak () {
-        postToggleBlockBreak ();
+    function handleClickBlockBreak() {
+        postToggleBlockBreak();
 
     }
 
-    function toggleAbout () {
-        setAbout (!about);
+    function toggleAbout() {
+        setAbout(!about);
     }
 
     if (about) {
@@ -826,26 +844,26 @@ const SettingsPage = observer (() => {
     </MenuContent>;
 });
 
-function AboutPage ({handleClickReturn}) {
+function AboutPage({handleClickReturn}) {
     // 0 : main
     // 1 : MPL
     // 2 : LGPL
-    let [view, setView] = useState (0);
+    let [view, setView] = useState(0);
 
-    function viewMain () {
-        setView (0);
+    function viewMain() {
+        setView(0);
     }
 
-    function viewMpl () {
-        setView (1);
+    function viewMpl() {
+        setView(1);
     }
 
-    function viewLgpl () {
-        setView (2);
+    function viewLgpl() {
+        setView(2);
     }
 
-    function viewApache () {
-        setView (3);
+    function viewApache() {
+        setView(3);
     }
 
     if (view === 1) {
@@ -889,7 +907,7 @@ function AboutPage ({handleClickReturn}) {
     );
 }
 
-function MozillaPublicLicense ({handleClickReturn}) {
+function MozillaPublicLicense({handleClickReturn}) {
     return (
             <MenuContent name={'Mozilla Public License Version 2.0'}>
                 <div className={'flex'}>
@@ -902,7 +920,7 @@ function MozillaPublicLicense ({handleClickReturn}) {
     );
 }
 
-function LesserGlpl ({handleClickReturn}) {
+function LesserGlpl({handleClickReturn}) {
     return (
             <MenuContent name={'GNU LESSER GENERAL PUBLIC LICENSE'}>
                 <div className={'flex'}>
@@ -915,7 +933,7 @@ function LesserGlpl ({handleClickReturn}) {
     );
 }
 
-function ApacheLicense ({handleClickReturn}) {
+function ApacheLicense({handleClickReturn}) {
     return (
             <MenuContent name={'APACHE LICENSE, VERSION 2.0'}>
                 <div className={'flex'}>
@@ -930,24 +948,24 @@ function ApacheLicense ({handleClickReturn}) {
 
 //
 
-let Menu = observer (() => {
+let Menu = observer(() => {
 
-    let {store, pushStore} = useStore ();
+    let {store, pushStore} = useStore();
 
-    let [active, setActive] = useState (0);
+    let [active, setActive] = useState(0);
 
     let navHome = () => {
-        setActive (0);
+        setActive(0);
     };
 
-    useEffect (() => {
-        autorun (() => {
+    useEffect(() => {
+        autorun(() => {
             // remove room code if
             // DEVELOPMENT || PRODUCTION
             if (store.room_code &&
                     (!store.ip_address || !store.port || !store.room_open)) {
-                console.log ('rm room code');
-                pushStore ({room_code: null});
+                console.log('rm room code');
+                pushStore({room_code: null});
                 return;
             }
 
@@ -955,30 +973,30 @@ let Menu = observer (() => {
             if (store.room_open && !store.room_code && !store.loading_room_code &&
                     store.ip_address &&
                     store.port) {
-                console.log ('fetch room code');
-                pushStore ({loading_room_code: true});
+                console.log('fetch room code');
+                pushStore({loading_room_code: true});
                 let url = API_BASE + '/rooms';
-                axios (
+                axios(
                         {
                             method: 'post',
                             url: url,
                             data: `ip_address=${store.ip_address}&port=${store.port}`,
                             header: {'content-type': 'application/x-www-form-urlencoded'},
                         },
-                ).then (response => {
-                    pushStore ({room_code: response.data.tag, loading_room_code: false});
-                }).catch (err => {
-                    console.log (err);
-                    pushStore ({loading_room_code: false});
+                ).then(response => {
+                    pushStore({room_code: response.data.tag, loading_room_code: false});
+                }).catch(err => {
+                    console.log(err);
+                    pushStore({loading_room_code: false});
                 });
             }
         });
 
     });
 
-    useEffect (() => {
+    useEffect(() => {
         return () => {
-            pushStore ({room_code: null});
+            pushStore({room_code: null});
         };
     }, [pushStore]);
 
@@ -990,17 +1008,17 @@ let Menu = observer (() => {
     ];
 
     if (store.media_info.Active) {
-        pages.push ({name: 'Player', component: PlayerPage});
+        pages.push({name: 'Player', component: PlayerPage});
 
     }
 
     if (store.build === 'DEVELOPMENT') {
-        pages.push ({name: 'Debug', component: DebugPage});
+        pages.push({name: 'Debug', component: DebugPage});
     }
 
     let SelectedPage;
     if (active > pages.length - 1) {
-        setActive (0);
+        setActive(0);
         SelectedPage = pages[0].component;
     } else {
         SelectedPage = pages[active].component;
@@ -1030,12 +1048,12 @@ let Menu = observer (() => {
 
                     <div className={'h-16'}/>
                     <SettingsList>
-                        {pages.map ((info, i) => {
-                            if (info.name.toLowerCase () === 'join desk' && !joinDeskActive) {
+                        {pages.map((info, i) => {
+                            if (info.name.toLowerCase() === 'join desk' && !joinDeskActive) {
                                 return <ListItem key={info.name}
                                                  inactive={true}>{info.name}</ListItem>;
                             }
-                            if (info.name.toLowerCase () === 'player') {
+                            if (info.name.toLowerCase() === 'player') {
                                 const buttonClass = 'text-white py-4 px-8 hover:bg-gray-800 active:bg-gray-900 hover:text-white rounded cursor-pointer flex flex-wrap content-center border-4 border-green-400';
                                 const buttonClassSelected = 'py-4 px-8 bg-blue-700 text-white rounded cursor-pointer flex flex-wrap content-center border-4 border-green-400';
 
@@ -1043,12 +1061,12 @@ let Menu = observer (() => {
                                         buttonClass={buttonClass}
                                         buttonClassSelected={buttonClassSelected}
                                         key={info.name} handleClick={() => {
-                                    setActive (i);
+                                    setActive(i);
                                 }} selected={active === i}>{info.name}</ListItem>;
 
                             }
                             return <ListItem key={info.name} handleClick={() => {
-                                setActive (i);
+                                setActive(i);
                             }} selected={active === i}>{info.name}</ListItem>;
                         })}
                     </SettingsList>
@@ -1063,10 +1081,10 @@ let Menu = observer (() => {
     );
 });
 
-function ExitButton () {
+function ExitButton() {
 
-    function handleClick () {
-        postCloseMenu ();
+    function handleClick() {
+        postCloseMenu();
     }
 
     let buttonClass = 'rounded h-16 py-4 px-8 bg-red-800 hover:bg-red-700 active:bg-red-600 hover:text-white cursor-pointer flex flex-wrap content-center';
@@ -1080,12 +1098,12 @@ function ExitButton () {
 
 }
 
-function NoMicPage () {
+function NoMicPage() {
 
     const className = 'py-4 px-8 font-bold bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
 
-    function handleClick () {
-        postRequestMicrophone ();
+    function handleClick() {
+        postRequestMicrophone();
     }
 
     return (

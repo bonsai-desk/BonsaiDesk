@@ -31,8 +31,6 @@ function genNavListeners (history) {
 
         if (json.type !== 'nav') return;
 
-        console.log ('asdf');
-
         switch (json.command) {
             case 'push':
                 console.log ('command: nav ' + json.path);

@@ -161,6 +161,9 @@ public class TableBrowserMenu : MonoBehaviour
                         var ts = float.Parse(message.Data);
                         SeekPlayer?.Invoke(this, ts);
                         break;
+                    case "restartVideo":
+                        RestartVideo?.Invoke(this, new EventArgs());
+                        break;
                     case "kickConnectionId":
                         // todo what happens when this fails?
                         var id = JsonConvert.DeserializeObject<int>(message.Data);
@@ -366,6 +369,7 @@ public class TableBrowserMenu : MonoBehaviour
     public event EventHandler PlayVideo;
     public event EventHandler PauseVideo;
     public event EventHandler EjectVideo;
+    public event EventHandler RestartVideo;
     public event EventHandler<float> SeekPlayer;
 
     public event EventHandler<string> BrowseSite;

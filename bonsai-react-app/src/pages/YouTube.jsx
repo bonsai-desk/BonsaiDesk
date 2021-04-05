@@ -3,9 +3,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import {useHistory} from 'react-router-dom';
 
 function setVol () {
-  console.log(document.getElementsByTagName("iframe"))
   document.querySelectorAll('video, audio').forEach(mediaElement => {
-    console.log("hit")
     console.log(mediaElement)
     mediaElement.volume = 0.25
   })
@@ -229,7 +227,9 @@ let Video = (props) => {
       if (json.type !== 'video') {
         return;
       }
-      console.log(event.data);
+      if (json.command !== "setVolume") {
+          console.log(event.data);
+      }
       switch (json.command) {
         case 'play':
           console.log('COMMAND: play');
@@ -259,7 +259,7 @@ let Video = (props) => {
   useEffect(() => {
     console.log('bonsai: add ping interval');
     let pingPlayerTime = setInterval(() => {
-      // todo
+      // todo make this more efficient
       setVol()
       let current_time = 0;
       let duration = 1;
