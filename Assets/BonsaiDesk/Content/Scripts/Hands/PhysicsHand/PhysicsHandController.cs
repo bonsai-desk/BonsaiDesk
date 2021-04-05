@@ -227,9 +227,30 @@ public class PhysicsHandController : MonoBehaviour
 
     private void UpdateVelocity()
     {
+        //velocity
         float velocityMagnitude = _rigidbody.velocity.magnitude;
         Vector3 direction = targetMapper.transform.position - transform.position;
         _rigidbody.velocity = direction.normalized * velocityMagnitude;
+        
+        //angular velocity
+        var delta = targetMapper.transform.rotation * Quaternion.Inverse(_rigidbody.rotation);
+        delta.ToAngleAxis(out float angle, out Vector3 axis);
+        // We get an infinite axis in the event that our rotation is already aligned.
+        // allow instant deceleration to stop rotation (not realistic)
+        if (float.IsInfinity(axis.x))
+        {
+            _rigidbody.angularVelocity = Vector3.zero;
+        }
+        else
+        {
+            if (angle > 180f)
+                angle -= 360f;
+
+            Vector3 targetAngularVelocity = Mathf.Deg2Rad * angle * axis.normalized / Time.deltaTime;
+
+            //angular speed is maintained, but direction is changed to be towards target rotation (not realistic)
+            _rigidbody.angularVelocity = targetAngularVelocity.normalized * _rigidbody.angularVelocity.magnitude;
+        }
     }
 
     public void ResetFingerJoints()
