@@ -36,9 +36,9 @@ public class AutoBrowserController : NetworkBehaviour
     [SyncVar] private float _height;
     [SyncVar] private ScrubData _idealScrub;
     private ContentInfo _serverContentInfo;
+    private bool _serverVideoEnded;
     private float _setVolumeLevelLast;
     [SyncVar] private float _volumeLevel = 1.0f;
-    private bool _serverVideoEnded;
 
     private void Start()
     {
@@ -86,12 +86,14 @@ public class AutoBrowserController : NetworkBehaviour
         togglePause.CmdSetPausedServer -= HandleCmdSetPausedServer;
         TableBrowserMenu.Singleton.VolumeChange -= HandleVolumeChange;
         TableBrowserMenu.Singleton.SeekPlayer -= HandleSeekPlayer;
+        TableBrowserMenu.Singleton.RestartVideo -= HandleRestartVideo;
 
         NetworkManagerGame.ServerAddPlayer += HandleServerAddPlayer;
         NetworkManagerGame.ServerDisconnect += HandleServerDisconnect;
         togglePause.CmdSetPausedServer += HandleCmdSetPausedServer;
         TableBrowserMenu.Singleton.VolumeChange += HandleVolumeChange;
         TableBrowserMenu.Singleton.SeekPlayer += HandleSeekPlayer;
+        TableBrowserMenu.Singleton.RestartVideo += HandleRestartVideo;
 
         if (tabletSpot != null)
         {
@@ -105,10 +107,9 @@ public class AutoBrowserController : NetworkBehaviour
         }
     }
 
-    private void HandleSeekPlayer(object sender, float ts)
+    private void HandleRestartVideo(object sender, EventArgs e)
     {
-        TLog($"Seek player to time stamp {ts}");
-        CmdReadyUp(ts);
+        CmdReadyUp(0);
     }
 
     public override void OnStopServer()
@@ -540,9 +541,16 @@ public class AutoBrowserController : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     public void CmdReadyUp(double timestamp)
     {
-        _idealScrub = ScrubData.PausedAtScrub(timestamp);
-        BeginSync("CmdReadyUp");
-        RpcReadyUp(_idealScrub.CurrentTimeStamp(NetworkTime.time));
+        if (_serverVideoEnded && _serverContentInfo.Active)
+        {
+            LoadVideo(_serverContentInfo.ID, timestamp);
+        }
+        else
+        {
+            _idealScrub = ScrubData.PausedAtScrub(timestamp);
+            BeginSync("CmdReadyUp");
+            RpcReadyUp(_idealScrub.CurrentTimeStamp(NetworkTime.time));
+        }
     }
 
     [Command(ignoreAuthority = true)]
@@ -553,7 +561,7 @@ public class AutoBrowserController : NetworkBehaviour
         _idealScrub = ScrubData.PausedAtScrub(endingTimeStamp);
         //tabletSpot.ServerEjectCurrentTablet();
     }
-    
+
     [Command(ignoreAuthority = true)]
     public void CmdChangeVolumeLevel(float delta)
     {
@@ -576,6 +584,13 @@ public class AutoBrowserController : NetworkBehaviour
     {
         TLog("[Target RPC] ReloadYouTube");
         ReloadYouTube(id, timeStamp, aspect);
+    }
+
+    [Client]
+    private void HandleSeekPlayer(object sender, float ts)
+    {
+        TLog($"Seek player to time stamp {ts}");
+        CmdReadyUp(ts);
     }
 
     [ClientRpc]
