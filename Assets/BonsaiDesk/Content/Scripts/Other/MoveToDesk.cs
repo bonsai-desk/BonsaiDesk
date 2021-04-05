@@ -604,6 +604,13 @@ public class MoveToDesk : MonoBehaviour
 
         InputManager.Hands.Left.PhysicsHandController.SetCapsulesActiveTarget(true);
         InputManager.Hands.Right.PhysicsHandController.SetCapsulesActiveTarget(true);
+
+        var hidePopup = SaveSystem.Instance.BoolPairs.TryGetValue("HidePopup", out var value) && value;
+        if (!hidePopup)
+        {
+            SaveSystem.Instance.BoolPairs["HidePopup"] = true;
+            SaveSystem.Instance.Save();
+        }
     }
 
     private Quaternion AverageQuaternion(Queue<Quaternion> quaternions)
