@@ -35,10 +35,10 @@ public class HandAnimatorController : MonoBehaviour
         var grab = OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger, controller);
 
         var pinch = OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, controller);
-        if (OVRInput.Get(OVRInput.Touch.PrimaryIndexTrigger, controller))
-        {
-            pinch = Mathf.Max(pinch, grab);
-        }
+        // if (OVRInput.Get(OVRInput.Touch.PrimaryIndexTrigger, controller))
+        // {
+        //     pinch = Mathf.Max(pinch, grab);
+        // }
 
         var stylus = 0;
         if (overScreen)
