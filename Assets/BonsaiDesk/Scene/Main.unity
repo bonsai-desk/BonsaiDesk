@@ -9019,6 +9019,7 @@ MonoBehaviour:
   m_InputActionsPerSecond: 10
   m_RepeatDelay: 0.5
   m_ForceModuleActive: 0
+  verbose: 1
   cursorRoot: {x: 0, y: 0, z: 0}
   m_Cursor: {fileID: 1695270410}
   drawcursor: 0

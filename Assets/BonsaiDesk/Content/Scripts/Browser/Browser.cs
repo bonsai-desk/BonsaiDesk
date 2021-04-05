@@ -143,6 +143,9 @@ public class Browser : MonoBehaviour
             case "event":
                 switch (message.Message)
                 {
+                    case "stoppedScrolling":
+                        WebViewPrefab.StopResidualScrolling();
+                        break;
                     case "listenersReady":
                         // todo: for some reason when using a hot reload url
                         // the app posts listeners-ready twice so we just check it here
