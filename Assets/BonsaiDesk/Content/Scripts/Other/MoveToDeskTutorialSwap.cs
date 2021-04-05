@@ -18,10 +18,9 @@ public class MoveToDeskTutorialSwap : MonoBehaviour
 
     private void Start()
     {
-        if (SaveSystem.Instance.BoolPairs.TryGetValue("OrientWithControllers", out var value))
-        {
-            _popupDismissed = value;
-        }
+        var orientWithControllers = SaveSystem.Instance.BoolPairs.TryGetValue("OrientWithControllers", out var value) && value;
+        var hidePopup = SaveSystem.Instance.BoolPairs.TryGetValue("HidePopup", out value) && value;
+        _popupDismissed = orientWithControllers || hidePopup;
     }
 
     private void Update()
@@ -36,6 +35,8 @@ public class MoveToDeskTutorialSwap : MonoBehaviour
                                                   OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.RTouch)))
         {
             _popupDismissed = true;
+            SaveSystem.Instance.BoolPairs["HidePopup"] = true;
+            SaveSystem.Instance.Save();
         }
 
         if (!handTracking && !_popupDismissed)

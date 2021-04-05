@@ -203,7 +203,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
                     hitAutoAuthority = check.GetComponent<AutoAuthority>();
                 }
 
-                if (hitAutoAuthority != null)
+                if (hitAutoAuthority != null && hitAutoAuthority.allowPinchPull && !hitAutoAuthority.InUse)
                 {
                     if (hit.distance < 0.1f)
                         break;

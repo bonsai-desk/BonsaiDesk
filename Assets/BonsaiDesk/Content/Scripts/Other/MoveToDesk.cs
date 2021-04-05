@@ -31,6 +31,8 @@ public class MoveToDesk : MonoBehaviour
     public Transform tableControls;
 
     private bool _oriented;
+    private bool _allowedToOrientWithLeftController;
+    private bool _allowedToOrientWithRightController;
     private float? calculatedCenterEyeAnchor;
 
     private Vector3? calculatedTablePosition;
@@ -287,10 +289,22 @@ public class MoveToDesk : MonoBehaviour
 
             if (!InputManager.Hands.UsingHandTracking)
             {
-                var inputTrigger = OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.LTouch) > 0.9f ||
-                                   OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.RTouch) > 0.9f;
+                var leftTrigger = OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.LTouch) > 0.9f;
+                var rightTrigger = OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.RTouch) > 0.9f;
+                var leftOff = OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.LTouch) < 0.05f;
+                var rightOff = OVRInput.Get(OVRInput.Axis1D.PrimaryIndexTrigger, OVRInput.Controller.RTouch) < 0.05f;
 
-                if (inputTrigger)
+                if (leftOff)
+                {
+                    _allowedToOrientWithLeftController = true;
+                }
+
+                if (rightOff)
+                {
+                    _allowedToOrientWithRightController = true;
+                }
+
+                if (leftTrigger && _allowedToOrientWithLeftController || rightTrigger && _allowedToOrientWithRightController)
                 {
                     calculatedTablePosition = oVRCameraRig.position;
                     calculatedTableRotation = oVRCameraRig.rotation;
@@ -547,6 +561,8 @@ public class MoveToDesk : MonoBehaviour
         var reasonStr = reason.Length > 0 ? reason : "Reason not provided";
         BonsaiLog($"Resetting position: {reasonStr}");
         oriented = false;
+        _allowedToOrientWithLeftController = false;
+        _allowedToOrientWithRightController = false;
         blackOverlay.SetActive(true);
         oVRCameraRig.position = oVRCameraRigStartPosition;
         oVRCameraRig.rotation = oVRCameraRigStartRotation;
@@ -604,6 +620,13 @@ public class MoveToDesk : MonoBehaviour
 
         InputManager.Hands.Left.PhysicsHandController.SetCapsulesActiveTarget(true);
         InputManager.Hands.Right.PhysicsHandController.SetCapsulesActiveTarget(true);
+
+        var hidePopup = SaveSystem.Instance.BoolPairs.TryGetValue("HidePopup", out var value) && value;
+        if (!hidePopup)
+        {
+            SaveSystem.Instance.BoolPairs["HidePopup"] = true;
+            SaveSystem.Instance.Save();
+        }
     }
 
     private Quaternion AverageQuaternion(Queue<Quaternion> quaternions)
