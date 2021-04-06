@@ -345,6 +345,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   canvas: {fileID: 4487893542834171871}
   textMesh: {fileID: 7548246681525763149}
+  img1: {fileID: 3965833872896665840}
+  img2: {fileID: 5087064658648657977}
 --- !u!1 &8754969533529917429
 GameObject:
   m_ObjectHideFlags: 0

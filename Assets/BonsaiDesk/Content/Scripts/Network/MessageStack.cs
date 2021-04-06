@@ -97,13 +97,13 @@ public class MessageStack : MonoBehaviour
         var newMessages = new List<Message>();
         foreach (var message in _messages)
         {
-            if (Time.time - message.TimeAdded < Duration)
+            if (message.MessageCanvas != null)
             {
                 newMessages.Add(message);
-            }
-            else
-            {
-                Destroy(message.MessageCanvas.gameObject);
+                if (Time.time - message.TimeAdded > Duration && !message.MessageCanvas.IsDestructing())
+                {
+                    message.MessageCanvas.SelfDestruct();
+                }
             }
         }
 
