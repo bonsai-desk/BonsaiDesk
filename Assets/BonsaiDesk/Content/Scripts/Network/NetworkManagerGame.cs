@@ -577,6 +577,11 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
         else if (!(HostEndPoint is null))
         {
+            if (mode == NetworkManagerMode.Offline)
+            {
+                StartHost();
+                _lastStartHost = Time.realtimeSinceStartup;
+            }
             // todo this can get stuck if somehow host mode is offline but HostEndPoint is not null
             BonsaiLog("HostEndpoint is not null");
         }
