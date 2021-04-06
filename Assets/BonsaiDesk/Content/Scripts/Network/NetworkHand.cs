@@ -74,6 +74,7 @@ public class NetworkHand : NetworkBehaviour
         else
             physicsHandPrefab = Resources.Load<GameObject>("Right_Hand");
         var hand = Instantiate(physicsHandPrefab);
+        hand.transform.GetChild(1).GetComponent<PhysicsHandController>().SetKinematic();
         var physicsMapper = hand.transform.GetChild(1).GetComponent<OVRHandTransformMapper>();
         physicsMapper.targetObject = transform;
         physicsMapper.capsulesParent = transform;
