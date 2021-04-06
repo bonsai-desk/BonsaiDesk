@@ -473,6 +473,14 @@ public class AutoBrowserController : NetworkBehaviour
         RpcReloadYouTube(_serverContentInfo.ID, timeStamp, _serverContentInfo.Aspect);
     }
 
+    private void HardSeekTo(float timeStamp)
+    {
+        _idealScrub = ScrubData.PausedAtScrub(timeStamp);
+        BeginSync();
+        togglePause.ServerSetPaused(false);
+        RpcReloadYouTube(_serverContentInfo.ID, timeStamp, _serverContentInfo.Aspect);
+    }
+
     [Server]
     private void LoadVideo(string id, double timeStamp)
     {
@@ -543,7 +551,7 @@ public class AutoBrowserController : NetworkBehaviour
     {
         if (_serverVideoEnded && _serverContentInfo.Active)
         {
-            LoadVideo(_serverContentInfo.ID, timestamp);
+            HardSeekTo((float) timestamp);
         }
         else
         {
