@@ -279,7 +279,7 @@ public class MoveToDesk : MonoBehaviour
 
             _tableAlpha = Mathf.MoveTowards(_tableAlpha, 1f, Time.deltaTime * (1f / TableLerpTime));
 
-            tableGhost.gameObject.SetActive(true);
+            tableGhost.gameObject.SetActive(!Mathf.Approximately(_tableAlpha, 0));
             if (InputManager.Hands.UsingHandTracking)
             {
                 tableGhostText.text = "<--- swipe apart --->";
@@ -355,6 +355,8 @@ public class MoveToDesk : MonoBehaviour
         }
         else
         {
+            tableGhost.gameObject.SetActive(!Mathf.Approximately(_tableAlpha, 0));
+            
             UpdateState(0);
 
             _tableAlpha = Mathf.MoveTowards(_tableAlpha, 0f, Time.deltaTime * (1f / TableLerpTime));
@@ -566,6 +568,7 @@ public class MoveToDesk : MonoBehaviour
         blackOverlay.SetActive(true);
         oVRCameraRig.position = oVRCameraRigStartPosition;
         oVRCameraRig.rotation = oVRCameraRigStartRotation;
+        _tableAlpha = 0;
 
         var eyeForward = centerEyeAnchor.forward;
         eyeForward.y = 0;
