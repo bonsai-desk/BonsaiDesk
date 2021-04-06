@@ -201,6 +201,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
                     if (pingTimeout)
                     {
                         BonsaiLog("Ping timeout as client");
+                        MessageStack.Singleton.AddMessage("Internet Disconnected as Client");
                         StopClient();
                     }
 
@@ -213,6 +214,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
                     else if (pingTimeout && Time.realtimeSinceStartup - _unpausedAt > 5.0f)
                     {
                         BonsaiLog("Ping timeout as host");
+                        MessageStack.Singleton.AddMessage("Internet Disconnected as Host");
                         StopHost();
                     }
 
@@ -228,6 +230,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
         if (Time.realtimeSinceStartup - _lastGoodPingReceived < 1.0f)
         {
             BonsaiLog("Got a good ping, disconnecting from LAN");
+            MessageStack.Singleton.AddMessage("Reconnected to the Internet");
             isLANOnly = false;
             StopClient();
         }
@@ -617,7 +620,5 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
     }
 
-    private struct ShouldDisconnectMessage : NetworkMessage
-    {
-    }
+    private struct ShouldDisconnectMessage : NetworkMessage { }
 }
