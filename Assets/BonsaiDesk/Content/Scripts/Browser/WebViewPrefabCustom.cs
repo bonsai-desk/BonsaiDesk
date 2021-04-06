@@ -46,6 +46,7 @@ namespace Vuplex.WebView
     [HelpURL("https://developer.vuplex.com/webview/WebViewPrefab")]
     public class WebViewPrefabCustom : MonoBehaviour
     {
+        public bool verbose;
         /// <summary>
         ///     If you drag a WebViewPrefab.prefab into the scene via the editor,
         ///     you can set this property to make it so that the instance
@@ -708,12 +709,14 @@ namespace Vuplex.WebView
 
         private void InputDetector_BeganDrag(object sender, EventArgs<Vector2> eventArgs)
         {
+            BonsaiLog("InputDetector_BeganDrag");
             _dragThresholdLastFrame = false;
             _previousDragPoint = _convertRatioPointToUnityUnits(_pointerDownRatioPoint);
         }
 
         private void InputDetector_Dragged(object sender, EventArgs<Vector2> eventArgs)
         {
+            BonsaiLog("InputDetector_Dragged");
             // The point is Vector3.zero when the user drags off of the screen.
             if (DragMode == DragMode.Disabled || _webView == null)
             {
@@ -762,6 +765,7 @@ namespace Vuplex.WebView
             {
                 if (dragThresholdReached)
                 {
+                    BonsaiLog("Drag threshold reached so stop click from pending");
                     _clickIsPending = false;
                 }
             }
@@ -771,27 +775,32 @@ namespace Vuplex.WebView
 
         protected virtual void InputDetector_PointerDown(object sender, PointerEventArgs eventArgs)
         {
+            BonsaiLog("InputDetector_PointerDown");
             _pointerIsDown = true;
             _pointerDownRatioPoint = eventArgs.Point;
 
             if (_residualScroll.magnitude != 0)
             {
+                BonsaiLog($"Reset scroll magnitude ({_residualScroll.magnitude}) and return");
                 _residualScroll = Vector2.zero;
                 return;
             }
 
             if (!ClickingEnabled || _webView == null)
             {
+                BonsaiLog($"Return from PointerDown: clicking is enabled ({ClickingEnabled}), webView is null ({_webView == null})");
                 return;
             }
 
             if (_options.clickWithoutStealingFocus)
             {
+                BonsaiLog("Click without stealing focus");
                 _webView.Click(eventArgs.Point, _options.clickWithoutStealingFocus);
                 _pointerIsDown = false;
                 return;
             }
 
+            BonsaiLog("Click is pending");
             var webViewWithPointerDown = _webView as IWithPointerDownAndUp;
             webViewWithPointerDown?.PointerDown(eventArgs.Point, eventArgs.ToPointerOptions());
 
@@ -802,6 +811,7 @@ namespace Vuplex.WebView
 
         private void InputDetector_PointerExited(object sender, EventArgs eventArgs)
         {
+            BonsaiLog("InputDetector_PointerExited");
             if (HoveringEnabled)
             {
                 // Remove the hover state when the pointer exits.
@@ -811,6 +821,7 @@ namespace Vuplex.WebView
 
         private void InputDetector_PointerMoved(object sender, EventArgs<Vector2> eventArgs)
         {
+            //BonsaiLog("InputDetector_PointerMoved");
             // InputDetector_Dragged handles calling MovePointer while dragging.
             if (_pointerIsDown || !HoveringEnabled)
             {
@@ -822,6 +833,7 @@ namespace Vuplex.WebView
 
         protected virtual void InputDetector_PointerUp(object sender, PointerEventArgs eventArgs)
         {
+            BonsaiLog("InputDetector_PointerUp");
             _pointerIsDown = false;
             if (!ClickingEnabled || _webView == null)
             {
@@ -840,6 +852,7 @@ namespace Vuplex.WebView
             {
                 if (!_clickIsPending)
                 {
+                    BonsaiLog("No click is pending so returning now");
                     return;
                 }
 
@@ -847,11 +860,13 @@ namespace Vuplex.WebView
                 // PointerDown() and PointerUp() don't support the preventStealingFocus parameter.
                 if (webViewWithPointerDownAndUp == null || _options.clickWithoutStealingFocus)
                 {
+                    BonsaiLog("WebView Click");
                     // todo this never gets called when for clickWithoutStealingFocus since _clickIsPending is not set for that case
                     _webView.Click(eventArgs.Point, _options.clickWithoutStealingFocus);
                 }
                 else
                 {
+                    BonsaiLog("WebView Pointer Down & Up (Up)");
                     var pointerOptions = eventArgs.ToPointerOptions();
                     //webViewWithPointerDownAndUp.PointerDown(eventArgs.Point, pointerOptions);
                     webViewWithPointerDownAndUp.PointerUp(eventArgs.Point, pointerOptions);
@@ -867,6 +882,7 @@ namespace Vuplex.WebView
 
         private void InputDetector_Scrolled(object sender, ScrolledEventArgs eventArgs)
         {
+            BonsaiLog("InputDetector_Scrolled");
             var scaledScrollDelta = new Vector2(eventArgs.ScrollDelta.x * ScrollingSensitivity, eventArgs.ScrollDelta.y * ScrollingSensitivity);
 
             _scrollIfNeeded(scaledScrollDelta, eventArgs.Point);
@@ -978,5 +994,30 @@ namespace Vuplex.WebView
                 throw new InvalidOperationException("Init() cannot be called on a WebViewPrefab that has already been initialized.");
             }
         }
+
+        public void StopResidualScrolling(string reason = "")
+        {
+            var reasonStr = reason.Length > 0 ? reason : "No reason provided";
+            BonsaiLog($"Stopping scrolling because: {reasonStr}");
+            _residualScroll = Vector2.zero;
+        }
+        
+    private void BonsaiLog(string msg)
+    {
+        if (verbose)
+        {
+            Debug.Log("<color=orange>BonsaiWebView: </color>: " + msg);
+        }
+    }
+
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiWebView: </color>: " + msg);
+    }
+
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiWebView: </color>: " + msg);
+    }
     }
 }

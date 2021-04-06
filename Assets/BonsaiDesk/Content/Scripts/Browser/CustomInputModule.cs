@@ -10,6 +10,7 @@ public class CustomInputModule : StandaloneInputModule
 {
     [Header("Custom Input Module")] public static CustomInputModule Singleton;
 
+    public bool verbose;
     public Vector3 cursorRoot;
     public OVRCursor m_Cursor;
     public bool drawcursor;
@@ -128,6 +129,7 @@ public class CustomInputModule : StandaloneInputModule
             {
                 if (!prevInClickRegion && Click != null)
                 {
+                    BonsaiLog("Click");
                     Click(this, new EventArgs());
                 }
 
@@ -224,19 +226,21 @@ public class CustomInputModule : StandaloneInputModule
 
             if (pressed)
             {
+                BonsaiLog("Pressed");
                 return PointerEventData.FramePressState.Pressed;
             }
 
             if (released)
             {
+                BonsaiLog("Released");
                 return PointerEventData.FramePressState.Released;
             }
 
             return PointerEventData.FramePressState.NotChanged;
         }
 
+        BonsaiLog("Released");
         return PointerEventData.FramePressState.Released;
-        //throw new NotImplementedException();
     }
 
     private bool FingerInBounds(Vector3 fingerInScreen)
@@ -324,5 +328,23 @@ public class CustomInputModule : StandaloneInputModule
     {
         Left,
         Right
+    }
+    
+    private void BonsaiLog(string msg)
+    {
+        if (verbose)
+        {
+            Debug.Log("<color=orange>BonsaiInput: </color>: " + msg);
+        }
+    }
+
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiInput: </color>: " + msg);
+    }
+
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiInput: </color>: " + msg);
     }
 }
