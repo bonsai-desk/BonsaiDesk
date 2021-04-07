@@ -373,6 +373,11 @@ public class AutoBrowserController : NetworkBehaviour
             case "error":
                 Debug.LogError(Tag() + $"Javascript error [{json["error"].Value}]");
                 return;
+            case "playerError":
+                BonsaiLog($"Player Error: {json["code"]}");
+                var code = (int) json["code"];
+                HandlePlayerError(code);
+                break;
             case "stateChange":
                 switch ((string) json["message"])
                 {
@@ -397,6 +402,41 @@ public class AutoBrowserController : NetworkBehaviour
                 CmdUpdateClientPlayerStatus(NetworkClient.connection.identity.netId, _clientPlayerStatus);
                 break;
         }
+    }
+
+    [Command (ignoreAuthority = true)]
+    private void CmdEjectWithError(string text)
+    {
+        if (_serverContentInfo.Active)
+        {
+            RpcAddMessageToStack(text);
+            tabletSpot.ServerEjectCurrentTablet();
+        }
+    }
+    
+    [ClientRpc]
+    private void RpcAddMessageToStack(string text)
+    {
+        MessageStack.Singleton.AddMessage(text);
+    }
+
+    private void HandlePlayerError(int code)
+    {
+        switch (code)
+        {
+            case 2:
+                CmdEjectWithError("Bad YouTube Id");
+                break;
+            case 5:
+                CmdEjectWithError("Can't Be Played in HTML5 Player");
+                break;
+            case 101:
+            case 150:
+                CmdEjectWithError("Can't Be Played in Embedded Player");
+                break;
+            
+        }
+        throw new NotImplementedException();
     }
 
     private void HandleVolumeChange(object _, float delta)
@@ -564,10 +604,8 @@ public class AutoBrowserController : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdHandleVideoEnded(float endingTimeStamp)
     {
-        TLog("Ejecting video because client reported ending");
         _serverVideoEnded = true;
         _idealScrub = ScrubData.PausedAtScrub(endingTimeStamp);
-        //tabletSpot.ServerEjectCurrentTablet();
     }
 
     [Command(ignoreAuthority = true)]
