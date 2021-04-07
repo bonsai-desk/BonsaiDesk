@@ -71,7 +71,7 @@ public class AutoBrowserController : NetworkBehaviour
 
     public override void OnStartServer()
     {
-        TLog("On Start Server");
+        TLog("OnStartServer");
         base.OnStartServer();
 
         _clientsJoinedNetworkTime.Clear();
