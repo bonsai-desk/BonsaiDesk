@@ -241,13 +241,13 @@ public class InputManager : MonoBehaviour
             var leftMenu = Left.PlayerHand.GetIHandTick<MenuHand>();
             if (leftMenu)
             {
-                leftMenu.TurnOffMenu();
+                leftMenu.TurnOffMenus();
             }
 
             var rightMenu = Right.PlayerHand.GetIHandTick<MenuHand>();
             if (rightMenu)
             {
-                rightMenu.TurnOffMenu();
+                rightMenu.TurnOffMenus();
             }
             
             leftControllerModel.SetActive(false);
