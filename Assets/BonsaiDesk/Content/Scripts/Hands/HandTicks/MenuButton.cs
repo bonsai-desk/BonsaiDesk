@@ -9,7 +9,7 @@ public class MenuButton : MonoBehaviour, IHandTick
 {
     public PlayerHand playerHand { get; set; }
 
-    private const float ActivationRadius = 0.02f;
+    private const float ActivationRadius = 0.0275f;
     private const float ActivationTime = 0.75f;
 
     public Transform buttonTransform;
