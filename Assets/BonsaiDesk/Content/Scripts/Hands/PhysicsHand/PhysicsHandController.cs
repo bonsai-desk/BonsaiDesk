@@ -19,8 +19,6 @@ public class PhysicsHandController : MonoBehaviour
     public Transform[] fingerTargets;
 
     public Vector3 jointOffset = new Vector3(0.035f, 0, 0);
-    private Vector3 _initialJointOffset;
-    public Vector3 InitialJointOffset => _initialJointOffset;
 
     private bool _initialized = false;
     private ConfigurableJoint _joint;
@@ -39,6 +37,8 @@ public class PhysicsHandController : MonoBehaviour
 
     private float _handScale = 1f;
 
+    private bool _isKinematic = false;
+
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
@@ -50,6 +50,36 @@ public class PhysicsHandController : MonoBehaviour
     {
         if (!_initialized)
             return;
+
+        if (_isKinematic)
+        {
+            TrySetCapsulesActiveToTarget();
+
+            _rigidbody.MovePosition(targetMapper.transform.position);
+            _rigidbody.MoveRotation(targetMapper.transform.rotation);
+
+            for (int i = 0; i < fingerJointBodies.Length; i++)
+            {
+                var body = fingerJointBodies[i];
+                var target = fingerTargets[i];
+
+                //if thumb or pinky
+                if (i == 0 || i == 12)
+                {
+                    // body.MoveRotation(target.parent.localRotation * target.localRotation);
+                    body.transform.localRotation = target.parent.localRotation * target.localRotation;
+                }
+                else
+                {
+                    body.transform.localRotation = target.localRotation;
+                    // body.MovePosition(body.transform.position);
+                    // body.MoveRotation(target.parent.localRotation * target.localRotation);
+                    // body.transform.position = body.transform.position;
+                }
+            }
+
+            return;
+        }
 
         if (PhysicsNaN())
         {
@@ -110,6 +140,23 @@ public class PhysicsHandController : MonoBehaviour
                float.IsNaN(t.rotation.z) || float.IsNaN(t.rotation.w);
     }
 
+    public void SetKinematic()
+    {
+        _isKinematic = true;
+
+        _rigidbody.isKinematic = true;
+        for (int i = 0; i < fingerJointBodies.Length; i++)
+        {
+            fingerJointBodies[i].isKinematic = true;
+        }
+
+        Destroy(_joint);
+        for (int i = 0; i < fingerJoints.Length; i++)
+        {
+            Destroy(fingerJoints[i]);
+        }
+    }
+
     public void SetHandScale(float scale)
     {
         if (Mathf.Approximately(_handScale, scale))
@@ -122,6 +169,11 @@ public class PhysicsHandController : MonoBehaviour
         var localScale = new Vector3(scale, scale, scale);
         transform.localScale = localScale;
         transform.parent.GetChild(1).localScale = localScale;
+
+        if (_isKinematic)
+        {
+            return;
+        }
 
         Joint.anchor = jointOffset * (1f / scale);
 
@@ -231,7 +283,7 @@ public class PhysicsHandController : MonoBehaviour
         float velocityMagnitude = _rigidbody.velocity.magnitude;
         Vector3 direction = targetMapper.transform.position - transform.position;
         _rigidbody.velocity = direction.normalized * velocityMagnitude;
-        
+
         //angular velocity
         var delta = targetMapper.transform.rotation * Quaternion.Inverse(_rigidbody.rotation);
         delta.ToAngleAxis(out float angle, out Vector3 axis);
@@ -255,6 +307,11 @@ public class PhysicsHandController : MonoBehaviour
 
     public void ResetFingerJoints()
     {
+        if (_isKinematic)
+        {
+            return;
+        }
+
         ResetTransform(_rigidbody, targetMapper.transform.position, targetMapper.transform.rotation, false);
         for (int i = 0; i < fingerJoints.Length; i++)
         {
@@ -340,8 +397,6 @@ public class PhysicsHandController : MonoBehaviour
         if (_initialized)
             return;
         _initialized = true;
-
-        _initialJointOffset = jointOffset;
 
         IgnoreCollisions();
         SetupJoint();
