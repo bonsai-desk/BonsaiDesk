@@ -93,7 +93,7 @@ const Boot = observer (() => {
                     <ul>
                         <li>
                             <Link
-                                    to={'/youtube_test/qEfPBt9dU60/19.02890180001912?x=480&y=360'}>youtube_test
+                                    to={'/youtube_test/Mr0l9iZx4no/19.02890180001912?x=480&y=360'}>youtube_test
                                 video</Link>
                         </li>
                         <li>
