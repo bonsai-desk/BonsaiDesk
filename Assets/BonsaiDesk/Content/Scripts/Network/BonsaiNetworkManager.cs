@@ -411,7 +411,6 @@ namespace NobleConnect.Mirror
             base.StopClient();
             if (authenticator != null)
             {
-                Debug.Log("[xx] rm cliauthlist");
                 authenticator.OnClientAuthenticated.RemoveListener(onClientAuthenticated);
             }
 

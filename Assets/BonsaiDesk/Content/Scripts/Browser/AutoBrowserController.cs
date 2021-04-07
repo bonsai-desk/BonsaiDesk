@@ -81,14 +81,14 @@ public class AutoBrowserController : NetworkBehaviour
         _serverContentInfo = new ContentInfo(false, "", new Vector2(1, 1));
         _contentActive = false;
 
-        NetworkManagerGame.ServerAddPlayer -= HandleServerAddPlayer;
+        NetworkManagerGame.Singleton.ServerAddPlayer -= HandleServerAddPlayer;
         NetworkManagerGame.ServerDisconnect -= HandleServerDisconnect;
         togglePause.CmdSetPausedServer -= HandleCmdSetPausedServer;
         TableBrowserMenu.Singleton.VolumeChange -= HandleVolumeChange;
         TableBrowserMenu.Singleton.SeekPlayer -= HandleSeekPlayer;
         TableBrowserMenu.Singleton.RestartVideo -= HandleRestartVideo;
 
-        NetworkManagerGame.ServerAddPlayer += HandleServerAddPlayer;
+        NetworkManagerGame.Singleton.ServerAddPlayer += HandleServerAddPlayer;
         NetworkManagerGame.ServerDisconnect += HandleServerDisconnect;
         togglePause.CmdSetPausedServer += HandleCmdSetPausedServer;
         TableBrowserMenu.Singleton.VolumeChange += HandleVolumeChange;
@@ -149,16 +149,16 @@ public class AutoBrowserController : NetworkBehaviour
     }
 
     [Server]
-    private void HandleServerAddPlayer(object _, NetworkConnection newConn)
+    private void HandleServerAddPlayer(NetworkConnection networkConnection, bool isLanOnly)
     {
-        var newId = newConn.identity.netId;
+        var newId = networkConnection.identity.netId;
         TLog($"AutoBrowserController add player [{newId}]");
         _clientsJoinedNetworkTime.Add(newId, NetworkTime.time);
         if (_serverContentInfo.Active)
         {
             BeginSync("new player joined");
             var timeStamp = _idealScrub.CurrentTimeStamp(NetworkTime.time);
-            TargetReloadYoutube(newConn, _serverContentInfo.ID, timeStamp, _serverContentInfo.Aspect);
+            TargetReloadYoutube(networkConnection, _serverContentInfo.ID, timeStamp, _serverContentInfo.Aspect);
             foreach (var conn in NetworkServer.connections.Values)
             {
                 if (conn.identity.netId != newId)

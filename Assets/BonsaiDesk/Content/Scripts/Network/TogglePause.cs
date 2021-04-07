@@ -285,8 +285,6 @@ public class TogglePause : NetworkBehaviour
 
         updateIcons(paused);
 
-        //throw new NotImplementedException("[Bonsai] ServerSetPaused");
-
         //TODO should this event fire?
         // PauseChangedServer?.Invoke(paused);
     }
