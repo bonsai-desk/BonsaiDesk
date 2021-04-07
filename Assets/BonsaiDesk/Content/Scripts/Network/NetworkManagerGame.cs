@@ -7,6 +7,7 @@ using NobleConnect.Mirror;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.XR.Management;
+using Vuplex.WebView;
 
 // this is a modified version of NobleNetworkManager
 // this version cleans up AddListener properly
@@ -30,11 +31,16 @@ public class NetworkManagerGame : BonsaiNetworkManager
     private const float PingInternetTimeoutBeforeDisconnect = 5.0f;
 
     public static NetworkManagerGame Singleton;
-    public static EventHandler<NetworkConnection> ServerAddPlayer;
+
+    public delegate void ServerAddPlayerHandler(NetworkConnection conn, bool isLanOnly);
+    public event ServerAddPlayerHandler ServerAddPlayer;
+    
     public static EventHandler<NetworkConnection> ServerDisconnect;
     public static EventHandler ServerPrepared;
     public static EventHandler<NetworkConnection> ClientConnect;
     public static EventHandler<NetworkConnection> ClientDisconnect;
+    public static EventHandler InternetTimeout;
+    public static EventHandler InternetReconnect;
 
     [HideInInspector] public bool roomOpen;
     public bool serverOnlyIfEditor;
@@ -200,9 +206,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
                 case NetworkManagerMode.ClientOnly:
                     if (pingTimeout)
                     {
-                        BonsaiLog("Ping timeout as client");
-                        MessageStack.Singleton.AddMessage("Internet Disconnected as Client");
-                        StopClient();
+                        HandleInternetTimeout(mode);
                     }
 
                     break;
@@ -213,9 +217,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
                     }
                     else if (pingTimeout && Time.realtimeSinceStartup - _unpausedAt > 5.0f)
                     {
-                        BonsaiLog("Ping timeout as host");
-                        MessageStack.Singleton.AddMessage("Internet Disconnected as Host");
-                        StopHost();
+                        HandleInternetTimeout(mode);
                     }
 
                     break;
@@ -225,11 +227,34 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
     }
 
+    private void HandleInternetTimeout(NetworkManagerMode netMode)
+    {
+        BonsaiLog($"Ping timeout as {netMode}");
+
+        InternetTimeout?.Invoke(this, new EventArgs());
+
+        switch (netMode)
+        {
+            case NetworkManagerMode.Host:
+                MessageStack.Singleton.AddMessage("Internet Disconnected: Closing Room");
+                StopHost();
+                break;
+            case NetworkManagerMode.ClientOnly:
+                MessageStack.Singleton.AddMessage("Internet Disconnected: Leaving Room");
+                StopClient();
+                break;
+            default:
+                BonsaiLogError($"Internet timeout not handled for {netMode}");
+                break;
+        }
+    }
+
     private void StopClientIfGoodPing()
     {
         if (Time.realtimeSinceStartup - _lastGoodPingReceived < 1.0f)
         {
             BonsaiLog("Got a good ping, disconnecting from LAN");
+            InternetReconnect?.Invoke(this, new EventArgs());
             MessageStack.Singleton.AddMessage("Reconnected to the Internet");
             isLANOnly = false;
             StopClient();
@@ -344,7 +369,7 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
         SpawnPlayer(conn, openSpot);
 
-        ServerAddPlayer?.Invoke(this, conn);
+        ServerAddPlayer?.Invoke(conn, isLANOnly);
         InfoChange?.Invoke(this, new EventArgs());
     }
 
@@ -577,6 +602,12 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
         else if (!(HostEndPoint is null))
         {
+            if (mode == NetworkManagerMode.Offline)
+            {
+                StartHost();
+                _lastStartHost = Time.realtimeSinceStartup;
+            }
+
             // todo this can get stuck if somehow host mode is offline but HostEndPoint is not null
             BonsaiLog("HostEndpoint is not null");
         }

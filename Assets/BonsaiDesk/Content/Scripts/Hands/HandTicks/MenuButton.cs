@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using OVR;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -18,6 +19,9 @@ public class MenuButton : MonoBehaviour, IHandTick
     private float _activeTimer = 0;
     private bool _activated = false;
 
+    private int emitterId = -1;
+    public SoundFXRef tickSound;
+
     public void Tick()
     {
         var fingerTouchingButton = false;
@@ -33,10 +37,21 @@ public class MenuButton : MonoBehaviour, IHandTick
 
         if (fingerTouchingButton)
         {
+            if (emitterId == -1)
+            {
+                emitterId = tickSound.PlaySoundAt(buttonTransform.position);
+                AudioManager.AttachSoundToParent(emitterId, buttonTransform);
+            }
             _activeTimer += Time.deltaTime;
         }
         else
         {
+            if (emitterId != -1)
+            {
+                AudioManager.StopSound(emitterId, false);
+                emitterId = -1;
+            }
+            
             _activeTimer = 0;
             _activated = false;
         }

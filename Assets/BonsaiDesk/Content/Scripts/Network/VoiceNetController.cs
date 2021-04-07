@@ -9,9 +9,9 @@ public class VoiceNetController : NetworkBehaviour
 
     public override void OnStartServer()
     {
-        NetworkManagerGame.ServerAddPlayer -= HandleServerAddPlayer;
+        NetworkManagerGame.Singleton.ServerAddPlayer -= HandleServerAddPlayer;
 
-        NetworkManagerGame.ServerAddPlayer += HandleServerAddPlayer;
+        NetworkManagerGame.Singleton.ServerAddPlayer += HandleServerAddPlayer;
 
         _lobbyChannelName = Guid.NewGuid().ToString();
 
@@ -19,9 +19,16 @@ public class VoiceNetController : NetworkBehaviour
     }
 
     [Server]
-    private void HandleServerAddPlayer(object _, NetworkConnection newConn)
+    private void HandleServerAddPlayer(NetworkConnection conn, bool isLanOnly)
     {
-        TargetJoinVoice(newConn, _lobbyChannelName);
+        if (!isLanOnly)
+        {
+            TargetJoinVoice(conn, _lobbyChannelName);
+        }
+        else
+        {
+            BonsaiLog("Not joining voice channel since isLanOnly");
+        }
     }
 
     [TargetRpc]

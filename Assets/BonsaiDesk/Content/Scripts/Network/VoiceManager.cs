@@ -25,9 +25,12 @@ public class VoiceManager : MonoBehaviour
     [SerializeField] private string _tokenKey = "GET VALUE FROM VIVOX DEVELOPER PORTAL";
     private readonly TimeSpan _tokenExpiration = TimeSpan.FromSeconds(90);
     private AccountId _accountId;
+    private Coroutine _backoffLoginRoutine;
     private Client _client = new Client();
+    private readonly string _displayName = "John Doe";
     private bool _hasFocus = true;
     private Coroutine _joinChannelRoutine;
+    private int _loginAttempts;
 
     private float _nextPosUpdate;
     private IChannelSession _positionalChannelSession;
@@ -58,24 +61,30 @@ public class VoiceManager : MonoBehaviour
         {
             _client.Uninitialize();
             _client.Initialize();
-            Login("displayName");
+            Login(_displayName);
         }
+
+        NetworkManagerGame.InternetTimeout += HandleInternetTimeout;
+        NetworkManagerGame.InternetReconnect += HandleInternetReconnect;
     }
 
     // Update is called once per frame
     private void Update()
     {
-        HandleMuteUpdate();
-
-        if (Time.realtimeSinceStartup > _nextPosUpdate)
+        if (LoginState == LoginState.LoggedIn)
         {
-            _nextPosUpdate += 0.1f;
-            if (!(_positionalChannelSession is null) && _positionalChannelSession.AudioState == ConnectionState.Connected)
+            HandleMuteUpdate();
+
+            if (Time.realtimeSinceStartup > _nextPosUpdate)
             {
-                var position = headTransform.position;
-                var forward = headTransform.forward;
-                var up = headTransform.up;
-                _positionalChannelSession?.Set3DPosition(position, position, forward, up);
+                _nextPosUpdate += 0.1f;
+                if (!(_positionalChannelSession is null) && _positionalChannelSession.AudioState == ConnectionState.Connected)
+                {
+                    var position = headTransform.position;
+                    var forward = headTransform.forward;
+                    var up = headTransform.up;
+                    _positionalChannelSession?.Set3DPosition(position, position, forward, up);
+                }
             }
         }
     }
@@ -94,7 +103,7 @@ public class VoiceManager : MonoBehaviour
             _client.Uninitialize();
             _client = new Client();
             _client.Initialize();
-            Login("displayName");
+            Login(_displayName);
         }
         else
         {
@@ -111,12 +120,43 @@ public class VoiceManager : MonoBehaviour
 
     public void OnApplicationQuit()
     {
+        UninitializeClient();
+    }
+
+    private void UninitializeClient()
+    {
+        RemovePositionalHandler();
         if (_client != null)
         {
             BonsaiLog("Uninitializing Vivox client.");
             _client.Uninitialize();
             _client = null;
+            LoginState = LoginState.LoggedOut;
         }
+    }
+
+    private void HandleInternetReconnect(object sender, EventArgs e)
+    {
+        BonsaiLog("Re-initialize and login");
+        if (_client == null)
+        {
+            _client = new Client();
+        }
+
+        if (!_client.Initialized)
+        {
+            _client.Initialize();
+            Login(_displayName);
+        }
+        else
+        {
+            BonsaiLogError("Tried to initialize on reconnect when client is already initialized");
+        }
+    }
+
+    private void HandleInternetTimeout(object sender, EventArgs e)
+    {
+        UninitializeClient();
     }
 
     public void DisconnectAllChannels()
@@ -135,12 +175,8 @@ public class VoiceManager : MonoBehaviour
             StopCoroutine(_joinChannelRoutine);
             _joinChannelRoutine = null;
         }
-
-        if (!(_positionalChannelSession is null))
-        {
-            BonsaiLog($"Removing positional channel handler for ({_positionalChannelSession.Channel.Name})");
-            _positionalChannelSession = null;
-        }
+        
+        RemovePositionalHandler();
 
         if (ActiveChannels?.Count > 0)
         {
@@ -148,37 +184,17 @@ public class VoiceManager : MonoBehaviour
             {
                 BonsaiLog($"Disconnect ({channelSession.Channel.Name})");
                 channelSession.Disconnect();
+                LoginSession.DeleteChannelSession(channelSession.Channel);
             }
         }
     }
 
-    private void DisconnectFromChannel(string oldName)
+    private void RemovePositionalHandler()
     {
-        if (oldName != "") // time to disconnect from old channel
+        if (!(_positionalChannelSession is null))
         {
-            // stop any routines to join a channel
-            if (!(_joinChannelRoutine is null))
-            {
-                BonsaiLog("Stopping join channel coroutine in progress");
-                StopCoroutine(_joinChannelRoutine);
-                _joinChannelRoutine = null;
-            }
-
-            // disconnect from oldName channel
-            foreach (var channelSession in ActiveChannels)
-            {
-                if (channelSession.Channel.Name == oldName)
-                {
-                    if (_positionalChannelSession.Channel.Name == channelSession.Channel.Name)
-                    {
-                        BonsaiLog($"Removing positional channel handler for ({_positionalChannelSession.Channel.Name})");
-                        _positionalChannelSession = null;
-                    }
-
-                    BonsaiLog($"Disconnecting from ({oldName})");
-                    channelSession?.Disconnect();
-                }
-            }
+            BonsaiLog($"Removing positional channel handler for ({_positionalChannelSession.Channel.Name})");
+            _positionalChannelSession = null;
         }
     }
 
@@ -262,6 +278,12 @@ public class VoiceManager : MonoBehaviour
 
     private void Login(string displayName)
     {
+        if (_backoffLoginRoutine != null)
+        {
+            StopCoroutine(_backoffLoginRoutine);
+            _backoffLoginRoutine = null;
+        }
+
         BonsaiLog("Begin login");
         var uniqueId = Guid.NewGuid().ToString();
         _accountId = new AccountId(_tokenIssuer, uniqueId, _domain, displayName);
@@ -273,14 +295,31 @@ public class VoiceManager : MonoBehaviour
             {
                 BonsaiLog("End login");
                 LoginSession.EndLogin(ar);
+                _loginAttempts = 0;
             }
             catch (Exception e)
             {
-                // todo handle error
-                BonsaiLogError(nameof(e));
+                BonsaiLogError(e.Message);
                 LoginSession.PropertyChanged -= OnLoginSessionPropertyChanged;
+                _loginAttempts += 1;
+                _backoffLoginRoutine = StartCoroutine(BackoffLogin(_loginAttempts));
             }
         });
+    }
+
+    private IEnumerator BackoffLogin(int attemptNumber)
+    {
+        if (attemptNumber == 4)
+        {
+            BonsaiLogError("Error logging into Vivox after 3 attempts");
+            MessageStack.Singleton.AddMessage("Problem With Voice Chat Service");
+        }
+        else
+        {
+            yield return new WaitForSeconds(attemptNumber * 2);
+            BonsaiLog($"Login retry # {attemptNumber}");
+            Login(_displayName);
+        }
     }
 
     private void Logout()
@@ -292,6 +331,7 @@ public class VoiceManager : MonoBehaviour
             OnUserLoggedOutEvent?.Invoke();
             LoginSession.PropertyChanged -= OnLoginSessionPropertyChanged;
             LoginSession.Logout();
+            LoginState = LoginState.LoggedOut;
         }
     }
 
@@ -451,26 +491,6 @@ public class VoiceManager : MonoBehaviour
     private void BonsaiLogError(string msg)
     {
         Debug.LogError("<color=green>BonsaiVoice: </color>: " + msg);
-    }
-
-    private void LogMicrophoneDevices()
-    {
-        BonsaiLog("Connected to voice server and logged in.");
-        BonsaiLog($"SystemDevice: {_client.AudioInputDevices.SystemDevice.Name}");
-        BonsaiLog($"ActiveDevice: {_client.AudioInputDevices.ActiveDevice.Name}");
-        BonsaiLog($"EffectiveDevice: {_client.AudioInputDevices.EffectiveDevice.Name}");
-        BonsaiLog($"Logging ({Microphone.devices.Length}) Microphone.devices now...");
-        foreach (var device in Microphone.devices)
-        {
-            BonsaiLog($"Microphone Name: {device}");
-        }
-
-        BonsaiLog($"Logging ({_client.AudioInputDevices.AvailableDevices.Count}) Vivox client available devices now...");
-        var devices = _client.AudioInputDevices.AvailableDevices;
-        foreach (var entry in devices)
-        {
-            BonsaiLog($"Device {entry.Key} {devices[entry.Key].Name}");
-        }
     }
 
     private void HandleMuteUpdate()
