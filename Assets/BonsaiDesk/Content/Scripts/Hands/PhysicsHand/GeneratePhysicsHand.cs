@@ -106,7 +106,7 @@ public class GeneratePhysicsHand : MonoBehaviour
         var rb = go.AddComponent<Rigidbody>();
 
         rb.useGravity = false;
-        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
         rb.mass = 0.1f;
         rb.angularDrag = 0f;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
@@ -163,7 +163,7 @@ public class GeneratePhysicsHand : MonoBehaviour
         rb.drag = 10f;
         rb.useGravity = false;
         rb.mass = 1f;
-        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         bodiesToReset.Enqueue(rb);
 
