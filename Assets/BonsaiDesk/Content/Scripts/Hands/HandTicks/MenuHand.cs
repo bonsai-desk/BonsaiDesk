@@ -9,14 +9,17 @@ public class MenuHand : MonoBehaviour, IHandTick
     public GameObject menuPrefab;
     public AngleToObject angleToHead;
     public TableBrowserParent tableBrowserParent;
+    public List<GameObject> menuObjects;
 
     private bool _isInit = false;
-    private GameObject menuObject;
 
     private void Init()
     {
-        menuObject = Instantiate(menuPrefab, transform);
-        menuObject.SetActive(false);
+        if (menuPrefab)
+        {
+            menuObjects.Add(Instantiate(menuPrefab, transform));
+        }
+        SetMenuState(false);
     }
 
     public void Tick()
@@ -31,11 +34,20 @@ public class MenuHand : MonoBehaviour, IHandTick
         var menuOpen = tableBrowserParent && !tableBrowserParent.sleeped;
         var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
         var oriented = MoveToDesk.Singleton.oriented;
-        menuObject.SetActive(angleBelowThreshold && playerHand.HandComponents.TrackingRecently && !menuOpen && playing && oriented);
+        var active = angleBelowThreshold && playerHand.HandComponents.TrackingRecently && !menuOpen && playing && oriented;
+        SetMenuState(active);
     }
 
-    public void TurnOffMenu()
+    public void TurnOffMenus()
     {
-        menuObject.SetActive(false);
+        SetMenuState(false);
+    }
+
+    private void SetMenuState(bool active)
+    {
+        for (int i = 0; i < menuObjects.Count; i++)
+        {
+            menuObjects[i].SetActive(active);
+        }
     }
 }
