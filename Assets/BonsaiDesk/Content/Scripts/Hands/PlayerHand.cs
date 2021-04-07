@@ -32,6 +32,7 @@ public class PlayerHand : MonoBehaviour
         IndexPinching,
         IndexTargetPinching,
         Fist,
+        StrongFist,
         FlatFist,
         WeakFist,
         WeakFlatFist,
@@ -175,6 +176,7 @@ public class PlayerHand : MonoBehaviour
         UpdateGesture(Gesture.IndexPinching, IndexPinching());
         UpdateGesture(Gesture.IndexTargetPinching, IndexTargetPinching());
         UpdateGesture(Gesture.Fist, fistStrength > 0.7f);
+        UpdateGesture(Gesture.StrongFist, fistStrength > 0.9f);
         UpdateGesture(Gesture.FlatFist, flatFistStrength > 0.7f);
         UpdateGesture(Gesture.WeakFist, fistStrength > 0.5f);
         UpdateGesture(Gesture.WeakFlatFist, flatFistStrength > 0.5f);
