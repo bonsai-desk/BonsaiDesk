@@ -7276,6 +7276,75 @@ MonoBehaviour:
         invSquareFalloff: {x: 1, y: 25}
       soundClips:
       - {fileID: 8300000, guid: 6d511a2947f977845a551a4b2b7ca0ea, type: 3}
+      visibilityToggle: 0
+    - name: returnToVoid
+      playback: 0
+      volume: 1
+      pitchVariance: {x: 1, y: 1}
+      falloffDistance: {x: 1, y: 25}
+      falloffCurve: 1
+      volumeFalloffCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      reverbZoneMix:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      spread: 0
+      pctChanceToPlay: 1
+      priority: 0
+      delay: {x: 0, y: 0}
+      looping: 0
+      ospProps:
+        enableSpatialization: 1
+        useFastOverride: 0
+        gain: 0
+        enableInvSquare: 0
+        volumetric: 0
+        invSquareFalloff: {x: 1, y: 25}
+      soundClips:
+      - {fileID: 8300000, guid: 80f6f07b995ba2b4d9b7e56335789be6, type: 3}
       visibilityToggle: 1
     mixerGroup: {fileID: 24300001, guid: 1dd706bb85d8aef4e83a6229dbd62c36, type: 2}
     maxPlayingSounds: 0
@@ -8446,6 +8515,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  tickSound:
+    soundFXName: returnToVoid
 --- !u!1 &632686398
 GameObject:
   m_ObjectHideFlags: 0
@@ -10574,6 +10645,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  tickSound:
+    soundFXName: returnToVoid
 --- !u!1 &952936015
 GameObject:
   m_ObjectHideFlags: 0
