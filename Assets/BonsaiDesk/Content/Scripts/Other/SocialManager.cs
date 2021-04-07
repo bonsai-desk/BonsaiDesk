@@ -23,8 +23,8 @@ public class SocialManager : NetworkBehaviour
             Singleton = this;
         }
 
-        NetworkManagerGame.ServerAddPlayer -= HandleServerAddPlayer;
-        NetworkManagerGame.ServerAddPlayer += HandleServerAddPlayer;
+        NetworkManagerGame.Singleton.ServerAddPlayer -= HandleServerAddPlayer;
+        NetworkManagerGame.Singleton.ServerAddPlayer += HandleServerAddPlayer;
 
         Core.AsyncInitialize().OnComplete(InitCallback);
     }
@@ -115,9 +115,9 @@ public class SocialManager : NetworkBehaviour
         BonsaiLog($"Received user info (id={id}) ({user.DisplayName})");
     }
 
-    private void HandleServerAddPlayer(object _, NetworkConnection conn)
+    private void HandleServerAddPlayer(NetworkConnection networkConnection, bool isLanOnly)
     {
-        TargetReportUserInfo(conn);
+        TargetReportUserInfo(networkConnection);
     }
 
     private void BonsaiLog(string msg)
