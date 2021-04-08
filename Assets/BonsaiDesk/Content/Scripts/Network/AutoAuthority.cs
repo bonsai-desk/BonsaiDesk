@@ -24,7 +24,7 @@ public class AutoAuthority : NetworkBehaviour
     private int _lastSetNewOwnerFrame;
 
     private bool _visualizePinchPull = false;
-    private Material _cachedMaterial;
+    public Material cachedMaterial;
     private int _colorPropertyId;
     private int _colorId = 0;
 
@@ -125,7 +125,7 @@ public class AutoAuthority : NetworkBehaviour
 
     public void SetCachedMaterial(Material mat)
     {
-        _cachedMaterial = mat;
+        cachedMaterial = mat;
     }
 
     private void UpdateColor()
@@ -142,13 +142,13 @@ public class AutoAuthority : NetworkBehaviour
         else if (shouldVisualizeAuthority)
             newColorId = 2;
 
-        if (_cachedMaterial == null)
-            _cachedMaterial = meshRenderer.material;
+        if (cachedMaterial == null)
+            cachedMaterial = meshRenderer.material;
 
         if (newColorId != _colorId)
         {
             _colorId = newColorId;
-            _cachedMaterial.SetColor(_colorPropertyId, _colors[_colorId]);
+            cachedMaterial.SetColor(_colorPropertyId, _colors[_colorId]);
         }
     }
 
@@ -336,5 +336,10 @@ public class AutoAuthority : NetworkBehaviour
     private void OnCollisionStay(Collision collision)
     {
         HandleRecursiveAuthority(collision);
+    }
+
+    private void OnDestroy()
+    {
+        Destroy(cachedMaterial);
     }
 }

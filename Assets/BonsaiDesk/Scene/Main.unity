@@ -10194,6 +10194,7 @@ MonoBehaviour:
   isKinematic: 0
   allowPinchPull: 0
   meshRenderer: {fileID: 0}
+  cachedMaterial: {fileID: 0}
 --- !u!114 &878527638
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20342,6 +20343,85 @@ Transform:
   m_Father: {fileID: 9034684193899926346}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &3343159806329872557
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3343159806455607841, guid: ac8f9b523d182b64ebab55c4c9898c0a,
+        type: 3}
+      propertyPath: sceneId
+      value: 1414282327
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343159806455607844, guid: ac8f9b523d182b64ebab55c4c9898c0a,
+        type: 3}
+      propertyPath: m_Name
+      value: VideoCube
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343159806455607868, guid: ac8f9b523d182b64ebab55c4c9898c0a,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 22
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343159806455607868, guid: ac8f9b523d182b64ebab55c4c9898c0a,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.191
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343159806455607868, guid: ac8f9b523d182b64ebab55c4c9898c0a,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.84509826
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343159806455607868, guid: ac8f9b523d182b64ebab55c4c9898c0a,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.011
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343159806455607868, guid: ac8f9b523d182b64ebab55c4c9898c0a,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343159806455607868, guid: ac8f9b523d182b64ebab55c4c9898c0a,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343159806455607868, guid: ac8f9b523d182b64ebab55c4c9898c0a,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343159806455607868, guid: ac8f9b523d182b64ebab55c4c9898c0a,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343159806455607868, guid: ac8f9b523d182b64ebab55c4c9898c0a,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343159806455607868, guid: ac8f9b523d182b64ebab55c4c9898c0a,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343159806455607868, guid: ac8f9b523d182b64ebab55c4c9898c0a,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3343159806455607871, guid: ac8f9b523d182b64ebab55c4c9898c0a,
+        type: 3}
+      propertyPath: videoId
+      value: 2vH1ZIs24As
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ac8f9b523d182b64ebab55c4c9898c0a, type: 3}
 --- !u!1 &5244714330615957811
 GameObject:
   m_ObjectHideFlags: 0
