@@ -4,16 +4,18 @@ using System.Collections.Generic;
 using System.Linq;
 using Mirror;
 using NobleConnect.Mirror;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.XR.Management;
-using Vuplex.WebView;
 
 // this is a modified version of NobleNetworkManager
 // this version cleans up AddListener properly
 
 public class NetworkManagerGame : BonsaiNetworkManager
 {
+    public delegate void ServerAddPlayerHandler(NetworkConnection conn, bool isLanOnly);
+
     public enum ConnectionState
     {
         RelayError,
@@ -24,7 +26,6 @@ public class NetworkManagerGame : BonsaiNetworkManager
     }
 
     private const double StartHostCooldown = 0.5f;
-
     private const float HardKickDelay = 0.5f;
     private const float PingInternetEvery = 2.0f;
     private const int PingInternetRequestTimeout = 4;
@@ -32,9 +33,6 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public static NetworkManagerGame Singleton;
 
-    public delegate void ServerAddPlayerHandler(NetworkConnection conn, bool isLanOnly);
-    public event ServerAddPlayerHandler ServerAddPlayer;
-    
     public static EventHandler<NetworkConnection> ServerDisconnect;
     public static EventHandler ServerPrepared;
     public static EventHandler<NetworkConnection> ClientConnect;
@@ -59,6 +57,8 @@ public class NetworkManagerGame : BonsaiNetworkManager
     private float _lastStartHost = Mathf.NegativeInfinity;
 
     private bool _roomJoinInProgress;
+
+    private int _startHostAttempts;
 
     private float _unpausedAt = Mathf.NegativeInfinity;
 
@@ -97,6 +97,10 @@ public class NetworkManagerGame : BonsaiNetworkManager
     {
         base.Start();
 
+    #if UNITY_EDITOR
+        EditorApplication.pauseStateChanged += HandleEditorPause;
+    #endif
+
         // todo make these into EventHandler
         TableBrowserMenu.JoinRoom += HandleJoinRoom;
         TableBrowserMenu.LeaveRoom += HandleLeaveRoom;
@@ -119,12 +123,44 @@ public class NetworkManagerGame : BonsaiNetworkManager
         HandleNetworkUpdate();
     }
 
-    private void OnApplicationPause(bool pauseStatus)
+    public void OnApplicationPause(bool pauseStatus)
+    {
+        BonsaiLog("OnApplicationPause");
+        HandlePause(pauseStatus);
+    }
+
+    public override void OnApplicationQuit()
+    {
+        base.OnApplicationQuit();
+
+        StopXR();
+    }
+
+    public event ServerAddPlayerHandler ServerAddPlayer;
+
+    #if UNITY_EDITOR
+    private void HandleEditorPause(PauseState obj)
+    {
+        switch (obj)
+        {
+            case PauseState.Paused:
+                HandlePause(true);
+                break;
+            case PauseState.Unpaused:
+                HandlePause(false);
+                break;
+        }
+    }
+    #endif
+
+    private void HandlePause(bool pauseStatus)
     {
         if (pauseStatus)
         {
+            BonsaiLog("HandlePause");
             if (mode == NetworkManagerMode.ClientOnly)
             {
+                BonsaiLog("HandleLeaveRoom");
                 HandleLeaveRoom();
             }
 
@@ -133,18 +169,12 @@ public class NetworkManagerGame : BonsaiNetworkManager
                 BonsaiLog("Stop Client/Server");
                 StopHost();
             }
+            roomOpen = false;
         }
         else
         {
             _unpausedAt = Time.realtimeSinceStartup;
         }
-    }
-
-    public override void OnApplicationQuit()
-    {
-        base.OnApplicationQuit();
-
-        StopXR();
     }
 
     public bool IsInternetGood()
@@ -596,20 +626,23 @@ public class NetworkManagerGame : BonsaiNetworkManager
     {
         if (Time.realtimeSinceStartup - _lastStartHost > StartHostCooldown && HostEndPoint is null)
         {
+            _startHostAttempts = 0;
             BonsaiLog($"StartHost {mode} {State} ({HostEndPoint})");
             StartHost();
             _lastStartHost = Time.realtimeSinceStartup;
         }
         else if (!(HostEndPoint is null))
         {
-            if (mode == NetworkManagerMode.Offline)
+            var _failAfter = 10;
+            _startHostAttempts += 1;
+            if (_startHostAttempts < _failAfter)
             {
-                StartHost();
-                _lastStartHost = Time.realtimeSinceStartup;
+                BonsaiLog($"Failed to start host attempt # {_startHostAttempts}");
             }
-
-            // todo this can get stuck if somehow host mode is offline but HostEndPoint is not null
-            BonsaiLog("HostEndpoint is not null");
+            else if (_startHostAttempts == _failAfter)
+            {
+                MessageStack.Singleton.AddMessage("Our Code Broke. Please Restart the App");
+            }
         }
     }
 
