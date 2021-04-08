@@ -96,6 +96,7 @@ GameObject:
   - component: {fileID: 3343159806455607846}
   - component: {fileID: 3343159806455607847}
   - component: {fileID: 3343159806455607871}
+  - component: {fileID: 4619225461558531738}
   m_Layer: 0
   m_Name: VideoCube
   m_TagString: Untagged
@@ -298,9 +299,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f97055564e87463448ab4eea16ae32f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
   videoId: 
+  smoothSyncVars: {fileID: 4619225461558531738}
   quad: {fileID: 5882505215330845545}
   triangle: {fileID: 335955065458151572}
+--- !u!114 &4619225461558531738
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3343159806455607844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85b22d6df478bea46bb92d552c11e7ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
+  variables:
+  - showThumbnail
 --- !u!1 &4315825355562396609
 GameObject:
   m_ObjectHideFlags: 0

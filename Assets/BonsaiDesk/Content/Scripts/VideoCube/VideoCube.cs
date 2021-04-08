@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Mirror;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Rendering;
 
-public class VideoCube : MonoBehaviour
+public class VideoCube : NetworkBehaviour
 {
     private static Mesh VideoCubeMesh;
 
@@ -16,11 +17,17 @@ public class VideoCube : MonoBehaviour
     private List<int> _triangles = new List<int>();
 
     public string videoId;
+    public SmoothSyncVars smoothSyncVars;
     public Transform quad;
     public Transform triangle;
+    private Vector3 _targetScale;
 
     private Material _material;
     private Material _hologramMaterial;
+
+    private float _lerp;
+    private const float AnimationTime = 0.25f;
+    private const float ActivationRadius = 0.1f;
 
     void Start()
     {
@@ -50,18 +57,47 @@ public class VideoCube : MonoBehaviour
         {
             StartCoroutine(LoadThumbnail(videoId));
         }
+
+        _targetScale = quad.localScale;
     }
 
     private void Update()
     {
+        var inRange = Vector3.Distance(InputManager.Hands.Left.PlayerHand.palm.position, transform.position) < ActivationRadius ||
+                      Vector3.Distance(InputManager.Hands.Right.PlayerHand.palm.position, transform.position) < ActivationRadius;
+        var authority = smoothSyncVars.HasAuthority();
+
+        if (inRange && !authority)
+        {
+            smoothSyncVars.RequestAuthority();
+        }
+
+        if (authority)
+        {
+            smoothSyncVars.Set("showThumbnail", inRange);
+        }
+
+        _lerp = CubicBezier.EaseOut.MoveTowards01(_lerp, AnimationTime, smoothSyncVars.Get("showThumbnail"));
+
         var toHead = InputManager.Hands.head.position - transform.position;
         toHead.y = 0;
         var atHead = Quaternion.LookRotation(-toHead);
+        quad.rotation = atHead;
+
+        var startPosition = transform.position;
+        var targetPosition = transform.position + new Vector3(0, 2.5f * 0.05f, 0);
+        quad.position = Vector3.Lerp(startPosition, targetPosition, _lerp);
+        quad.localScale = Vector3.Lerp(Vector3.zero, _targetScale, _lerp);
+
+        CalculateTriangle(atHead);
+    }
+
+    private void CalculateTriangle(Quaternion atHead)
+    {
         triangle.position = transform.position + new Vector3(0, 0.5f * 0.05f, 0);
         triangle.rotation = atHead;
-        triangle.localScale = new Vector3(quad.localScale.x, 2.5f - (quad.localScale.y / 2f) - 0.5f, 1);
-        quad.rotation = atHead;
-        quad.position = transform.position + new Vector3(0, 2.5f * 0.05f, 0);
+        triangle.localScale = new Vector3(quad.localScale.x,
+            (quad.transform.position.y - transform.position.y) * (1f / 0.05f) - (quad.localScale.y / 2f) - 0.5f, 1);
     }
 
     private readonly Vector3[] quadVertices = new[]

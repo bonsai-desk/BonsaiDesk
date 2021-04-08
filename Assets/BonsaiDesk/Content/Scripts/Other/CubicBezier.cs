@@ -60,6 +60,11 @@ public class CubicBezier
     /// <returns>The updated t value</returns>
     public float MoveTowards01(float tCurrent, float animationTime, bool increase)
     {
+        if (Mathf.Approximately(tCurrent, 0) && !increase || Mathf.Approximately(tCurrent, 1) && increase)
+        {
+            return tCurrent;
+        }
+
         float t = SampleInverse(tCurrent);
         float step = (1f / animationTime) * Time.deltaTime;
         t = Mathf.MoveTowards(t, increase ? 1f : 0f, step);
