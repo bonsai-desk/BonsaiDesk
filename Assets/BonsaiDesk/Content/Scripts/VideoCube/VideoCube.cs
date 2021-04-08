@@ -16,8 +16,11 @@ public class VideoCube : MonoBehaviour
     private List<int> _triangles = new List<int>();
 
     public string videoId;
+    public Transform quad;
+    public Transform triangle;
 
     private Material _material;
+    private Material _hologramMaterial;
 
     void Start()
     {
@@ -29,10 +32,6 @@ public class VideoCube : MonoBehaviour
             Face(new Vector3(0.5f, 0, 0), Quaternion.AngleAxis(-90, Vector3.up));
             Face(new Vector3(0, 0, 0.5f), Quaternion.AngleAxis(180, Vector3.up));
             Face(new Vector3(-0.5f, 0, 0), Quaternion.AngleAxis(90, Vector3.up));
-
-            // Face(new Vector3(0, 0.5f, 0), Quaternion.AngleAxis(90, Vector3.right));
-            // Face(new Vector3(0, -0.5f, 0), Quaternion.AngleAxis(-90, Vector3.right));
-
             Quad(new Vector3(0, 0.5f, 0), Quaternion.AngleAxis(90, Vector3.right), Vector3.one, false);
             Quad(new Vector3(0, -0.5f, 0), Quaternion.AngleAxis(-90, Vector3.right), Vector3.one, false);
 
@@ -51,6 +50,18 @@ public class VideoCube : MonoBehaviour
         {
             StartCoroutine(LoadThumbnail(videoId));
         }
+    }
+
+    private void Update()
+    {
+        var toHead = InputManager.Hands.head.position - transform.position;
+        toHead.y = 0;
+        var atHead = Quaternion.LookRotation(-toHead);
+        triangle.position = transform.position + new Vector3(0, 0.5f * 0.05f, 0);
+        triangle.rotation = atHead;
+        triangle.localScale = new Vector3(quad.localScale.x, 2.5f - (quad.localScale.y / 2f) - 0.5f, 1);
+        quad.rotation = atHead;
+        quad.position = transform.position + new Vector3(0, 2.5f * 0.05f, 0);
     }
 
     private readonly Vector3[] quadVertices = new[]
@@ -194,8 +205,22 @@ public class VideoCube : MonoBehaviour
                 }
 
                 _material.SetFloat("_AspectRatio", aspectRatio);
-                
+
                 _material.SetColor("_AccentColor", Color.red);
+
+                var hologramQuad = quad.GetComponent<MeshRenderer>();
+                _hologramMaterial = new Material(hologramQuad.sharedMaterial);
+                hologramQuad.sharedMaterial = _hologramMaterial;
+                _hologramMaterial.mainTexture = newTexture;
+
+                var bounds = hologramQuad.transform.localScale.xy();
+                var localScale = new Vector3(bounds.y * aspectRatio, bounds.y, 1);
+                if (localScale.x > bounds.x)
+                {
+                    localScale = new Vector3(bounds.x, bounds.x * (1f / aspectRatio), 1);
+                }
+
+                hologramQuad.transform.localScale = localScale;
 
                 Destroy(texture);
             }
@@ -205,5 +230,6 @@ public class VideoCube : MonoBehaviour
     private void OnDestroy()
     {
         Destroy(_material);
+        Destroy(_hologramMaterial);
     }
 }

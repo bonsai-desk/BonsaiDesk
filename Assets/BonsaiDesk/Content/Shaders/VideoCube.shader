@@ -50,7 +50,7 @@
                 o.vertex = UnityObjectToClipPos(v.vertex + v.lerpDir * ratio);
 
                 float3 normal = UnityObjectToWorldNormal(v.normal);
-                o.light = saturate(dot(normal, normalize(float3(0.1, 0.15, 1)))) * 0.5;
+                o.light = saturate(dot(normal, normalize(float3(0.25, 0.45, 1)))) * 0.75;
                 
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 
@@ -62,7 +62,7 @@
                 // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv);
                 col = lerp(col, _AccentColor, step(i.uv.x, 0)) * _Color;
-                col *= 0.5 + i.light;
+                col *= 0.25 + i.light;
                 return col;
             }
             ENDCG
