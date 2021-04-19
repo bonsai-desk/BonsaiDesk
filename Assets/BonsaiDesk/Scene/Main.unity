@@ -1574,7 +1574,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 217350381}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6b0fecffa3f624585964b0d0eb21b18e, type: 3}
+  m_Script: {fileID: 11500000, guid: 0e6a497c3406db14b9ddf9f89e1ebcfe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   OnClientConnected:
@@ -1601,14 +1601,6 @@ MonoBehaviour:
   OnServerDisconnected:
     m_PersistentCalls:
       m_Calls: []
-  Port: 7777
-  NoDelay: 1
-  Interval: 10
-  FastResend: 0
-  CongestionWindow: 1
-  SendWindowSize: 128
-  ReceiveWindowSize: 128
-  debugGUI: 0
 --- !u!114 &217350383
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1645,6 +1637,7 @@ MonoBehaviour:
   - {fileID: 6876464847205822899, guid: 58577b8f94ebfd842a65f7340cee4843, type: 3}
   - {fileID: 5091729340588248543, guid: fc3dae8c141f5d446a0d64a88cd562d1, type: 3}
   - {fileID: 1897995405423690374, guid: 9665c8d8782c7584eb9e16bd36823d22, type: 3}
+  oculusTransport: {fileID: 217350382}
   roomOpen: 0
   networkHandLeftPrefab: {fileID: 7303093392691314294, guid: 989c75c8561f8ba41a2ad43b4b919ec7,
     type: 3}

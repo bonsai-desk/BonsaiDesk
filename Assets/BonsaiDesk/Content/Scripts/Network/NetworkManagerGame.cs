@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Mirror;
+using Mirror.OculusP2P;
 using Oculus.Platform;
 using Oculus.Platform.Models;
 using UnityEngine;
@@ -17,6 +18,8 @@ using UnityEditor;
 public class NetworkManagerGame : NetworkManager
 {
     public delegate void LoggedInHandler(User user);
+
+    public OculusTransport oculusTransport;
 
     public delegate void ServerAddPlayerHandler(NetworkConnection conn, bool isLanOnly);
 
@@ -107,7 +110,6 @@ public class NetworkManagerGame : NetworkManager
 
         if (User != null && mode == NetworkManagerMode.Offline)
         {
-            networkAddress = "localhost";
             BonsaiLog("StartHost");
             StartHost();
         }
@@ -227,7 +229,11 @@ public class NetworkManagerGame : NetworkManager
 
     private void JoinRoom(RoomData roomData)
     {
-        BonsaiLog($"JoinRoom ({roomData.ip_address})");
+        BonsaiLog($"JoinRoom ({roomData.network_address})");
+        if (!OculusCommon.CanParseId(roomData.network_address))
+        {
+            BonsaiLogError("Can't parse network address");
+        }
 
         if (mode == NetworkManagerMode.Host)
         {
@@ -245,7 +251,6 @@ public class NetworkManagerGame : NetworkManager
         {
             networkAddress = roomData.network_address;
             BonsaiLog("StartClient");
-            networkAddress = roomData.ip_address;
             StartClient();
         }
         else
@@ -536,6 +541,7 @@ public class NetworkManagerGame : NetworkManager
         }
 
         User = msg.Data;
+        oculusTransport.LoggedIn(User);
         LoggedIn?.Invoke(User);
     }
 
