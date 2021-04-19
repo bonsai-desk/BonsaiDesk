@@ -1,19 +1,28 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using OVR;
 using UnityEngine;
 
 public class MessageStack : MonoBehaviour
 {
+    public enum MessageType
+    {
+        Bad,
+        Neutral,
+        Good
+    }
+
     private const float StepSize = 0.25f;
-    private const float Duration = 5f;
     public static MessageStack Singleton;
     public MessageCanvas messageObject;
 
     public Transform spawnLocation;
     public Transform firstLocation;
 
-    public SoundFXRef messageSound;
+    public SoundFXRef badMessageSound;
+    public SoundFXRef neutralMessageSound;
+    public SoundFXRef goodMessageSound;
     private List<Message> _messages = new List<Message>();
 
     private void Awake()
@@ -30,19 +39,45 @@ public class MessageStack : MonoBehaviour
         UpdateAllMessageTransforms();
     }
 
-    private IEnumerator DelayAddMessage(float seconds)
+    private void Start() { }
+
+    private IEnumerator DemoMessages()
     {
-        yield return new WaitForSeconds(seconds);
-        AddMessage("Dummy Message");
+        yield return new WaitForSeconds(5);
+        AddMessage("good", MessageType.Good);
+        yield return new WaitForSeconds(2);
+        AddMessage("neutral", MessageType.Neutral);
+        yield return new WaitForSeconds(2);
+        AddMessage("bad", MessageType.Bad);
     }
 
-    public void AddMessage(string text)
+    public int AddMessage(string text, MessageType messageType = MessageType.Neutral, float duration = 5f)
     {
         BumpAll();
         var msg = Instantiate(messageObject, spawnLocation);
         msg.SetText(text);
         msg.SetEnabled(false);
-        _messages.Add(new Message(msg, firstLocation));
+        BonsaiLog($"Message ({text}) ({messageType})");
+        switch (messageType)
+        {
+            case MessageType.Bad:
+                msg.SetColor(MessageCanvas.BorderColor.Red);
+                break;
+            case MessageType.Neutral:
+                msg.SetColor(MessageCanvas.BorderColor.Gray);
+                break;
+            case MessageType.Good:
+                msg.SetColor(MessageCanvas.BorderColor.Green);
+                break;
+        }
+
+        _messages.Add(new Message(msg, firstLocation, messageType, duration));
+        return _messages[_messages.Count - 1].GetHashCode();
+    }
+
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiMessage: </color>: " + msg);
     }
 
     private void BumpAll()
@@ -50,6 +85,22 @@ public class MessageStack : MonoBehaviour
         foreach (var message in _messages)
         {
             message.BumpMessage();
+        }
+    }
+
+    private void PlaySound(Message message)
+    {
+        switch (message.MessageType)
+        {
+            case MessageType.Bad:
+                badMessageSound.PlaySoundAt(message.MessageCanvas.transform.position);
+                break;
+            case MessageType.Neutral:
+                neutralMessageSound.PlaySoundAt(message.MessageCanvas.transform.position);
+                break;
+            case MessageType.Good:
+                goodMessageSound.PlaySoundAt(message.MessageCanvas.transform.position);
+                break;
         }
     }
 
@@ -65,7 +116,7 @@ public class MessageStack : MonoBehaviour
             if (i == 0 && !_messages[i].IsEnabled())
             {
                 _messages[i].SetEnabled(true);
-                messageSound.PlaySoundAt(_messages[i].MessageCanvas.transform.position);
+                PlaySound(_messages[i]);
             }
             else if (!_messages[i].IsEnabled() && i != 0)
             {
@@ -76,7 +127,7 @@ public class MessageStack : MonoBehaviour
                 if (farEnoughAway)
                 {
                     _messages[i].SetEnabled(true);
-                    messageSound.PlaySoundAt(_messages[i].MessageCanvas.transform.position);
+                    PlaySound(_messages[i]);
                 }
             }
         }
@@ -95,14 +146,23 @@ public class MessageStack : MonoBehaviour
     private void PruneMessages()
     {
         var newMessages = new List<Message>();
-        foreach (var message in _messages)
+        for (var i = 0; i < _messages.Count; i++)
         {
+            var message = _messages[i];
             if (message.MessageCanvas != null)
             {
                 newMessages.Add(message);
-                if (Time.time - message.TimeAdded > Duration && !message.MessageCanvas.IsDestructing())
+                if (Time.time - message.TimeAdded > message.Duration && !message.MessageCanvas.IsDestructing())
                 {
                     message.MessageCanvas.SelfDestruct();
+                }
+            }
+            else if (i > 0)
+            {
+                // we don't want holes in the message stack when some messages delete in the middle
+                for (var j = 0; j < i; j++)
+                {
+                    _messages[j].UnbumpMessage();
                 }
             }
         }
@@ -110,22 +170,42 @@ public class MessageStack : MonoBehaviour
         _messages = newMessages;
     }
 
+    public void PruneMessageID(int id)
+    {
+        foreach (var message in _messages)
+        {
+            if (message.GetHashCode() == id && !message.MessageCanvas.IsDestructing())
+            {
+                message.MessageCanvas.SelfDestruct();
+            }
+        }
+    }
+
     private class Message
     {
         public readonly MessageCanvas MessageCanvas;
         public readonly double TimeAdded;
+        public readonly float Duration;
+        public MessageType MessageType;
         public Vector3 TargetPosition;
 
-        public Message(MessageCanvas messageCanvas, Transform firstLocation)
+        public Message(MessageCanvas messageCanvas, Transform firstLocation, MessageType messageType, float duration)
         {
             TimeAdded = Time.time;
             MessageCanvas = messageCanvas;
             TargetPosition = firstLocation.position;
+            MessageType = messageType;
+            Duration = duration;
         }
 
         public void BumpMessage()
         {
             TargetPosition.y += StepSize;
+        }
+
+        public void UnbumpMessage()
+        {
+            TargetPosition.y -= StepSize;
         }
 
         public void SetEnabled(bool enabled)

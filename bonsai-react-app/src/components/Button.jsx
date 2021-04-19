@@ -66,3 +66,32 @@ export function Button(props) {
     );
 }
 
+export function UpButton(props) {
+    let {
+        handleClick,
+        className = '',
+        shouldPostDown = true,
+        shouldPostHover = true,
+        shouldPostUp = true,
+    } = props;
+    return (
+            <div onPointerEnter={shouldPostHover ? postHover : null}
+                 onPointerDown={() => {
+                     if (shouldPostDown) {
+                         postMouseDown();
+                     }
+                 }}
+                 onPointerUp={() => {
+                     handleClick();
+                     if (shouldPostUp) {
+                         postMouseUp()
+                     }
+                 }}
+            >
+                <div className={className}>
+                    {props.children}
+                </div>
+            </div>
+    );
+}
+

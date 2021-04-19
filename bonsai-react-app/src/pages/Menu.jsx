@@ -1,7 +1,7 @@
 import React, {useEffect, useState, useRef} from 'react';
 import './Menu.css';
 import {postJson} from '../utilities';
-import {Button, ToggleButton} from '../components/Button';
+import {Button, ToggleButton, UpButton} from '../components/Button';
 import axios from 'axios';
 import DoorOpen from '../static/door-open.svg';
 import LinkImg from '../static/link.svg';
@@ -24,6 +24,7 @@ import {useStore} from '../DataProvider';
 import {BeatLoader, BounceLoader} from 'react-spinners';
 import {observer} from 'mobx-react-lite';
 import {action, autorun} from 'mobx';
+import {NetworkManagerMode} from '../DataProvider';
 
 const API_BASE = 'https://api.desk.link';
 
@@ -112,7 +113,7 @@ function postLightsChange(level) {
 
 function showInfo(info) {
     switch (info[0]) {
-        case 'player_info':
+        case 'PlayerInfos':
             return showPlayerInfo(info[1]);
         case 'user_info':
             return JSON.stringify(info);
@@ -298,14 +299,16 @@ const RoomInfo = observer(() => {
     let {store} = useStore();
 
     let handleCloseRoom = () => {
-        axios({
-            method: 'delete',
-            url: API_BASE + '/rooms/' + store._room_code,
-        }).then(r => {
-            if (r.status === 200) {
-                console.log(`deleted room ${store._room_code}`);
-            }
-        }).catch(console.log);
+        if (store.RoomCode) {
+            axios({
+                method: 'delete',
+                url: API_BASE + '/rooms/' + store.RoomCode,
+            }).then(r => {
+                if (r.status === 200) {
+                    console.log(`deleted room ${store.RoomCode}`);
+                }
+            }).catch(console.log);
+        }
         postCloseRoom();
     };
 
@@ -326,7 +329,7 @@ const RoomInfo = observer(() => {
 
     const roomCodeCLass = 'text-5xl ';
 
-    if (store.room_open) {
+    if (store.NetworkInfo.RoomOpen) {
         return (
                 <React.Fragment>
                     {CloseRoom}
@@ -334,8 +337,8 @@ const RoomInfo = observer(() => {
                               slug={'People who have this can join you'}
                               imgSrc={LinkImg}>
                         <div className={'h-20 flex flex-wrap content-center'}>
-                            {store.room_code ?
-                                    <div className={roomCodeCLass}>{store.room_code}</div>
+                            {store.RoomCode ?
+                                    <div className={roomCodeCLass}>{store.RoomCode}</div>
 
                                     :
                                     <div className={grayButtonClassInert}><BeatLoader size={8}
@@ -363,11 +366,11 @@ const HostHomePage = observer(() => {
     return (
             <React.Fragment>
                 <RoomInfo/>
-                {store.player_info.length > 0 && store.room_open ?
+                {store.PlayerInfos.length > 0 && store.NetworkInfo.RoomOpen ?
                         <React.Fragment>
                             <div className={'text-xl'}>People in Your Room</div>
                             <div className={'flex space-x-2'}>
-                                {store.player_info.map(info => <ConnectedClient info={info}/>)}
+                                {store.PlayerInfos.map(info => <ConnectedClient info={info}/>)}
                             </div>
                         </React.Fragment>
                         :
@@ -381,22 +384,22 @@ const HostHomePage = observer(() => {
 
 const PlayerPage = observer(() => {
     const {store} = useStore();
-    //const store = {media_info: {Active:true, Scrub: 10, Duration: 33}}
+    //const store = {MediaInfo: {Active:true, Scrub: 10, Duration: 33}}
     const ref = useRef(null);
 
-    const finished = (store.media_info.Duration - store.media_info.Scrub) < 0.25;
+    const finished = (store.MediaInfo.Duration - store.MediaInfo.Scrub) < 0.25;
 
-    let media = store.media_info;
+    let media = store.MediaInfo;
 
     const pct = 100 * media.Scrub / media.Duration;
 
-    if (!store.media_info.Active) {
+    if (!store.MediaInfo.Active) {
         return '';
     }
 
     function handleClick(e) {
         let pct = (e.clientX - ref.current.offsetLeft) / ref.current.offsetWidth;
-        let ts = pct * store.media_info.Duration;
+        let ts = pct * store.MediaInfo.Duration;
         postSeekPlayer(ts);
     }
 
@@ -431,7 +434,7 @@ const PlayerPage = observer(() => {
         if (finished) {
             return <KeySVG handleClick={handleRestart} imgSrc={ResetImg}/>;
         } else {
-            if (store.media_info.Paused) {
+            if (store.MediaInfo.Paused) {
                 return <KeySVG handleClick={handlePlay} imgSrc={PlayImg}/>;
             } else {
                 return <KeySVG handleClick={handlePause} imgSrc={PauseImg}/>;
@@ -471,14 +474,12 @@ const HomePage = observer(() => {
 
     let Inner;
 
-    switch (store.network_state) {
-        case 'Neutral':
-        case 'HostWaiting':
-        case 'Hosting':
-            Inner = <HostHomePage/>;
-            break;
-        case 'ClientConnected':
+    switch (store.NetworkInfo.Mode) {
+        case NetworkManagerMode.ClientOnly:
             Inner = <ClientHomePage/>;
+            break;
+        case NetworkManagerMode.Host:
+            Inner = <HostHomePage/>;
             break;
         default:
             Inner = <LoadingHomePage/>;
@@ -510,11 +511,11 @@ let JoinDeskPage = observer((props) => {
                 method: 'get',
                 url: url,
             }).then(response => {
-                console.log(response.data);
-                console.log(store.ip_address, store.port);
-                if (response.data.ip_address.toString() ===
-                        store.ip_address.toString() &&
-                        response.data.port.toString() === store.port.toString()) {
+                
+                let networkAddressResponse = response.data.network_address.toString();
+                let networkAddressStore = store.NetworkInfo.NetworkAddress;
+                
+                if (networkAddressResponse === networkAddressStore) {
                     // trying to join your own room
                     setMessage(`Could not find ${code} try again`);
                     setCode('');
@@ -532,7 +533,7 @@ let JoinDeskPage = observer((props) => {
                 setPosting(false);
             });
         }
-    }, [code, navHome, posting, store.ip_address, store.port]);
+    }, [code, navHome, posting, store.NetworkInfo.NetworkAddress]);
 
     function handleClick(char) {
         setMessage('');
@@ -614,10 +615,12 @@ const DebugPage = observer(() => {
     let {store} = useStore();
 
     let addFakeIpPort = action((store) => {
+        //todo
         store.ip_address = 1234;
         store.port = 4321;
     });
     let rmFakeIpPort = action(store => {
+        //todo
         store.ip_address = null;
         store.port = null;
     });
@@ -627,23 +630,24 @@ const DebugPage = observer(() => {
     });
 
     let addFakeClient = action(store => {
-        if (store.player_info.length > 0) {
-            store.player_info.push({Name: 'cam', ConnectionId: 1});
+        if (store.PlayerInfos.length > 0) {
+            store.PlayerInfos.push({Name: 'cam', ConnectionId: 1});
         } else {
-            store.player_info.push(
+            store.PlayerInfos.push(
                     {Name: 'loremIpsumLoremIpsumLorem', ConnectionId: 0});
         }
     });
     let rmFakeClient = action(store => {
-        store.player_info.pop();
+        store.PlayerInfos.pop();
     });
 
     let toggleRoomOpen = action(store => {
-        store.room_open = !store.room_open;
+        //todo
+        store.RoomOpen = !store.RoomOpen;
     });
 
     let addFakeVideoPlayerPaused = () => {
-        store.media_info = {
+        store.MediaInfo = {
             Active: true,
             Name: 'Video Name',
             Paused: true,
@@ -654,7 +658,7 @@ const DebugPage = observer(() => {
     };
 
     let addFakeVideoPlayerPlaying = () => {
-        store.media_info = {
+        store.MediaInfo = {
             Active: true,
             Name: 'Video Name',
             Paused: false,
@@ -665,7 +669,7 @@ const DebugPage = observer(() => {
     };
 
     let rmFakeVideoPlayer = () => {
-        store.media_info = {
+        store.MediaInfo = {
             Active: false,
             Name: 'None',
             Paused: true,
@@ -734,6 +738,16 @@ const DebugPage = observer(() => {
                                 rmFakeClient(store);
                             }} className={grayButtonClass}>- fake client
                             </Button>
+                            <UpButton handleClick={() => {
+                                postJoinRoom({
+                                    id: "",
+                                    ip_address: "192.168.1.117",
+                                    network_address: "",
+                                    port: 0,
+                                    pinged: 0
+                                });
+                            }} className={grayButtonClass}>join hard coded
+                            </UpButton>
                         </div>
 
                         <div>Room Status</div>
@@ -812,7 +826,7 @@ const SettingsPage = observer(() => {
             <ToggleButton
                     classEnabled={greenButtonClass}
                     classDisabled={grayButtonClass}
-                    enabled={store.experimental_info.PinchPullEnabled}
+                    enabled={store.ExperimentalInfo.PinchPullEnabled}
                     handleClick={handleClickPinchPull}
             >
                 Toggle
@@ -823,7 +837,7 @@ const SettingsPage = observer(() => {
             <ToggleButton
                     classEnabled={greenButtonClass}
                     classDisabled={grayButtonClass}
-                    enabled={store.experimental_info.BlockBreakEnabled}
+                    enabled={store.ExperimentalInfo.BlockBreakEnabled}
                     handleClick={handleClickBlockBreak}
             >
                 Toggle
@@ -833,7 +847,7 @@ const SettingsPage = observer(() => {
             Information
         </div>
         <InfoItem title={'Version'}
-                  slug={store.app_info.Version + 'b' + store.app_info.BuildId}>
+                  slug={store.AppInfo.Version + 'b' + store.AppInfo.BuildId}>
             <Button
                     className={grayButtonClass}
                     handleClick={toggleAbout}
@@ -962,32 +976,34 @@ let Menu = observer(() => {
         autorun(() => {
             // remove room code if
             // DEVELOPMENT || PRODUCTION
-            if (store.room_code &&
-                    (!store.ip_address || !store.port || !store.room_open)) {
-                console.log('rm room code');
-                pushStore({room_code: null});
+            const networkAddress = store.NetworkInfo.NetworkAddress;
+            const roomOpen = store.NetworkInfo.RoomOpen;
+            const roomCode = store.RoomCode;
+            const loadingRoomCode = store.LoadingRoomCode;
+
+            if (roomCode && (!networkAddress || !roomOpen)) {
+                console.log('Remove room code');
+                pushStore({RoomCode: null});
                 return;
             }
 
             // send ip/port out for a room code
-            if (store.room_open && !store.room_code && !store.loading_room_code &&
-                    store.ip_address &&
-                    store.port) {
+            if (roomOpen && !roomCode && !loadingRoomCode && networkAddress) {
                 console.log('fetch room code');
-                pushStore({loading_room_code: true});
+                pushStore({LoadingRoomCode: true});
                 let url = API_BASE + '/rooms';
                 axios(
                         {
                             method: 'post',
                             url: url,
-                            data: `ip_address=${store.ip_address}&port=${store.port}`,
+                            data: `network_address=${networkAddress}`,
                             header: {'content-type': 'application/x-www-form-urlencoded'},
                         },
                 ).then(response => {
-                    pushStore({room_code: response.data.tag, loading_room_code: false});
+                    pushStore({RoomCode: response.data.tag, LoadingRoomCode: false});
                 }).catch(err => {
                     console.log(err);
-                    pushStore({loading_room_code: false});
+                    pushStore({LoadingRoomCode: false});
                 });
             }
         });
@@ -996,7 +1012,7 @@ let Menu = observer(() => {
 
     useEffect(() => {
         return () => {
-            pushStore({room_code: null});
+            pushStore({RoomCode: null});
         };
     }, [pushStore]);
 
@@ -1007,12 +1023,12 @@ let Menu = observer(() => {
         {name: 'Settings', component: SettingsPage},
     ];
 
-    if (store.media_info.Active) {
+    if (store.MediaInfo.Active) {
         pages.push({name: 'Player', component: PlayerPage});
 
     }
 
-    if (store.build === 'DEVELOPMENT') {
+    if (store.AppInfo.Build === 'DEVELOPMENT') {
         pages.push({name: 'Debug', component: DebugPage});
     }
 
@@ -1024,15 +1040,15 @@ let Menu = observer(() => {
         SelectedPage = pages[active].component;
     }
 
-    let joinDeskActive = store.network_state === 'Hosting' && !store._room_open;
+    let joinDeskActive = store.NetworkInfo.Mode === NetworkManagerMode.Host && !store.NetworkInfo.RoomOpen;
 
-    if (!store.app_info.MicrophonePermission) {
+    if (!store.AppInfo.MicrophonePermission) {
         return <NoMicPage/>;
     }
 
     return (
             <div className={'flex text-lg text-gray-500 h-full static'}>
-                {!store.is_internet_good ?
+                {!store.NetworkInfo.Online ?
                         <div className={'text-2xl p-4 flex flex-wrap content-center absolute text-white bg-red-800 bottom-2 right-2 z-20 rounded'}>
                             Internet Error: Check Your Connection
                         </div>

@@ -8,36 +8,79 @@ export const useStore = () => useContext(StoreContext);
 
 let API_BASE = 'https://api.desk.link';
 
+export const NetworkManagerMode = {
+    Offline: 0,
+    ServerOnly: 1,
+    ClientOnly: 2,
+    Host: 3,
+};
+
+// todo ip_address, port, network_state
 class Store {
-    ip_address = null;
-    is_internet_good = false;
-    port = null;
-    network_state = null;
-    loading_room_code = false;
-    _refresh_room_code_handler = null;
-    user_info = {};
-    player_info = [];
-    build = 'PRODUCTION';
-    media_info = {
+    AppInfo = {
+        Build: 'PRODUCTION',
+        MicrophonePermission: false,
+        Version: '?',
+        BuildId: -1,
+    };
+
+    _networkInfo = {
+        Online: false,
+        NetworkAddress: 'none',
+        RoomOpen: false,
+        Mode: NetworkManagerMode.Offline
+    };
+    MediaInfo = {
         Active: false,
         Name: 'None',
         Paused: true,
         Scrub: 0,
         Duration: 1,
         VolumeLevel: 0,
-    }
-    experimental_info = {
+    };
+    ExperimentalInfo = {
         BlockBreakEnabled: false,
-        PinchPullEnabled: false
-    }
-    app_info = {
-        MicrophonePermission:false,
-        Version: "?",
-        BuildId: -1
-    }
+        PinchPullEnabled: false,
+    };
+    PlayerInfos = [];
+    LoadingRoomCode = false;
+    _refresh_room_code_handler = null;
 
     constructor() {
         makeAutoObservable(this);
+    }
+
+    get NetworkInfo() {
+        return this._networkInfo;
+    }
+
+    set NetworkInfo(networkInfo) {
+        this._networkInfo = networkInfo;
+        if (!networkInfo.RoomOpen) {
+            this.RoomCode = '';
+        }
+
+    }
+
+    _roomCode = null;
+
+    get RoomCode() {
+        return this._roomCode;
+    }
+
+    set RoomCode(code) {
+        this._roomCode = code;
+        if (code) {
+            this._refresh_room_code_handler = setInterval(() => {
+                        if (this.RoomCode) {
+                            this.refreshRoomCode();
+                        }
+                    }
+                    , 1000);
+        } else {
+            clearInterval(this._refresh_room_code_handler);
+            this._refresh_room_code_handler = null;
+        }
     }
 
     _room_open = false;
@@ -49,41 +92,19 @@ class Store {
     set room_open(open) {
         this._room_open = open;
         if (!open) {
-            this.room_code = '';
-        }
-    }
-
-    _room_code = null;
-
-    get room_code() {
-        return this._room_code;
-    }
-
-    set room_code(code) {
-        this._room_code = code;
-        if (code) {
-            this._refresh_room_code_handler = setInterval(() => {
-                        if (this.room_code) {
-                            this.refreshRoomCode();
-                        }
-                    }
-                    , 1000);
-        } else {
-            clearInterval(this._refresh_room_code_handler);
-            this._refresh_room_code_handler = null;
+            this.RoomCode = '';
         }
     }
 
     refreshRoomCode() {
         axios({
             method: 'post',
-            url: API_BASE + `/rooms/${store.room_code}/refresh`,
+            url: API_BASE + `/rooms/${store.RoomCode}/refresh`,
         }).catch(err => {
             console.log(err);
-            this.room_code = null;
+            this.RoomCode = null;
         });
     }
-
 }
 
 const store = new Store();

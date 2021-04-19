@@ -1,9 +1,17 @@
-﻿using TMPro;
+﻿using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class MessageCanvas : MonoBehaviour
 {
+    public enum BorderColor
+    {
+        Red,
+        Green,
+        Gray
+    }
+
     public Canvas canvas;
     public TextMeshProUGUI textMesh;
 
@@ -50,5 +58,21 @@ public class MessageCanvas : MonoBehaviour
     public bool IsDestructing()
     {
         return _shouldDestroy;
+    }
+
+    public void SetColor(BorderColor color)
+    {
+        switch (color)
+        {
+            case BorderColor.Red:
+                img1.color = new Color(1, 0.1319f, 0, 1);
+                break;
+            case BorderColor.Gray:
+                img1.color = new Color(0.6981f, 0.6981f, 00.6981f, 1);
+                break;
+            case BorderColor.Green:
+                img1.color = new Color(0.09f, 1f, 0f, 1);
+                break;
+        }
     }
 }
