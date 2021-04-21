@@ -23,11 +23,11 @@ public class VoiceManager : MonoBehaviour
     [SerializeField] private string _domain = "GET VALUE FROM VIVOX DEVELOPER PORTAL";
     [SerializeField] private string _tokenIssuer = "GET VALUE FROM VIVOX DEVELOPER PORTAL";
     [SerializeField] private string _tokenKey = "GET VALUE FROM VIVOX DEVELOPER PORTAL";
+    private readonly string _displayName = "John Doe";
     private readonly TimeSpan _tokenExpiration = TimeSpan.FromSeconds(90);
     private AccountId _accountId;
     private Coroutine _backoffLoginRoutine;
     private Client _client = new Client();
-    private readonly string _displayName = "John Doe";
     private bool _hasFocus = true;
     private Coroutine _joinChannelRoutine;
     private int _loginAttempts;
@@ -175,7 +175,7 @@ public class VoiceManager : MonoBehaviour
             StopCoroutine(_joinChannelRoutine);
             _joinChannelRoutine = null;
         }
-        
+
         RemovePositionalHandler();
 
         if (ActiveChannels?.Count > 0)
@@ -223,7 +223,8 @@ public class VoiceManager : MonoBehaviour
         }
 
         _joinChannelRoutine = null;
-        JoinChannel(lobbyName, ChannelType.Positional, properties: new Channel3DProperties());
+
+        JoinChannel(lobbyName, ChannelType.Positional, properties: new Channel3DProperties(32, 2, 1.0f, AudioFadeModel.InverseByDistance));
     }
 
     public event LoginStatusChangedHandler OnUserLoggedOutEvent;

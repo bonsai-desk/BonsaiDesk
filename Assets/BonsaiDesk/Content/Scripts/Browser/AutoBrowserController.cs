@@ -16,6 +16,7 @@ public class AutoBrowserController : NetworkBehaviour
     private const float ClientPingInterval = 0.1f;
     private const float MaxReadyUpPeriod = 10f;
     private const float VideoSyncTolerance = 1f;
+    private const float NewVideoVolumeLevel = 0.25f;
     public TogglePause togglePause;
     public TabletSpot tabletSpot;
     private readonly Dictionary<uint, double> _clientsJoinedNetworkTime = new Dictionary<uint, double>();
@@ -541,6 +542,7 @@ public class AutoBrowserController : NetworkBehaviour
             _contentActive = true;
             _contentInfoAtTime = NetworkTime.time;
             _idealScrub = ScrubData.PausedAtScrub(timeStamp);
+            _volumeLevel = NewVideoVolumeLevel;
 
             BeginSync("new video");
             RpcReloadYouTube(id, timeStamp, aspect);
