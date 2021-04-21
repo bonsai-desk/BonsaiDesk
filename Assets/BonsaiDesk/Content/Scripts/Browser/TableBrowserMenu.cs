@@ -164,19 +164,9 @@ public class TableBrowserMenu : MonoBehaviour
                         var id = JsonConvert.DeserializeObject<int>(message.Data);
                         KickConnectionId?.Invoke(id);
                         break;
-                    case "volumeIncrement":
-                        if (VolumeChange != null)
-                        {
-                            VolumeChange.Invoke(this, 0.10f);
-                        }
-
-                        break;
-                    case "volumeDecrement":
-                        if (VolumeChange != null)
-                        {
-                            VolumeChange.Invoke(this, -0.10f);
-                        }
-
+                    case "setVolume":
+                        var level = JsonConvert.DeserializeObject<float>(message.Data);
+                        SetVolumeLevel?.Invoke(this, level);
                         break;
                     case "lightsChange":
                         if (LightChange != null)
@@ -303,8 +293,8 @@ public class TableBrowserMenu : MonoBehaviour
     public event EventHandler<float> SeekPlayer;
 
     public event EventHandler<string> BrowseSite;
-
-    public event EventHandler<float> VolumeChange;
+    
+    public event EventHandler<float> SetVolumeLevel;
 
     public event EventHandler<LightState> LightChange;
 

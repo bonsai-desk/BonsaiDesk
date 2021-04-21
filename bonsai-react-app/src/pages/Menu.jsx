@@ -9,10 +9,9 @@ import LightImg from '../static/lightbulb.svg';
 import PauseImg from '../static/pause.svg';
 import PlayImg from '../static/play.svg';
 import ResetImg from '../static/reset.svg';
+import VolumeHigh from '../static/volume-high.svg';
+import VolumeOff from '../static/volume-off.svg';
 import {mpl, lgpl, apache} from '../static/licenses';
-
-import MinusImg from '../static/minus.svg';
-import PlusImg from '../static/plus.svg';
 
 import DotsImg from '../static/dots-vertical.svg';
 
@@ -81,12 +80,9 @@ function postSeekPlayer(ts) {
     postJson({Type: 'command', Message: 'seekPlayer', Data: ts});
 }
 
-function postVolumeIncrement() {
-    postJson({Type: 'command', Message: 'volumeIncrement'});
-}
-
-function postVolumeDecrement() {
-    postJson({Type: 'command', Message: 'volumeDecrement'});
+function postSetVolume(level) {
+    // [0,1]
+    postJson({Type: 'command', Message: 'setVolume', Data: level});
 }
 
 function postVideoPlay() {
@@ -384,31 +380,36 @@ const HostHomePage = observer(() => {
 
 const PlayerPage = observer(() => {
     const {store} = useStore();
-    //const store = {MediaInfo: {Active:true, Scrub: 10, Duration: 33}}
-    const ref = useRef(null);
+    const [preMuteVolume, setPreMuteVolume] = useState(null);
 
     const finished = (store.MediaInfo.Duration - store.MediaInfo.Scrub) < 0.25;
 
     let media = store.MediaInfo;
 
-    const pct = 100 * media.Scrub / media.Duration;
+    const playerLevel = media.Scrub / media.Duration;
+
+    const volumeApproxZero = store.MediaInfo.VolumeLevel < 0.001;
 
     if (!store.MediaInfo.Active) {
         return '';
     }
 
-    function handleClick(e) {
-        let pct = (e.clientX - ref.current.offsetLeft) / ref.current.offsetWidth;
-        let ts = pct * store.MediaInfo.Duration;
+    function handleClickMute() {
+        if (store.MediaInfo.VolumeLevel < 0.0001) {
+            postSetVolume(preMuteVolume);
+        } else {
+            setPreMuteVolume(store.MediaInfo.VolumeLevel);
+            postSetVolume(0);
+        }
+    }
+
+    function handleClickPlayer(level) {
+        let ts = level * store.MediaInfo.Duration;
         postSeekPlayer(ts);
     }
 
-    function VolumeDecrement() {
-        postVolumeDecrement();
-    }
-
-    function VolumeIncrement() {
-        postVolumeIncrement();
+    function handleClickVolume(level) {
+        postSetVolume(level);
     }
 
     function handlePause() {
@@ -442,31 +443,45 @@ const PlayerPage = observer(() => {
         }
     }
 
-    return <MenuContent name={'Player'}>
-        <div>Video Scrub</div>
+    return <MenuContent name={'Player Controls'}>
         <div className={'flex space-x-2'}>
             <ControlButton/>
-            <div ref={ref} onPointerDown={handleClick}
-                 className={'relative bg-gray-600 rounded w-full'}>
-
-                <div style={{width: pct + '%'}}
-                     className={'h-full bg-gray-400 rounded'}/>
-
-            </div>
+            <Bar level={playerLevel} handleClickLevel={handleClickPlayer}/>
             <KeySVG handleClick={handleEject} imgSrc={EjectImg}
                     className={mediaClass}/>
 
         </div>
-        <div>Volume {parseInt(100 * media.VolumeLevel)}</div>
         <div className={'flex space-x-2'}>
-            <KeySVG handleClick={VolumeDecrement} className={mediaClass}
-                    imgSrc={MinusImg}/>
-            <KeySVG handleClick={VolumeIncrement} className={mediaClass}
-                    imgSrc={PlusImg}/>
+            <KeySVG handleClick={handleClickMute} imgSrc={volumeApproxZero ? VolumeOff : VolumeHigh}
+                    className={mediaClass}/>
+            <Bar level={media.VolumeLevel} handleClickLevel={handleClickVolume}/>
         </div>
     </MenuContent>;
 
 });
+
+function Bar({level, handleClickLevel}) {
+    const ref = useRef(null);
+
+    function handleClick(e) {
+        let clickedLevel = (e.clientX - ref.current.offsetLeft) / ref.current.offsetWidth;
+        console.log(clickedLevel);
+        if (handleClickLevel) {
+            handleClickLevel(clickedLevel);
+        }
+    }
+
+    const pct = 100 * level;
+
+    return (<div className={'flex h-20 w-full'}>
+        <div ref={ref} onPointerDown={handleClick}
+             className={'relative bg-gray-600 rounded w-full'}>
+
+            <div style={{width: pct + '%'}}
+                 className={'h-full bg-gray-400 rounded'}/>
+        </div>
+    </div>);
+}
 
 const HomePage = observer(() => {
 
@@ -511,10 +526,10 @@ let JoinDeskPage = observer((props) => {
                 method: 'get',
                 url: url,
             }).then(response => {
-                
+
                 let networkAddressResponse = response.data.network_address.toString();
                 let networkAddressStore = store.NetworkInfo.NetworkAddress;
-                
+
                 if (networkAddressResponse === networkAddressStore) {
                     // trying to join your own room
                     setMessage(`Could not find ${code} try again`);
@@ -740,11 +755,11 @@ const DebugPage = observer(() => {
                             </Button>
                             <UpButton handleClick={() => {
                                 postJoinRoom({
-                                    id: "",
-                                    ip_address: "192.168.1.117",
-                                    network_address: "",
+                                    id: '',
+                                    ip_address: '192.168.1.117',
+                                    network_address: '',
                                     port: 0,
-                                    pinged: 0
+                                    pinged: 0,
                                 });
                             }} className={grayButtonClass}>join hard coded
                             </UpButton>

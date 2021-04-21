@@ -15,7 +15,6 @@ export const NetworkManagerMode = {
     Host: 3,
 };
 
-// todo ip_address, port, network_state
 class Store {
     AppInfo = {
         Build: 'PRODUCTION',

@@ -73,20 +73,21 @@ const Boot = observer(() => {
 
     function handleKeyPress(e) {
         if (e.key === 'x') {
-            store.build = 'DEVELOPMENT';
+            store.AppInfo.Build = 'DEVELOPMENT';
         }
         if (e.key === 'm') {
-            store.app_info.MicrophonePermission = true;
+            store.AppInfo.MicrophonePermission = true;
         }
 
         if (e.key === 'b') {
-            store.build = 'DEVELOPMENT';
-            store.app_info.MicrophonePermission = true;
-            store.is_internet_good = true;
+            console.log("asdf")
+            store.AppInfo.Build = 'DEVELOPMENT';
+            store.AppInfo.MicrophonePermission = true;
+            store.NetworkInfo.Online = true;
         }
     }
 
-    if (store.build === 'DEVELOPMENT') {
+    if (store.AppInfo.Build === 'DEVELOPMENT') {
         return (
                 <div>
                     Boot

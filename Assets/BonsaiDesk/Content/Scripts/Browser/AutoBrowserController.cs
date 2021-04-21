@@ -84,14 +84,14 @@ public class AutoBrowserController : NetworkBehaviour
         NetworkManagerGame.Singleton.ServerAddPlayer -= HandleServerAddPlayer;
         NetworkManagerGame.ServerDisconnect -= HandleServerDisconnect;
         togglePause.CmdSetPausedServer -= HandleCmdSetPausedServer;
-        TableBrowserMenu.Singleton.VolumeChange -= HandleVolumeChange;
+        TableBrowserMenu.Singleton.SetVolumeLevel -= HandleSetVolumeLevel;
         TableBrowserMenu.Singleton.SeekPlayer -= HandleSeekPlayer;
         TableBrowserMenu.Singleton.RestartVideo -= HandleRestartVideo;
 
         NetworkManagerGame.Singleton.ServerAddPlayer += HandleServerAddPlayer;
         NetworkManagerGame.ServerDisconnect += HandleServerDisconnect;
         togglePause.CmdSetPausedServer += HandleCmdSetPausedServer;
-        TableBrowserMenu.Singleton.VolumeChange += HandleVolumeChange;
+        TableBrowserMenu.Singleton.SetVolumeLevel += HandleSetVolumeLevel;
         TableBrowserMenu.Singleton.SeekPlayer += HandleSeekPlayer;
         TableBrowserMenu.Singleton.RestartVideo += HandleRestartVideo;
 
@@ -105,6 +105,11 @@ public class AutoBrowserController : NetworkBehaviour
             tabletSpot.PlayVideo += HandlePlayVideo;
             tabletSpot.StopVideo += HandleStopVideo;
         }
+    }
+
+    private void HandleSetVolumeLevel(object sender, float level)
+    {
+        CmdSetVolumeLevel(level);
     }
 
     private void HandleRestartVideo(object sender, EventArgs e)
@@ -439,11 +444,6 @@ public class AutoBrowserController : NetworkBehaviour
         throw new NotImplementedException();
     }
 
-    private void HandleVolumeChange(object _, float delta)
-    {
-        CmdChangeVolumeLevel(delta);
-    }
-
     private bool ClientInGracePeriod(uint id)
     {
         return ClientJoinGracePeriod > NetworkTime.time - _clientsJoinedNetworkTime[id];
@@ -612,6 +612,12 @@ public class AutoBrowserController : NetworkBehaviour
     public void CmdChangeVolumeLevel(float delta)
     {
         _volumeLevel = Mathf.Clamp(_volumeLevel + delta, 0, 1);
+    }
+    
+    [Command(ignoreAuthority = true)]
+    public void CmdSetVolumeLevel(float volumeLevel)
+    {
+        _volumeLevel = Mathf.Clamp(volumeLevel, 0, 1);
     }
 
     [Server]
