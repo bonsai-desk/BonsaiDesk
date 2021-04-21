@@ -8,12 +8,13 @@ public class LogoMove : MonoBehaviour
 {
     private void Awake()
     {
-        DontDestroyOnLoad(gameObject);
-        SceneManager.sceneLoaded += SceneLoad;
+        //DontDestroyOnLoad(gameObject);
+        //SceneManager.sceneLoaded += SceneLoad;
     }
 
     void SceneLoad(Scene scene, LoadSceneMode mode)
     {
+        return;
         if (mode == LoadSceneMode.Single && SceneManager.GetActiveScene().buildIndex == 1)
         {
             var centerEyeAnchor = GameObject.Find("CenterEyeAnchor");

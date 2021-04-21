@@ -14,6 +14,7 @@ ANY KIND, either express or implied. See the License for the specific language g
 permissions and limitations under the License.
 ************************************************************************************/
 
+using System;
 using UnityEngine;
 using System.Collections; // required for Coroutines
 
@@ -22,13 +23,12 @@ using System.Collections; // required for Coroutines
 /// </summary>
 public class BonsaiScreenFade : MonoBehaviour
 {
+    public TableBrowser browser;
     [Tooltip("Fade duration")]
     public float fadeTime = 2.0f;
 
     [Tooltip("Screen color at maximum fade")]
     public Color fadeColor = new Color(0.01f, 0.01f, 0.01f, 1.0f);
-
-    public bool fadeOnStart = true;
 
     /// <summary>
     /// The render queue used by the fade mesh. Reduce this if you need to render on top of it.
@@ -44,11 +44,21 @@ public class BonsaiScreenFade : MonoBehaviour
 
     public float currentAlpha { get; private set; }
 
+    public float _loadedAt;
+    public bool _initialFade;
+
+    public void Awake()
+    {
+        _loadedAt = Time.realtimeSinceStartup;
+    }
+
     /// <summary>
     /// Automatically starts a fade in
     /// </summary>
     void Start()
     {
+        browser.ListenersReady += HandleListenersReady;
+        
         if (gameObject.name.StartsWith("OculusMRC_"))
         {
             Destroy(this);
@@ -105,12 +115,26 @@ public class BonsaiScreenFade : MonoBehaviour
         uv[3] = new Vector2(1, 1);
 
         mesh.uv = uv;
+        
+        SetFadeLevel(1);
+    }
 
-        SetFadeLevel(0);
-
-        if (fadeOnStart)
+    void Update()
+    {
+        if (!_initialFade && Time.realtimeSinceStartup - _loadedAt > 5f)
         {
-            StartCoroutine(Fade(1, 0));
+            Debug.LogWarning("Failed to trigger fade in after 5 seconds, triggering now");
+            _initialFade = true;
+            FadeIn();
+        }
+    }
+
+    public void HandleListenersReady()
+    {
+        if (!_initialFade)
+        {
+            _initialFade = true;
+            FadeIn();
         }
     }
 
@@ -127,7 +151,6 @@ public class BonsaiScreenFade : MonoBehaviour
         StartCoroutine(Fade(1, 0));
     }
 
-
     /// <summary>
     /// Starts a fade in when a new level is loaded
     /// </summary>
@@ -138,10 +161,6 @@ public class BonsaiScreenFade : MonoBehaviour
 
     void OnEnable()
     {
-        if (!fadeOnStart)
-        {
-            SetFadeLevel(0);
-        }
     }
 
     /// <summary>
