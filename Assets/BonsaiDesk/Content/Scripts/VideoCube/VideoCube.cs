@@ -76,6 +76,7 @@ public class VideoCube : NetworkBehaviour
         if (authority)
         {
             smoothSyncVars.Set("showThumbnail", inRange);
+            VideoCubeArm.Instance.SetCubePosition(transform);
         }
 
         _lerp = CubicBezier.EaseOut.MoveTowards01(_lerp, AnimationTime, smoothSyncVars.Get("showThumbnail"));
