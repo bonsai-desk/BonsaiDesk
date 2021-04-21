@@ -7221,7 +7221,7 @@ MonoBehaviour:
       soundClips:
       - {fileID: 8300000, guid: 838dd6a6b99c2044fadc33f8a99b2f87, type: 3}
       visibilityToggle: 0
-    - name: message
+    - name: MessageNeutral
       playback: 0
       volume: 1
       pitchVariance: {x: 1, y: 1}
@@ -7288,7 +7288,7 @@ MonoBehaviour:
         volumetric: 0
         invSquareFalloff: {x: 1, y: 25}
       soundClips:
-      - {fileID: 8300000, guid: 6d511a2947f977845a551a4b2b7ca0ea, type: 3}
+      - {fileID: 8300000, guid: aeaf779424f64bb41b36411862af3f23, type: 3}
       visibilityToggle: 0
     - name: returnToVoid
       playback: 0
@@ -7358,7 +7358,145 @@ MonoBehaviour:
         invSquareFalloff: {x: 1, y: 25}
       soundClips:
       - {fileID: 8300000, guid: 80f6f07b995ba2b4d9b7e56335789be6, type: 3}
-      visibilityToggle: 1
+      visibilityToggle: 0
+    - name: MessageGood
+      playback: 0
+      volume: 1
+      pitchVariance: {x: 1, y: 1}
+      falloffDistance: {x: 1, y: 25}
+      falloffCurve: 1
+      volumeFalloffCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      reverbZoneMix:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      spread: 0
+      pctChanceToPlay: 1
+      priority: 0
+      delay: {x: 0, y: 0}
+      looping: 0
+      ospProps:
+        enableSpatialization: 1
+        useFastOverride: 0
+        gain: 0
+        enableInvSquare: 0
+        volumetric: 0
+        invSquareFalloff: {x: 1, y: 25}
+      soundClips:
+      - {fileID: 8300000, guid: 23b4077e1ec29d34da5033c69518b2bc, type: 3}
+      visibilityToggle: 0
+    - name: MessageBad
+      playback: 0
+      volume: 1
+      pitchVariance: {x: 1, y: 1}
+      falloffDistance: {x: 1, y: 25}
+      falloffCurve: 1
+      volumeFalloffCurve:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      reverbZoneMix:
+        serializedVersion: 2
+        m_Curve:
+        - serializedVersion: 3
+          time: 0
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 1
+          value: 1
+          inSlope: 0
+          outSlope: 0
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        m_PreInfinity: 2
+        m_PostInfinity: 2
+        m_RotationOrder: 4
+      spread: 0
+      pctChanceToPlay: 1
+      priority: 0
+      delay: {x: 0, y: 0}
+      looping: 0
+      ospProps:
+        enableSpatialization: 1
+        useFastOverride: 0
+        gain: 0
+        enableInvSquare: 0
+        volumetric: 0
+        invSquareFalloff: {x: 1, y: 25}
+      soundClips:
+      - {fileID: 8300000, guid: 702f757970f612b41a3cf17ccd58afc1, type: 3}
+      visibilityToggle: 0
     mixerGroup: {fileID: 24300001, guid: 1dd706bb85d8aef4e83a6229dbd62c36, type: 2}
     maxPlayingSounds: 0
     preloadAudio: 2
@@ -7843,36 +7981,6 @@ MonoBehaviour:
   rightController: {fileID: 1767542169}
   tutorial: {fileID: 1860854827}
   useHandsPopup: {fileID: 258512554}
---- !u!1 &538881679
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 538881680}
-  m_Layer: 0
-  m_Name: MessageStackNetController
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &538881680
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 538881679}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 593480625}
-  m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &539392155
 GameObject:
   m_ObjectHideFlags: 0
@@ -7991,7 +8099,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1907837445}
-  - {fileID: 538881680}
   m_Father: {fileID: 1757354512}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -16956,11 +17063,11 @@ MonoBehaviour:
   spawnLocation: {fileID: 1751897309}
   firstLocation: {fileID: 543542855}
   badMessageSound:
-    soundFXName: 
+    soundFXName: MessageBad
   neutralMessageSound:
-    soundFXName: 
+    soundFXName: MessageNeutral
   goodMessageSound:
-    soundFXName: 
+    soundFXName: MessageGood
 --- !u!1 &1917777734
 GameObject:
   m_ObjectHideFlags: 0
