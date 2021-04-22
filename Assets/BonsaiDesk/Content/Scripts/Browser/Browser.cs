@@ -29,6 +29,7 @@ public class Browser : MonoBehaviour
     protected Transform Resizer;
     protected Transform WebViewView;
     public Transform WebViewTransform;
+    public int compositionDepth = 0;
 
     protected virtual void Start()
     {
@@ -94,6 +95,8 @@ public class Browser : MonoBehaviour
         _overlay = overlayTransform.gameObject.AddComponent<OVROverlay>();
         _overlay.externalSurfaceWidth = resolution.x;
         _overlay.externalSurfaceHeight = resolution.y;
+        _overlay.compositionDepth = compositionDepth;
+        
 
         _overlay.currentOverlayType = OVROverlay.OverlayType.Underlay;
         _overlay.isExternalSurface = true;
