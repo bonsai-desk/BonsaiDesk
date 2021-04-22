@@ -23,7 +23,6 @@ using System.Collections; // required for Coroutines
 /// </summary>
 public class BonsaiScreenFade : MonoBehaviour
 {
-    public TableBrowser browser;
     [Tooltip("Fade duration")]
     public float fadeTime = 2.0f;
 
@@ -44,21 +43,12 @@ public class BonsaiScreenFade : MonoBehaviour
 
     public float currentAlpha { get; private set; }
 
-    public float _loadedAt;
-    public bool _initialFade;
-
-    public void Awake()
-    {
-        _loadedAt = Time.realtimeSinceStartup;
-    }
 
     /// <summary>
     /// Automatically starts a fade in
     /// </summary>
     void Start()
     {
-        browser.ListenersReady += HandleListenersReady;
-        
         if (gameObject.name.StartsWith("OculusMRC_"))
         {
             Destroy(this);
@@ -116,26 +106,7 @@ public class BonsaiScreenFade : MonoBehaviour
 
         mesh.uv = uv;
         
-        SetFadeLevel(1);
-    }
-
-    void Update()
-    {
-        if (!_initialFade && Time.realtimeSinceStartup - _loadedAt > 5f)
-        {
-            Debug.LogWarning("Failed to trigger fade in after 5 seconds, triggering now");
-            _initialFade = true;
-            FadeIn();
-        }
-    }
-
-    public void HandleListenersReady()
-    {
-        if (!_initialFade)
-        {
-            _initialFade = true;
-            FadeIn();
-        }
+        SetFadeLevel(0);
     }
 
     /// <summary>
