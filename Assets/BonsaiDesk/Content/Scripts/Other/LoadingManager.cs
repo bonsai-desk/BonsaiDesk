@@ -17,6 +17,8 @@ public class LoadingManager : MonoBehaviour
 
     private void HandleListenersReady()
     {
+        
+        BonsaiLog($"Fade in after {Time.realtimeSinceStartup - _startedAt} seconds");
         _initialFade = true;
         FadeIn();
     }
@@ -47,7 +49,6 @@ public class LoadingManager : MonoBehaviour
 
     private void FadeIn()
     {
-        BonsaiLog("Fading in");
         LaunchManager.Instance?.logoMove?.FadeOut();
     }
 }
