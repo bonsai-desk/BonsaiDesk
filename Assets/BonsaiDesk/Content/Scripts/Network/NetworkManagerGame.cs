@@ -186,6 +186,7 @@ public class NetworkManagerGame : NetworkManager
         BonsaiLog("CloseRoom");
         roomOpen = false;
         StartCoroutine(KickClients());
+        InfoChange?.Invoke(this, new EventArgs());
     }
 
     private void HandleOpenRoom()
@@ -204,6 +205,7 @@ public class NetworkManagerGame : NetworkManager
     {
         BonsaiLog("HandleLeaveRoom");
         StopClient();
+        InfoChange?.Invoke(this, new EventArgs());
     }
 
     private void HandleJoinRoom(RoomData roomData)
@@ -252,6 +254,7 @@ public class NetworkManagerGame : NetworkManager
             networkAddress = roomData.network_address;
             BonsaiLog("StartClient");
             StartClient();
+            InfoChange?.Invoke(this, new EventArgs());
         }
         else
         {
@@ -374,6 +377,7 @@ public class NetworkManagerGame : NetworkManager
         }
 
         ClientConnect?.Invoke(this, conn);
+        InfoChange?.Invoke(this, new EventArgs());
     }
 
     public override void OnClientDisconnect(NetworkConnection conn)
@@ -385,6 +389,7 @@ public class NetworkManagerGame : NetworkManager
         ClientDisconnect?.Invoke(this, conn);
 
         base.OnClientDisconnect(conn);
+        InfoChange?.Invoke(this, new EventArgs());
     }
 
     public override void OnStartServer()
