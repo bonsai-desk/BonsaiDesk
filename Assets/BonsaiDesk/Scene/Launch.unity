@@ -364,7 +364,7 @@ MonoBehaviour:
   layerTextureFormat: 0
   currentOverlayShape: 2
   textures:
-  - {fileID: 8900000, guid: 028834de4e91eb34c84deb8b884b7434, type: 3}
+  - {fileID: 8900000, guid: 3d74a182fbb97334c894536b3947df25, type: 3}
   - {fileID: 0}
   isAlphaPremultiplied: 0
   _previewInEditor: 1
