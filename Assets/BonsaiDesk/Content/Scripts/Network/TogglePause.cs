@@ -71,11 +71,19 @@ public class TogglePause : NetworkBehaviour
         }
         set
         {
+            if (Mathf.Approximately(value, _positionLocal))
+            {
+                return;
+            }
             _positionLocal = value;
             if (isServer && !isClient)
+            {
                 _positionSynced = value;
+            }
             else if (NetworkClient.connection != null && NetworkClient.connection.identity != null)
+            {
                 CmdSetPosition(value);
+            }
         }
     }
 
@@ -91,6 +99,10 @@ public class TogglePause : NetworkBehaviour
         }
         set
         {
+            if (_positionVector3Local == value)
+            {
+                return;
+            }
             _positionVector3Local = value;
             if (isServer && !isClient)
                 _positionVector3Synced = value;
