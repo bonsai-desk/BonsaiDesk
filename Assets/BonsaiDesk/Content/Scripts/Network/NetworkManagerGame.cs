@@ -498,6 +498,9 @@ public class NetworkManagerGame : NetworkManager
         ServerDisconnect?.Invoke(this, conn);
 
         PlayerInfos.Remove(conn);
+        
+        // call the base after the ServerDisconnect event otherwise null reference gets passed to subscribers
+        base.OnServerDisconnect(conn);
 
         var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
         foreach (var identity in tmp)
@@ -514,8 +517,6 @@ public class NetworkManagerGame : NetworkManager
             }
         }
 
-        // call the base after the ServerDisconnect event otherwise null reference gets passed to subscribers
-        base.OnServerDisconnect(conn);
 
         InfoChange?.Invoke(this, new EventArgs());
     }
