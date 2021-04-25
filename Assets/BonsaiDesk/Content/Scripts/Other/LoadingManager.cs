@@ -6,6 +6,7 @@ public class LoadingManager : MonoBehaviour
     private bool _initialFade;
     private bool _setFreq;
     private float _startedAt;
+    private float _lastLog;
 
     private void Start()
     {
@@ -16,6 +17,13 @@ public class LoadingManager : MonoBehaviour
 
     private void Update()
     {
+        if (Time.time > _lastLog)
+        {
+            _lastLog += 1.5f;
+            var msg = CaptiveReality.Jni.Util.StaticCall("sayHello", "Invalid response", "com.example.bonsai.HelloWorld");
+            Debug.Log(msg);
+        }
+            
         if (!_setFreq && OVRManager.OVRManagerinitialized)
         {
             _setFreq = true;

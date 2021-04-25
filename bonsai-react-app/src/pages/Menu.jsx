@@ -25,7 +25,13 @@ import {observer} from 'mobx-react-lite';
 import {action, autorun} from 'mobx';
 import {NetworkManagerMode} from '../DataProvider';
 
-const API_BASE = 'https://api.desk.link';
+function apiBase(store) {
+    let API_BASE = 'https://api.desk.link';
+    if (store.AppInfo.Build === 'DEVELOPMENT') {
+        API_BASE = 'https://api.desk.link:8080';
+    }
+    return API_BASE;
+}
 
 const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 const redButtonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
@@ -298,7 +304,7 @@ const RoomInfo = observer(() => {
         if (store.RoomCode) {
             axios({
                 method: 'delete',
-                url: API_BASE + '/rooms/' + store.RoomCode,
+                url: apiBase(store) + '/rooms/' + store.RoomCode,
             }).then(r => {
                 if (r.status === 200) {
                     console.log(`deleted room ${store.RoomCode}`);
@@ -428,8 +434,7 @@ const PlayerPage = observer(() => {
         postVideoRestart();
     }
 
-    let mediaClass = 'flex rounded h-16 w-24';
-    mediaClass = grayButtonClass;
+    let mediaClass = grayButtonClass;
 
     function ControlButton() {
         if (finished) {
@@ -521,7 +526,7 @@ let JoinDeskPage = observer((props) => {
 
         if (code.length === 4) {
             setPosting(true);
-            let url = API_BASE + `/rooms/${code}`;
+            let url = apiBase(store) + `/rooms/${code}`;
             axios({
                 method: 'get',
                 url: url,
@@ -1006,7 +1011,7 @@ let Menu = observer(() => {
             if (roomOpen && !roomCode && !loadingRoomCode && networkAddress) {
                 console.log('fetch room code');
                 pushStore({LoadingRoomCode: true});
-                let url = API_BASE + '/rooms';
+                let url = apiBase(store) + '/rooms';
                 axios(
                         {
                             method: 'post',

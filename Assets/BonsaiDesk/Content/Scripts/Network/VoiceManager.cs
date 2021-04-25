@@ -7,6 +7,7 @@ using VivoxUnity;
 
 public class VoiceManager : MonoBehaviour
 {
+    public bool verbose;
     public delegate void LoginStatusChangedHandler();
 
     public delegate void ParticipantStatusChangedHandler(string username, ChannelId channel, IParticipant participant);
@@ -469,7 +470,10 @@ public class VoiceManager : MonoBehaviour
         {
             case "SpeechDetected":
             {
-                BonsaiLog($"OnSpeechDetectedEvent: {username} in {channel}.");
+                if (verbose)
+                {
+                    BonsaiLog($"OnSpeechDetectedEvent: {username} in {channel}.");
+                }
                 OnSpeechDetectedEvent?.Invoke(username, channel, e.Value.SpeechDetected);
                 break;
             }
