@@ -1,19 +1,13 @@
 {
     "m_SelectedDeviceId": "1WMHH836X81104",
     "m_SelectedPackage": {
-        "deviceId": "1WMHH836X81104",
-        "name": "com.HyperMesa.BonsaiDesk",
-        "processId": 4657,
+        "deviceId": "",
+        "name": "",
+        "processId": 0,
         "exited": false
     },
     "m_SelectedPriority": 0,
     "m_KnownPackagesForSerialization": [
-        {
-            "deviceId": "1WMHH836X81104",
-            "name": "com.HyperMesa.BonsaiDesk",
-            "processId": 21161,
-            "exited": true
-        },
         {
             "deviceId": "1WMHH836X81104",
             "name": "com.oculus.shellenv",
@@ -48,7 +42,7 @@
             "deviceId": "1WMHH836X81104",
             "name": "com.HyperMesa.BonsaiDesk",
             "processId": 4657,
-            "exited": false
+            "exited": true
         }
     ],
     "m_Tags": {
