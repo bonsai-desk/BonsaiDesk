@@ -528,7 +528,9 @@ let JoinDeskPage = observer((props) => {
                 let networkAddressResponse = response.data.network_address.toString();
                 let networkAddressStore = store.NetworkInfo.NetworkAddress;
 
+                // todo networkAddress is not unique per user
                 console.log(networkAddressStore, networkAddressResponse)
+                
                 if (networkAddressResponse === networkAddressStore) {
                     // trying to join your own room
                     setMessage(`You can't join your own room`);
@@ -995,6 +997,7 @@ let Menu = observer(() => {
             const roomCode = store.RoomCode;
             const loadingRoomCode = store.LoadingRoomCode;
             const userName = store.SocialInfo.UserName;
+            const version = `${store.AppInfo.Version}b${store.AppInfo.BuildId}`;
 
             if (roomCode && (!networkAddress || !roomOpen)) {
                 console.log('Remove room code');
@@ -1011,7 +1014,7 @@ let Menu = observer(() => {
                         {
                             method: 'post',
                             url: url,
-                            data: `network_address=${networkAddress}&username=${userName}`,
+                            data: `network_address=${networkAddress}&username=${userName}&version=${version}`,
                             header: {'content-type': 'application/x-www-form-urlencoded'},
                         },
                 ).then(response => {
