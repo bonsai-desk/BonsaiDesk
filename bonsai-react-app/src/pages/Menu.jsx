@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useRef} from 'react';
 import './Menu.css';
-import {postJson} from '../utilities';
+import {postJson, apiBase} from '../utilities';
 import {Button, ToggleButton, UpButton} from '../components/Button';
 import axios from 'axios';
 import DoorOpen from '../static/door-open.svg';
@@ -25,13 +25,6 @@ import {observer} from 'mobx-react-lite';
 import {action, autorun} from 'mobx';
 import {NetworkManagerMode} from '../DataProvider';
 
-function apiBase(store) {
-    let API_BASE = 'https://api.desk.link';
-    if (store.AppInfo.Build === 'DEVELOPMENT') {
-        API_BASE = 'https://api.desk.link:8080';
-    }
-    return API_BASE;
-}
 
 const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 const redButtonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
@@ -537,7 +530,7 @@ let JoinDeskPage = observer((props) => {
 
                 if (networkAddressResponse === networkAddressStore) {
                     // trying to join your own room
-                    setMessage(`Could not find ${code} try again`);
+                    setMessage(`You can't join your own room`);
                     setCode('');
                     setPosting(false);
                 } else {
@@ -1020,7 +1013,11 @@ let Menu = observer(() => {
                             header: {'content-type': 'application/x-www-form-urlencoded'},
                         },
                 ).then(response => {
-                    pushStore({RoomCode: response.data.tag, LoadingRoomCode: false});
+                    let tag = response.data.tag;
+                    let secret = response.data.secret;
+                    console.log(`Got room ${tag} ${secret}`)
+                    pushStore({RoomSecret: secret})
+                    pushStore({RoomCode: tag, LoadingRoomCode: false});
                 }).catch(err => {
                     console.log(err);
                     pushStore({LoadingRoomCode: false});

@@ -5,4 +5,12 @@ let postJson = (json) => {
     }
 }
 
-module.exports = {postJson};
+function apiBase(store) {
+    let API_BASE = 'https://api.desk.link';
+    if (store.AppInfo.Build === 'DEVELOPMENT') {
+        API_BASE = 'https://api.desk.link:8080';
+    }
+    return API_BASE;
+}
+
+module.exports = {postJson, apiBase};

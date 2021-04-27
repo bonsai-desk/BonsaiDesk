@@ -2,11 +2,10 @@ import React, {useContext, useEffect, useState} from 'react';
 import {action, makeAutoObservable} from 'mobx';
 import {observer} from 'mobx-react-lite';
 import axios from 'axios';
+import {apiBase} from "./utilities";
 
 export const StoreContext = React.createContext();
 export const useStore = () => useContext(StoreContext);
-
-let API_BASE = 'https://api.desk.link';
 
 export const NetworkManagerMode = {
     Offline: 0,
@@ -60,6 +59,8 @@ class Store {
         }
 
     }
+    
+    RoomSecret = ""
 
     _roomCode = null;
 
@@ -79,6 +80,7 @@ class Store {
         } else {
             clearInterval(this._refresh_room_code_handler);
             this._refresh_room_code_handler = null;
+            this.RoomSecret = "";
         }
     }
 
@@ -96,9 +98,13 @@ class Store {
     }
 
     refreshRoomCode() {
+        let url = apiBase(this) + `/rooms/${store.RoomCode}/refresh`
+        console.log(url)
         axios({
             method: 'post',
-            url: API_BASE + `/rooms/${store.RoomCode}/refresh`,
+            url: url,
+            data: `secret=${this.RoomSecret}`,
+            header: {'content-type': 'application/x-www-form-urlencoded'},
         }).catch(err => {
             console.log(err);
             this.RoomCode = null;
