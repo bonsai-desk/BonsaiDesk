@@ -57,6 +57,15 @@ public class NetworkManagerGame : NetworkManager
     public EventHandler InfoChange;
     public User User;
 
+    public string UserName()
+    {
+        if (User != null)
+        {
+            return User.OculusID;
+        }
+        return "Player";
+    }
+
     private Action<NetworkConnection, UserInfoMessage> UserInfoEvent;
 
     public bool Online => IsInternetGood();

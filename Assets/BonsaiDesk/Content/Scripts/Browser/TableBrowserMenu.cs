@@ -63,6 +63,7 @@ public class TableBrowserMenu : MonoBehaviour
 
             PostExperimentalInfo();
             PostAppInfo();
+            PostSocialInfo();
         }
     }
 
@@ -248,6 +249,18 @@ public class TableBrowserMenu : MonoBehaviour
         SerializeAndPost(jsMessage);
     }
 
+    private void PostSocialInfo()
+    {
+        var socialInfo = new SocialInfo
+        {
+            UserName = NetworkManagerGame.Singleton.UserName()
+        };
+        var kvs = new KeyType<SocialInfo> {Key = "SocialInfo", Val = socialInfo};
+        var jsMessage = new CsMessageKeyType<SocialInfo> {Data = kvs};
+        var message = JsonConvert.SerializeObject(jsMessage);
+        browser.PostMessage(message);
+    }
+
     private void PostExperimentalInfo()
     {
         var experimentalInfo = new ExperimentalInfo
@@ -325,6 +338,11 @@ public class TableBrowserMenu : MonoBehaviour
     {
         public bool BlockBreakEnabled;
         public bool PinchPullEnabled;
+    }
+
+    private class SocialInfo
+    {
+        public string UserName;
     }
 
     private class AppInfo

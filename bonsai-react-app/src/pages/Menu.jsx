@@ -528,6 +528,7 @@ let JoinDeskPage = observer((props) => {
                 let networkAddressResponse = response.data.network_address.toString();
                 let networkAddressStore = store.NetworkInfo.NetworkAddress;
 
+                console.log(networkAddressStore, networkAddressResponse)
                 if (networkAddressResponse === networkAddressStore) {
                     // trying to join your own room
                     setMessage(`You can't join your own room`);
@@ -993,6 +994,7 @@ let Menu = observer(() => {
             const roomOpen = store.NetworkInfo.RoomOpen;
             const roomCode = store.RoomCode;
             const loadingRoomCode = store.LoadingRoomCode;
+            const userName = store.SocialInfo.UserName;
 
             if (roomCode && (!networkAddress || !roomOpen)) {
                 console.log('Remove room code');
@@ -1009,7 +1011,7 @@ let Menu = observer(() => {
                         {
                             method: 'post',
                             url: url,
-                            data: `network_address=${networkAddress}`,
+                            data: `network_address=${networkAddress}&username=${userName}`,
                             header: {'content-type': 'application/x-www-form-urlencoded'},
                         },
                 ).then(response => {

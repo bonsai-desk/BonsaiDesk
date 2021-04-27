@@ -15,6 +15,9 @@ export const NetworkManagerMode = {
 };
 
 class Store {
+    SocialInfo = {
+        UserName: "NoName",
+    }
     AppInfo = {
         Build: 'PRODUCTION',
         MicrophonePermission: false,
