@@ -4,9 +4,9 @@ public class LoadingManager : MonoBehaviour
 {
     public TableBrowser browser;
     private bool _initialFade;
+    private float _lastLog;
     private bool _setFreq;
     private float _startedAt;
-    private float _lastLog;
 
     private void Start()
     {
@@ -20,15 +20,13 @@ public class LoadingManager : MonoBehaviour
         if (Time.time > _lastLog)
         {
             _lastLog += 1.5f;
-            var msg = CaptiveReality.Jni.Util.StaticCall("sayHello", "Invalid response", "com.example.bonsai.HelloWorld");
-            Debug.Log(msg);
         }
-            
+
         if (!_setFreq && OVRManager.OVRManagerinitialized)
         {
             _setFreq = true;
 
-            float newFreq = 72f;
+            var newFreq = 72f;
             foreach (var freq in OVRManager.display.displayFrequenciesAvailable)
             {
                 if (freq <= 90f)
