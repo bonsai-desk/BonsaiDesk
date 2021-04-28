@@ -107,13 +107,16 @@ public class LogToText : MonoBehaviour
         {
             string fileName = Path.GetFileName(filePath.ToString());
             int periodIndex = fileName.IndexOf('.');
-            string name = fileName.Substring(0, periodIndex);
-            string ext = fileName.Substring(periodIndex + 1);
-            if (ext.CompareTo("log") == 0)
+            if (periodIndex > 0)
             {
-                if (int.TryParse(name, out int nameNumber))
+                string name = fileName.Substring(0, periodIndex);
+                string ext = fileName.Substring(periodIndex + 1);
+                if (ext.CompareTo("log") == 0)
                 {
-                    sortedLogs.Add(nameNumber, filePath.ToString());
+                    if (int.TryParse(name, out int nameNumber))
+                    {
+                        sortedLogs.Add(nameNumber, filePath.ToString());
+                    }
                 }
             }
         }
