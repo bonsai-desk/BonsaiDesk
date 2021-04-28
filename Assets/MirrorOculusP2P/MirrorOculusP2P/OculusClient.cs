@@ -106,8 +106,6 @@ namespace Mirror.OculusP2P
 
         public void Disconnect()
         {
-            Connected = false;
-            Dispose();
             if (Net.IsConnected(HostID))
             {
                 OculusLog("Sending Disconnect message");
@@ -123,10 +121,10 @@ namespace Mirror.OculusP2P
 
         private void InternalDisconnect()
         {
+            Dispose();
             Connected = false;
             OnDisconnected.Invoke();
             OculusLog("Disconnected.");
-            Net.Close(HostID);
         }
 
         public void ReceiveData()
