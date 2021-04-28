@@ -249,16 +249,21 @@ public class TableBrowserMenu : MonoBehaviour
         SerializeAndPost(jsMessage);
     }
 
+    private void Post<T>(T info, string KeyName)
+    {
+        var kvs = new KeyType<T> {Key = KeyName, Val = info};
+        var jsMessage = new CsMessageKeyType<T> {Data = kvs};
+        var message = JsonConvert.SerializeObject(jsMessage);
+        browser.PostMessage(message);
+    }
+
     private void PostSocialInfo()
     {
         var socialInfo = new SocialInfo
         {
             UserName = NetworkManagerGame.Singleton.UserName()
         };
-        var kvs = new KeyType<SocialInfo> {Key = "SocialInfo", Val = socialInfo};
-        var jsMessage = new CsMessageKeyType<SocialInfo> {Data = kvs};
-        var message = JsonConvert.SerializeObject(jsMessage);
-        browser.PostMessage(message);
+        Post(socialInfo, "SocialInfo");
     }
 
     private void PostExperimentalInfo()
@@ -268,11 +273,7 @@ public class TableBrowserMenu : MonoBehaviour
             PinchPullEnabled = InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled,
             BlockBreakEnabled = InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().BreakModeActive
         };
-
-        var kvs = new KeyType<ExperimentalInfo> {Key = "ExperimentalInfo", Val = experimentalInfo};
-        var jsMessage = new CsMessageKeyType<ExperimentalInfo> {Data = kvs};
-        var message = JsonConvert.SerializeObject(jsMessage);
-        browser.PostMessage(message);
+        Post(experimentalInfo, "ExperimentalInfo");
     }
 
     private void PostKvs(KeyVal[] kvs)
