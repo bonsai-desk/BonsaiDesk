@@ -60,6 +60,8 @@ namespace Mirror.OculusP2P
         {
             byte[] data = new byte[segment.Count];
             Array.Copy(segment.Array, segment.Offset, data, 0, segment.Count);
+            
+            // todo: can this be null?
             client.Send(data, channelId);
         }
 
