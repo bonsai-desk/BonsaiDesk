@@ -507,8 +507,10 @@ public class NetworkManagerGame : NetworkManager
 
     public override void OnServerDisconnect(NetworkConnection conn)
     {
-        BonsaiLog("ServerDisconnect");
-
+        if (!conn.isAuthenticated)
+        {
+            return;
+        }
         ServerDisconnect?.Invoke(this, conn);
 
         PlayerInfos.Remove(conn);
