@@ -25,7 +25,6 @@ import {observer} from 'mobx-react-lite';
 import {action, autorun} from 'mobx';
 import {NetworkManagerMode} from '../DataProvider';
 
-
 const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 const redButtonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
 const greenButtonClass = 'py-4 px-8 font-bold bg-green-800 active:bg-green-700 hover:bg-green-600 rounded cursor-pointer flex flex-wrap content-center';
@@ -528,12 +527,23 @@ let JoinDeskPage = observer((props) => {
                 let networkAddressResponse = response.data.network_address.toString();
                 let networkAddressStore = store.NetworkInfo.NetworkAddress;
 
+                let {
+                    network_address,
+                    username,
+                    version,
+                } = response.data;
+
                 // todo networkAddress is not unique per user
-                console.log(networkAddressStore, networkAddressResponse)
-                
+                console.log(networkAddressStore, networkAddressResponse);
+                console.log(store.FullVersion, version);
+
                 if (networkAddressResponse === networkAddressStore) {
                     // trying to join your own room
                     setMessage(`You can't join your own room`);
+                    setCode('');
+                    setPosting(false);
+                } else if (store.FullVersion !== version) {
+                    setMessage(`Your version (${store.FullVersion}) mismatch host (${version})`);
                     setCode('');
                     setPosting(false);
                 } else {
@@ -1020,8 +1030,9 @@ let Menu = observer(() => {
                 ).then(response => {
                     let tag = response.data.tag;
                     let secret = response.data.secret;
-                    console.log(`Got room ${tag} ${secret}`)
-                    pushStore({RoomSecret: secret})
+
+                    console.log(`Got room ${tag} ${secret}`);
+                    pushStore({RoomSecret: secret});
                     pushStore({RoomCode: tag, LoadingRoomCode: false});
                 }).catch(err => {
                     console.log(err);

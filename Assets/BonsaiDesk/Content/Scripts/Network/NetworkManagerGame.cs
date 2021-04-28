@@ -19,8 +19,6 @@ public class NetworkManagerGame : NetworkManager
 {
     public delegate void LoggedInHandler(User user);
 
-    public OculusTransport oculusTransport;
-
     public delegate void ServerAddPlayerHandler(NetworkConnection conn, bool isLanOnly);
 
     private const float HardKickDelay = 0.5f;
@@ -33,6 +31,8 @@ public class NetworkManagerGame : NetworkManager
     public static EventHandler<NetworkConnection> ClientDisconnect;
     public static EventHandler InternetTimeout;
     public static EventHandler InternetReconnect;
+
+    public OculusTransport oculusTransport;
     public bool roomOpen;
 
     public GameObject networkHandLeftPrefab;
@@ -57,16 +57,11 @@ public class NetworkManagerGame : NetworkManager
     public EventHandler InfoChange;
     public User User;
 
-    public string UserName()
-    {
-        if (User != null)
-        {
-            return User.OculusID;
-        }
-        return "Player";
-    }
-
     private Action<NetworkConnection, UserInfoMessage> UserInfoEvent;
+
+    public string FullVersion => Version + "b" + BuildId;
+
+    public string Version => Application.version;
 
     public bool Online => IsInternetGood();
 
@@ -144,6 +139,16 @@ public class NetworkManagerGame : NetworkManager
     {
         base.OnApplicationQuit();
         StopXR();
+    }
+
+    public string UserName()
+    {
+        if (User != null)
+        {
+            return User.OculusID;
+        }
+
+        return "Player";
     }
 
 #if UNITY_EDITOR
@@ -507,7 +512,7 @@ public class NetworkManagerGame : NetworkManager
         ServerDisconnect?.Invoke(this, conn);
 
         PlayerInfos.Remove(conn);
-        
+
         // call the base after the ServerDisconnect event otherwise null reference gets passed to subscribers
         base.OnServerDisconnect(conn);
 
@@ -525,7 +530,6 @@ public class NetworkManagerGame : NetworkManager
                 identity.RemoveClientAuthority();
             }
         }
-
 
         InfoChange?.Invoke(this, new EventArgs());
     }

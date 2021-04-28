@@ -15,6 +15,9 @@ export const NetworkManagerMode = {
 };
 
 class Store {
+    get FullVersion (){
+        return this.AppInfo.Version + "b" + this.AppInfo.BuildId;
+    }
     SocialInfo = {
         UserName: "NoName",
     }
