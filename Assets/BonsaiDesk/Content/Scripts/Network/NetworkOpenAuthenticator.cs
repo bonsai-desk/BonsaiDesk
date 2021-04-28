@@ -110,6 +110,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator
                 break;
             case 200:
                 BonsaiLog($"Authenticator Rejected: {msg.Message}");
+                MessageStack.Singleton.AddMessage(msg.Message);
                 ClientReject(conn);
                 break;
         }

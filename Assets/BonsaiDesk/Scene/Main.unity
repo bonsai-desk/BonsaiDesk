@@ -1593,7 +1593,7 @@ MonoBehaviour:
   dontDestroyOnLoad: 1
   runInBackground: 1
   autoStartServerBuild: 1
-  showDebugMessages: 0
+  showDebugMessages: 1
   serverTickRate: 30
   offlineScene: 
   onlineScene: 
@@ -1621,7 +1621,7 @@ MonoBehaviour:
     type: 3}
   visualizeAuthority: 0
   serverOnlyIfEditor: 0
-  BuildId: 37
+  BuildId: 38
 --- !u!4 &217350384
 Transform:
   m_ObjectHideFlags: 0
