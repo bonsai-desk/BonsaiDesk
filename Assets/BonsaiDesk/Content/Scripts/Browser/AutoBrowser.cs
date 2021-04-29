@@ -24,9 +24,13 @@ public class AutoBrowser : Browser
     {
         base.Start();
         BonsaiLog("Start");
+            
         _defaultLocalPosition = transform.localPosition;
         _belowTableLocalPosition = _defaultLocalPosition;
-        _belowTableLocalPosition.y = -Bounds.y;
+        //_belowTableLocalPosition.y = -Bounds.y;
+        
+        _belowTableLocalPosition.y = transform.InverseTransformPoint(0, deskHeight, 0).y -Bounds.y/2 - 0.0001f;
+        
         ListenersReady += NavHome;
     }
 
@@ -69,23 +73,23 @@ public class AutoBrowser : Browser
        var heightT = t;
        transform.localPosition = Vector3.Lerp(_belowTableLocalPosition, _defaultLocalPosition, Mathf.Clamp01(heightT));
 
-       var height = boundsTransform.localScale.y;
-       var halfHeight = height / 2f;
+      //var height = boundsTransform.localScale.y;
+      //var halfHeight = height / 2f;
 
-       var scaleT = (transform.localPosition.y + halfHeight) / height;
-       scaleT = Mathf.Clamp01(scaleT);
+      //var scaleT = (transform.localPosition.y + halfHeight) / height;
+      //scaleT = Mathf.Clamp01(scaleT);
 
-       holePuncherTransform.localScale = new Vector3(1, 2*scaleT, 1);
-       holePuncherTransform.localPosition = new Vector3(0, (1 - scaleT) / 2, 0);
+      //holePuncherTransform.localScale = new Vector3(1, 2*scaleT, 1);
+      //holePuncherTransform.localPosition = new Vector3(0, (1 - scaleT) / 2, 0);
 
-       if (Mathf.Approximately(t, 0))
-       {
-           //TODO is this laggy? also this runs even if you don't have authority over the screen
-           screenRigidBody.velocity = Vector3.zero;
-           screenRigidBody.angularVelocity = Vector3.zero;
-           transform.GetChild(0).localPosition = Vector3.zero;
-           transform.GetChild(0).localRotation = Quaternion.identity;
-       }
+      //if (Mathf.Approximately(t, 0))
+      //{
+      //    //TODO is this laggy? also this runs even if you don't have authority over the screen
+      //    screenRigidBody.velocity = Vector3.zero;
+      //    screenRigidBody.angularVelocity = Vector3.zero;
+      //    transform.GetChild(0).localPosition = Vector3.zero;
+      //    transform.GetChild(0).localRotation = Quaternion.identity;
+      //}
     }
 
     protected override void SetupWebViewPrefab()
