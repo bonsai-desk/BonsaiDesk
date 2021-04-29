@@ -25,7 +25,10 @@ namespace Mirror.OculusP2P
                 return;
             }
             client?.ReceiveData();
+            client?.FlushData();
+            
             server?.ReceiveData();
+            server?.FlushData();
         }
 
         public override bool ClientConnected() => ClientActive() && client.Connected;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Oculus.Platform;
 using Oculus.Platform.Models;
 using Debug = UnityEngine.Debug;
@@ -7,6 +8,7 @@ namespace Mirror.OculusP2P
 {
     public class OculusServer : OculusCommon, IServer
     {
+        private List<(int, byte[], int)> _messages = new List<(int, byte[], int)>();
         private event Action<int> OnConnected;
         private event Action<int, byte[], int> OnReceivedData;
         private event Action<int> OnDisconnected;
@@ -93,6 +95,7 @@ namespace Mirror.OculusP2P
 
         private void InternalDisconnect(int connId, ulong userId)
         {
+            ClearMessagesFor(connId);
             if (_oculusIDToMirrorID.TryGetValue(userId, out int _))
             {
                 _oculusIDToMirrorID.Remove(connId);
@@ -102,6 +105,21 @@ namespace Mirror.OculusP2P
             {
                 OculusLogWarning($"Nothing to disconnect");
             }
+        }
+
+        private void ClearMessagesFor(int connId)
+        {
+            var prunedMessages = new List<(int, byte[], int)>();
+            for (var i = 0; i < _messages.Count; i++)
+            {
+                if (connId != _messages[i].Item1)
+                {
+                    prunedMessages.Add(_messages[i]);
+                }
+            }
+
+            _messages = prunedMessages;
+
         }
 
         public bool Disconnect(int connectionId)
@@ -120,7 +138,33 @@ namespace Mirror.OculusP2P
             }
         }
 
-        public void FlushData() { }
+        public void FlushData()
+        {
+            for (var i = 0; i < _messages.Count; i++)
+            {
+                var (connectionId, data, channelId) = _messages[i];
+                if (_oculusIDToMirrorID.TryGetValue(connectionId, out ulong userId))
+                {
+                    var sent = SendPacket(userId, data, channelId);
+
+                    if (!sent)
+                    {
+                        OculusLogWarning("Failed to send packet");
+                        
+                        // todo
+                        Net.Close(userId);
+                        
+                        InternalDisconnect(connectionId, userId);
+                    }
+                }
+                else
+                {
+                    OculusLogError("Trying to send on unknown connection: " + connectionId);
+                    OnReceivedError.Invoke(connectionId, new Exception("ERROR Unknown Connection"));
+                }
+            }
+            _messages.Clear();
+        }
 
         public void ReceiveData()
         {
@@ -139,23 +183,10 @@ namespace Mirror.OculusP2P
                 
             }
         }
-
+        
         public void Send(int connectionId, byte[] data, int channelId)
         {
-            if (_oculusIDToMirrorID.TryGetValue(connectionId, out ulong userId))
-            {
-                var sent = SendPacket(userId, data, channelId);
-
-                if (!sent)
-                {
-                    OculusLogError($"Could not send");
-                }
-            }
-            else
-            {
-                OculusLogError("Trying to send on unknown connection: " + connectionId);
-                OnReceivedError.Invoke(connectionId, new Exception("ERROR Unknown Connection"));
-            }
+            _messages.Add((connectionId, data, channelId));
         }
 
         public string ServerGetClientAddress(int connectionId)
