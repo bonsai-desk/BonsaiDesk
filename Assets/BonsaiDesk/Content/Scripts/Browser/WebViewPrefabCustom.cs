@@ -284,17 +284,22 @@ namespace Vuplex.WebView
         {
             return Instantiate(width, height, new WebViewOptions());
         }
+        
+        public static WebViewPrefabCustom Instantiate(float width, float height, Material material = null)
+        {
+            return Instantiate(width, height, new WebViewOptions(), material);
+        }
 
         /// <summary>
         ///     Like `Instantiate(float, float)`, except it also accepts an object
         ///     of options flags that can be used to alter the generated webview's behavior.
         /// </summary>
-        public static WebViewPrefabCustom Instantiate(float width, float height, WebViewOptions options)
+        public static WebViewPrefabCustom Instantiate(float width, float height, WebViewOptions options, Material material = null)
         {
             var prefabPrototype = (GameObject) Resources.Load("WebViewPrefabCustom");
             var viewGameObject = Instantiate(prefabPrototype);
             var webViewPrefab = viewGameObject.GetComponent<WebViewPrefabCustom>();
-            webViewPrefab.Init(width, height, options);
+            webViewPrefab.Init(width, height, options, material);
             return webViewPrefab;
         }
 
@@ -345,9 +350,9 @@ namespace Vuplex.WebView
         ///     Like `Init(float, float)`, except it also accepts an object
         ///     of options flags that can be used to alter the webview's behavior.
         /// </summary>
-        public virtual void Init(float width, float height, WebViewOptions options)
+        public virtual void Init(float width, float height, WebViewOptions options, Material material)
         {
-            _init(width, height, options);
+            _init(width, height, options, null, material);
         }
 
         /// <summary>
@@ -496,8 +501,15 @@ namespace Vuplex.WebView
             return _getDefaultView();
         }
 
-        private void _init(float width, float height, WebViewOptions options = new WebViewOptions(), IWebView initializedWebView = null)
+        private void _init(float width, float height, WebViewOptions options = new WebViewOptions(), IWebView initializedWebView = null, Material material = null)
         {
+
+            if (!material)
+            {
+                material = new Material(Resources.Load<Material>("OnTopViewportMaterial"));
+            }
+            
+            
             _throwExceptionIfInitialized();
             _options = options;
             _resetLocalScale();
@@ -539,7 +551,7 @@ namespace Vuplex.WebView
             _setViewSize(width, height);
             _initView();
 
-            var material = new Material(Resources.Load<Material>("OnTopViewportMaterial"));
+            //var material = new Material(Resources.Load<Material>("OnTopViewportMaterial"));
             // var material = new Material(Resources.Load<Material>("DefaultViewportMaterial"));
             Web.CreateTexture(1, 1, texture =>
             {
