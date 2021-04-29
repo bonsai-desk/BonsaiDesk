@@ -9,6 +9,7 @@ using Vuplex.WebView;
 
 public class Browser : MonoBehaviour
 {
+    public bool Initialized;
     public Vector2 startingAspect = new Vector2(16, 9);
     public float distanceEstimate = 1;
     public int pixelPerDegree = 16;
@@ -123,6 +124,7 @@ public class Browser : MonoBehaviour
     {
         WebViewPrefab.Initialized += (sender, eventArgs) =>
         {
+            Initialized = true;
             BonsaiLog("Browser initialized");
             WebViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
             WebViewPrefab.DragMode = dragMode;
@@ -140,6 +142,8 @@ public class Browser : MonoBehaviour
     private void HandleJavaScriptMessage(object _, EventArgs<string> eventArgs)
     {
         var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
+        
+        BonsaiLog($"JS {eventArgs.Value}");
 
         switch (message.Type)
         {

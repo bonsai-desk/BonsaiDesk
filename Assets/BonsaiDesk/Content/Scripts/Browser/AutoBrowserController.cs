@@ -44,7 +44,17 @@ public class AutoBrowserController : NetworkBehaviour
     {
         // so the server runs a browser but does not sync it yet
         // it will need to be synced for streamer mode
-        _autoBrowser.BrowserReady += (_, e) => { SetupBrowser(); };
+        if (_autoBrowser.Initialized)
+        {
+            SetupBrowser();
+        }
+        else
+        {
+            _autoBrowser.BrowserReady += (_, e) =>
+            {
+                SetupBrowser();
+            };
+        }
     }
 
     private void Update()
@@ -361,7 +371,7 @@ public class AutoBrowserController : NetworkBehaviour
 
         if (json?["type"] != "infoCurrentTime")
         {
-            TLog($"Received JSON {eventArgs.Value} at {NetworkTime.time}");
+            TLog($"AB Received JSON {eventArgs.Value} at {NetworkTime.time}");
         }
 
         if (json?["current_time"] != null)
