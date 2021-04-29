@@ -29,7 +29,7 @@ public class LoadingManager : MonoBehaviour
             var newFreq = 72f;
             foreach (var freq in OVRManager.display.displayFrequenciesAvailable)
             {
-                if (freq <= 120)
+                if (freq <= 90)
                 {
                     newFreq = freq;
                 }
