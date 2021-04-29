@@ -147,9 +147,10 @@ public class TableBrowserMenu : MonoBehaviour
                         CloseRoom?.Invoke();
                         break;
                     case "browseYouTube":
-                        if (BrowseSite != null)
+                        // todo remove this
+                        if (BrowseYouTube != null)
                         {
-                            BrowseSite(this, "https://m.youtube.com");
+                            BrowseYouTube(this, new EventArgs());
                         }
 
                         break;
@@ -306,7 +307,7 @@ public class TableBrowserMenu : MonoBehaviour
     public event EventHandler RestartVideo;
     public event EventHandler<float> SeekPlayer;
 
-    public event EventHandler<string> BrowseSite;
+    public event EventHandler BrowseYouTube;
     
     public event EventHandler<float> SetVolumeLevel;
 

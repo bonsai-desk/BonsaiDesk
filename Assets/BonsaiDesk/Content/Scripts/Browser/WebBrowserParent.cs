@@ -49,10 +49,6 @@ public class WebBrowserParent : MonoBehaviour
         webBrowser.SetHidden(hidden);
         keyboardBrowser.SetHidden(hidden);
         webNavBrowser.SetHidden(hidden);
-        if (hidden)
-        {
-            LoadUrl("about:blank");
-        }
     }
 
     private void HandleWebNavBrowserReady(object sender, EventArgs eventArgs)

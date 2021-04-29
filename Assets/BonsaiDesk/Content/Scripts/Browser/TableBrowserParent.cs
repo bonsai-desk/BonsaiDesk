@@ -1,8 +1,11 @@
 ﻿using System;
 using UnityEngine;
+using Vuplex.WebView;
 
 public class TableBrowserParent : MonoBehaviour
 {
+    private bool openedOnce;
+    private Browser preSleepActive = Browser.Table;
     public TableBrowser TableBrowser;
     public TableBrowserMenu TableBrowserMenu;
     public WebBrowserParent WebBrowserParent;
@@ -13,7 +16,7 @@ public class TableBrowserParent : MonoBehaviour
     private void Start()
     {
         MoveToDesk.OrientationChanged += HandleOrientationChange;
-        TableBrowserMenu.BrowseSite += HandleBrowseSite;
+        TableBrowserMenu.BrowseYouTube += HandleBrowseYouTube;
         WebBrowserParent.CloseWeb += HandleCloseWeb;
 
         WebBrowserParent.BrowsersReady += HandleParentReady;
@@ -32,6 +35,7 @@ public class TableBrowserParent : MonoBehaviour
         if (parentsReady == 2)
         {
             Sleep();
+            WebBrowserParent.LoadUrl("https://m.youtube.com");
         }
     }
 
@@ -50,14 +54,14 @@ public class TableBrowserParent : MonoBehaviour
         SetActive(Browser.Table);
     }
 
-    private void HandleBrowseSite(object _, string url)
+    private void HandleBrowseYouTube(object _, EventArgs e)
     {
-        WebBrowserParent.LoadUrl(url);
         SetActive(Browser.Web);
     }
 
     private void SetActive(Browser browser)
     {
+        preSleepActive = browser;
         switch (browser)
         {
             case Browser.Web:
@@ -77,6 +81,7 @@ public class TableBrowserParent : MonoBehaviour
     public void Sleep()
     {
         BonsaiLog("Sleep");
+        
         sleeped = true;
         TableBrowser.SetHidden(true);
         WebBrowserParent.SetAllHidden(true);
@@ -90,7 +95,28 @@ public class TableBrowserParent : MonoBehaviour
     public void Wake()
     {
         sleeped = false;
-        TableBrowser.SetHidden(false);
+
+        if (!openedOnce)
+        {
+            openedOnce = true;
+            TableBrowser.SetHidden(false);
+        }
+        else
+        {
+            switch (preSleepActive)
+            {
+                case Browser.Web:
+                    WebBrowserParent.SetAllHidden(false);
+                    break;
+                case Browser.Table:
+                    TableBrowser.SetHidden(false);
+                    break;
+                default:
+                    TableBrowser.SetHidden(false);
+                    break;
+            }
+        }
+        
 
         InputManager.Hands.Left.ZTestOverlay();
         InputManager.Hands.Right.ZTestOverlay();
