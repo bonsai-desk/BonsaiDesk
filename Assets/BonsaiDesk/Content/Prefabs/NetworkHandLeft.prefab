@@ -68,7 +68,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   interpolationBackTime: 0.1
-  extrapolationMode: 1
+  extrapolationMode: 0
   useExtrapolationTimeLimit: 1
   extrapolationTimeLimit: 5
   useExtrapolationDistanceLimit: 0
