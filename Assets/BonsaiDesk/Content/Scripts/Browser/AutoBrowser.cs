@@ -3,6 +3,7 @@ using Vuplex.WebView;
 
 public class AutoBrowser : Browser
 {
+    public float deskHeight = 0.724f;
     public Rigidbody screenRigidBody;
     public Vector3 _belowTableLocalPosition;
     public Vector3 _defaultLocalPosition;
@@ -89,7 +90,10 @@ public class AutoBrowser : Browser
 
     protected override void SetupWebViewPrefab()
     {
-        WebViewPrefab = WebViewPrefabCustom.Instantiate(1, 1);
+        var material = new Material(Resources.Load<Material>("OnTopViewportClipped"));
+        material.SetFloat("_ClipLevel", deskHeight);
+        
+        WebViewPrefab = WebViewPrefabCustom.Instantiate(1, 1, material);
         Destroy(WebViewPrefab.Collider);
         WebViewPrefab.transform.SetParent(webViewParent, false);
 

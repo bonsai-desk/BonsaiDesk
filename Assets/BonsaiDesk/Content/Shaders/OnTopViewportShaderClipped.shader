@@ -32,6 +32,7 @@ Shader "Unlit/OnTopViewportShaderClipped" {
         _ColorMask ("Color Mask", Float) = 15
         
         _ZTest ("ZTest", int) = 4
+        _ClipLevel("ClipLevel", Float) = 0
     }
 
     SubShader {
@@ -87,6 +88,7 @@ Shader "Unlit/OnTopViewportShaderClipped" {
                 SamplerState linear_clamp_sampler;
 
                 float4 _MainTex_ST;
+                float _ClipLevel;
 
                 v2f vert (appdata v) {
                     v2f o;
@@ -171,7 +173,7 @@ Shader "Unlit/OnTopViewportShaderClipped" {
                     col = float4(GammaToLinearSpace(col.xyz), col.w);
                     #endif
 
-                    clip(i.world_space_pos.y);
+                    clip(i.world_space_pos.y - _ClipLevel);
 
                     return col;
                 }

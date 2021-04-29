@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: OnTopViewportShaderClipped
-  m_Shader: {fileID: 4800000, guid: fd150d2e621277e40a2800bf3e8a0af3, type: 3}
+  m_Name: OnTopViewportClipped
+  m_Shader: {fileID: 4800000, guid: 9bd63945d21686c4bb07f5c4e15b52a3, type: 3}
   m_ShaderKeywords: _STEREOMODE_NONE
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
