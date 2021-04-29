@@ -29,7 +29,7 @@ public class AutoBrowser : Browser
         _belowTableLocalPosition = _defaultLocalPosition;
         //_belowTableLocalPosition.y = -Bounds.y;
         
-        _belowTableLocalPosition.y = transform.InverseTransformPoint(0, deskHeight, 0).y -Bounds.y/2 - 0.0001f;
+        _belowTableLocalPosition.y = transform.InverseTransformPoint(0, deskHeight, 0).y -Bounds.y/2 - 0.001f;
         
         ListenersReady += NavHome;
     }
@@ -94,10 +94,18 @@ public class AutoBrowser : Browser
 
     protected override void SetupWebViewPrefab()
     {
+        
+            
         var material = new Material(Resources.Load<Material>("OnTopViewportClipped"));
         material.SetFloat("_ClipLevel", deskHeight);
-        
         WebViewPrefab = WebViewPrefabCustom.Instantiate(1, 1, material);
+            
+        #if UNITY_ANDROID && !UNITY_EDITOR
+        holePuncherMaterial = new Material(Resources.Load<Material>("OnTopUnderlayClipped"));
+        holePuncherMaterial.SetFloat("_ClipLevel", deskHeight);
+        WebViewPrefab = WebViewPrefabCustom.Instantiate(1, 1);
+        #endif
+        
         Destroy(WebViewPrefab.Collider);
         WebViewPrefab.transform.SetParent(webViewParent, false);
 

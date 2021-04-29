@@ -25,7 +25,7 @@ public class Browser : MonoBehaviour
     private GameObject _boundsObject;
     private OVROverlay _overlay;
     private bool _postedListenersReady;
-    private Material holePuncherMaterial;
+    protected Material holePuncherMaterial;
     protected Transform Resizer;
     protected Transform WebViewView;
     public Transform WebViewTransform;

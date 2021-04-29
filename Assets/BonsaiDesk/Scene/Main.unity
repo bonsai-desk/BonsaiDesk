@@ -1998,6 +1998,11 @@ PrefabInstance:
       propertyPath: compositionDepth
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: holePuncherMaterial
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141497, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
       propertyPath: m_Name
@@ -9607,6 +9612,11 @@ PrefabInstance:
       objectReference: {fileID: 744943659}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
+      propertyPath: holePuncherMaterial
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
       propertyPath: clickWithoutStealingFocus
       value: 1
       objectReference: {fileID: 0}
@@ -10925,6 +10935,11 @@ PrefabInstance:
       propertyPath: customInputModule
       value: 
       objectReference: {fileID: 744943659}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
+      propertyPath: holePuncherMaterial
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
       propertyPath: clickWithoutStealingFocus
@@ -12519,6 +12534,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
+      propertyPath: holePuncherMaterial
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
+        type: 3}
       propertyPath: clickWithoutStealingFocus
       value: 1
       objectReference: {fileID: 0}
@@ -13425,8 +13445,10 @@ MonoBehaviour:
   dragMode: 0
   WebViewPrefab: {fileID: 0}
   hidden: 0
+  holePuncherMaterial: {fileID: 2100000, guid: e5ee24d217a159342b17923993b58b43, type: 2}
   WebViewTransform: {fileID: 0}
   compositionDepth: 1
+  deskHeight: 0.724
   screenRigidBody: {fileID: 878527641}
   _belowTableLocalPosition: {x: 0, y: 0, z: 0}
   _defaultLocalPosition: {x: 0, y: 0, z: 0}
