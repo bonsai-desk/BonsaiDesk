@@ -513,12 +513,13 @@ let JoinDeskPage = observer((props) => {
     let [posting, setPosting] = useState(false);
     let [message, setMessage] = useState('');
 
+    let url = apiBase(store) + `/rooms/${code}`;
+
     useEffect(() => {
         if (posting) return;
 
         if (code.length === 4) {
             setPosting(true);
-            let url = apiBase(store) + `/rooms/${code}`;
             axios({
                 method: 'get',
                 url: url,
@@ -528,8 +529,8 @@ let JoinDeskPage = observer((props) => {
                 let networkAddressStore = store.NetworkInfo.NetworkAddress;
 
                 let {
-                    network_address,
-                    username,
+                    //network_address,
+                    //username,
                     version,
                 } = response.data;
 
@@ -559,7 +560,7 @@ let JoinDeskPage = observer((props) => {
                 setPosting(false);
             });
         }
-    }, [code, navHome, posting, store.NetworkInfo.NetworkAddress]);
+    }, [code, navHome, posting, url, store.NetworkInfo.NetworkAddress, store.FullVersion]);
 
     function handleClick(char) {
         setMessage('');

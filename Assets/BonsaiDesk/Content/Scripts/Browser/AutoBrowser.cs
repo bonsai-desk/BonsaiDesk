@@ -3,18 +3,34 @@ using Vuplex.WebView;
 
 public class AutoBrowser : Browser
 {
+    public float deskHeight = 0.724f;
     public Rigidbody screenRigidBody;
-    private Vector3 _belowTableLocalPosition;
-    private Vector3 _defaultLocalPosition;
+    public Vector3 _belowTableLocalPosition;
+    public Vector3 _defaultLocalPosition;
+    public Transform webViewParent;
+
+    private void Update()
+    {
+       //if (WebViewPrefab)
+       //{
+       //    
+       //    WebViewPrefab.transform.position = boundsTransform.position;
+       //    WebViewPrefab.transform.position = screenTransform.position;
+       //    WebViewPrefab.transform.localScale = boundsTransform.localScale;
+       //}
+    }
 
     protected override void Start()
     {
         base.Start();
         BonsaiLog("Start");
+            
         _defaultLocalPosition = transform.localPosition;
         _belowTableLocalPosition = _defaultLocalPosition;
-        _belowTableLocalPosition.y = -Bounds.y / 2f;
-
+        //_belowTableLocalPosition.y = -Bounds.y;
+        
+        _belowTableLocalPosition.y = transform.InverseTransformPoint(0, deskHeight, 0).y -Bounds.y/2 - 0.001f;
+        
         ListenersReady += NavHome;
     }
 
@@ -54,45 +70,64 @@ public class AutoBrowser : Browser
 
     public void SetHeight(float t)
     {
-        var heightT = t;
-        transform.localPosition = Vector3.Lerp(_belowTableLocalPosition, _defaultLocalPosition, Mathf.Clamp01(heightT));
+       var heightT = t;
+       transform.localPosition = Vector3.Lerp(_belowTableLocalPosition, _defaultLocalPosition, Mathf.Clamp01(heightT));
 
-        var height = boundsTransform.localScale.y;
-        var halfHeight = height / 2f;
+      //var height = boundsTransform.localScale.y;
+      //var halfHeight = height / 2f;
 
-        var scaleT = (transform.localPosition.y + halfHeight) / height;
-        scaleT = Mathf.Clamp01(scaleT);
+      //var scaleT = (transform.localPosition.y + halfHeight) / height;
+      //scaleT = Mathf.Clamp01(scaleT);
 
-        holePuncherTransform.localScale = new Vector3(1, scaleT, 1);
-        holePuncherTransform.localPosition = new Vector3(0, (1 - scaleT) / 2, 0);
+      //holePuncherTransform.localScale = new Vector3(1, 2*scaleT, 1);
+      //holePuncherTransform.localPosition = new Vector3(0, (1 - scaleT) / 2, 0);
 
-        if (Mathf.Approximately(t, 0))
-        {
-            //TODO is this laggy? also this runs even if you don't have authority over the screen
-            screenRigidBody.velocity = Vector3.zero;
-            screenRigidBody.angularVelocity = Vector3.zero;
-            transform.GetChild(0).localPosition = Vector3.zero;
-            transform.GetChild(0).localRotation = Quaternion.identity;
-        }
+      //if (Mathf.Approximately(t, 0))
+      //{
+      //    //TODO is this laggy? also this runs even if you don't have authority over the screen
+      //    screenRigidBody.velocity = Vector3.zero;
+      //    screenRigidBody.angularVelocity = Vector3.zero;
+      //    transform.GetChild(0).localPosition = Vector3.zero;
+      //    transform.GetChild(0).localRotation = Quaternion.identity;
+      //}
     }
 
     protected override void SetupWebViewPrefab()
     {
+        
+            
+        var material = new Material(Resources.Load<Material>("OnTopViewportClipped"));
+        material.SetFloat("_ClipLevel", deskHeight);
+        WebViewPrefab = WebViewPrefabCustom.Instantiate(1, 1, material);
+            
+        #if UNITY_ANDROID && !UNITY_EDITOR
+        holePuncherMaterial = new Material(Resources.Load<Material>("OnTopUnderlayClipped"));
+        holePuncherMaterial.SetFloat("_ClipLevel", deskHeight);
         WebViewPrefab = WebViewPrefabCustom.Instantiate(1, 1);
+        #endif
+        
         Destroy(WebViewPrefab.Collider);
-        WebViewPrefab.transform.SetParent(boundsTransform, false);
+        WebViewPrefab.transform.SetParent(webViewParent, false);
 
         Resizer = WebViewPrefab.transform.Find("WebViewPrefabResizer");
         WebViewView = Resizer.transform.Find("WebViewPrefabView");
+        
 
-        WebViewPrefab.transform.localPosition = new Vector3(0, 0.5f, 0);
-        WebViewPrefab.transform.localEulerAngles = new Vector3(0, 180, 0);
+        //WebViewPrefab.transform.localPosition = new Vector3(0, 0.5f, 0);
+        //WebViewPrefab.transform.localEulerAngles = new Vector3(0, 180, 0);
 
 #if UNITY_ANDROID && !UNITY_EDITOR
         WebViewView.GetComponent<MeshRenderer>().enabled = false;
 #endif
 
-        WebViewPrefab.Initialized += (sender, eventArgs) => { ChangeAspect(startingAspect); };
+        WebViewPrefab.Initialized += (sender, eventArgs) =>
+        {
+            ChangeAspect(startingAspect);
+            WebViewView.SetParent(boundsTransform, false);
+            WebViewView.transform.localPosition = Vector3.zero;
+            WebViewView.transform.localEulerAngles = Vector3.zero;
+            
+        };
         base.SetupWebViewPrefab();
     }
 

@@ -8,7 +8,6 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Vuplex.WebView;
 
-[RequireComponent(typeof(AutoBrowser))]
 public class AutoBrowserController : NetworkBehaviour
 {
     private const float ClientJoinGracePeriod = 10f;
@@ -24,7 +23,7 @@ public class AutoBrowserController : NetworkBehaviour
     private readonly Dictionary<uint, PlayerState> _clientsPlayerStatus = new Dictionary<uint, PlayerState>();
     private readonly float _setVolumeLevelEvery = 0.5f;
     private bool _allGood;
-    private AutoBrowser _autoBrowser;
+    public AutoBrowser _autoBrowser;
     private double _beginReadyUpTime;
     private double _clientLastSentPing;
     private float _clientPlayerDuration;
@@ -45,8 +44,17 @@ public class AutoBrowserController : NetworkBehaviour
     {
         // so the server runs a browser but does not sync it yet
         // it will need to be synced for streamer mode
-        _autoBrowser = GetComponent<AutoBrowser>();
-        _autoBrowser.BrowserReady += (_, e) => { SetupBrowser(); };
+        if (_autoBrowser.Initialized)
+        {
+            SetupBrowser();
+        }
+        else
+        {
+            _autoBrowser.BrowserReady += (_, e) =>
+            {
+                SetupBrowser();
+            };
+        }
     }
 
     private void Update()
@@ -363,7 +371,7 @@ public class AutoBrowserController : NetworkBehaviour
 
         if (json?["type"] != "infoCurrentTime")
         {
-            TLog($"Received JSON {eventArgs.Value} at {NetworkTime.time}");
+            TLog($"AB Received JSON {eventArgs.Value} at {NetworkTime.time}");
         }
 
         if (json?["current_time"] != null)

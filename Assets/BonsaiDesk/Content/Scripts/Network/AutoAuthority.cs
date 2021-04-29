@@ -12,6 +12,7 @@ public class AutoAuthority : NetworkBehaviour
     [SyncVar] private uint _ownerIdentityId = uint.MaxValue;
     [SyncVar] private bool _inUse = false;
     [SyncVar] public bool isKinematic = false;
+    public bool destroyIfBelow = true;
 
     public bool InUse => _inUse;
 
@@ -60,7 +61,7 @@ public class AutoAuthority : NetworkBehaviour
         UpdateColor();
         _visualizePinchPull = false;
 
-        if (isServer && transform.position.y < -1f)
+        if (destroyIfBelow && isServer && transform.position.y < -1f)
         {
             var blockObject = GetComponent<BlockObject>();
             if (blockObject && blockObject.Blocks.Count > 4)
