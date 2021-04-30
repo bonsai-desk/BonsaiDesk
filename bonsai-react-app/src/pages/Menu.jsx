@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Link, Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
 import './Menu.css';
-import {apiBase, postJson} from '../utilities';
+import {apiBase} from '../utilities';
 import {Button, ToggleButton} from '../components/Button';
 import axios from 'axios';
 import DoorOpen from '../static/door-open.svg';
@@ -25,6 +25,25 @@ import {BeatLoader, BounceLoader} from 'react-spinners';
 import {observer} from 'mobx-react-lite';
 import {action, autorun} from 'mobx';
 import {MenuContent} from '../components/MenuContent';
+import {
+    postBrowseYouTube,
+    postCloseMenu,
+    postCloseRoom,
+    postJoinRoom,
+    postKickConnectionId,
+    postLeaveRoom,
+    postLightsChange,
+    postOpenRoom,
+    postRequestMicrophone,
+    postSeekPlayer,
+    postSetVolume,
+    postToggleBlockBreak,
+    postTogglePinchPull,
+    postVideoEject,
+    postVideoPause,
+    postVideoPlay,
+    postVideoRestart,
+} from '../api';
 
 const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 const redButtonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
@@ -33,76 +52,6 @@ const grayButtonClass = 'py-4 px-8 font-bold bg-gray-800 active:bg-gray-700 hove
 const grayButtonClassInert = 'py-4 px-8 font-bold bg-gray-800 rounded flex flex-wrap content-center';
 
 // post data
-
-function postRequestMicrophone() {
-    postJson({Type: 'command', Message: 'requestMicrophone'});
-}
-
-function postTogglePinchPull() {
-    postJson({Type: 'command', Message: 'togglePinchPull'});
-}
-
-function postToggleBlockBreak() {
-    postJson({Type: 'command', Message: 'toggleBlockBreak'});
-}
-
-function postCloseMenu() {
-    postJson({Type: 'command', Message: 'closeMenu'});
-}
-
-function postBrowseYouTube() {
-    postJson({Type: 'command', Message: 'browseYouTube'});
-}
-
-function postOpenRoom() {
-    postJson({Type: 'command', Message: 'openRoom'});
-}
-
-function postCloseRoom() {
-    postJson({Type: 'command', Message: 'closeRoom'});
-}
-
-function postJoinRoom(data) {
-    postJson({Type: 'command', Message: 'joinRoom', data: JSON.stringify(data)});
-}
-
-function postLeaveRoom() {
-    postJson({Type: 'command', Message: 'leaveRoom'});
-
-}
-
-function postKickConnectionId(id) {
-    postJson({Type: 'command', Message: 'kickConnectionId', Data: id});
-}
-
-function postSeekPlayer(ts) {
-    postJson({Type: 'command', Message: 'seekPlayer', Data: ts});
-}
-
-function postSetVolume(level) {
-    // [0,1]
-    postJson({Type: 'command', Message: 'setVolume', Data: level});
-}
-
-function postVideoPlay() {
-    postJson({Type: 'command', Message: 'playVideo'});
-}
-
-function postVideoPause() {
-    postJson({Type: 'command', Message: 'pauseVideo'});
-}
-
-function postVideoEject() {
-    postJson({Type: 'command', Message: 'ejectVideo'});
-}
-
-function postVideoRestart() {
-    postJson({Type: 'command', Message: 'restartVideo'});
-}
-
-function postLightsChange(level) {
-    postJson({Type: 'command', Message: 'lightsChange', Data: level});
-}
 
 // utils
 
