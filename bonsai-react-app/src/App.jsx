@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     Link,
-    MemoryRouter as Router,
+    BrowserRouter as Router,
     Route,
     Switch,
     useHistory,
@@ -130,7 +130,7 @@ const Boot = observer(() => {
 });
 
 function Home() {
-    return <div className={'w-full h-full bg-gray-900'}></div>;
+    return <div className={'w-full h-full bg-gray-900'}/>;
 }
 
 function App() {
