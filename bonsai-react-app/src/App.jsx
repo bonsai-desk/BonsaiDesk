@@ -34,6 +34,7 @@ function genNavListeners(history) {
         switch (json.command) {
             case 'push':
                 console.log('command: nav ' + json.path);
+                // todo does this still work with BrowserRouter
                 history.push(json.path);
                 break;
             default:
