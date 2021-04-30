@@ -19,13 +19,13 @@ class Store {
         UserName: 'NoName',
     };
     AppInfo = {
-        Build: 'PRODUCTION',
-        MicrophonePermission: false,
+        Build: 'DEVELOPMENT',
+        MicrophonePermission: true,
         Version: '?',
         BuildId: -1,
     };
     _networkInfo = {
-        Online: false,
+        Online: true,
         NetworkAddress: 'none',
         RoomOpen: false,
         Mode: NetworkManagerMode.Offline,

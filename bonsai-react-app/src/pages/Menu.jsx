@@ -1,7 +1,8 @@
-import React, {useEffect, useState, useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
+import {Link, Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
 import './Menu.css';
-import {postJson, apiBase} from '../utilities';
-import {Button, ToggleButton, UpButton} from '../components/Button';
+import {apiBase, postJson} from '../utilities';
+import {Button, ToggleButton} from '../components/Button';
 import axios from 'axios';
 import DoorOpen from '../static/door-open.svg';
 import LinkImg from '../static/link.svg';
@@ -11,7 +12,7 @@ import PlayImg from '../static/play.svg';
 import ResetImg from '../static/reset.svg';
 import VolumeHigh from '../static/volume-high.svg';
 import VolumeOff from '../static/volume-off.svg';
-import {mpl, lgpl, apache} from '../static/licenses';
+import {apache, lgpl, mpl} from '../static/licenses';
 
 import DotsImg from '../static/dots-vertical.svg';
 
@@ -19,11 +20,11 @@ import EjectImg from '../static/eject-fill.svg';
 import {KeySVG} from '../components/Keys';
 import YtImg from '../static/yt-small.png';
 import ThinkingFace from '../static/thinking-face.svg';
-import {useStore} from '../DataProvider';
+import {NetworkManagerMode, useStore} from '../DataProvider';
 import {BeatLoader, BounceLoader} from 'react-spinners';
 import {observer} from 'mobx-react-lite';
 import {action, autorun} from 'mobx';
-import {NetworkManagerMode} from '../DataProvider';
+import {MenuContent} from '../components/MenuContent';
 
 const roundButtonClass = 'bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded-full p-4 cursor-pointer w-20 h-20 flex flex-wrap content-center';
 const redButtonClass = 'py-4 px-8 font-bold bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer flex flex-wrap content-center';
@@ -132,7 +133,10 @@ function ListItem(props) {
         buttonClassSelected = '',
         buttonClass = '',
         buttonClassInactive = '',
+        to = '',
     } = props;
+
+    let history = useHistory();
 
     buttonClass = buttonClass ?
             buttonClass :
@@ -153,6 +157,23 @@ function ListItem(props) {
     }
 
     let className = selected ? buttonClassSelected : buttonClass;
+    if (to) {
+        className = window.location.pathname === to ? buttonClassSelected : buttonClass;
+    }
+
+    if (to) {
+        return (
+                <Button className={className} handleClick={() => {
+                    history.push(to);
+                }}>
+                    <Link to={to}>
+                        {props.children}
+                    </Link>
+                </Button>
+        );
+
+    }
+
     return (
             <Button className={className} handleClick={handleClick}>
                 {props.children}
@@ -253,24 +274,6 @@ function InfoItem({imgSrc, title, slug, children}) {
     );
 }
 
-function MenuContent(props) {
-    let {name} = props;
-
-    return (
-            <div className={'text-white p-4 h-full pr-8'}>
-                {name ?
-                        <div className={'pb-8 text-xl'}>
-                            {name}
-                        </div>
-                        : ''}
-                <div className={'space-y-8 pb-8'}>
-                    {props.children}
-                </div>
-            </div>
-    );
-
-}
-
 function LoadingHomePage() {
     return <div className={'flex justify-center w-full flex-wrap'}>
         <BounceLoader size={200} color={'#737373'}/>
@@ -289,7 +292,15 @@ function ClientHomePage() {
     );
 }
 
-const RoomInfo = observer(() => {
+function OpenRoomItem() {
+    return <InfoItem title={'Room'} slug={'Invite others'} imgSrc={DoorOpen}>
+        <Button className={greenButtonClass} handleClick={postOpenRoom}>
+            Open Up
+        </Button>
+    </InfoItem>;
+}
+
+const CloseRoomItem = observer(() => {
     let {store} = useStore();
 
     let handleCloseRoom = () => {
@@ -306,47 +317,47 @@ const RoomInfo = observer(() => {
         postCloseRoom();
     };
 
-    let OpenRoom =
-            <InfoItem title={'Room'} slug={'Invite others'} imgSrc={DoorOpen}>
-                <Button className={greenButtonClass} handleClick={postOpenRoom}>
-                    Open Up
-                </Button>
-            </InfoItem>;
+    return <InfoItem title={'Room'} slug={'Ready to accept connections'}
+                     imgSrc={DoorOpen}>
+        <Button className={redButtonClass} handleClick={handleCloseRoom}>
+            Close
+        </Button>
+    </InfoItem>;
+});
 
-    let CloseRoom =
-            <InfoItem title={'Room'} slug={'Ready to accept connections'}
-                      imgSrc={DoorOpen}>
-                <Button className={redButtonClass} handleClick={handleCloseRoom}>
-                    Close
-                </Button>
-            </InfoItem>;
-
+const DeskCodeItem = observer(() => {
+    let {store} = useStore();
     const roomCodeCLass = 'text-5xl ';
+    return <InfoItem title={'Desk Code'}
+                     slug={'People who have this can join you'}
+                     imgSrc={LinkImg}>
+        <div className={'h-20 flex flex-wrap content-center'}>
+            {store.RoomCode ?
+                    <div className={roomCodeCLass}>{store.RoomCode}</div>
+
+                    :
+                    <div className={grayButtonClassInert}><BeatLoader size={8}
+                                                                      color={'#737373'}/>
+                    </div>
+            }
+        </div>
+    </InfoItem>;
+});
+
+const RoomInfo = observer(() => {
+    let {store} = useStore();
 
     if (store.NetworkInfo.RoomOpen) {
         return (
                 <React.Fragment>
-                    {CloseRoom}
-                    <InfoItem title={'Desk Code'}
-                              slug={'People who have this can join you'}
-                              imgSrc={LinkImg}>
-                        <div className={'h-20 flex flex-wrap content-center'}>
-                            {store.RoomCode ?
-                                    <div className={roomCodeCLass}>{store.RoomCode}</div>
-
-                                    :
-                                    <div className={grayButtonClassInert}><BeatLoader size={8}
-                                                                                      color={'#737373'}/>
-                                    </div>
-                            }
-                        </div>
-                    </InfoItem>
+                    <CloseRoomItem/>
+                    <DeskCodeItem/>
                 </React.Fragment>
         );
     } else {
         return (
                 <React.Fragment>
-                    {OpenRoom}
+                    <OpenRoomItem/>
                 </React.Fragment>
         );
     }
@@ -506,16 +517,22 @@ const HomePage = observer(() => {
 });
 
 let JoinDeskPage = observer((props) => {
-    let {navHome} = props;
     let {store} = useStore();
 
     let [code, setCode] = useState('');
     let [posting, setPosting] = useState(false);
     let [message, setMessage] = useState('');
 
+    let {history} = useHistory();
+
     let url = apiBase(store) + `/rooms/${code}`;
 
     useEffect(() => {
+
+        function navHome() {
+            history.push('/menu/home');
+        }
+
         if (posting) return;
 
         if (code.length === 4) {
@@ -560,7 +577,7 @@ let JoinDeskPage = observer((props) => {
                 setPosting(false);
             });
         }
-    }, [code, navHome, posting, url, store.NetworkInfo.NetworkAddress, store.FullVersion]);
+    }, [history, code, posting, url, store.NetworkInfo.NetworkAddress, store.FullVersion]);
 
     function handleClick(char) {
         setMessage('');
@@ -641,19 +658,8 @@ function VideosPage() {
 const DebugPage = observer(() => {
     let {store} = useStore();
 
-    let addFakeIpPort = action((store) => {
-        //todo
-        store.ip_address = 1234;
-        store.port = 4321;
-    });
-    let rmFakeIpPort = action(store => {
-        //todo
-        store.ip_address = null;
-        store.port = null;
-    });
-
     let setNetState = action((store, netState) => {
-        store.network_state = netState;
+        store.NetworkInfo.Mode = netState;
     });
 
     let addFakeClient = action(store => {
@@ -670,7 +676,7 @@ const DebugPage = observer(() => {
 
     let toggleRoomOpen = action(store => {
         //todo
-        store.RoomOpen = !store.RoomOpen;
+        store.NetworkInfo.RoomOpen = !store.NetworkInfo.RoomOpen;
     });
 
     let addFakeVideoPlayerPaused = () => {
@@ -725,23 +731,36 @@ const DebugPage = observer(() => {
 
                     <div className={'w-1/2'}>
 
+                        <div>Room Status</div>
+                        <div className={containerClass}>
+                            <Button handleClick={() => {
+                                toggleRoomOpen(store);
+                            }} className={grayButtonClass}>
+                                toggle
+                            </Button>
+                        </div>
+
                         <div>Host State</div>
                         <div className={containerClass}>
                             <Button handleClick={() => {
-                                setNetState(store, 'Neutral');
-                            }} className={grayButtonClass}>Neutral
+                                setNetState(store, NetworkManagerMode.Offline);
+                            }} className={grayButtonClass}>
+                                Offline
                             </Button>
                             <Button handleClick={() => {
-                                setNetState(store, 'HostWaiting');
-                            }} className={grayButtonClass}>HostWaiting
+                                setNetState(store, NetworkManagerMode.ServerOnly);
+                            }} className={grayButtonClass}>
+                                Server Only
                             </Button>
                             <Button handleClick={() => {
-                                setNetState(store, 'Hosting');
-                            }} className={grayButtonClass}>Hosting
+                                setNetState(store, NetworkManagerMode.ClientOnly);
+                            }} className={grayButtonClass}>
+                                Client Only
                             </Button>
                             <Button handleClick={() => {
-                                setNetState(store, 'ClientConnected');
-                            }} className={grayButtonClass}>ClientConnected
+                                setNetState(store, NetworkManagerMode.Host);
+                            }} className={grayButtonClass}>
+                                Host
                             </Button>
 
 
@@ -749,14 +768,6 @@ const DebugPage = observer(() => {
 
                         <div>Connection</div>
                         <div className={containerClass}>
-                            <Button className={grayButtonClass} handleClick={() => {
-                                addFakeIpPort(store);
-                            }}>+ fake ip/port
-                            </Button>
-                            <Button className={grayButtonClass} handleClick={() => {
-                                rmFakeIpPort(store);
-                            }}>- fake ip/port
-                            </Button>
                             <Button handleClick={() => {
                                 addFakeClient(store);
                             }} className={grayButtonClass}>+ fake client
@@ -765,27 +776,8 @@ const DebugPage = observer(() => {
                                 rmFakeClient(store);
                             }} className={grayButtonClass}>- fake client
                             </Button>
-                            <UpButton handleClick={() => {
-                                postJoinRoom({
-                                    id: '',
-                                    ip_address: '192.168.1.117',
-                                    network_address: '',
-                                    port: 0,
-                                    pinged: 0,
-                                });
-                            }} className={grayButtonClass}>join hard coded
-                            </UpButton>
                         </div>
 
-                        <div>Room Status</div>
-
-                        <div className={containerClass}>
-                            <Button handleClick={() => {
-                                toggleRoomOpen(store);
-                            }} className={grayButtonClass}>
-                                toggle
-                            </Button>
-                        </div>
                         <div>Player</div>
                         <div className={containerClass}>
                             <Button handleClick={rmFakeVideoPlayer}
@@ -993,11 +985,7 @@ let Menu = observer(() => {
 
     let {store, pushStore} = useStore();
 
-    let [active, setActive] = useState(0);
-
-    let navHome = () => {
-        setActive(0);
-    };
+    let match = useRouteMatch();
 
     useEffect(() => {
         autorun(() => {
@@ -1066,19 +1054,14 @@ let Menu = observer(() => {
         pages.push({name: 'Debug', component: DebugPage});
     }
 
-    let SelectedPage;
-    if (active > pages.length - 1) {
-        setActive(0);
-        SelectedPage = pages[0].component;
-    } else {
-        SelectedPage = pages[active].component;
-    }
-
     let joinDeskActive = store.NetworkInfo.Mode === NetworkManagerMode.Host && !store.NetworkInfo.RoomOpen;
 
     if (!store.AppInfo.MicrophonePermission) {
         return <NoMicPage/>;
     }
+
+    const playerButtonClass = 'text-white py-4 px-8 hover:bg-gray-800 active:bg-gray-900 hover:text-white rounded cursor-pointer flex flex-wrap content-center border-4 border-green-400';
+    const playerButtonClassSelected = 'py-4 px-8 bg-blue-700 text-white rounded cursor-pointer flex flex-wrap content-center border-4 border-green-400';
 
     return (
             <div className={'flex text-lg text-gray-500 h-full static'}>
@@ -1098,35 +1081,36 @@ let Menu = observer(() => {
 
                     <div className={'h-16'}/>
                     <SettingsList>
-                        {pages.map((info, i) => {
-                            if (info.name.toLowerCase() === 'join desk' && !joinDeskActive) {
-                                return <ListItem key={info.name}
-                                                 inactive={true}>{info.name}</ListItem>;
-                            }
-                            if (info.name.toLowerCase() === 'player') {
-                                const buttonClass = 'text-white py-4 px-8 hover:bg-gray-800 active:bg-gray-900 hover:text-white rounded cursor-pointer flex flex-wrap content-center border-4 border-green-400';
-                                const buttonClassSelected = 'py-4 px-8 bg-blue-700 text-white rounded cursor-pointer flex flex-wrap content-center border-4 border-green-400';
+                        <ListItem to={'/menu/home'}>Home</ListItem>
+                        {store.MediaInfo.Active ?
+                                <ListItem to={'/menu/player'}
+                                          buttonClass={playerButtonClass}
+                                          buttonClassSelected={playerButtonClassSelected}>
+                                    Player
+                                </ListItem> : ''}
+                        <ListItem to={'/menu/join-desk'} inactive={!joinDeskActive}>Join Desk</ListItem>
+                        <ListItem to={'/menu/videos'}>Videos</ListItem>
+                        <ListItem to={'/menu/settings'}>Settings</ListItem>
 
-                                return <ListItem
-                                        buttonClass={buttonClass}
-                                        buttonClassSelected={buttonClassSelected}
-                                        key={info.name} handleClick={() => {
-                                    setActive(i);
-                                }} selected={active === i}>{info.name}</ListItem>;
-
-                            }
-                            return <ListItem key={info.name} handleClick={() => {
-                                setActive(i);
-                            }} selected={active === i}>{info.name}</ListItem>;
-                        })}
+                        <ListItem to={'/menu/debug'} component={DebugPage}>Debug</ListItem>
                     </SettingsList>
                     <div className={'w-full p-2'}>
                         <ExitButton/>
                     </div>
                 </div>
+
                 <div className={'bg-gray-900 z-10 w-full overflow-auto scroll-host'}>
-                    <SelectedPage navHome={navHome}/>
+                    <Switch>
+                        <Route path={`${match.path}/home`} component={HomePage}/>
+                        <Route path={`${match.path}/join-desk`} component={JoinDeskPage}/>
+                        <Route path={`${match.path}/videos`} component={VideosPage}/>
+                        <Route path={`${match.path}/settings`} component={SettingsPage}/>
+                        <Route path={`${match.path}/debug`} component={DebugPage}/>
+                        <Route path={`${match.path}/player`} component={PlayerPage}/>
+                        <Route path={`${match.path}`}>Page not found</Route>
+                    </Switch>
                 </div>
+
             </div>
     );
 });
