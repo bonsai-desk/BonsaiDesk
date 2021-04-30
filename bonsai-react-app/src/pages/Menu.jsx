@@ -2,72 +2,38 @@ import React, {useEffect, useRef, useState} from 'react';
 import {Link, Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
 import './Menu.css';
 import {apiBase} from '../utilities';
-import {Button, ToggleButton} from '../components/Button';
+import {Button} from '../components/Button';
 import axios from 'axios';
-import DoorOpen from '../static/door-open.svg';
-import LinkImg from '../static/link.svg';
-import LightImg from '../static/lightbulb.svg';
 import PauseImg from '../static/pause.svg';
 import PlayImg from '../static/play.svg';
 import ResetImg from '../static/reset.svg';
 import VolumeHigh from '../static/volume-high.svg';
 import VolumeOff from '../static/volume-off.svg';
-import {apache, lgpl, mpl} from '../static/licenses';
 
 import DotsImg from '../static/dots-vertical.svg';
 
 import EjectImg from '../static/eject-fill.svg';
 import {KeySVG} from '../components/Keys';
-import YtImg from '../static/yt-small.png';
-import ThinkingFace from '../static/thinking-face.svg';
 import {NetworkManagerMode, useStore} from '../DataProvider';
-import {BeatLoader, BounceLoader} from 'react-spinners';
 import {observer} from 'mobx-react-lite';
-import {action, autorun} from 'mobx';
+import {autorun} from 'mobx';
 import {MenuContent} from '../components/MenuContent';
 import {
-    postBrowseYouTube,
     postCloseMenu,
-    postCloseRoom,
     postJoinRoom,
-    postKickConnectionId,
-    postLeaveRoom,
-    postLightsChange,
-    postOpenRoom,
     postRequestMicrophone,
     postSeekPlayer,
     postSetVolume,
-    postToggleBlockBreak,
-    postTogglePinchPull,
     postVideoEject,
     postVideoPause,
     postVideoPlay,
     postVideoRestart,
 } from '../api';
-import {grayButtonClass, grayButtonClassInert, greenButtonClass, redButtonClass, roundButtonClass} from '../cssClasses';
-
-// post data
-
-// utils
-
-function showInfo(info) {
-    switch (info[0]) {
-        case 'PlayerInfos':
-            return showPlayerInfo(info[1]);
-        case 'user_info':
-            return JSON.stringify(info);
-        default:
-            return info[1] ? JSON.stringify(info[1], null, 2) : '';
-    }
-}
-
-function showPlayerInfo(playerInfo) {
-    return '[' + playerInfo.map(info => {
-        return `(${info.Name}, ${info.ConnectionId})`;
-    }).join(' ') + ']';
-}
-
-//
+import {grayButtonClass, roundButtonClass} from '../cssClasses';
+import {DebugPage} from './Debug';
+import {VideosPage} from './Videos';
+import {SettingsPage} from './Settings';
+import {HomePage} from './Home';
 
 function ListItem(props) {
     let {
@@ -151,183 +117,6 @@ function JoinDeskButton(props) {
             </Button>
     );
 }
-
-function ConnectedClient(props) {
-    let {info} = props;
-    let {Name, ConnectionId} = info;
-
-    const hostClass = 'bg-gray-800 rounded-full p-4 h-20 flex flex-wrap content-center';
-    const clientClass = 'bg-gray-800 active:bg-red-700 hover:bg-red-600 rounded-full p-4 cursor-pointer h-20 flex flex-wrap content-center';
-
-    if (ConnectionId === 0) {
-        return (
-                <div className={hostClass}>
-                    <div
-                            className={'flex content-center p-2 space-x-4'}>
-                        <div>
-                            <img className={'h-9 w-9'} src={ThinkingFace} alt={''}/>
-                        </div>
-                        <div>
-                            {Name}
-                        </div>
-                    </div>
-                </div>
-        );
-    } else {
-        return (
-                <Button className={clientClass} handleClick={() => {
-                    postKickConnectionId(ConnectionId);
-                }}>
-                    <div
-                            className={'flex content-center p-2 space-x-4'}>
-                        <div>
-                            <img className={'h-9 w-9'} src={ThinkingFace} alt={''}/>
-                        </div>
-                        <div>
-                            {Name}
-                        </div>
-                    </div>
-                </Button>
-        );
-
-    }
-
-}
-
-function InfoItem({imgSrc, title, slug, children}) {
-    return (
-            <div className={'flex w-full justify-between'}>
-                <div className={'flex w-auto'}>
-                    <div className={'flex flex-wrap content-center  p-2 mr-2'}>
-                        {imgSrc ?
-                                <img className={'h-9 w-9'} src={imgSrc} alt={''}/>
-                                : ''
-                        }
-                    </div>
-                    <div className={'my-auto'}>
-                        <div className={'text-xl'}>
-                            {title}
-                        </div>
-                        <div className={'text-gray-400'}>
-                            {slug}
-                        </div>
-                    </div>
-                </div>
-                {children}
-            </div>
-    );
-}
-
-function LoadingHomePage() {
-    return <div className={'flex justify-center w-full flex-wrap'}>
-        <BounceLoader size={200} color={'#737373'}/>
-    </div>;
-}
-
-function ClientHomePage() {
-    return (
-            <div className={'flex'}>
-                <InfoItem title={'Connected'} slug={'You are connected to a host'}
-                          imgSrc={LinkImg}>
-                    <Button handleClick={postLeaveRoom}
-                            className={redButtonClass}>Exit</Button>
-                </InfoItem>
-            </div>
-    );
-}
-
-function OpenRoomItem() {
-    return <InfoItem title={'Room'} slug={'Invite others'} imgSrc={DoorOpen}>
-        <Button className={greenButtonClass} handleClick={postOpenRoom}>
-            Open Up
-        </Button>
-    </InfoItem>;
-}
-
-const CloseRoomItem = observer(() => {
-    let {store} = useStore();
-
-    let handleCloseRoom = () => {
-        if (store.RoomCode) {
-            axios({
-                method: 'delete',
-                url: apiBase(store) + '/rooms/' + store.RoomCode,
-            }).then(r => {
-                if (r.status === 200) {
-                    console.log(`deleted room ${store.RoomCode}`);
-                }
-            }).catch(console.log);
-        }
-        postCloseRoom();
-    };
-
-    return <InfoItem title={'Room'} slug={'Ready to accept connections'}
-                     imgSrc={DoorOpen}>
-        <Button className={redButtonClass} handleClick={handleCloseRoom}>
-            Close
-        </Button>
-    </InfoItem>;
-});
-
-const DeskCodeItem = observer(() => {
-    let {store} = useStore();
-    const roomCodeCLass = 'text-5xl ';
-    return <InfoItem title={'Desk Code'}
-                     slug={'People who have this can join you'}
-                     imgSrc={LinkImg}>
-        <div className={'h-20 flex flex-wrap content-center'}>
-            {store.RoomCode ?
-                    <div className={roomCodeCLass}>{store.RoomCode}</div>
-
-                    :
-                    <div className={grayButtonClassInert}><BeatLoader size={8}
-                                                                      color={'#737373'}/>
-                    </div>
-            }
-        </div>
-    </InfoItem>;
-});
-
-const RoomInfo = observer(() => {
-    let {store} = useStore();
-
-    if (store.NetworkInfo.RoomOpen) {
-        return (
-                <React.Fragment>
-                    <CloseRoomItem/>
-                    <DeskCodeItem/>
-                </React.Fragment>
-        );
-    } else {
-        return (
-                <React.Fragment>
-                    <OpenRoomItem/>
-                </React.Fragment>
-        );
-    }
-
-});
-
-const HostHomePage = observer(() => {
-
-    let {store} = useStore();
-
-    return (
-            <React.Fragment>
-                <RoomInfo/>
-                {store.PlayerInfos.length > 0 && store.NetworkInfo.RoomOpen ?
-                        <React.Fragment>
-                            <div className={'text-xl'}>People in Your Room</div>
-                            <div className={'flex space-x-2'}>
-                                {store.PlayerInfos.map(info => <ConnectedClient info={info}/>)}
-                            </div>
-                        </React.Fragment>
-                        :
-                        ''}
-            </React.Fragment>
-    );
-
-});
 
 //
 
@@ -435,32 +224,7 @@ function Bar({level, handleClickLevel}) {
     </div>);
 }
 
-const HomePage = observer(() => {
-
-    let {store} = useStore();
-
-    let Inner;
-
-    switch (store.NetworkInfo.Mode) {
-        case NetworkManagerMode.ClientOnly:
-            Inner = <ClientHomePage/>;
-            break;
-        case NetworkManagerMode.Host:
-            Inner = <HostHomePage/>;
-            break;
-        default:
-            Inner = <LoadingHomePage/>;
-            break;
-    }
-
-    return (
-            <MenuContent name={'Home'}>
-                {Inner}
-            </MenuContent>
-    );
-});
-
-let JoinDeskPage = observer((props) => {
+let JoinDeskPage = observer(() => {
     let {store} = useStore();
 
     let [code, setCode] = useState('');
@@ -588,341 +352,6 @@ let JoinDeskPage = observer((props) => {
     );
 });
 
-function VideosPage() {
-    return <MenuContent name={'Videos'}>
-        <InfoItem imgSrc={YtImg} title={'YouTube'}
-                  slug={'Find videos to watch on the big screen'}>
-            <Button className={greenButtonClass} handleClick={postBrowseYouTube}>
-                Browse
-            </Button>
-        </InfoItem>
-    </MenuContent>;
-}
-
-const DebugPage = observer(() => {
-    let {store} = useStore();
-
-    let setNetState = action((store, netState) => {
-        store.NetworkInfo.Mode = netState;
-    });
-
-    let addFakeClient = action(store => {
-        if (store.PlayerInfos.length > 0) {
-            store.PlayerInfos.push({Name: 'cam', ConnectionId: 1});
-        } else {
-            store.PlayerInfos.push(
-                    {Name: 'loremIpsumLoremIpsumLorem', ConnectionId: 0});
-        }
-    });
-    let rmFakeClient = action(store => {
-        store.PlayerInfos.pop();
-    });
-
-    let toggleRoomOpen = action(store => {
-        //todo
-        store.NetworkInfo.RoomOpen = !store.NetworkInfo.RoomOpen;
-    });
-
-    let addFakeVideoPlayerPaused = () => {
-        store.MediaInfo = {
-            Active: true,
-            Name: 'Video Name',
-            Paused: true,
-            Scrub: 20,
-            Duration: 60,
-            VolumeLevel: 0.5,
-        };
-    };
-
-    let addFakeVideoPlayerPlaying = () => {
-        store.MediaInfo = {
-            Active: true,
-            Name: 'Video Name',
-            Paused: false,
-            Scrub: 20,
-            Duration: 60,
-            VolumeLevel: 0.5,
-        };
-    };
-
-    let rmFakeVideoPlayer = () => {
-        store.MediaInfo = {
-            Active: false,
-            Name: 'None',
-            Paused: true,
-            Scrub: 0,
-            Duration: 1,
-            VolumeLevel: 0,
-        };
-    };
-
-    let containerClass = 'flex flex-wrap';
-
-    return (
-            <MenuContent name={'Debug'}>
-                <div className={'flex'}>
-
-                    <div className={'w-1/2'}>
-                        <ul>
-                            {Object.entries(store).map(info => {
-                                return <li className={'mb-2'} key={info[0]}>
-                                    <span className={'font-bold'}>{info[0]}</span>{': '}<span
-                                        className={'text-gray-400'}>{showInfo(info)}</span>
-                                </li>;
-                            })}
-                        </ul>
-                    </div>
-
-                    <div className={'w-1/2'}>
-
-                        <div>Room Status</div>
-                        <div className={containerClass}>
-                            <Button handleClick={() => {
-                                toggleRoomOpen(store);
-                            }} className={grayButtonClass}>
-                                toggle
-                            </Button>
-                        </div>
-
-                        <div>Host State</div>
-                        <div className={containerClass}>
-                            <Button handleClick={() => {
-                                setNetState(store, NetworkManagerMode.Offline);
-                            }} className={grayButtonClass}>
-                                Offline
-                            </Button>
-                            <Button handleClick={() => {
-                                setNetState(store, NetworkManagerMode.ServerOnly);
-                            }} className={grayButtonClass}>
-                                Server Only
-                            </Button>
-                            <Button handleClick={() => {
-                                setNetState(store, NetworkManagerMode.ClientOnly);
-                            }} className={grayButtonClass}>
-                                Client Only
-                            </Button>
-                            <Button handleClick={() => {
-                                setNetState(store, NetworkManagerMode.Host);
-                            }} className={grayButtonClass}>
-                                Host
-                            </Button>
-
-
-                        </div>
-
-                        <div>Connection</div>
-                        <div className={containerClass}>
-                            <Button handleClick={() => {
-                                addFakeClient(store);
-                            }} className={grayButtonClass}>+ fake client
-                            </Button>
-                            <Button handleClick={() => {
-                                rmFakeClient(store);
-                            }} className={grayButtonClass}>- fake client
-                            </Button>
-                        </div>
-
-                        <div>Player</div>
-                        <div className={containerClass}>
-                            <Button handleClick={rmFakeVideoPlayer}
-                                    className={grayButtonClass}>none</Button>
-                            <Button handleClick={addFakeVideoPlayerPlaying}
-                                    className={grayButtonClass}>playing</Button>
-                            <Button handleClick={addFakeVideoPlayerPaused}
-                                    className={grayButtonClass}>paused</Button>
-                        </div>
-
-                    </div>
-
-                </div>
-            </MenuContent>
-    );
-});
-
-const SettingsPage = observer(() => {
-    let {store} = useStore();
-
-    let [about, setAbout] = useState(false);
-
-    function handleClickVibes() {
-        postLightsChange('vibes');
-    }
-
-    function handleClickBright() {
-        postLightsChange('bright');
-    }
-
-    function handleClickPinchPull() {
-        postTogglePinchPull();
-    }
-
-    function handleClickBlockBreak() {
-        postToggleBlockBreak();
-
-    }
-
-    function toggleAbout() {
-        setAbout(!about);
-    }
-
-    if (about) {
-        return <AboutPage handleClickReturn={toggleAbout}/>;
-    }
-
-    return <MenuContent name={'Settings'}>
-        <InfoItem title={'Lights'} slug={'Set the mood'}
-                  imgSrc={LightImg}>
-            <div className={'flex space-x-2'}>
-                <Button handleClick={handleClickVibes}
-                        className={grayButtonClass}>Vibes</Button>
-                <Button handleClick={handleClickBright}
-                        className={grayButtonClass}>Bright</Button>
-
-            </div>
-        </InfoItem>
-        <div className={'text-xl'}>
-            Experimental
-        </div>
-        <InfoItem title={'Pinch Pull'}
-                  slug={'Point at object with pinched fingers'}
-        >
-            <ToggleButton
-                    classEnabled={greenButtonClass}
-                    classDisabled={grayButtonClass}
-                    enabled={store.ExperimentalInfo.PinchPullEnabled}
-                    handleClick={handleClickPinchPull}
-            >
-                Toggle
-            </ToggleButton>
-        </InfoItem>
-        <InfoItem title={'Block Break'}
-                  slug={'Delete blocks by touching them (right index finger)'}>
-            <ToggleButton
-                    classEnabled={greenButtonClass}
-                    classDisabled={grayButtonClass}
-                    enabled={store.ExperimentalInfo.BlockBreakEnabled}
-                    handleClick={handleClickBlockBreak}
-            >
-                Toggle
-            </ToggleButton>
-        </InfoItem>
-        <div className={'text-xl'}>
-            Information
-        </div>
-        <InfoItem title={'Version'}
-                  slug={store.AppInfo.Version + 'b' + store.AppInfo.BuildId}>
-            <Button
-                    className={grayButtonClass}
-                    handleClick={toggleAbout}
-            >
-                About
-            </Button>
-        </InfoItem>
-    </MenuContent>;
-});
-
-function AboutPage({handleClickReturn}) {
-    // 0 : main
-    // 1 : MPL
-    // 2 : LGPL
-    let [view, setView] = useState(0);
-
-    function viewMain() {
-        setView(0);
-    }
-
-    function viewMpl() {
-        setView(1);
-    }
-
-    function viewLgpl() {
-        setView(2);
-    }
-
-    function viewApache() {
-        setView(3);
-    }
-
-    if (view === 1) {
-        return <MozillaPublicLicense handleClickReturn={viewMain}/>;
-    }
-
-    if (view === 2) {
-        return <LesserGlpl handleClickReturn={viewMain}/>;
-    }
-
-    if (view === 3) {
-        return <ApacheLicense handleClickReturn={viewMain}/>;
-    }
-
-    return (
-            <MenuContent name={'About'}>
-                <div className={'flex'}>
-                    <Button className={grayButtonClass} handleClick={handleClickReturn}>
-                        Return to Settings
-                    </Button>
-                </div>
-                <div className={'text-xl'}>
-                    Credits
-                </div>
-                <InfoItem title={'GeckoView'} slug={'Mozilla Public License'}>
-                    <Button className={grayButtonClass} handleClick={viewMpl}>
-                        View
-                    </Button>
-                </InfoItem>
-                <InfoItem title={'PDF.js'} slug={'Apache License'}>
-                    <Button className={grayButtonClass} handleClick={viewApache}>
-                        View
-                    </Button>
-                </InfoItem>
-                <InfoItem title={'AdGuard AdBlocker'} slug={'GNU Lesser General Public License'}>
-                    <Button className={grayButtonClass} handleClick={viewLgpl}>
-                        View
-                    </Button>
-                </InfoItem>
-            </MenuContent>
-    );
-}
-
-function MozillaPublicLicense({handleClickReturn}) {
-    return (
-            <MenuContent name={'Mozilla Public License Version 2.0'}>
-                <div className={'flex'}>
-                    <Button className={grayButtonClass} handleClick={handleClickReturn}>
-                        Return
-                    </Button>
-                </div>
-                <div dangerouslySetInnerHTML={{__html: mpl}}/>
-            </MenuContent>
-    );
-}
-
-function LesserGlpl({handleClickReturn}) {
-    return (
-            <MenuContent name={'GNU LESSER GENERAL PUBLIC LICENSE'}>
-                <div className={'flex'}>
-                    <Button className={grayButtonClass} handleClick={handleClickReturn}>
-                        Return
-                    </Button>
-                </div>
-                <div dangerouslySetInnerHTML={{__html: lgpl}}/>
-            </MenuContent>
-    );
-}
-
-function ApacheLicense({handleClickReturn}) {
-    return (
-            <MenuContent name={'APACHE LICENSE, VERSION 2.0'}>
-                <div className={'flex'}>
-                    <Button className={grayButtonClass} handleClick={handleClickReturn}>
-                        Return
-                    </Button>
-                </div>
-                <div dangerouslySetInnerHTML={{__html: apache}}/>
-            </MenuContent>
-    );
-}
-
 //
 
 let Menu = observer(() => {
@@ -981,22 +410,6 @@ let Menu = observer(() => {
             pushStore({RoomCode: null});
         };
     }, [pushStore]);
-
-    let pages = [
-        {name: 'Home', component: HomePage},
-        {name: 'Join Desk', component: JoinDeskPage},
-        {name: 'Videos', component: VideosPage},
-        {name: 'Settings', component: SettingsPage},
-    ];
-
-    if (store.MediaInfo.Active) {
-        pages.push({name: 'Player', component: PlayerPage});
-
-    }
-
-    if (store.AppInfo.Build === 'DEVELOPMENT') {
-        pages.push({name: 'Debug', component: DebugPage});
-    }
 
     let joinDeskActive = store.NetworkInfo.Mode === NetworkManagerMode.Host && !store.NetworkInfo.RoomOpen;
 
