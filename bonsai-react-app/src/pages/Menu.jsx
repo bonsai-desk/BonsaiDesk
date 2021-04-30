@@ -1,41 +1,68 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect} from 'react';
 import {Link, Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
 import './Menu.css';
 import {apiBase} from '../utilities';
 import {Button} from '../components/Button';
 import axios from 'axios';
-import PauseImg from '../static/pause.svg';
-import PlayImg from '../static/play.svg';
-import ResetImg from '../static/reset.svg';
-import VolumeHigh from '../static/volume-high.svg';
-import VolumeOff from '../static/volume-off.svg';
 
 import DotsImg from '../static/dots-vertical.svg';
-
-import EjectImg from '../static/eject-fill.svg';
-import {KeySVG} from '../components/Keys';
 import {NetworkManagerMode, useStore} from '../DataProvider';
 import {observer} from 'mobx-react-lite';
 import {autorun} from 'mobx';
-import {MenuContent} from '../components/MenuContent';
-import {
-    postCloseMenu,
-    postJoinRoom,
-    postRequestMicrophone,
-    postSeekPlayer,
-    postSetVolume,
-    postVideoEject,
-    postVideoPause,
-    postVideoPlay,
-    postVideoRestart,
-} from '../api';
-import {grayButtonClass, roundButtonClass} from '../cssClasses';
+import {postCloseMenu, postRequestMicrophone} from '../api';
 import {DebugPage} from './Debug';
 import {VideosPage} from './Videos';
 import {SettingsPage} from './Settings';
-import {HomePage} from './Home';
+import {HomePage, JoinDeskPage} from './Home';
+import {PlayerPage} from './Player';
 
-function ListItem(props) {
+function NoMicPage() {
+
+    const className = 'py-4 px-8 font-bold bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
+
+    function handleClick() {
+        postRequestMicrophone();
+    }
+
+    return (
+            <div className={'flex flex-wrap content-center justify-center bg-black w-full h-screen'}>
+                <div className={''}>
+                    <div className={'flex justify-center'}>
+                        <div className={'text-2xl p-4 flex flex-wrap content-center text-white bg-red-800 rounded'}>
+                            No Access to Microphone
+                        </div>
+                    </div>
+                    <div className={'h-4'}/>
+                    <div className={'flex justify-center'}>
+                        <div className={'text-2xl font-normal text-white '}>
+                            <Button className={className} handleClick={handleClick}>Request</Button>
+                        </div>
+                    </div>
+                    <div className={'h-4'}/>
+                    <div className={'flex text-white'}>
+                        <span>If that does not work, check your app permissions under </span>
+                        <img src={DotsImg} alt={''}/>
+                    </div>
+                </div>
+            </div>
+    );
+
+}
+
+function ExitButton() {
+
+    let buttonClass = 'rounded h-16 py-4 px-8 bg-red-800 hover:bg-red-700 active:bg-red-600 hover:text-white cursor-pointer flex flex-wrap content-center';
+
+    return (
+            <NavItem buttonClass={buttonClass} handleClick={postCloseMenu}
+                     className={'text-white'}>
+                <span className={'text-white'}>Close Menu</span>
+            </NavItem>
+    );
+
+}
+
+function NavItem(props) {
     let {
         selected,
         handleClick,
@@ -91,7 +118,7 @@ function ListItem(props) {
     );
 }
 
-function SettingsList(props) {
+function NavList(props) {
     return (
             <div className={'space-y-1 px-2'}>
                 {props.children}
@@ -99,260 +126,10 @@ function SettingsList(props) {
 
 }
 
-function SettingsTitle(props) {
+function NavTitle(props) {
     return <div
             className={'text-white font-bold text-xl px-5 pt-5 pb-2'}>{props.children}</div>;
 }
-
-function JoinDeskButton(props) {
-    let {handleClick, char} = props;
-
-    return (
-            <Button className={roundButtonClass} handleClick={() => {
-                handleClick(char);
-            }}>
-            <span className={'w-full text-center'}>
-                {char}
-            </span>
-            </Button>
-    );
-}
-
-//
-
-const PlayerPage = observer(() => {
-    const {store} = useStore();
-    const [preMuteVolume, setPreMuteVolume] = useState(null);
-
-    const finished = (store.MediaInfo.Duration - store.MediaInfo.Scrub) < 0.25;
-
-    let media = store.MediaInfo;
-
-    const playerLevel = media.Scrub / media.Duration;
-
-    const volumeApproxZero = store.MediaInfo.VolumeLevel < 0.001;
-
-    if (!store.MediaInfo.Active) {
-        return '';
-    }
-
-    function handleClickMute() {
-        if (store.MediaInfo.VolumeLevel < 0.0001) {
-            postSetVolume(preMuteVolume);
-        } else {
-            setPreMuteVolume(store.MediaInfo.VolumeLevel);
-            postSetVolume(0);
-        }
-    }
-
-    function handleClickPlayer(level) {
-        let ts = level * store.MediaInfo.Duration;
-        postSeekPlayer(ts);
-    }
-
-    function handleClickVolume(level) {
-        postSetVolume(level);
-    }
-
-    function handlePause() {
-        postVideoPause();
-    }
-
-    function handlePlay() {
-        postVideoPlay();
-    }
-
-    function handleEject() {
-        postVideoEject();
-    }
-
-    function handleRestart() {
-        postVideoRestart();
-    }
-
-    let mediaClass = grayButtonClass;
-
-    function ControlButton() {
-        if (finished) {
-            return <KeySVG handleClick={handleRestart} imgSrc={ResetImg}/>;
-        } else {
-            if (store.MediaInfo.Paused) {
-                return <KeySVG handleClick={handlePlay} imgSrc={PlayImg}/>;
-            } else {
-                return <KeySVG handleClick={handlePause} imgSrc={PauseImg}/>;
-            }
-        }
-    }
-
-    return <MenuContent name={'Player Controls'}>
-        <div className={'flex space-x-2'}>
-            <ControlButton/>
-            <Bar level={playerLevel} handleClickLevel={handleClickPlayer}/>
-            <KeySVG handleClick={handleEject} imgSrc={EjectImg}
-                    className={mediaClass}/>
-
-        </div>
-        <div className={'flex space-x-2'}>
-            <KeySVG handleClick={handleClickMute} imgSrc={volumeApproxZero ? VolumeOff : VolumeHigh}
-                    className={mediaClass}/>
-            <Bar level={media.VolumeLevel} handleClickLevel={handleClickVolume}/>
-        </div>
-    </MenuContent>;
-
-});
-
-function Bar({level, handleClickLevel}) {
-    const ref = useRef(null);
-
-    function handleClick(e) {
-        let clickedLevel = (e.clientX - ref.current.offsetLeft) / ref.current.offsetWidth;
-        console.log(clickedLevel);
-        if (handleClickLevel) {
-            handleClickLevel(clickedLevel);
-        }
-    }
-
-    const pct = 100 * level;
-
-    return (<div className={'flex h-20 w-full'}>
-        <div ref={ref} onPointerDown={handleClick}
-             className={'relative bg-gray-600 rounded w-full'}>
-
-            <div style={{width: pct + '%'}}
-                 className={'h-full bg-gray-400 rounded'}/>
-        </div>
-    </div>);
-}
-
-let JoinDeskPage = observer(() => {
-    let {store} = useStore();
-
-    let [code, setCode] = useState('');
-    let [posting, setPosting] = useState(false);
-    let [message, setMessage] = useState('');
-
-    let {history} = useHistory();
-
-    let url = apiBase(store) + `/rooms/${code}`;
-
-    useEffect(() => {
-
-        function navHome() {
-            history.push('/menu/home');
-        }
-
-        if (posting) return;
-
-        if (code.length === 4) {
-            setPosting(true);
-            axios({
-                method: 'get',
-                url: url,
-            }).then(response => {
-
-                let networkAddressResponse = response.data.network_address.toString();
-                let networkAddressStore = store.NetworkInfo.NetworkAddress;
-
-                let {
-                    //network_address,
-                    //username,
-                    version,
-                } = response.data;
-
-                // todo networkAddress is not unique per user
-                console.log(networkAddressStore, networkAddressResponse);
-                console.log(store.FullVersion, version);
-
-                if (networkAddressResponse === networkAddressStore) {
-                    // trying to join your own room
-                    setMessage(`You can't join your own room`);
-                    setCode('');
-                    setPosting(false);
-                } else if (store.FullVersion !== version) {
-                    setMessage(`Your version (${store.FullVersion}) mismatch host (${version})`);
-                    setCode('');
-                    setPosting(false);
-                } else {
-                    postJoinRoom(response.data);
-                    setCode('');
-                    setPosting(false);
-                    navHome();
-                }
-            }).catch(err => {
-                console.log(err);
-                setMessage(`Could not find ${code} try again`);
-                setCode('');
-                setPosting(false);
-            });
-        }
-    }, [history, code, posting, url, store.NetworkInfo.NetworkAddress, store.FullVersion]);
-
-    function handleClick(char) {
-        setMessage('');
-        switch (code.length) {
-            case 4:
-                setCode(char);
-                break;
-            default:
-                setCode(code + char);
-                break;
-        }
-    }
-
-    function handleBackspace() {
-        if (code.length > 0) {
-            setCode(code.slice(0, code.length - 1));
-        }
-    }
-
-    return (
-            <MenuContent name={'Join Desk'}>
-                <div className={'flex flex-wrap w-full content-center'}>
-                    <div className={' w-1/2'}>
-                        <div className={'text-xl'}>
-                            {message}
-                        </div>
-                        <div
-                                className={'text-9xl h-full flex flex-wrap content-center justify-center'}>
-                            {code.length < 4 ? code : ''}
-                        </div>
-                    </div>
-                    <div className={'p-2 rounded space-y-4 text-2xl'}>
-                        <div className={'flex space-x-4'}>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'1'}/>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'2'}/>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'3'}/>
-                        </div>
-                        <div className={'flex space-x-4'}>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'4'}/>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'5'}/>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'6'}/>
-                        </div>
-                        <div className={'flex space-x-4'}>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'7'}/>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'8'}/>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'9'}/>
-                        </div>
-                        <div className={'flex flex-wrap w-full justify-around'}>
-                            <JoinDeskButton
-                                    handleClick={handleBackspace} char={'<'}/>
-                        </div>
-                    </div>
-                </div>
-            </MenuContent>
-    );
-});
-
-//
 
 let Menu = observer(() => {
 
@@ -431,26 +208,26 @@ let Menu = observer(() => {
                 }
                 <div className={'w-4/12 bg-black overflow-auto scroll-host static'}>
                     <div className={'w-4/12 bg-black fixed'}>
-                        <SettingsTitle>
+                        <NavTitle>
                             Menu
-                        </SettingsTitle>
+                        </NavTitle>
                     </div>
 
                     <div className={'h-16'}/>
-                    <SettingsList>
-                        <ListItem to={'/menu/home'}>Home</ListItem>
+                    <NavList>
+                        <NavItem to={'/menu/home'}>Home</NavItem>
                         {store.MediaInfo.Active ?
-                                <ListItem to={'/menu/player'}
+                                <NavItem to={'/menu/player'}
                                           buttonClass={playerButtonClass}
                                           buttonClassSelected={playerButtonClassSelected}>
                                     Player
-                                </ListItem> : ''}
-                        <ListItem to={'/menu/join-desk'} inactive={!joinDeskActive}>Join Desk</ListItem>
-                        <ListItem to={'/menu/videos'}>Videos</ListItem>
-                        <ListItem to={'/menu/settings'}>Settings</ListItem>
+                                </NavItem> : ''}
+                        <NavItem to={'/menu/join-desk'} inactive={!joinDeskActive}>Join Desk</NavItem>
+                        <NavItem to={'/menu/videos'}>Videos</NavItem>
+                        <NavItem to={'/menu/settings'}>Settings</NavItem>
 
-                        <ListItem to={'/menu/debug'} component={DebugPage}>Debug</ListItem>
-                    </SettingsList>
+                        <NavItem to={'/menu/debug'} component={DebugPage}>Debug</NavItem>
+                    </NavList>
                     <div className={'w-full p-2'}>
                         <ExitButton/>
                     </div>
@@ -471,55 +248,5 @@ let Menu = observer(() => {
             </div>
     );
 });
-
-function ExitButton() {
-
-    function handleClick() {
-        postCloseMenu();
-    }
-
-    let buttonClass = 'rounded h-16 py-4 px-8 bg-red-800 hover:bg-red-700 active:bg-red-600 hover:text-white cursor-pointer flex flex-wrap content-center';
-
-    return (
-            <ListItem buttonClass={buttonClass} handleClick={handleClick}
-                      className={'text-white'}>
-                <span className={'text-white'}>Close Menu</span>
-            </ListItem>
-    );
-
-}
-
-function NoMicPage() {
-
-    const className = 'py-4 px-8 font-bold bg-gray-800 active:bg-gray-700 hover:bg-gray-600 rounded cursor-pointer flex flex-wrap content-center';
-
-    function handleClick() {
-        postRequestMicrophone();
-    }
-
-    return (
-            <div className={'flex flex-wrap content-center justify-center bg-black w-full h-screen'}>
-                <div className={''}>
-                    <div className={'flex justify-center'}>
-                        <div className={'text-2xl p-4 flex flex-wrap content-center text-white bg-red-800 rounded'}>
-                            No Access to Microphone
-                        </div>
-                    </div>
-                    <div className={'h-4'}/>
-                    <div className={'flex justify-center'}>
-                        <div className={'text-2xl font-normal text-white '}>
-                            <Button className={className} handleClick={handleClick}>Request</Button>
-                        </div>
-                    </div>
-                    <div className={'h-4'}/>
-                    <div className={'flex text-white'}>
-                        <span>If that does not work, check your app permissions under </span>
-                        <img src={DotsImg} alt={''}/>
-                    </div>
-                </div>
-            </div>
-    );
-
-}
 
 export default Menu;

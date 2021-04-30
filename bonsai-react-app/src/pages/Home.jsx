@@ -1,17 +1,18 @@
 import {observer} from 'mobx-react-lite';
 import {NetworkManagerMode, useStore} from '../DataProvider';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import {apiBase} from '../utilities';
-import {postCloseRoom, postKickConnectionId, postLeaveRoom, postOpenRoom} from '../api';
+import {postCloseRoom, postJoinRoom, postKickConnectionId, postLeaveRoom, postOpenRoom} from '../api';
 import {InfoItem} from '../components/InfoItem';
 import DoorOpen from '../static/door-open.svg';
 import {Button} from '../components/Button';
-import {grayButtonClassInert, greenButtonClass, redButtonClass} from '../cssClasses';
+import {grayButtonClassInert, greenButtonClass, redButtonClass, roundButtonClass} from '../cssClasses';
 import LinkImg from '../static/link.svg';
 import {BeatLoader, BounceLoader} from 'react-spinners';
 import ThinkingFace from '../static/thinking-face.svg';
 import {MenuContent} from '../components/MenuContent';
+import {useHistory} from 'react-router-dom';
 
 function ConnectedClient(props) {
   let {info} = props;
@@ -184,6 +185,148 @@ export const HomePage = observer(() => {
     return (
             <MenuContent name={'Home'}>
                 {Inner}
+            </MenuContent>
+    );
+});
+
+function JoinDeskButton(props) {
+    let {handleClick, char} = props;
+
+    return (
+            <Button className={roundButtonClass} handleClick={() => {
+                handleClick(char);
+            }}>
+            <span className={'w-full text-center'}>
+                {char}
+            </span>
+            </Button>
+    );
+}
+
+export let JoinDeskPage = observer(() => {
+    let {store} = useStore();
+
+    let [code, setCode] = useState('');
+    let [posting, setPosting] = useState(false);
+    let [message, setMessage] = useState('');
+
+    let {history} = useHistory();
+
+    let url = apiBase(store) + `/rooms/${code}`;
+
+    useEffect(() => {
+
+        function navHome() {
+            history.push('/menu/home');
+        }
+
+        if (posting) return;
+
+        if (code.length === 4) {
+            setPosting(true);
+            axios({
+                method: 'get',
+                url: url,
+            }).then(response => {
+
+                let networkAddressResponse = response.data.network_address.toString();
+                let networkAddressStore = store.NetworkInfo.NetworkAddress;
+
+                let {
+                    //network_address,
+                    //username,
+                    version,
+                } = response.data;
+
+                // todo networkAddress is not unique per user
+                console.log(networkAddressStore, networkAddressResponse);
+                console.log(store.FullVersion, version);
+
+                if (networkAddressResponse === networkAddressStore) {
+                    // trying to join your own room
+                    setMessage(`You can't join your own room`);
+                    setCode('');
+                    setPosting(false);
+                } else if (store.FullVersion !== version) {
+                    setMessage(`Your version (${store.FullVersion}) mismatch host (${version})`);
+                    setCode('');
+                    setPosting(false);
+                } else {
+                    postJoinRoom(response.data);
+                    setCode('');
+                    setPosting(false);
+                    navHome();
+                }
+            }).catch(err => {
+                console.log(err);
+                setMessage(`Could not find ${code} try again`);
+                setCode('');
+                setPosting(false);
+            });
+        }
+    }, [history, code, posting, url, store.NetworkInfo.NetworkAddress, store.FullVersion]);
+
+    function handleClick(char) {
+        setMessage('');
+        switch (code.length) {
+            case 4:
+                setCode(char);
+                break;
+            default:
+                setCode(code + char);
+                break;
+        }
+    }
+
+    function handleBackspace() {
+        if (code.length > 0) {
+            setCode(code.slice(0, code.length - 1));
+        }
+    }
+
+    return (
+            <MenuContent name={'Join Desk'}>
+                <div className={'flex flex-wrap w-full content-center'}>
+                    <div className={' w-1/2'}>
+                        <div className={'text-xl'}>
+                            {message}
+                        </div>
+                        <div
+                                className={'text-9xl h-full flex flex-wrap content-center justify-center'}>
+                            {code.length < 4 ? code : ''}
+                        </div>
+                    </div>
+                    <div className={'p-2 rounded space-y-4 text-2xl'}>
+                        <div className={'flex space-x-4'}>
+                            <JoinDeskButton handleClick={handleClick}
+                                            char={'1'}/>
+                            <JoinDeskButton handleClick={handleClick}
+                                            char={'2'}/>
+                            <JoinDeskButton handleClick={handleClick}
+                                            char={'3'}/>
+                        </div>
+                        <div className={'flex space-x-4'}>
+                            <JoinDeskButton handleClick={handleClick}
+                                            char={'4'}/>
+                            <JoinDeskButton handleClick={handleClick}
+                                            char={'5'}/>
+                            <JoinDeskButton handleClick={handleClick}
+                                            char={'6'}/>
+                        </div>
+                        <div className={'flex space-x-4'}>
+                            <JoinDeskButton handleClick={handleClick}
+                                            char={'7'}/>
+                            <JoinDeskButton handleClick={handleClick}
+                                            char={'8'}/>
+                            <JoinDeskButton handleClick={handleClick}
+                                            char={'9'}/>
+                        </div>
+                        <div className={'flex flex-wrap w-full justify-around'}>
+                            <JoinDeskButton
+                                    handleClick={handleBackspace} char={'<'}/>
+                        </div>
+                    </div>
+                </div>
             </MenuContent>
     );
 });
