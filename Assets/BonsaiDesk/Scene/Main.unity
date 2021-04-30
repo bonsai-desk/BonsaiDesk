@@ -11800,10 +11800,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   verbose: 0
   headTransform: {fileID: 89707680}
-  _server: https://mt1s.www.vivox.com/api2
-  _domain: mt1s.vivox.com
-  _tokenIssuer: bonsai8334-bo47-dev
-  _tokenKey: daze715
+  _server: 
+  _domain: 
+  _tokenIssuer: 
+  _tokenKey: 
 --- !u!114 &1123713195 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 114567484643301796, guid: 835e735ca71bf78459fb2cababd74112,

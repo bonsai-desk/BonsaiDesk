@@ -7,7 +7,6 @@ using VivoxUnity;
 
 public class VoiceManager : MonoBehaviour
 {
-    public bool verbose;
     public delegate void LoginStatusChangedHandler();
 
     public delegate void ParticipantStatusChangedHandler(string username, ChannelId channel, IParticipant participant);
@@ -17,6 +16,7 @@ public class VoiceManager : MonoBehaviour
     public delegate void ParticipantValueUpdatedHandler(string username, ChannelId channel, double value);
 
     public static VoiceManager Singleton;
+    public bool verbose;
 
     [FormerlySerializedAs("headPosition")] public Transform headTransform;
 
@@ -53,6 +53,19 @@ public class VoiceManager : MonoBehaviour
         {
             Singleton = this;
         }
+
+    #if UNITY_EDITOR || DEVELOPMENT_BUILD
+        _server = "https://mt1s.www.vivox.com/api2";
+        _domain = "mt1s.vivox.com";
+        _tokenIssuer = "bonsai8334-bo47-dev";
+        _tokenKey = "daze715";
+    #elif UNITY_ANDROID
+      _server = "https://mt2p.www.vivox.com/api2";
+      _domain = "mt2p.vivox.com";
+      _tokenIssuer = "bonsai8334-bo47";
+      _tokenKey = "sxJgPtuXlh4FcMGqxIkfwK1R048ezXAE";
+    #endif
+        
     }
 
     // Start is called before the first frame update
@@ -474,6 +487,7 @@ public class VoiceManager : MonoBehaviour
                 {
                     BonsaiLog($"OnSpeechDetectedEvent: {username} in {channel}.");
                 }
+
                 OnSpeechDetectedEvent?.Invoke(username, channel, e.Value.SpeechDetected);
                 break;
             }
