@@ -80,7 +80,7 @@ const Boot = observer(() => {
         }
 
         if (e.key === 'b') {
-            console.log("asdf")
+            console.log('asdf');
             store.AppInfo.Build = 'DEVELOPMENT';
             store.AppInfo.MicrophonePermission = true;
             store.NetworkInfo.Online = true;

@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useState} from 'react';
 import {action, makeAutoObservable} from 'mobx';
 import {observer} from 'mobx-react-lite';
 import axios from 'axios';
-import {apiBase} from "./utilities";
+import {apiBase} from './utilities';
 
 export const StoreContext = React.createContext();
 export const useStore = () => useContext(StoreContext);
@@ -15,24 +15,20 @@ export const NetworkManagerMode = {
 };
 
 class Store {
-    get FullVersion (){
-        return this.AppInfo.Version + "b" + this.AppInfo.BuildId;
-    }
     SocialInfo = {
-        UserName: "NoName",
-    }
+        UserName: 'NoName',
+    };
     AppInfo = {
         Build: 'PRODUCTION',
         MicrophonePermission: false,
         Version: '?',
         BuildId: -1,
     };
-
     _networkInfo = {
         Online: false,
         NetworkAddress: 'none',
         RoomOpen: false,
-        Mode: NetworkManagerMode.Offline
+        Mode: NetworkManagerMode.Offline,
     };
     MediaInfo = {
         Active: false,
@@ -49,9 +45,15 @@ class Store {
     PlayerInfos = [];
     LoadingRoomCode = false;
     _refresh_room_code_handler = null;
+    RoomSecret = '';
+    _roomCode = null;
 
     constructor() {
         makeAutoObservable(this);
+    }
+
+    get FullVersion() {
+        return this.AppInfo.Version + 'b' + this.AppInfo.BuildId;
     }
 
     get NetworkInfo() {
@@ -65,10 +67,6 @@ class Store {
         }
 
     }
-    
-    RoomSecret = ""
-
-    _roomCode = null;
 
     get RoomCode() {
         return this._roomCode;
@@ -86,7 +84,7 @@ class Store {
         } else {
             clearInterval(this._refresh_room_code_handler);
             this._refresh_room_code_handler = null;
-            this.RoomSecret = "";
+            this.RoomSecret = '';
         }
     }
 
@@ -104,8 +102,8 @@ class Store {
     }
 
     refreshRoomCode() {
-        let url = apiBase(this) + `/rooms/${store.RoomCode}/refresh`
-        console.log(url)
+        let url = apiBase(this) + `/rooms/${store.RoomCode}/refresh`;
+        console.log(url);
         axios({
             method: 'post',
             url: url,

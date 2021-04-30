@@ -8,61 +8,61 @@ import {postJson} from '../utilities';
 import {KeySVG} from '../components/Keys';
 
 function postCommand(message) {
-  console.log(message);
-  postJson({Type: 'command', Message: message});
+    console.log(message);
+    postJson({Type: 'command', Message: message});
 }
 
 function KeyboardButton(props) {
-  let {kbActive, handleClick} = props;
+    let {kbActive, handleClick} = props;
 
-  return (
-      <div className={'w-full flex justify-center'}>
-        <KeySVG handleClick={handleClick}
-                imgSrc={kbActive ? KeyBoardDismissImg : KeyBoardImg}/>
-      </div>
+    return (
+            <div className={'w-full flex justify-center'}>
+                <KeySVG handleClick={handleClick}
+                        imgSrc={kbActive ? KeyBoardDismissImg : KeyBoardImg}/>
+            </div>
 
-  );
+    );
 
 }
 
 function WebNav() {
 
-  let [kbActive, setKbActive] = useState(false);
+    let [kbActive, setKbActive] = useState(false);
 
-  let closeButtonClass = 'bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer w-20 h-20 flex flex-wrap content-center';
+    let closeButtonClass = 'bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer w-20 h-20 flex flex-wrap content-center';
 
-  let handleClose = () => {
-    postCommand('closeWeb');
-  };
+    let handleClose = () => {
+        postCommand('closeWeb');
+    };
 
-  let handleKeyboardButtonClick = () => {
-    kbActive ? postCommand('dismissKeyboard') : postCommand('spawnKeyboard');
-    setKbActive(!kbActive);
-  };
+    let handleKeyboardButtonClick = () => {
+        kbActive ? postCommand('dismissKeyboard') : postCommand('spawnKeyboard');
+        setKbActive(!kbActive);
+    };
 
-  return (
-      <div
-          className={'w-full h-screen bg-black flex flex-wrap content-center justify-center'}>
-        <div className={'space-y-2 mb-2'}>
-          <div className={'w-full flex justify-center'}>
-            <KeySVG handleClick={handleClose} className={closeButtonClass}
-                    imgSrc={CloseImg}/>
-          </div>
-          <div className={'flex space-x-2'}>
-            <KeySVG imgSrc={BackImg} handleClick={
-              () => {
-                postCommand('navBack');
-              }
-            }/>
-            <KeySVG imgSrc={ForwardImg} handleClick={() => {
-              postCommand('navForward');
-            }}/>
-          </div>
-          <KeyboardButton kbActive={kbActive}
-                          handleClick={handleKeyboardButtonClick}/>
-        </div>
-      </div>
-  );
+    return (
+            <div
+                    className={'w-full h-screen bg-black flex flex-wrap content-center justify-center'}>
+                <div className={'space-y-2 mb-2'}>
+                    <div className={'w-full flex justify-center'}>
+                        <KeySVG handleClick={handleClose} className={closeButtonClass}
+                                imgSrc={CloseImg}/>
+                    </div>
+                    <div className={'flex space-x-2'}>
+                        <KeySVG imgSrc={BackImg} handleClick={
+                            () => {
+                                postCommand('navBack');
+                            }
+                        }/>
+                        <KeySVG imgSrc={ForwardImg} handleClick={() => {
+                            postCommand('navForward');
+                        }}/>
+                    </div>
+                    <KeyboardButton kbActive={kbActive}
+                                    handleClick={handleKeyboardButtonClick}/>
+                </div>
+            </div>
+    );
 }
 
 export default WebNav;
