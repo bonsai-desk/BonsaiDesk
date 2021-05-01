@@ -76,6 +76,8 @@ class Store {
     ContextInfo = {
         LeftBlockActive: Blocks.None,
         RightBlockActive: Blocks.None,
+        LeftBlockBreak: false,
+        RightBlockBreak: false,
     }
     MediaInfo = {
         Active: false,

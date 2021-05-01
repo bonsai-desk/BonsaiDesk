@@ -30,6 +30,9 @@ public class ContextBrowserController : MonoBehaviour
     public Block LeftBlockActive = Block.None;
     public Block RightBlockActive = Block.None;
 
+    public bool LeftBlockBreak;
+    public bool RightBlockBreak;
+
     private TableBrowser _browser;
 
     // Start is called before the first frame update
@@ -40,7 +43,8 @@ public class ContextBrowserController : MonoBehaviour
         _browser.BrowserReady += (sender, _) => { _browser.OnMessageEmitted(HandleJavascriptMessage); };
     }
 
-    public event Action<Hand, Block> ChangeActiveBlock;
+
+    public event Action InfoChange;
 
     private void HandleJavascriptMessage(object sender, EventArgs<string> e)
     {
@@ -50,18 +54,34 @@ public class ContextBrowserController : MonoBehaviour
             case "command":
                 switch (message.Message)
                 {
+                    case "toggleBlockBreakHand":
+                        var toggleBlockBreakHand = message.Data == "left" ? Hand.Left : Hand.Right;
+                        if (toggleBlockBreakHand == Hand.Left)
+                        {
+                            LeftBlockBreak = !LeftBlockBreak;
+                            InfoChange?.Invoke();
+                        }
+
+                        if (toggleBlockBreakHand == Hand.Right)
+                        {
+                            RightBlockBreak = !RightBlockBreak;
+                            InfoChange?.Invoke();
+                        }
+
+                        break;
+                        
                     case "toggleBlockActive":
                         var toggleHand = message.Data == "left" ? Hand.Left : Hand.Right;
                         if (toggleHand == Hand.Left)
                         {
                             LeftBlockActive = LeftBlockActive == Block.None ? Block.Wood : Block.None;
-                            ChangeActiveBlock?.Invoke(toggleHand, LeftBlockActive);
+                            InfoChange?.Invoke();
                         }
 
                         if (toggleHand == Hand.Right)
                         {
                             RightBlockActive = RightBlockActive == Block.None ? Block.Wood : Block.None;
-                            ChangeActiveBlock?.Invoke(toggleHand, RightBlockActive);
+                            InfoChange?.Invoke();
                         }
 
                         break;
@@ -85,7 +105,7 @@ public class ContextBrowserController : MonoBehaviour
                                 break;
                         }
 
-                        ChangeActiveBlock?.Invoke(hand, block);
+                        InfoChange?.Invoke();
                         break;
                 }
 

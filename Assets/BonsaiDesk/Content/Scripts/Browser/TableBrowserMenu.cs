@@ -44,10 +44,10 @@ public class TableBrowserMenu : MonoBehaviour
         browser.ListenersReady += HandleListenersReady;
         NetworkManagerGame.Singleton.InfoChange += HandleNetworkInfoChange;
         OVRManager.HMDUnmounted += () => { browser.SetHidden(true); };
-        contextBrowserController.ChangeActiveBlock += HandleChangeBlockActive;
+        contextBrowserController.InfoChange += HandleChangeBlockActive;
     }
 
-    private void HandleChangeBlockActive(ContextBrowserController.Hand arg1, ContextBrowserController.Block arg2)
+    private void HandleChangeBlockActive()
     {
         PostContextInfo();
     }
@@ -264,7 +264,9 @@ public class TableBrowserMenu : MonoBehaviour
         var contextInfo = new ContextInfo
         {
             LeftBlockActive = contextBrowserController.LeftBlockActive,
-            RightBlockActive = contextBrowserController.RightBlockActive
+            RightBlockActive = contextBrowserController.RightBlockActive,
+            LeftBlockBreak = contextBrowserController.LeftBlockBreak,
+            RightBlockBreak =  contextBrowserController.RightBlockBreak
         };
         contextBrowser.PostMessage(Message(contextInfo, "ContextInfo"));
     }
@@ -273,6 +275,8 @@ public class TableBrowserMenu : MonoBehaviour
     {
         public ContextBrowserController.Block LeftBlockActive;
         public ContextBrowserController.Block RightBlockActive;
+        public bool LeftBlockBreak;
+        public bool RightBlockBreak;
     }
 
     private string Message<T>(T info, string KeyName)

@@ -1,6 +1,6 @@
 import {observer} from 'mobx-react-lite';
 import {Blocks, showBlock, useStore} from '../DataProvider';
-import {postChangeActiveBlock, postToggleBlockActive} from '../api';
+import {postChangeActiveBlock, postToggleBlockActive, postToggleBlockBreakHand} from '../api';
 
 function Button({children, onClick}) {
     return <div className={'h-20 w-20 bg-gray-600 rounded'} onPointerDown={onClick}>{children}</div>;
@@ -74,42 +74,42 @@ const ActiveItem = observer(({hand}) => {
 
 const ToggleBlocks = observer(({hand}) => {
     let {store} = useStore();
-    
+
     let switchOff = false;
 
-    let className = "bg-green-400 h-10";
+    let className = 'bg-green-400 h-10';
 
     switch (hand) {
-        case "left":
+        case 'left':
             switchOff = store.ContextInfo.LeftBlockActive === Blocks.None;
             break;
-        case "right":
+        case 'right':
             switchOff = store.ContextInfo.RightBlockActive === Blocks.None;
             break;
         default:
-            console.log(`Toggle blocks for ${hand} not handled`)
+            console.log(`Toggle blocks for ${hand} not handled`);
             break;
     }
-    
+
     if (switchOff) {
-        className = "bg-gray-900 h-10"
+        className = 'bg-gray-900 h-10';
     }
-    
-    function Inner () {
-        return <div className={className}/>
+
+    function Inner() {
+        return <div className={className}/>;
     }
-    
+
     let onClick = () => {
-        if (hand === "left" || hand === "right"){
-            postToggleBlockActive(hand)
+        if (hand === 'left' || hand === 'right') {
+            postToggleBlockActive(hand);
         }
-    }
-    
-    return <div className={"w-full flex justify-center"}>
+    };
+
+    return <div className={'w-full flex justify-center'}>
         <Button onClick={onClick}><Inner/></Button>
-    </div>
-    
-})
+    </div>;
+
+});
 
 function ButtonGrid({hand}) {
     return (
@@ -130,10 +130,40 @@ function ButtonGrid({hand}) {
     );
 }
 
+const HandButton = observer(({hand}) => {
+    let {store} = useStore();
+
+    let blockBreakOn = false;
+
+    if (hand === 'left') {
+        blockBreakOn = store.ContextInfo.LeftBlockBreak;
+    }
+    if (hand === 'right') {
+        blockBreakOn = store.ContextInfo.RightBlockBreak;
+    }
+
+    let className = blockBreakOn ? 'bg-red-400 h-10' : 'bg-gray-900 h-10';
+
+    function Inner() {
+        return <div className={className}>block break</div>;
+    }
+
+    function onClick() {
+        postToggleBlockBreakHand(hand);
+    }
+   
+    return <div className={'flex flex-wrap content-center'}>
+        <Button onClick={onClick}><Inner/></Button>
+    </div>;
+
+});
+
 const Context = observer(() => {
-    return <div className={'bg-gray-900 h-screen flex justify-center space-x-20'}>
+    return <div className={'bg-gray-900 h-screen flex flex-wrap justify-center space-x-20 content-center'}>
+        <HandButton hand={'left'}/>
         <ButtonGrid hand={'left'}/>
         <ButtonGrid hand={'right'}/>
+        <HandButton hand={'right'}/>
     </div>;
 });
 
