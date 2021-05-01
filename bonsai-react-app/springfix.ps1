@@ -1,3 +1,5 @@
+Write-Host "fixing spring"
+
 $reactSpringPackageJSONs = Get-ChildItem -Path node_modules\\*@react-spring/\\*/package.json
 
 foreach ($reactSpringPackageJSON in $reactSpringPackageJSONs) {

@@ -14,6 +14,15 @@ export const NetworkManagerMode = {
     Host: 3,
 };
 
+export const Blocks = {
+    None: 0,
+    Wood: 1,
+    Orange: 2,
+    Green: 3,
+    Purple: 4,
+    Red: 5,
+};
+
 class Store {
     SocialInfo = {
         UserName: 'NoName',
@@ -30,6 +39,10 @@ class Store {
         RoomOpen: false,
         Mode: NetworkManagerMode.Offline,
     };
+    ContextInfo = {
+        LeftBlockActive: Blocks.None,
+        RightBlockActive: Blocks.None,
+    }
     MediaInfo = {
         Active: false,
         Name: 'None',

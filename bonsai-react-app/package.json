@@ -42,7 +42,7 @@
     "copy-build-windows": "npm run clear-streaming-build-windows && npm run copy-to-streaming-windows",
     "clear-streaming-build-windows": "if exist ..\\Assets\\StreamingAssets\\build rmdir /s /q ..\\Assets\\StreamingAssets\\build",
     "copy-to-streaming-windows": "mkdir ..\\Assets\\StreamingAssets\\build && xcopy /e /i /q build ..\\Assets\\StreamingAssets\\build",
-    "react-spring-issue-1078": "./springfix.ps1"
+    "react-spring-issue-1078": "powershell ./springfix.ps1"
   },
   "eslintConfig": {
     "extends": [

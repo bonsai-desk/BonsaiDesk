@@ -12,6 +12,7 @@ import Twitch from './pages/Twitch';
 import Menu from './pages/Menu';
 import Keyboard from './pages/Keyboard';
 import WebNav from './pages/WebNav';
+import Context from "./pages/Context"
 import {postJson} from './utilities';
 import {observer} from 'mobx-react-lite';
 import {useStore} from './DataProvider';
@@ -148,6 +149,8 @@ function App() {
                         <Route path={'/twitch'} component={Twitch}/>
 
                         <Route path={'/menu'} component={Menu}/>
+
+                        <Route path={'/context'} component={Context}/>
 
                         <Route path={'/keyboard'} component={Keyboard}/>
 

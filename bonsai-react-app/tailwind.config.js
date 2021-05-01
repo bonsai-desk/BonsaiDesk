@@ -5,7 +5,9 @@ module.exports = {
         enabled: true,
         content: [
             './src/*.jsx',
-            './src/**/*.jsx'
+            './src/**/*.jsx',
+            './src/*.js',
+            './src/**/*.js',
         ]
     },
     theme: {

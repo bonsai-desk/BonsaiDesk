@@ -68,3 +68,7 @@ export function postVideoRestart() {
 export function postLightsChange(level) {
     postJson({Type: 'command', Message: 'lightsChange', Data: level});
 }
+
+export function postChangeActiveBlock(hand, blockId){
+    postJson({Type: 'command', Message: 'changeActiveBlock', Hand: hand, BlockId: blockId});
+}

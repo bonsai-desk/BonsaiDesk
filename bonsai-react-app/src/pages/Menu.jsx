@@ -1,15 +1,16 @@
 import React, {useEffect} from 'react';
 import {Link, Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
-import './Menu.css';
-import {apiBase} from '../utilities';
-import {Button} from '../components/Button';
 import axios from 'axios';
+import {observer} from 'mobx-react-lite';
+import {autorun} from 'mobx';
 
 import DotsImg from '../static/dots-vertical.svg';
 import {NetworkManagerMode, useStore} from '../DataProvider';
-import {observer} from 'mobx-react-lite';
-import {autorun} from 'mobx';
 import {postCloseMenu, postRequestMicrophone} from '../api';
+
+import {apiBase} from '../utilities';
+import {Button} from '../components/Button';
+import './Menu.css';
 import {DebugPage} from './Debug';
 import {VideosPage} from './Videos';
 import {SettingsPage} from './Settings';
@@ -218,8 +219,8 @@ let Menu = observer(() => {
                         <NavItem to={'/menu/home'}>Home</NavItem>
                         {store.MediaInfo.Active ?
                                 <NavItem to={'/menu/player'}
-                                          buttonClass={playerButtonClass}
-                                          buttonClassSelected={playerButtonClassSelected}>
+                                         buttonClass={playerButtonClass}
+                                         buttonClassSelected={playerButtonClassSelected}>
                                     Player
                                 </NavItem> : ''}
                         <NavItem to={'/menu/join-desk'} inactive={!joinDeskActive}>Join Desk</NavItem>
