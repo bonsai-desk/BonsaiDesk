@@ -8,6 +8,9 @@ using Vuplex.WebView;
 [RequireComponent(typeof(TableBrowser))]
 public class ContextBrowserController : MonoBehaviour
 {
+    public Block LeftBlockActive = Block.None;
+    public Block RightBlockActive = Block.None;
+    
     private TableBrowser _browser;
     // Start is called before the first frame update
     void Start()
@@ -39,6 +42,16 @@ public class ContextBrowserController : MonoBehaviour
                             BonsaiLogWarning("Failed to match block id, defaulting to None");
                         }
                         BonsaiLog($"changeActiveBlock: {hand} {block}");
+                        switch (hand)
+                        {
+                            case Hand.Left:
+                                LeftBlockActive = block;
+                                break;
+                            case Hand.Right:
+                                RightBlockActive = block;
+                                break;
+                        }
+
                         ChangeActiveBlock?.Invoke(hand, block);
                         break;
                 }

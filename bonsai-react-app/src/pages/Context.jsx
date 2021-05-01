@@ -91,7 +91,7 @@ function ButtonGrid({hand}) {
 }
 
 const Context = observer(() => {
-    return <div className={'bg-gray-900 h-screen flex justify-between'}>
+    return <div className={'bg-gray-900 h-screen flex justify-center space-x-20'}>
         <ButtonGrid hand={'left'}/>
         <ButtonGrid hand={'right'}/>
     </div>;

@@ -10948,6 +10948,7 @@ MonoBehaviour:
   ContextMenu: {fileID: 1341499996}
   TableBrowserMenu: {fileID: 1361515863}
   WebBrowserParent: {fileID: 328235781}
+  contentBoxCollider: {fileID: 1907945390}
 --- !u!1 &981885497
 GameObject:
   m_ObjectHideFlags: 0
@@ -13339,6 +13340,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f349dca275e36604883978521079ae9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  LeftBlockActive: 0
+  RightBlockActive: 0
 --- !u!114 &1341499996 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
@@ -13454,6 +13457,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 14d236040c072f344bbab4d314837566, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  contextBrowserController: {fileID: 1341499995}
+  contextBrowser: {fileID: 1341499996}
   autoBrowserController: {fileID: 2131499094}
   postMediaInfoEvery: 0.5
   browser: {fileID: 0}
@@ -17334,7 +17339,7 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 726756871}
   m_PrefabAsset: {fileID: 0}
---- !u!65 &1907945389
+--- !u!65 &1907945390
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
