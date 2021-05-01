@@ -74,6 +74,14 @@ export function postChangeActiveBlock(hand, blockId) {
         Type: 'command', 
         Message: 'changeActiveBlock', 
         Data: JSON.stringify({Hand: hand, BlockId: blockId})
-    }
-    );
+    });
+}
+
+export function postToggleBlockActive (hand) {
+    postJson({
+        Type: 'command',
+        Message: 'toggleBlockActive',
+        Data: hand
+    });
+
 }

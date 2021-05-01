@@ -19,9 +19,43 @@ export const Blocks = {
     Wood: 1,
     Orange: 2,
     Green: 3,
-    Purple: 4,
-    Red: 5,
+    Brown: 4,
+    Pink: 5,
+    LightPurple: 6,
+    DarkPurple: 7,
+    Violet: 8,
+    LightNeutral: 9,
+    DarkNeutral: 10,
 };
+
+export function showBlock(block){
+    switch (block){
+        case Blocks.None:
+            return "None"
+        case Blocks.Wood:
+            return "Wood"
+        case Blocks.Orange:
+            return "Orange"
+        case Blocks.Green:
+            return "Green"
+        case Blocks.Brown:
+            return "Brown"
+        case Blocks.Pink:
+            return "Pink"
+        case Blocks.LightPurple:
+            return "Light Purple"
+        case Blocks.DarkPurple:
+            return "Dark Purple"
+        case Blocks.Violet:
+            return "Violet"
+        case Blocks.LightNeutral:
+            return "Light Neutral"
+        case Blocks.DarkNeutral:
+            return "Dark Neutral"
+        default:
+            return `Unknown (${block})`
+    }
+}
 
 class Store {
     SocialInfo = {

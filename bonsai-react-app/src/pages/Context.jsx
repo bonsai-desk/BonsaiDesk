@@ -1,16 +1,9 @@
 import {observer} from 'mobx-react-lite';
-import {Blocks, useStore} from '../DataProvider';
-import {postChangeActiveBlock} from '../api';
+import {Blocks, showBlock, useStore} from '../DataProvider';
+import {postChangeActiveBlock, postToggleBlockActive} from '../api';
 
 function Button({children, onClick}) {
     return <div className={'h-20 w-20 bg-gray-600 rounded'} onPointerDown={onClick}>{children}</div>;
-}
-
-function NoneButton({hand}) {
-    let onClick = () => {
-        postChangeActiveBlock(hand, Blocks.None);
-    };
-    return <Button onClick={onClick}>none</Button>;
 }
 
 function WoodButton({hand}) {
@@ -34,18 +27,25 @@ function GreenButton({hand}) {
     return <Button onClick={onClick}>green</Button>;
 }
 
-function PurpleButton({hand}) {
+function PinkButton({hand}) {
     let onClick = () => {
-        postChangeActiveBlock(hand, Blocks.Purple);
+        postChangeActiveBlock(hand, Blocks.Pink);
     };
-    return <Button onClick={onClick}>purple</Button>;
+    return <Button onClick={onClick}>pink</Button>;
 }
 
-function RedButton({hand}) {
+function VioletButton({hand}) {
     let onClick = () => {
-        postChangeActiveBlock(hand, Blocks.Red);
+        postChangeActiveBlock(hand, Blocks.Violet);
     };
-    return <Button onClick={onClick}>red</Button>;
+    return <Button onClick={onClick}>violet</Button>;
+}
+
+function DarkNeutralButton({hand}) {
+    let onClick = () => {
+        postChangeActiveBlock(hand, Blocks.DarkNeutral);
+    };
+    return <Button onClick={onClick}>dark neutral</Button>;
 }
 
 function ButtonRow({children}) {
@@ -68,24 +68,64 @@ const ActiveItem = observer(({hand}) => {
     }
 
     return <div className={'w-full flex justify-center'}>
-        <Button>{activeBlock}</Button>
+        <Button>{showBlock(activeBlock)}</Button>
     </div>;
 });
+
+const ToggleBlocks = observer(({hand}) => {
+    let {store} = useStore();
+    
+    let switchOff = false;
+
+    let className = "bg-green-400 h-10";
+
+    switch (hand) {
+        case "left":
+            switchOff = store.ContextInfo.LeftBlockActive === Blocks.None;
+            break;
+        case "right":
+            switchOff = store.ContextInfo.RightBlockActive === Blocks.None;
+            break;
+        default:
+            console.log(`Toggle blocks for ${hand} not handled`)
+            break;
+    }
+    
+    if (switchOff) {
+        className = "bg-gray-900 h-10"
+    }
+    
+    function Inner () {
+        return <div className={className}/>
+    }
+    
+    let onClick = () => {
+        if (hand === "left" || hand === "right"){
+            postToggleBlockActive(hand)
+        }
+    }
+    
+    return <div className={"w-full flex justify-center"}>
+        <Button onClick={onClick}><Inner/></Button>
+    </div>
+    
+})
 
 function ButtonGrid({hand}) {
     return (
             <ButtonContainer>
                 <ActiveItem hand={hand}/>
                 <ButtonRow>
-                    <NoneButton hand={hand}/>
                     <WoodButton hand={hand}/>
                     <OrangeButton hand={hand}/>
+                    <GreenButton hand={hand}/>
                 </ButtonRow>
                 <ButtonRow>
-                    <GreenButton hand={hand}/>
-                    <PurpleButton hand={hand}/>
-                    <RedButton hand={hand}/>
+                    <PinkButton hand={hand}/>
+                    <VioletButton hand={hand}/>
+                    <DarkNeutralButton hand={hand}/>
                 </ButtonRow>
+                <ToggleBlocks hand={hand}/>
             </ButtonContainer>
     );
 }

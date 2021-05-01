@@ -287,7 +287,6 @@ public class TableBrowserMenu : MonoBehaviour
         var kvs = new KeyType<T> {Key = KeyName, Val = info};
         var jsMessage = new CsMessageKeyType<T> {Data = kvs};
         var message = JsonConvert.SerializeObject(jsMessage);
-        Debug.Log(message);
         browser.PostMessage(message);
     }
 
