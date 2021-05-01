@@ -69,6 +69,11 @@ export function postLightsChange(level) {
     postJson({Type: 'command', Message: 'lightsChange', Data: level});
 }
 
-export function postChangeActiveBlock(hand, blockId){
-    postJson({Type: 'command', Message: 'changeActiveBlock', Hand: hand, BlockId: blockId});
+export function postChangeActiveBlock(hand, blockId) {
+    postJson({
+        Type: 'command', 
+        Message: 'changeActiveBlock', 
+        Data: JSON.stringify({Hand: hand, BlockId: blockId})
+    }
+    );
 }

@@ -3,7 +3,7 @@ import {Blocks, useStore} from '../DataProvider';
 import {postChangeActiveBlock} from '../api';
 
 function Button({children, onClick}) {
-    return <div className={'h-20 w-20 bg-gray-600 rounded'}>{children}</div>;
+    return <div className={'h-20 w-20 bg-gray-600 rounded'} onPointerDown={onClick}>{children}</div>;
 }
 
 function NoneButton({hand}) {

@@ -143,8 +143,6 @@ public class Browser : MonoBehaviour
     {
         var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
         
-        BonsaiLog($"JS {eventArgs.Value}");
-
         switch (message.Type)
         {
             case "event":

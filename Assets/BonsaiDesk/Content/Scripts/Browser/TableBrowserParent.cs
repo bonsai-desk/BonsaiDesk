@@ -14,6 +14,7 @@ public class TableBrowserParent : MonoBehaviour
     public bool ContextAsleep { get; private set; }
     
     private int _parentsReady;
+    public BoxCollider contentBoxCollider;
 
     // Start is called before the first frame update
     private void Start()
@@ -149,6 +150,7 @@ public class TableBrowserParent : MonoBehaviour
     private void ContextWake()
     {
         ContextAsleep = false;
+        contentBoxCollider.enabled = true;
         ContextMenu.SetHidden(false);
         SetHandsForActiveBrowser();
         
@@ -157,6 +159,7 @@ public class TableBrowserParent : MonoBehaviour
     private void ContextSleep()
     {
         ContextAsleep = true;
+        contentBoxCollider.enabled = false;
         ContextMenu.SetHidden(true);
         SetHandForInactiveBrowser();
     }
