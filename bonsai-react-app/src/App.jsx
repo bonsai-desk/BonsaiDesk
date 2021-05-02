@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     Link,
-    MemoryRouter as Router,
+    BrowserRouter as Router,
     Route,
     Switch,
     useHistory,
@@ -12,6 +12,7 @@ import Twitch from './pages/Twitch';
 import Menu from './pages/Menu';
 import Keyboard from './pages/Keyboard';
 import WebNav from './pages/WebNav';
+import Context from "./pages/Context"
 import {postJson} from './utilities';
 import {observer} from 'mobx-react-lite';
 import {useStore} from './DataProvider';
@@ -34,6 +35,7 @@ function genNavListeners(history) {
         switch (json.command) {
             case 'push':
                 console.log('command: nav ' + json.path);
+                // todo does this still work with BrowserRouter
                 history.push(json.path);
                 break;
             default:
@@ -80,7 +82,7 @@ const Boot = observer(() => {
         }
 
         if (e.key === 'b') {
-            console.log("asdf")
+            console.log('asdf');
             store.AppInfo.Build = 'DEVELOPMENT';
             store.AppInfo.MicrophonePermission = true;
             store.NetworkInfo.Online = true;
@@ -130,7 +132,7 @@ const Boot = observer(() => {
 });
 
 function Home() {
-    return <div className={'w-full h-full bg-gray-900'}></div>;
+    return <div className={'w-full h-full bg-gray-900'}/>;
 }
 
 function App() {
@@ -147,6 +149,8 @@ function App() {
                         <Route path={'/twitch'} component={Twitch}/>
 
                         <Route path={'/menu'} component={Menu}/>
+
+                        <Route path={'/context'} component={Context}/>
 
                         <Route path={'/keyboard'} component={Keyboard}/>
 

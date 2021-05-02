@@ -7,10 +7,14 @@ public class TableBrowserParent : MonoBehaviour
     private bool openedOnce;
     private Browser preSleepActive = Browser.Table;
     public TableBrowser TableBrowser;
+    public TableBrowser ContextMenu;
     public TableBrowserMenu TableBrowserMenu;
     public WebBrowserParent WebBrowserParent;
-    public bool sleeped { get; private set; }
-    private int parentsReady;
+    public bool MenuAsleep { get; private set; }
+    public bool ContextAsleep { get; private set; }
+    
+    private int _parentsReady;
+    public BoxCollider contentBoxCollider;
 
     // Start is called before the first frame update
     private void Start()
@@ -22,19 +26,26 @@ public class TableBrowserParent : MonoBehaviour
         WebBrowserParent.BrowsersReady += HandleParentReady;
         TableBrowser.BrowserReady += HandleParentReady;
         TableBrowserMenu.Singleton.CloseMenu += HandleCloseMenu;
+
+        ContextMenu.BrowserReady += HandleContextReady;
+    }
+
+    private void HandleContextReady(object sender, EventArgs e)
+    {
+        ContextSleep();
     }
 
     private void HandleCloseMenu(object sender, EventArgs e)
     {
-        Sleep();
+        MenuSleep();
     }
 
     private void HandleParentReady(object sender, EventArgs e)
     {
-        parentsReady += 1;
-        if (parentsReady == 2)
+        _parentsReady += 1;
+        if (_parentsReady == 2)
         {
-            Sleep();
+            MenuSleep();
             WebBrowserParent.LoadUrl("https://m.youtube.com");
         }
     }
@@ -46,7 +57,7 @@ public class TableBrowserParent : MonoBehaviour
 
     private void HandleOrientationChange(bool oriented)
     {
-        Sleep();
+        MenuSleep();
     }
 
     private void HandleCloseWeb(object _, EventArgs e)
@@ -78,23 +89,19 @@ public class TableBrowserParent : MonoBehaviour
         }
     }
 
-    public void Sleep()
+    public void MenuSleep()
     {
-        BonsaiLog("Sleep");
+        MenuAsleep = true;
         
-        sleeped = true;
         TableBrowser.SetHidden(true);
         WebBrowserParent.SetAllHidden(true);
 
-        InputManager.Hands.Left.ZTestRegular();
-        InputManager.Hands.Right.ZTestRegular();
-        InputManager.Hands.Left.SetPhysicsLayerRegular();
-        InputManager.Hands.Right.SetPhysicsLayerRegular();
+        SetHandForInactiveBrowser();
     }
 
-    public void Wake()
+    private void MenuWake()
     {
-        sleeped = false;
+        MenuAsleep = false;
 
         if (!openedOnce)
         {
@@ -117,22 +124,67 @@ public class TableBrowserParent : MonoBehaviour
             }
         }
         
+        SetHandsForActiveBrowser();
 
+    }
+
+    private void SetHandsForActiveBrowser()
+    {
         InputManager.Hands.Left.ZTestOverlay();
         InputManager.Hands.Right.ZTestOverlay();
         InputManager.Hands.Left.SetPhysicsLayerForTouchScreen();
         InputManager.Hands.Right.SetPhysicsLayerForTouchScreen();
     }
 
-    public void ToggleAwake()
+    private void SetHandForInactiveBrowser()
     {
-        if (sleeped)
+        if (MenuAsleep && ContextAsleep)
         {
-            Wake();
+            InputManager.Hands.Left.ZTestRegular();
+            InputManager.Hands.Right.ZTestRegular();
+            InputManager.Hands.Left.SetPhysicsLayerRegular();
+            InputManager.Hands.Right.SetPhysicsLayerRegular();
+        }
+    }
+
+    private void ContextWake()
+    {
+        ContextAsleep = false;
+        contentBoxCollider.enabled = true;
+        ContextMenu.SetHidden(false);
+        SetHandsForActiveBrowser();
+        
+    }
+
+    private void ContextSleep()
+    {
+        ContextAsleep = true;
+        contentBoxCollider.enabled = false;
+        ContextMenu.SetHidden(true);
+        SetHandForInactiveBrowser();
+    }
+
+    public void ToggleContextAwake()
+    {
+        if (ContextAsleep)
+        {
+            ContextWake();
         }
         else
         {
-            Sleep();
+            ContextSleep();
+        }
+    }
+
+    public void ToggleAwake()
+    {
+        if (MenuAsleep)
+        {
+            MenuWake();
+        }
+        else
+        {
+            MenuSleep();
         }
     }
 
@@ -142,12 +194,12 @@ public class TableBrowserParent : MonoBehaviour
         Table
     }
 
-    private void BonsaiLog(string msg)
+    private static void BonsaiLog(string msg)
     {
         Debug.Log("<color=orange>BonsaiTableBrowserParent: </color>: " + msg);
     }
 
-    private void BonsaiLogWarning(string msg)
+    private static void BonsaiLogWarning(string msg)
     {
         Debug.LogWarning("<color=orange>BonsaiTableBrowserParent: </color>: " + msg);
     }

@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useState} from 'react';
 import {action, makeAutoObservable} from 'mobx';
 import {observer} from 'mobx-react-lite';
 import axios from 'axios';
-import {apiBase} from "./utilities";
+import {apiBase} from './utilities';
 
 export const StoreContext = React.createContext();
 export const useStore = () => useContext(StoreContext);
@@ -14,26 +14,71 @@ export const NetworkManagerMode = {
     Host: 3,
 };
 
+export const Blocks = {
+    None: 0,
+    Wood: 1,
+    Orange: 2,
+    Green: 3,
+    Brown: 4,
+    Pink: 5,
+    LightPurple: 6,
+    DarkPurple: 7,
+    Violet: 8,
+    LightNeutral: 9,
+    DarkNeutral: 10,
+};
+
+export function showBlock(block){
+    switch (block){
+        case Blocks.None:
+            return "None"
+        case Blocks.Wood:
+            return "Wood"
+        case Blocks.Orange:
+            return "Orange"
+        case Blocks.Green:
+            return "Green"
+        case Blocks.Brown:
+            return "Brown"
+        case Blocks.Pink:
+            return "Pink"
+        case Blocks.LightPurple:
+            return "Light Purple"
+        case Blocks.DarkPurple:
+            return "Dark Purple"
+        case Blocks.Violet:
+            return "Violet"
+        case Blocks.LightNeutral:
+            return "Light Neutral"
+        case Blocks.DarkNeutral:
+            return "Dark Neutral"
+        default:
+            return `Unknown (${block})`
+    }
+}
+
 class Store {
-    get FullVersion (){
-        return this.AppInfo.Version + "b" + this.AppInfo.BuildId;
-    }
     SocialInfo = {
-        UserName: "NoName",
-    }
+        UserName: 'NoName',
+    };
     AppInfo = {
-        Build: 'PRODUCTION',
-        MicrophonePermission: false,
+        Build: 'DEVELOPMENT',
+        MicrophonePermission: true,
         Version: '?',
         BuildId: -1,
     };
-
     _networkInfo = {
-        Online: false,
+        Online: true,
         NetworkAddress: 'none',
         RoomOpen: false,
-        Mode: NetworkManagerMode.Offline
+        Mode: NetworkManagerMode.Offline,
     };
+    ContextInfo = {
+        LeftBlockActive: Blocks.None,
+        RightBlockActive: Blocks.None,
+        LeftBlockBreak: false,
+        RightBlockBreak: false,
+    }
     MediaInfo = {
         Active: false,
         Name: 'None',
@@ -49,9 +94,15 @@ class Store {
     PlayerInfos = [];
     LoadingRoomCode = false;
     _refresh_room_code_handler = null;
+    RoomSecret = '';
+    _roomCode = null;
 
     constructor() {
         makeAutoObservable(this);
+    }
+
+    get FullVersion() {
+        return this.AppInfo.Version + 'b' + this.AppInfo.BuildId;
     }
 
     get NetworkInfo() {
@@ -65,10 +116,6 @@ class Store {
         }
 
     }
-    
-    RoomSecret = ""
-
-    _roomCode = null;
 
     get RoomCode() {
         return this._roomCode;
@@ -86,7 +133,7 @@ class Store {
         } else {
             clearInterval(this._refresh_room_code_handler);
             this._refresh_room_code_handler = null;
-            this.RoomSecret = "";
+            this.RoomSecret = '';
         }
     }
 
@@ -104,8 +151,8 @@ class Store {
     }
 
     refreshRoomCode() {
-        let url = apiBase(this) + `/rooms/${store.RoomCode}/refresh`
-        console.log(url)
+        let url = apiBase(this) + `/rooms/${store.RoomCode}/refresh`;
+        console.log(url);
         axios({
             method: 'post',
             url: url,

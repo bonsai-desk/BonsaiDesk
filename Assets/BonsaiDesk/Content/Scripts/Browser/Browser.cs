@@ -9,7 +9,7 @@ using Vuplex.WebView;
 
 public class Browser : MonoBehaviour
 {
-    public bool Initialized;
+    [HideInInspector] public bool Initialized;
     public Vector2 startingAspect = new Vector2(16, 9);
     public float distanceEstimate = 1;
     public int pixelPerDegree = 16;
@@ -143,8 +143,6 @@ public class Browser : MonoBehaviour
     {
         var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
         
-        BonsaiLog($"JS {eventArgs.Value}");
-
         switch (message.Type)
         {
             case "event":
@@ -291,6 +289,7 @@ public class Browser : MonoBehaviour
         public static readonly string NavHome = PushPath("/home");
         public static readonly string NavKeyboard = PushPath("/keyboard");
         public static readonly string NavWebNav = PushPath("/webnav");
+        public static readonly string NavContext = PushPath("/context");
 
         private static string PushPath(string path)
         {

@@ -84,7 +84,7 @@ export function UpButton(props) {
                  onPointerUp={() => {
                      handleClick();
                      if (shouldPostUp) {
-                         postMouseUp()
+                         postMouseUp();
                      }
                  }}
             >

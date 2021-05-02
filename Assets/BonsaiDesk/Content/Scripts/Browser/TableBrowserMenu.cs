@@ -12,6 +12,8 @@ using static AutoBrowserController;
 [RequireComponent(typeof(TableBrowser))]
 public class TableBrowserMenu : MonoBehaviour
 {
+    public ContextBrowserController contextBrowserController;
+    public TableBrowser contextBrowser;
     public enum LightState
     {
         Bright,
@@ -42,6 +44,12 @@ public class TableBrowserMenu : MonoBehaviour
         browser.ListenersReady += HandleListenersReady;
         NetworkManagerGame.Singleton.InfoChange += HandleNetworkInfoChange;
         OVRManager.HMDUnmounted += () => { browser.SetHidden(true); };
+        contextBrowserController.InfoChange += HandleChangeBlockActive;
+    }
+
+    private void HandleChangeBlockActive()
+    {
+        PostContextInfo();
     }
 
     public void Update()
@@ -64,6 +72,7 @@ public class TableBrowserMenu : MonoBehaviour
             PostExperimentalInfo();
             PostAppInfo();
             PostSocialInfo();
+            PostContextInfo();
         }
     }
 
@@ -248,6 +257,33 @@ public class TableBrowserMenu : MonoBehaviour
         var kvs = new KeyType<AppInfo> {Key = "AppInfo", Val = appInfo};
         var jsMessage = new CsMessageKeyType<AppInfo> {Data = kvs};
         SerializeAndPost(jsMessage);
+    }
+
+    private void PostContextInfo()
+    {
+        var contextInfo = new ContextInfo
+        {
+            LeftBlockActive = contextBrowserController.LeftBlockActive,
+            RightBlockActive = contextBrowserController.RightBlockActive,
+            LeftBlockBreak = contextBrowserController.LeftBlockBreak,
+            RightBlockBreak =  contextBrowserController.RightBlockBreak
+        };
+        contextBrowser.PostMessage(Message(contextInfo, "ContextInfo"));
+    }
+
+    private class ContextInfo
+    {
+        public ContextBrowserController.Block LeftBlockActive;
+        public ContextBrowserController.Block RightBlockActive;
+        public bool LeftBlockBreak;
+        public bool RightBlockBreak;
+    }
+
+    private string Message<T>(T info, string KeyName)
+    {
+        var kvs = new KeyType<T> {Key = KeyName, Val = info};
+        var jsMessage = new CsMessageKeyType<T> {Data = kvs};
+        return JsonConvert.SerializeObject(jsMessage);
     }
 
     private void Post<T>(T info, string KeyName)

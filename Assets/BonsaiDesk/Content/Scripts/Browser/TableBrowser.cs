@@ -45,8 +45,6 @@ public class TableBrowser : Browser
     {
         var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
         
-        BonsaiLog($"Received JSON {eventArgs.Value}");
-
         switch (message.Type)
         {
             case "event":
