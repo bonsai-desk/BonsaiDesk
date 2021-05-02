@@ -6,46 +6,11 @@ function Button({children, onClick}) {
     return <div className={'h-20 w-20 bg-gray-600 rounded'} onPointerDown={onClick}>{children}</div>;
 }
 
-function WoodButton({hand}) {
+function BlockButton({hand, blockId}) {
     let onClick = () => {
-        postChangeActiveBlock(hand, Blocks.Wood);
+        postChangeActiveBlock(hand, blockId);
     };
-    return <Button onClick={onClick}>wood</Button>;
-}
-
-function OrangeButton({hand}) {
-    let onClick = () => {
-        postChangeActiveBlock(hand, Blocks.Orange);
-    };
-    return <Button onClick={onClick}>orange</Button>;
-}
-
-function GreenButton({hand}) {
-    let onClick = () => {
-        postChangeActiveBlock(hand, Blocks.Green);
-    };
-    return <Button onClick={onClick}>green</Button>;
-}
-
-function PinkButton({hand}) {
-    let onClick = () => {
-        postChangeActiveBlock(hand, Blocks.Pink);
-    };
-    return <Button onClick={onClick}>pink</Button>;
-}
-
-function VioletButton({hand}) {
-    let onClick = () => {
-        postChangeActiveBlock(hand, Blocks.Violet);
-    };
-    return <Button onClick={onClick}>violet</Button>;
-}
-
-function DarkNeutralButton({hand}) {
-    let onClick = () => {
-        postChangeActiveBlock(hand, Blocks.DarkNeutral);
-    };
-    return <Button onClick={onClick}>dark neutral</Button>;
+    return <Button onClick={onClick}>{showBlock(blockId)}</Button>;
 }
 
 function ButtonRow({children}) {
@@ -77,8 +42,6 @@ const ToggleBlocks = observer(({hand}) => {
 
     let switchOff = false;
 
-    let className = 'bg-green-400 h-10';
-
     switch (hand) {
         case 'left':
             switchOff = store.ContextInfo.LeftBlockActive === Blocks.None;
@@ -91,13 +54,7 @@ const ToggleBlocks = observer(({hand}) => {
             break;
     }
 
-    if (switchOff) {
-        className = 'bg-gray-900 h-10';
-    }
-
-    function Inner() {
-        return <div className={className}/>;
-    }
+    let className = switchOff ? 'bg-gray-900 h-10' : 'bg-green-400 h-10';
 
     let onClick = () => {
         if (hand === 'left' || hand === 'right') {
@@ -106,7 +63,9 @@ const ToggleBlocks = observer(({hand}) => {
     };
 
     return <div className={'w-full flex justify-center'}>
-        <Button onClick={onClick}><Inner/></Button>
+        <Button onClick={onClick}>
+            <div className={className}/>
+        </Button>
     </div>;
 
 });
@@ -116,14 +75,14 @@ function ButtonGrid({hand}) {
             <ButtonContainer>
                 <ActiveItem hand={hand}/>
                 <ButtonRow>
-                    <WoodButton hand={hand}/>
-                    <OrangeButton hand={hand}/>
-                    <GreenButton hand={hand}/>
+                    <BlockButton hand={hand} blockId={Blocks.Wood}/>
+                    <BlockButton hand={hand} blockId={Blocks.Orange}/>
+                    <BlockButton hand={hand} blockId={Blocks.Green}/>
                 </ButtonRow>
                 <ButtonRow>
-                    <PinkButton hand={hand}/>
-                    <VioletButton hand={hand}/>
-                    <DarkNeutralButton hand={hand}/>
+                    <BlockButton hand={hand} blockId={Blocks.Pink}/>
+                    <BlockButton hand={hand} blockId={Blocks.Violet}/>
+                    <BlockButton hand={hand} blockId={Blocks.DarkNeutral}/>
                 </ButtonRow>
                 <ToggleBlocks hand={hand}/>
             </ButtonContainer>
@@ -151,7 +110,7 @@ const HandButton = observer(({hand}) => {
     function onClick() {
         postToggleBlockBreakHand(hand);
     }
-   
+
     return <div className={'flex flex-wrap content-center'}>
         <Button onClick={onClick}><Inner/></Button>
     </div>;

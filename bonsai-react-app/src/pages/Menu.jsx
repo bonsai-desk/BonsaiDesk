@@ -65,7 +65,6 @@ function ExitButton() {
 
 function NavItem(props) {
     let {
-        selected,
         handleClick,
         inactive = false,
         buttonClassSelected = '',
@@ -86,6 +85,10 @@ function NavItem(props) {
             buttonClassInactive :
             'py-4 px-8 bg-gray-800 rounded cursor-pointer flex flex-wrap content-center';
 
+    let selected = window.location.pathname === to;
+
+    let textClass = selected ? 'text-white' : 'text-gray-300';
+
     if (inactive) {
         return (
                 <div className={buttonClassInactive}>
@@ -95,6 +98,7 @@ function NavItem(props) {
     }
 
     let className = selected ? buttonClassSelected : buttonClass;
+
     if (to) {
         className = window.location.pathname === to ? buttonClassSelected : buttonClass;
     }
@@ -105,7 +109,7 @@ function NavItem(props) {
                     history.push(to);
                 }}>
                     <Link to={to}>
-                        {props.children}
+                        <span className={textClass}>{props.children}</span>
                     </Link>
                 </Button>
         );
