@@ -1,44 +1,36 @@
 import React from 'react';
 import {useHistory} from 'react-router-dom';
-import {roundButtonClass} from '../cssClasses';
-import BackImg from "../static/back.svg"
-
-function BackButton({to}) {
-    let className = 'h-14 w-14 bg-gray-400 rounded-full';
-    let history = useHistory();
-
-    function onClick() {
-        history.push(to);
-    }
-
-    return <div className={roundButtonClass} onClick={onClick}>
-        <img src={BackImg} alt={"back"}/>
-        
-    </div>;
-}
+import {BackButton} from './Button';
 
 export function MenuContent(props) {
     let {name, back} = props;
+    let history = useHistory();
     
-    //back = ""
+    
 
     return (
-            <div className={'text-white p-4 h-full pr-8'}>
-                <div className={'flex flex-wrap space-x-6 content-center h-20'}>
-                    {back ?
-                            <BackButton to={back}/> : ''
-                    }
-                    {name ?
+            <div className={'text-white h-full'}>
+                <div className={'w-full fixed flex flex-wrap content-center h-24 bg-gray-900'}>
+                    <div className={"flex flex-wrap pl-4 space-x-6"}>
+                        {back ?
+                                <BackButton onClick={() => {
+                                    history.push(back);
+                                }}/> : ''
 
-                            <div className={'flex flex-wrap content-center'}>
-                                <div className={'text-2xl'}>
-                                    {name}
+                        }
+                        {name ?
+
+                                <div className={'flex flex-wrap content-center'}>
+                                    <div className={'text-2xl'}>
+                                        {name}
+                                    </div>
                                 </div>
-                            </div>
 
-                            : ''}
+                                : ''}
+                    </div>
                 </div>
-                <div className={'space-y-8 pb-8'}>
+                <div className={back ? 'h-24' : 'h-20'}/>
+                <div className={'space-y-8 p-4 pb-8'}>
                     {props.children}
                 </div>
             </div>

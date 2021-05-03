@@ -5,7 +5,7 @@ import {observer} from 'mobx-react-lite';
 import {autorun} from 'mobx';
 
 import DotsImg from '../static/dots-vertical.svg';
-import {NetworkManagerMode, useStore} from '../DataProvider';
+import {useStore} from '../DataProvider';
 import {postCloseMenu, postRequestMicrophone} from '../api';
 
 import {apiBase} from '../utilities';
@@ -14,7 +14,7 @@ import './Menu.css';
 import {DebugPage} from './Debug';
 import {VideosPage} from './Videos';
 import {SettingsPage} from './Settings';
-import {HomePage, JoinDeskPage} from './Home';
+import {HomePage} from './Home';
 import {PlayerPage} from './Player';
 import {PublicRoomsPage} from './PublicRooms';
 
@@ -194,8 +194,6 @@ let Menu = observer(() => {
         };
     }, [pushStore]);
 
-    let joinDeskActive = store.NetworkInfo.Mode === NetworkManagerMode.Host && !store.NetworkInfo.RoomOpen;
-
     if (!store.AppInfo.MicrophonePermission) {
         return <NoMicPage/>;
     }
@@ -241,7 +239,6 @@ let Menu = observer(() => {
                 <div className={'bg-gray-900 z-10 w-full overflow-auto scroll-host'}>
                     <Switch>
                         <Route path={`${match.path}/home`} component={HomePage}/>
-                        <Route path={`${match.path}/join-desk`} component={JoinDeskPage}/>
                         <Route path={`${match.path}/videos`} component={VideosPage}/>
                         <Route path={`${match.path}/settings`} component={SettingsPage}/>
                         <Route path={`${match.path}/debug`} component={DebugPage}/>

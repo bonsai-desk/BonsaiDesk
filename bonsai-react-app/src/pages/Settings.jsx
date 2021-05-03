@@ -1,9 +1,9 @@
 import {MenuContent} from '../components/MenuContent';
 import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
-import {Button, ToggleButton} from '../components/Button';
+import {Button, ForwardButton, ToggleButton} from '../components/Button';
 import {grayButtonClass, greenButtonClass} from '../cssClasses';
 import {apache, lgpl, mpl} from '../static/licenses';
-import React, {useState} from 'react';
+import React from 'react';
 import {InfoItem} from '../components/InfoItem';
 import {observer} from 'mobx-react-lite';
 import {useStore} from '../DataProvider';
@@ -75,16 +75,11 @@ const Settings = observer(() => {
             </ToggleButton>
         </InfoItem>
         <div className={'text-xl'}>
-            Information
+            Info
         </div>
-        <InfoItem title={'Version'}
+        <InfoItem title={'About'}
                   slug={store.AppInfo.Version + 'b' + store.AppInfo.BuildId}>
-            <Button
-                    className={grayButtonClass}
-                    handleClick={goToInfo}
-            >
-                About
-            </Button>
+            <ForwardButton onClick={goToInfo}/>
         </InfoItem>
     </MenuContent>;
 
@@ -100,26 +95,14 @@ function AboutPage({back}) {
     console.log(match.path);
     return <MenuContent name={'About'} back={back}>
         <InfoItem title={'GeckoView'} slug={'Mozilla Public License'}>
-            <Button className={grayButtonClass} handleClick={() => {
-                history.push(mplUrl);
-            }}>
-                View
-            </Button>
+            <ForwardButton onClick={()=>{history.push(mplUrl)}}/>
         </InfoItem>
         <InfoItem title={'PDF.js'} slug={'Apache License'}>
-            <Button className={grayButtonClass} handleClick={() => {
-                history.push(aplUrl);
-            }}>
-                View
-            </Button>
+            <ForwardButton onClick={()=>{history.push(aplUrl)}}/>
         </InfoItem>
         <InfoItem title={'AdGuard AdBlocker'}
                   slug={'GNU Lesser General Public License'}>
-            <Button className={grayButtonClass} handleClick={() => {
-                history.push(gplUrl);
-            }}>
-                View
-            </Button>
+            <ForwardButton onClick={()=>{history.push(gplUrl)}}/>
         </InfoItem>
     </MenuContent>;
 }
@@ -165,12 +148,6 @@ function ApacheLicense({handleClickReturn, back}) {
 
 export const SettingsPage = observer(() => {
     let match = useRouteMatch();
-
-    let [about, setAbout] = useState(false);
-
-    function toggleAbout() {
-        setAbout(!about);
-    }
 
     return <Switch>
         <Route exact path={`${match.path}`} component={Settings}/>

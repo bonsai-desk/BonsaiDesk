@@ -1,6 +1,9 @@
 import React from 'react';
 
 import {postJson} from '../utilities';
+import {smallRoundButtonClass} from '../cssClasses';
+import ForwardImg from "../static/forward.svg"
+import BackImg from "../static/back.svg"
 
 function postMouseDown() {
     postJson({Type: 'event', Message: 'mouseDown'});
@@ -64,6 +67,18 @@ export function Button(props) {
                 </div>
             </div>
     );
+}
+
+export function ForwardButton ({onClick}) {
+    return <Button className={smallRoundButtonClass} handleClick={onClick}>
+        <img src={ForwardImg} alt={"forward"}/>
+    </Button>
+}
+
+export function BackButton ({onClick}) {
+    return <Button className={smallRoundButtonClass} handleClick={onClick}>
+        <img src={BackImg} alt={"back"}/>
+    </Button>
 }
 
 export function UpButton(props) {
