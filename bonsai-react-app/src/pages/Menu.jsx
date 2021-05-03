@@ -52,7 +52,7 @@ function NoMicPage() {
 
 function ExitButton() {
 
-    let buttonClass = 'rounded h-16 py-4 px-8 bg-red-800 hover:bg-red-700 active:bg-red-600 hover:text-white cursor-pointer flex flex-wrap content-center';
+    let buttonClass = 'rounded h-16 py-4 px-8 bg-bonsai-brown hover:bg-bonsai-orange active:bg-red-600 hover:text-white cursor-pointer flex flex-wrap content-center';
 
     return (
             <NavItem buttonClass={buttonClass} handleClick={postCloseMenu}
@@ -80,7 +80,7 @@ function NavItem(props) {
             'py-4 px-8 hover:bg-gray-800 active:bg-gray-900 hover:text-white rounded cursor-pointer flex flex-wrap content-center';
     buttonClassSelected = buttonClassSelected ?
             buttonClassSelected :
-            'py-4 px-8 bg-blue-700 text-white rounded cursor-pointer flex flex-wrap content-center';
+            'py-4 px-8 bg-bonsai-green text-white rounded cursor-pointer flex flex-wrap content-center';
     buttonClassInactive = buttonClassInactive ?
             buttonClassInactive :
             'py-4 px-8 bg-gray-800 rounded cursor-pointer flex flex-wrap content-center';
