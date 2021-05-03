@@ -2,17 +2,24 @@ import React, {useEffect, useState} from 'react';
 import axios from 'axios';
 import {observer} from 'mobx-react-lite';
 import {BeatLoader, BounceLoader} from 'react-spinners';
-import {useHistory} from 'react-router-dom';
+import {useHistory, useRouteMatch} from 'react-router-dom';
 
 import DoorOpen from '../static/door-open.svg';
+import ForwardImg from "../static/forward.svg"
 import LinkImg from '../static/link.svg';
 import ThinkingFace from '../static/thinking-face.svg';
-import {grayButtonClassInert, greenButtonClass, redButtonClass, roundButtonClass} from '../cssClasses';
+import {grayButtonClass, grayButtonClassInert, greenButtonClass, redButtonClass, roundButtonClass} from '../cssClasses';
 import {InfoItem} from '../components/InfoItem';
 import {Button} from '../components/Button';
 import {MenuContent} from '../components/MenuContent';
 import {apiBase} from '../utilities';
-import {postCloseRoom, postJoinRoom, postKickConnectionId, postLeaveRoom, postOpenRoom} from '../api';
+import {
+    postCloseRoom,
+    postJoinRoom,
+    postKickConnectionId,
+    postLeaveRoom, postOpenPrivateRoom,
+    postOpenPublicRoom,
+} from '../api';
 import {NetworkManagerMode, useStore} from '../DataProvider';
 
 function ConnectedClient(props) {
@@ -58,11 +65,33 @@ function ConnectedClient(props) {
 }
 
 function OpenRoomItem() {
-    return <InfoItem title={'Room'} slug={'Invite others'} imgSrc={DoorOpen}>
-        <Button className={greenButtonClass} handleClick={postOpenRoom}>
-            Open Up
-        </Button>
+    return <InfoItem title={'Open Your Room'} slug={'Let people join you'} imgSrc={DoorOpen}>
+        <div className={"flex space-x-4"}>
+            <Button className={grayButtonClass} handleClick={postOpenPrivateRoom}>
+                Private
+            </Button>
+            <Button className={greenButtonClass} handleClick={postOpenPublicRoom}>
+                Public
+            </Button>
+        </div>
     </InfoItem>;
+}
+
+function JoinDeskItem () {
+
+    let history = useHistory();
+    
+    function onClick () {
+        
+        history.push("/menu/join-desk")
+    }
+    
+    return <InfoItem title={"Join Room"} slug={"Using a room code"} imgSrc={ForwardImg}>
+        <Button className={grayButtonClass} handleClick={onClick}>
+            Enter Room Code
+        </Button>
+    </InfoItem>
+
 }
 
 const CloseRoomItem = observer(() => {
@@ -121,6 +150,7 @@ const RoomInfo = observer(() => {
         return (
                 <React.Fragment>
                     <OpenRoomItem/>
+                    <JoinDeskItem/>
                 </React.Fragment>
         );
     }
@@ -165,30 +195,6 @@ function ClientHomePage() {
     );
 }
 
-export const HomePage = observer(() => {
-
-    let {store} = useStore();
-
-    let Inner;
-
-    switch (store.NetworkInfo.Mode) {
-        case NetworkManagerMode.ClientOnly:
-            Inner = <ClientHomePage/>;
-            break;
-        case NetworkManagerMode.Host:
-            Inner = <HostHomePage/>;
-            break;
-        default:
-            Inner = <LoadingHomePage/>;
-            break;
-    }
-
-    return (
-            <MenuContent name={'Home'}>
-                {Inner}
-            </MenuContent>
-    );
-});
 
 function JoinDeskButton(props) {
     let {handleClick, char} = props;
@@ -284,9 +290,9 @@ export let JoinDeskPage = observer(() => {
             setCode(code.slice(0, code.length - 1));
         }
     }
-
+    
     return (
-            <MenuContent name={'Join Desk'}>
+            <MenuContent name={'Join Desk'} back={"/menu/home"}>
                 <div className={'flex flex-wrap w-full content-center'}>
                     <div className={' w-1/2'}>
                         <div className={'text-xl'}>
@@ -328,6 +334,31 @@ export let JoinDeskPage = observer(() => {
                         </div>
                     </div>
                 </div>
+            </MenuContent>
+    );
+});
+
+export const HomePage = observer(() => {
+
+    let {store} = useStore();
+
+    let Inner;
+
+    switch (store.NetworkInfo.Mode) {
+        case NetworkManagerMode.ClientOnly:
+            Inner = <ClientHomePage/>;
+            break;
+        case NetworkManagerMode.Host:
+            Inner = <HostHomePage/>;
+            break;
+        default:
+            Inner = <LoadingHomePage/>;
+            break;
+    }
+
+    return (
+            <MenuContent name={'Home'}>
+                {Inner}
             </MenuContent>
     );
 });

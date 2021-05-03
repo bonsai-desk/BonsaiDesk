@@ -16,6 +16,7 @@ import {VideosPage} from './Videos';
 import {SettingsPage} from './Settings';
 import {HomePage, JoinDeskPage} from './Home';
 import {PlayerPage} from './Player';
+import {PublicRoomsPage} from './PublicRooms';
 
 function NoMicPage() {
 
@@ -227,10 +228,9 @@ let Menu = observer(() => {
                                          buttonClassSelected={playerButtonClassSelected}>
                                     Player
                                 </NavItem> : ''}
-                        <NavItem to={'/menu/join-desk'} inactive={!joinDeskActive}>Join Desk</NavItem>
+                        <NavItem to={'/menu/public-rooms'}>Public Rooms</NavItem>
                         <NavItem to={'/menu/videos'}>Videos</NavItem>
                         <NavItem to={'/menu/settings'}>Settings</NavItem>
-
                         <NavItem to={'/menu/debug'} component={DebugPage}>Debug</NavItem>
                     </NavList>
                     <div className={'w-full p-2'}>
@@ -246,6 +246,7 @@ let Menu = observer(() => {
                         <Route path={`${match.path}/settings`} component={SettingsPage}/>
                         <Route path={`${match.path}/debug`} component={DebugPage}/>
                         <Route path={`${match.path}/player`} component={PlayerPage}/>
+                        <Route path={`${match.path}/public-rooms`} component={PublicRoomsPage}/>
                         <Route path={`${match.path}`}>Page not found</Route>
                     </Switch>
                 </div>
