@@ -1,6 +1,6 @@
 import {MenuContent} from '../components/MenuContent';
 import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
-import {Button, ForwardButton, ToggleButton} from '../components/Button';
+import {InstantButton, ForwardButton, ToggleButton} from '../components/Button';
 import {grayButtonClass, greenButtonClass} from '../cssClasses';
 import {apache, lgpl, mpl} from '../static/licenses';
 import React from 'react';
@@ -41,10 +41,10 @@ const Settings = observer(() => {
         <InfoItem title={'Lights'} slug={'Set the mood'}
                   imgSrc={LightImg}>
             <div className={'flex space-x-2'}>
-                <Button handleClick={handleClickVibes}
-                        className={grayButtonClass}>Vibes</Button>
-                <Button handleClick={handleClickBright}
-                        className={grayButtonClass}>Bright</Button>
+                <InstantButton onClick={handleClickVibes}
+                        className={grayButtonClass}>Vibes</InstantButton>
+                <InstantButton onClick={handleClickBright}
+                        className={grayButtonClass}>Bright</InstantButton>
 
             </div>
         </InfoItem>

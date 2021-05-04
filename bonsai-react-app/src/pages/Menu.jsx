@@ -9,7 +9,7 @@ import {useStore} from '../DataProvider';
 import {postCloseMenu, postRequestMicrophone} from '../api';
 
 import {apiBase} from '../utilities';
-import {Button} from '../components/Button';
+import {InstantButton} from '../components/Button';
 import './Menu.css';
 import {DebugPage} from './Debug';
 import {VideosPage} from './Videos';
@@ -37,7 +37,7 @@ function NoMicPage() {
                     <div className={'h-4'}/>
                     <div className={'flex justify-center'}>
                         <div className={'text-2xl font-normal text-white '}>
-                            <Button className={className} handleClick={handleClick}>Request</Button>
+                            <InstantButton className={className} onClick={handleClick}>Request</InstantButton>
                         </div>
                     </div>
                     <div className={'h-4'}/>
@@ -106,21 +106,21 @@ function NavItem(props) {
 
     if (to) {
         return (
-                <Button className={className} handleClick={() => {
+                <InstantButton className={className} onClick={() => {
                     history.push(to);
                 }}>
                     <Link to={to}>
                         <span className={textClass}>{props.children}</span>
                     </Link>
-                </Button>
+                </InstantButton>
         );
 
     }
 
     return (
-            <Button className={className} handleClick={handleClick}>
+            <InstantButton className={className} onClick={handleClick}>
                 {props.children}
-            </Button>
+            </InstantButton>
     );
 }
 

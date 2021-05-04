@@ -44,7 +44,17 @@ export function ToggleButton(props) {
     );
 }
 
-export function Button(props) {
+export function NormalButton (props) {
+    let {onClick, children} = props;
+    return <Button {...props} handleClick={delay(onClick)}>{children}</Button>
+}
+
+export function InstantButton(props){
+    let {onClick, children} = props;
+    return <Button {...props} handleClick={onClick}>{children}</Button>
+}
+
+function Button(props) {
     let {
         handleClick,
         className = '',
@@ -69,17 +79,24 @@ export function Button(props) {
     );
 }
 
+function delay(onClick) {
+    return () => {
+        setTimeout(onClick, 175)
+    }
+}
+
 export function ForwardButton ({onClick}) {
-    return <Button className={smallRoundButtonClass} handleClick={onClick}>
+    return <Button className={smallRoundButtonClass} handleClick={delay(onClick)}>
         <img src={ForwardImg} alt={"forward"}/>
     </Button>
 }
 
 export function BackButton ({onClick}) {
-    return <Button className={smallRoundButtonClass} handleClick={onClick}>
+    return <Button className={smallRoundButtonClass} handleClick={delay(onClick)}>
         <img src={BackImg} alt={"back"}/>
     </Button>
 }
+
 
 export function UpButton(props) {
     let {

@@ -3,7 +3,7 @@ import {NetworkManagerMode, useStore} from '../DataProvider';
 import {action} from 'mobx';
 import {MenuContent} from '../components/MenuContent';
 import {showInfo} from '../esUtils';
-import {Button} from '../components/Button';
+import {InstantButton} from '../components/Button';
 import {grayButtonClass} from '../cssClasses';
 import React from 'react';
 
@@ -85,59 +85,59 @@ export const DebugPage = observer(() => {
 
                         <div>Room Status</div>
                         <div className={containerClass}>
-                            <Button handleClick={() => {
+                            <InstantButton onClick={() => {
                                 toggleRoomOpen(store);
                             }} className={grayButtonClass}>
                                 toggle
-                            </Button>
+                            </InstantButton>
                         </div>
 
                         <div>Host State</div>
                         <div className={containerClass}>
-                            <Button handleClick={() => {
+                            <InstantButton onClick={() => {
                                 setNetState(store, NetworkManagerMode.Offline);
                             }} className={grayButtonClass}>
                                 Offline
-                            </Button>
-                            <Button handleClick={() => {
+                            </InstantButton>
+                            <InstantButton onClick={() => {
                                 setNetState(store, NetworkManagerMode.ServerOnly);
                             }} className={grayButtonClass}>
                                 Server Only
-                            </Button>
-                            <Button handleClick={() => {
+                            </InstantButton>
+                            <InstantButton onClick={() => {
                                 setNetState(store, NetworkManagerMode.ClientOnly);
                             }} className={grayButtonClass}>
                                 Client Only
-                            </Button>
-                            <Button handleClick={() => {
+                            </InstantButton>
+                            <InstantButton onClick={() => {
                                 setNetState(store, NetworkManagerMode.Host);
                             }} className={grayButtonClass}>
                                 Host
-                            </Button>
+                            </InstantButton>
 
 
                         </div>
 
                         <div>Connection</div>
                         <div className={containerClass}>
-                            <Button handleClick={() => {
+                            <InstantButton onClick={() => {
                                 addFakeClient(store);
                             }} className={grayButtonClass}>+ fake client
-                            </Button>
-                            <Button handleClick={() => {
+                            </InstantButton>
+                            <InstantButton onClick={() => {
                                 rmFakeClient(store);
                             }} className={grayButtonClass}>- fake client
-                            </Button>
+                            </InstantButton>
                         </div>
 
                         <div>Player</div>
                         <div className={containerClass}>
-                            <Button handleClick={rmFakeVideoPlayer}
-                                    className={grayButtonClass}>none</Button>
-                            <Button handleClick={addFakeVideoPlayerPlaying}
-                                    className={grayButtonClass}>playing</Button>
-                            <Button handleClick={addFakeVideoPlayerPaused}
-                                    className={grayButtonClass}>paused</Button>
+                            <InstantButton onClick={rmFakeVideoPlayer}
+                                    className={grayButtonClass}>none</InstantButton>
+                            <InstantButton onClick={addFakeVideoPlayerPlaying}
+                                    className={grayButtonClass}>playing</InstantButton>
+                            <InstantButton onClick={addFakeVideoPlayerPaused}
+                                    className={grayButtonClass}>paused</InstantButton>
                         </div>
 
                     </div>

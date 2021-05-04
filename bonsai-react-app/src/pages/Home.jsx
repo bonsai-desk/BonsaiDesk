@@ -8,10 +8,10 @@ import DoorOpen from '../static/door-open.svg';
 import HashImg from '../static/hash.svg';
 import LinkImg from '../static/link.svg';
 import ThinkingFace from '../static/thinking-face.svg';
-import {grayButtonClass, grayButtonClassInert, greenButtonClass, redButtonClass} from '../cssClasses';
+import {grayButtonClassInert, redButtonClass} from '../cssClasses';
 import {InfoItem} from '../components/InfoItem';
-import {Button, ForwardButton} from '../components/Button';
-import {MenuContent} from '../components/MenuContent';
+import {InstantButton, ForwardButton, NormalButton} from '../components/Button';
+import {MenuContent, MenuContentFixed} from '../components/MenuContent';
 import {apiBase} from '../utilities';
 import {postCloseRoom, postKickConnectionId, postLeaveRoom, postOpenPrivateRoom, postOpenPublicRoom} from '../api';
 import {NetworkManagerMode, useStore} from '../DataProvider';
@@ -40,7 +40,7 @@ function ConnectedClient(props) {
         );
     } else {
         return (
-                <Button className={clientClass} handleClick={() => {
+                <InstantButton className={clientClass} onClick={() => {
                     postKickConnectionId(ConnectionId);
                 }}>
                     <div
@@ -52,7 +52,7 @@ function ConnectedClient(props) {
                             {Name}
                         </div>
                     </div>
-                </Button>
+                </InstantButton>
         );
 
     }
@@ -60,14 +60,10 @@ function ConnectedClient(props) {
 }
 
 function OpenRoomItem() {
+    let history = useHistory();
     return <InfoItem title={'Open Your Room'} slug={'Let people join you'} imgSrc={DoorOpen}>
         <div className={'flex space-x-4'}>
-            <Button className={grayButtonClass} handleClick={postOpenPrivateRoom}>
-                Private
-            </Button>
-            <Button className={greenButtonClass} handleClick={postOpenPublicRoom}>
-                Public
-            </Button>
+            <ForwardButton onClick={()=>{history.push('/menu/home/open-up')}}/>
         </div>
     </InfoItem>;
 }
@@ -105,9 +101,9 @@ const CloseRoomItem = observer(() => {
 
     return <InfoItem title={'Room'} slug={'Ready to accept connections'}
                      imgSrc={DoorOpen}>
-        <Button className={redButtonClass} handleClick={handleCloseRoom}>
+        <NormalButton className={redButtonClass} onClick={handleCloseRoom}>
             Close
-        </Button>
+        </NormalButton>
     </InfoItem>;
 });
 
@@ -180,12 +176,35 @@ function ClientHomePage() {
         <div className={'flex'}>
             <InfoItem title={'Connected'} slug={'You are connected to a host'}
                       imgSrc={LinkImg}>
-                <Button handleClick={postLeaveRoom}
-                        className={redButtonClass}>Exit</Button>
+                <NormalButton onClick={postLeaveRoom}
+                        className={redButtonClass}>Exit</NormalButton>
             </InfoItem>
         </div>
 
     </MenuContent>;
+}
+
+function OpenRoomButton({children, onClick, privateRoom}) {
+    const privateClass =
+    'w-56 h-36 rounded flex flex-wrap content-center justify-center bg-gray-800 active:bg-gray-700 hover:bg-gray-600 cursor-pointer'
+    const publicClass =
+    'w-56 h-36 rounded flex flex-wrap content-center justify-center bg-green-800 active:bg-green-700 hover:bg-green-600 cursor-pointer'
+    const className = privateRoom ? privateClass : publicClass;
+    return <NormalButton onClick={onClick}
+                   className={className}>
+        <span className={'font-bold'}>
+        {children}
+        </span>
+    </NormalButton>;
+}
+
+function OpenUpPage({back}) {
+    return <MenuContentFixed name={'Open Up Room'} back={back}>
+        <div className={'flex flex-wrap h-full space-x-20 justify-center content-center'}>
+            <OpenRoomButton privateRoom={true} onClick={postOpenPrivateRoom}>private</OpenRoomButton>
+            <OpenRoomButton onClick={postOpenPublicRoom}>public</OpenRoomButton>
+        </div>
+    </MenuContentFixed>;
 }
 
 export const HomePage = observer(() => {
@@ -209,5 +228,8 @@ export const HomePage = observer(() => {
     return <Switch>
         <Route exact path={`${match.path}`} component={Inner}/>
         <Route path={`${match.path}/join-desk`} component={JoinDeskPage}/>
+        <Route path={`${match.path}/open-up`}>
+            <OpenUpPage back={match.path}/>
+        </Route>
     </Switch>;
 });
