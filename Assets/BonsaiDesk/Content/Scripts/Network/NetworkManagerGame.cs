@@ -34,6 +34,7 @@ public class NetworkManagerGame : NetworkManager
 
     public OculusTransport oculusTransport;
     public bool roomOpen;
+    public bool publicRoom;
 
     public GameObject networkHandLeftPrefab;
     public GameObject networkHandRightPrefab;
@@ -203,10 +204,11 @@ public class NetworkManagerGame : NetworkManager
         InfoChange?.Invoke(this, new EventArgs());
     }
 
-    private void HandleOpenRoom()
+    private void HandleOpenRoom(bool isPublicRoom)
     {
         BonsaiLog("OpenRoom");
         roomOpen = true;
+        publicRoom = isPublicRoom;
         InfoChange?.Invoke(this, new EventArgs());
     }
 

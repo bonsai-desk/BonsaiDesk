@@ -16,7 +16,7 @@ import {VideosPage} from './Videos';
 import {SettingsPage} from './Settings';
 import {HomePage} from './Home';
 import {PlayerPage} from './Player';
-import {PublicRoomsPage} from './PublicRooms';
+import PublicRoomsPage from './PublicRooms';
 
 function NoMicPage() {
 
@@ -153,6 +153,7 @@ let Menu = observer(() => {
             const loadingRoomCode = store.LoadingRoomCode;
             const userName = store.SocialInfo.UserName;
             const version = `${store.AppInfo.Version}b${store.AppInfo.BuildId}`;
+            const publicRoom = store.NetworkInfo.PublicRoom ? 1 : 0;
 
             if (roomCode && (!networkAddress || !roomOpen)) {
                 console.log('Remove room code');
@@ -165,11 +166,12 @@ let Menu = observer(() => {
                 console.log('fetch room code');
                 pushStore({LoadingRoomCode: true});
                 let url = apiBase(store) + '/rooms';
+                let data = `network_address=${networkAddress}&username=${userName}&version=${version}&public_room=${publicRoom}`
                 axios(
                         {
                             method: 'post',
                             url: url,
-                            data: `network_address=${networkAddress}&username=${userName}&version=${version}`,
+                            data: data,
                             header: {'content-type': 'application/x-www-form-urlencoded'},
                         },
                 ).then(response => {
@@ -227,7 +229,7 @@ let Menu = observer(() => {
                                     Player
                                 </NavItem> : ''}
                         <NavItem to={'/menu/public-rooms'}>Public Rooms</NavItem>
-                        <NavItem to={'/menu/videos'}>Videos</NavItem>
+                        <NavItem to={'/menu/videos'}>Media</NavItem>
                         <NavItem to={'/menu/settings'}>Settings</NavItem>
                         <NavItem to={'/menu/debug'} component={DebugPage}>Debug</NavItem>
                     </NavList>

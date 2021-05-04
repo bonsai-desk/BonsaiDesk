@@ -10,7 +10,7 @@ import LinkImg from '../static/link.svg';
 import ThinkingFace from '../static/thinking-face.svg';
 import {grayButtonClassInert, redButtonClass} from '../cssClasses';
 import {InfoItem} from '../components/InfoItem';
-import {InstantButton, ForwardButton, NormalButton} from '../components/Button';
+import {ForwardButton, InstantButton, NormalButton} from '../components/Button';
 import {MenuContent, MenuContentFixed} from '../components/MenuContent';
 import {apiBase} from '../utilities';
 import {postCloseRoom, postKickConnectionId, postLeaveRoom, postOpenPrivateRoom, postOpenPublicRoom} from '../api';
@@ -63,7 +63,9 @@ function OpenRoomItem() {
     let history = useHistory();
     return <InfoItem title={'Open Your Room'} slug={'Let people join you'} imgSrc={DoorOpen}>
         <div className={'flex space-x-4'}>
-            <ForwardButton onClick={()=>{history.push('/menu/home/open-up')}}/>
+            <ForwardButton onClick={() => {
+                history.push('/menu/home/open-up');
+            }}/>
         </div>
     </InfoItem>;
 }
@@ -85,11 +87,13 @@ function JoinDeskItem() {
 
 const CloseRoomItem = observer(() => {
     let {store} = useStore();
+    let secret = store.RoomSecret;
     let handleCloseRoom = () => {
         if (store.RoomCode) {
+            console.log('secret ', secret);
             axios({
                 method: 'delete',
-                url: apiBase(store) + '/rooms/' + store.RoomCode,
+                url: apiBase(store) + '/rooms/' + store.RoomCode + `?secret=${secret}`,
             }).then(r => {
                 if (r.status === 200) {
                     console.log(`deleted room ${store.RoomCode}`);
@@ -177,7 +181,7 @@ function ClientHomePage() {
             <InfoItem title={'Connected'} slug={'You are connected to a host'}
                       imgSrc={LinkImg}>
                 <NormalButton onClick={postLeaveRoom}
-                        className={redButtonClass}>Exit</NormalButton>
+                              className={redButtonClass}>Exit</NormalButton>
             </InfoItem>
         </div>
 
@@ -186,12 +190,12 @@ function ClientHomePage() {
 
 function OpenRoomButton({children, onClick, privateRoom}) {
     const privateClass =
-    'w-56 h-36 rounded flex flex-wrap content-center justify-center bg-gray-800 active:bg-gray-700 hover:bg-gray-600 cursor-pointer'
+            'w-56 h-36 rounded flex flex-wrap content-center justify-center bg-gray-800 active:bg-gray-700 hover:bg-gray-600 cursor-pointer';
     const publicClass =
-    'w-56 h-36 rounded flex flex-wrap content-center justify-center bg-green-800 active:bg-green-700 hover:bg-green-600 cursor-pointer'
+            'w-56 h-36 rounded flex flex-wrap content-center justify-center bg-green-800 active:bg-green-700 hover:bg-green-600 cursor-pointer';
     const className = privateRoom ? privateClass : publicClass;
     return <NormalButton onClick={onClick}
-                   className={className}>
+                         className={className}>
         <span className={'font-bold'}>
         {children}
         </span>

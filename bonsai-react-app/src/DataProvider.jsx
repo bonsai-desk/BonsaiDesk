@@ -72,6 +72,7 @@ class Store {
         NetworkAddress: 'none',
         RoomOpen: false,
         Mode: NetworkManagerMode.Offline,
+        PublicRoom: false,
     };
     ContextInfo = {
         LeftBlockActive: Blocks.None,

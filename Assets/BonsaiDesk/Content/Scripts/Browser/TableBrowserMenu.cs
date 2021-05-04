@@ -88,7 +88,8 @@ public class TableBrowserMenu : MonoBehaviour
             Online = NetworkManagerGame.Singleton.Online,
             NetworkAddress = NetworkManagerGame.Singleton.GetNetworkAddress(),
             RoomOpen = NetworkManagerGame.Singleton.roomOpen,
-            Mode = NetworkManagerGame.Singleton.mode
+            Mode = NetworkManagerGame.Singleton.mode,
+            PublicRoom = NetworkManagerGame.Singleton.publicRoom
         };
         var csm = new CsMessageKeyType<NetworkInfo>
         {
@@ -151,12 +152,12 @@ public class TableBrowserMenu : MonoBehaviour
                         break;
                     case "openPublicRoom":
                         BonsaiLogWarning("public room not implemented yet");
-                        OpenRoom?.Invoke();
+                        OpenRoom?.Invoke(true);
                         browser.PostMessage(Browser.BrowserMessage.NavToMenu);
                         break;
                     case "openPrivateRoom":
                         BonsaiLogWarning("private room not implemented yet");
-                        OpenRoom?.Invoke();
+                        OpenRoom?.Invoke(false);
                         browser.PostMessage(Browser.BrowserMessage.NavToMenu);
                         break;
                     case "closeRoom":
@@ -339,7 +340,7 @@ public class TableBrowserMenu : MonoBehaviour
 
     public static event Action<RoomData> JoinRoom;
     public static event Action LeaveRoom;
-    public static event Action OpenRoom;
+    public static event Action<bool> OpenRoom;
     public static event Action CloseRoom;
     public static event Action<int> KickConnectionId;
 
@@ -377,6 +378,7 @@ public class TableBrowserMenu : MonoBehaviour
         public string NetworkAddress;
         public bool RoomOpen;
         public NetworkManagerMode Mode;
+        public bool PublicRoom;
     }
 
     private class ExperimentalInfo

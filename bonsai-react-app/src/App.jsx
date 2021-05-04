@@ -106,7 +106,7 @@ const Boot = observer(() => {
                             <Link to={'/twitch'}>twitch</Link>
                         </li>
                         <li>
-                            <Link to={'/menu'}>menu</Link>
+                            <Link to={'/menu/home'}>menu</Link>
                         </li>
                         <li>
                             <Link to={'/home'}>home</Link>

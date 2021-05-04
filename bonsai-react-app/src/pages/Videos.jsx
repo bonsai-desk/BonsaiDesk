@@ -7,7 +7,7 @@ import {postBrowseYouTube} from '../api';
 import React from 'react';
 
 export function VideosPage() {
-  return <MenuContent name={'Videos'}>
+  return <MenuContent name={'Media'}>
     <InfoItem imgSrc={YtImg} title={'YouTube'}
               slug={'Find videos to watch on the big screen'}>
       <NormalButton className={greenButtonClass} onClick={postBrowseYouTube}>
