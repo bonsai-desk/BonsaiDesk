@@ -1,199 +1,157 @@
 import {MenuContent} from '../components/MenuContent';
-import {Button, ToggleButton} from '../components/Button';
+import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
+import {InstantButton, ForwardButton, ToggleButton} from '../components/Button';
 import {grayButtonClass, greenButtonClass} from '../cssClasses';
 import {apache, lgpl, mpl} from '../static/licenses';
-import React, {useState} from 'react';
+import React from 'react';
 import {InfoItem} from '../components/InfoItem';
 import {observer} from 'mobx-react-lite';
 import {useStore} from '../DataProvider';
-import {
-  postLightsChange,
-  postToggleBlockBreak,
-  postTogglePinchPull,
-} from '../api';
+import {postLightsChange, postToggleBlockBreak, postTogglePinchPull} from '../api';
 import LightImg from '../static/lightbulb.svg';
 
-export const SettingsPage = observer(() => {
-  let {store} = useStore();
+const Settings = observer(() => {
 
-  let [about, setAbout] = useState(false);
+    let {store} = useStore();
+    let history = useHistory();
+    let match = useRouteMatch();
 
-  function handleClickVibes() {
-    postLightsChange('vibes');
-  }
+    function goToInfo() {
+        history.push(`${match.path}/about`);
+    }
 
-  function handleClickBright() {
-    postLightsChange('bright');
-  }
+    function handleClickVibes() {
+        postLightsChange('vibes');
+    }
 
-  function handleClickPinchPull() {
-    postTogglePinchPull();
-  }
+    function handleClickBright() {
+        postLightsChange('bright');
+    }
 
-  function handleClickBlockBreak() {
-    postToggleBlockBreak();
+    function handleClickPinchPull() {
+        postTogglePinchPull();
+    }
 
-  }
+    function handleClickBlockBreak() {
+        postToggleBlockBreak();
 
-  function toggleAbout() {
-    setAbout(!about);
-  }
+    }
 
-  if (about) {
-    return <AboutPage handleClickReturn={toggleAbout}/>;
-  }
+    return <MenuContent name={'Settings'}>
+        <InfoItem title={'Lights'} slug={'Set the mood'}
+                  imgSrc={LightImg}>
+            <div className={'flex space-x-2'}>
+                <InstantButton onClick={handleClickVibes}
+                        className={grayButtonClass}>Vibes</InstantButton>
+                <InstantButton onClick={handleClickBright}
+                        className={grayButtonClass}>Bright</InstantButton>
 
-  return <MenuContent name={'Settings'}>
-    <InfoItem title={'Lights'} slug={'Set the mood'}
-              imgSrc={LightImg}>
-      <div className={'flex space-x-2'}>
-        <Button handleClick={handleClickVibes}
-                className={grayButtonClass}>Vibes</Button>
-        <Button handleClick={handleClickBright}
-                className={grayButtonClass}>Bright</Button>
+            </div>
+        </InfoItem>
+        <div className={'text-xl'}>
+            Experimental
+        </div>
+        <InfoItem title={'Pinch Pull'}
+                  slug={'Point at object with pinched fingers'}
+        >
+            <ToggleButton
+                    classEnabled={greenButtonClass}
+                    classDisabled={grayButtonClass}
+                    enabled={store.ExperimentalInfo.PinchPullEnabled}
+                    handleClick={handleClickPinchPull}
+            >
+                Toggle
+            </ToggleButton>
+        </InfoItem>
+        <InfoItem title={'Block Break'}
+                  slug={'Delete blocks by touching them (right index finger)'}>
+            <ToggleButton
+                    classEnabled={greenButtonClass}
+                    classDisabled={grayButtonClass}
+                    enabled={store.ExperimentalInfo.BlockBreakEnabled}
+                    handleClick={handleClickBlockBreak}
+            >
+                Toggle
+            </ToggleButton>
+        </InfoItem>
+        <div className={'text-xl'}>
+            Info
+        </div>
+        <InfoItem title={'About'}
+                  slug={store.AppInfo.Version + 'b' + store.AppInfo.BuildId}>
+            <ForwardButton onClick={goToInfo}/>
+        </InfoItem>
+    </MenuContent>;
 
-      </div>
-    </InfoItem>
-    <div className={'text-xl'}>
-      Experimental
-    </div>
-    <InfoItem title={'Pinch Pull'}
-              slug={'Point at object with pinched fingers'}
-    >
-      <ToggleButton
-          classEnabled={greenButtonClass}
-          classDisabled={grayButtonClass}
-          enabled={store.ExperimentalInfo.PinchPullEnabled}
-          handleClick={handleClickPinchPull}
-      >
-        Toggle
-      </ToggleButton>
-    </InfoItem>
-    <InfoItem title={'Block Break'}
-              slug={'Delete blocks by touching them (right index finger)'}>
-      <ToggleButton
-          classEnabled={greenButtonClass}
-          classDisabled={grayButtonClass}
-          enabled={store.ExperimentalInfo.BlockBreakEnabled}
-          handleClick={handleClickBlockBreak}
-      >
-        Toggle
-      </ToggleButton>
-    </InfoItem>
-    <div className={'text-xl'}>
-      Information
-    </div>
-    <InfoItem title={'Version'}
-              slug={store.AppInfo.Version + 'b' + store.AppInfo.BuildId}>
-      <Button
-          className={grayButtonClass}
-          handleClick={toggleAbout}
-      >
-        About
-      </Button>
-    </InfoItem>
-  </MenuContent>;
 });
 
-function AboutPage({handleClickReturn}) {
-  // 0 : main
-  // 1 : MPL
-  // 2 : LGPL
-  let [view, setView] = useState(0);
+function AboutPage({back}) {
+    let match = useRouteMatch();
+    let mplUrl = `${match.path}/mpl`;
+    let gplUrl = `${match.path}/gpl`;
+    let aplUrl = `${match.path}/apl`;
+    let history = useHistory();
 
-  function viewMain() {
-    setView(0);
-  }
-
-  function viewMpl() {
-    setView(1);
-  }
-
-  function viewLgpl() {
-    setView(2);
-  }
-
-  function viewApache() {
-    setView(3);
-  }
-
-  if (view === 1) {
-    return <MozillaPublicLicense handleClickReturn={viewMain}/>;
-  }
-
-  if (view === 2) {
-    return <LesserGlpl handleClickReturn={viewMain}/>;
-  }
-
-  if (view === 3) {
-    return <ApacheLicense handleClickReturn={viewMain}/>;
-  }
-
-  return (
-      <MenuContent name={'About'}>
-        <div className={'flex'}>
-          <Button className={grayButtonClass} handleClick={handleClickReturn}>
-            Return to Settings
-          </Button>
-        </div>
-        <div className={'text-xl'}>
-          Credits
-        </div>
+    console.log(match.path);
+    return <MenuContent name={'About'} back={back}>
         <InfoItem title={'GeckoView'} slug={'Mozilla Public License'}>
-          <Button className={grayButtonClass} handleClick={viewMpl}>
-            View
-          </Button>
+            <ForwardButton onClick={()=>{history.push(mplUrl)}}/>
         </InfoItem>
         <InfoItem title={'PDF.js'} slug={'Apache License'}>
-          <Button className={grayButtonClass} handleClick={viewApache}>
-            View
-          </Button>
+            <ForwardButton onClick={()=>{history.push(aplUrl)}}/>
         </InfoItem>
         <InfoItem title={'AdGuard AdBlocker'}
                   slug={'GNU Lesser General Public License'}>
-          <Button className={grayButtonClass} handleClick={viewLgpl}>
-            View
-          </Button>
+            <ForwardButton onClick={()=>{history.push(gplUrl)}}/>
         </InfoItem>
-      </MenuContent>
-  );
+    </MenuContent>;
 }
 
-function MozillaPublicLicense({handleClickReturn}) {
-  return (
-      <MenuContent name={'Mozilla Public License Version 2.0'}>
-        <div className={'flex'}>
-          <Button className={grayButtonClass} handleClick={handleClickReturn}>
-            Return
-          </Button>
-        </div>
-        <div dangerouslySetInnerHTML={{__html: mpl}}/>
-      </MenuContent>
-  );
+function About({back}) {
+    let match = useRouteMatch();
+    return <Switch>
+        <Route path={`${match.path}/apl`}><ApacheLicense back={match.path}/></Route>
+        <Route path={`${match.path}/gpl`}><LesserGlpl back={match.path}/></Route>
+        <Route path={`${match.path}/mpl`}><MozillaPublicLicense back={match.path}/></Route>
+        <Route><AboutPage back={back}/></Route>
+    </Switch>;
+
 }
 
-function LesserGlpl({handleClickReturn}) {
-  return (
-      <MenuContent name={'GNU LESSER GENERAL PUBLIC LICENSE'}>
-        <div className={'flex'}>
-          <Button className={grayButtonClass} handleClick={handleClickReturn}>
-            Return
-          </Button>
-        </div>
-        <div dangerouslySetInnerHTML={{__html: lgpl}}/>
-      </MenuContent>
-  );
+function MozillaPublicLicense({handleClickReturn, back}) {
+    return (
+            <MenuContent name={'Mozilla Public License Version 2.0'} back={back}>
+                <div dangerouslySetInnerHTML={{__html: mpl}}/>
+            </MenuContent>
+    );
 }
 
-function ApacheLicense({handleClickReturn}) {
-  return (
-      <MenuContent name={'APACHE LICENSE, VERSION 2.0'}>
-        <div className={'flex'}>
-          <Button className={grayButtonClass} handleClick={handleClickReturn}>
-            Return
-          </Button>
-        </div>
-        <div dangerouslySetInnerHTML={{__html: apache}}/>
-      </MenuContent>
-  );
+function LesserGlpl({handleClickReturn, back}) {
+    return (
+            <MenuContent name={'GNU LESSER GENERAL PUBLIC LICENSE'} back={back}>
+                <div className={'flex'}>
+                </div>
+                <div dangerouslySetInnerHTML={{__html: lgpl}}/>
+            </MenuContent>
+    );
 }
+
+function ApacheLicense({handleClickReturn, back}) {
+    return (
+            <MenuContent name={'APACHE LICENSE, VERSION 2.0'} back={back}>
+                <div className={'flex'}>
+                </div>
+                <div dangerouslySetInnerHTML={{__html: apache}}/>
+            </MenuContent>
+    );
+}
+
+export const SettingsPage = observer(() => {
+    let match = useRouteMatch();
+
+    return <Switch>
+        <Route exact path={`${match.path}`} component={Settings}/>
+        <Route path={`${match.path}/about`}><About back={match.path}/></Route>
+    </Switch>;
+
+});

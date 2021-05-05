@@ -6,9 +6,9 @@ let postJson = (json) => {
 };
 
 function apiBase(store) {
-    let API_BASE = 'https://api.desk.link';
+    let API_BASE = 'https://api.desk.link:1776/v1';
     if (store.AppInfo.Build === 'DEVELOPMENT') {
-        API_BASE = 'https://api.desk.link:8080';
+        API_BASE = 'https://api.desk.link:8080/v1';
     }
     return API_BASE;
 }

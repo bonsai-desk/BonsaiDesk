@@ -87,8 +87,12 @@ public class TableBrowserMenu : MonoBehaviour
         {
             Online = NetworkManagerGame.Singleton.Online,
             NetworkAddress = NetworkManagerGame.Singleton.GetNetworkAddress(),
+            MyNetworkAddress = NetworkManagerGame.Singleton.GetMyNetworkAddress(),
             RoomOpen = NetworkManagerGame.Singleton.roomOpen,
-            Mode = NetworkManagerGame.Singleton.mode
+            Mode = NetworkManagerGame.Singleton.mode,
+            PublicRoom = NetworkManagerGame.Singleton.publicRoom,
+            Full = NetworkManagerGame.Singleton.RoomFull,
+            Connecting = NetworkManagerGame.Singleton.connecting
         };
         var csm = new CsMessageKeyType<NetworkInfo>
         {
@@ -149,8 +153,15 @@ public class TableBrowserMenu : MonoBehaviour
                     case "leaveRoom":
                         LeaveRoom?.Invoke();
                         break;
-                    case "openRoom":
-                        OpenRoom?.Invoke();
+                    case "openPublicRoom":
+                        BonsaiLogWarning("public room not implemented yet");
+                        OpenRoom?.Invoke(true);
+                        browser.PostMessage(Browser.BrowserMessage.NavToMenu);
+                        break;
+                    case "openPrivateRoom":
+                        BonsaiLogWarning("private room not implemented yet");
+                        OpenRoom?.Invoke(false);
+                        browser.PostMessage(Browser.BrowserMessage.NavToMenu);
                         break;
                     case "closeRoom":
                         CloseRoom?.Invoke();
@@ -332,7 +343,7 @@ public class TableBrowserMenu : MonoBehaviour
 
     public static event Action<RoomData> JoinRoom;
     public static event Action LeaveRoom;
-    public static event Action OpenRoom;
+    public static event Action<bool> OpenRoom;
     public static event Action CloseRoom;
     public static event Action<int> KickConnectionId;
 
@@ -368,8 +379,12 @@ public class TableBrowserMenu : MonoBehaviour
     {
         public bool Online;
         public string NetworkAddress;
+        public string MyNetworkAddress;
         public bool RoomOpen;
         public NetworkManagerMode Mode;
+        public bool PublicRoom;
+        public bool Full;
+        public bool Connecting;
     }
 
     private class ExperimentalInfo

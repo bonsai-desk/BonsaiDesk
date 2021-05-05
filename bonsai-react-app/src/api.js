@@ -20,8 +20,12 @@ export function postBrowseYouTube() {
     postJson({Type: 'command', Message: 'browseYouTube'});
 }
 
-export function postOpenRoom() {
-    postJson({Type: 'command', Message: 'openRoom'});
+export function postOpenPrivateRoom() {
+    postJson({Type: 'command', Message: 'openPrivateRoom'});
+}
+
+export function postOpenPublicRoom() {
+    postJson({Type: 'command', Message: 'openPublicRoom'});
 }
 
 export function postCloseRoom() {

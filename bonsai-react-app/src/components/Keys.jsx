@@ -1,6 +1,6 @@
 import React from 'react';
 import {animated, useSpring} from 'react-spring';
-import {Button} from './Button';
+import {InstantButton} from './Button';
 import {postJson} from '../utilities';
 import BackSpaceImgHollow from '../static/backspace-hollow.svg';
 import CaretSquareUp from '../static/caret-square-up.svg';
@@ -42,7 +42,7 @@ export function KeyFrames({handleClick, width, children}) {
     }
 
     return (
-            <Button handleClick={_handleClick} shouldPostDown={false}
+            <InstantButton onClick={_handleClick} shouldPostDown={false}
                     shouldPostUp={false} shouldPostHover={false}>
                 <div>
                     <animated.div
@@ -64,7 +64,7 @@ export function KeyFrames({handleClick, width, children}) {
                         </div>
                     </animated.div>
                 </div>
-            </Button>
+            </InstantButton>
     );
 }
 

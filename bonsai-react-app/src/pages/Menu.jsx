@@ -5,17 +5,18 @@ import {observer} from 'mobx-react-lite';
 import {autorun} from 'mobx';
 
 import DotsImg from '../static/dots-vertical.svg';
-import {NetworkManagerMode, useStore} from '../DataProvider';
+import {useStore} from '../DataProvider';
 import {postCloseMenu, postRequestMicrophone} from '../api';
 
 import {apiBase} from '../utilities';
-import {Button} from '../components/Button';
+import {InstantButton} from '../components/Button';
 import './Menu.css';
 import {DebugPage} from './Debug';
 import {VideosPage} from './Videos';
 import {SettingsPage} from './Settings';
-import {HomePage, JoinDeskPage} from './Home';
+import {HomePage} from './Home';
 import {PlayerPage} from './Player';
+import PublicRoomsPage from './PublicRooms';
 
 function NoMicPage() {
 
@@ -36,7 +37,7 @@ function NoMicPage() {
                     <div className={'h-4'}/>
                     <div className={'flex justify-center'}>
                         <div className={'text-2xl font-normal text-white '}>
-                            <Button className={className} handleClick={handleClick}>Request</Button>
+                            <InstantButton className={className} onClick={handleClick}>Request</InstantButton>
                         </div>
                     </div>
                     <div className={'h-4'}/>
@@ -105,21 +106,21 @@ function NavItem(props) {
 
     if (to) {
         return (
-                <Button className={className} handleClick={() => {
+                <InstantButton className={className} onClick={() => {
                     history.push(to);
                 }}>
                     <Link to={to}>
                         <span className={textClass}>{props.children}</span>
                     </Link>
-                </Button>
+                </InstantButton>
         );
 
     }
 
     return (
-            <Button className={className} handleClick={handleClick}>
+            <InstantButton className={className} onClick={handleClick}>
                 {props.children}
-            </Button>
+            </InstantButton>
     );
 }
 
@@ -152,6 +153,7 @@ let Menu = observer(() => {
             const loadingRoomCode = store.LoadingRoomCode;
             const userName = store.SocialInfo.UserName;
             const version = `${store.AppInfo.Version}b${store.AppInfo.BuildId}`;
+            const publicRoom = store.NetworkInfo.PublicRoom ? 1 : 0;
 
             if (roomCode && (!networkAddress || !roomOpen)) {
                 console.log('Remove room code');
@@ -164,11 +166,12 @@ let Menu = observer(() => {
                 console.log('fetch room code');
                 pushStore({LoadingRoomCode: true});
                 let url = apiBase(store) + '/rooms';
+                let data = `network_address=${networkAddress}&username=${userName}&version=${version}&public_room=${publicRoom}`
                 axios(
                         {
                             method: 'post',
                             url: url,
-                            data: `network_address=${networkAddress}&username=${userName}&version=${version}`,
+                            data: data,
                             header: {'content-type': 'application/x-www-form-urlencoded'},
                         },
                 ).then(response => {
@@ -192,8 +195,6 @@ let Menu = observer(() => {
             pushStore({RoomCode: null});
         };
     }, [pushStore]);
-
-    let joinDeskActive = store.NetworkInfo.Mode === NetworkManagerMode.Host && !store.NetworkInfo.RoomOpen;
 
     if (!store.AppInfo.MicrophonePermission) {
         return <NoMicPage/>;
@@ -227,10 +228,9 @@ let Menu = observer(() => {
                                          buttonClassSelected={playerButtonClassSelected}>
                                     Player
                                 </NavItem> : ''}
-                        <NavItem to={'/menu/join-desk'} inactive={!joinDeskActive}>Join Desk</NavItem>
-                        <NavItem to={'/menu/videos'}>Videos</NavItem>
+                        <NavItem to={'/menu/public-rooms'}>Public Rooms</NavItem>
+                        <NavItem to={'/menu/videos'}>Media</NavItem>
                         <NavItem to={'/menu/settings'}>Settings</NavItem>
-
                         <NavItem to={'/menu/debug'} component={DebugPage}>Debug</NavItem>
                     </NavList>
                     <div className={'w-full p-2'}>
@@ -241,11 +241,11 @@ let Menu = observer(() => {
                 <div className={'bg-gray-900 z-10 w-full overflow-auto scroll-host'}>
                     <Switch>
                         <Route path={`${match.path}/home`} component={HomePage}/>
-                        <Route path={`${match.path}/join-desk`} component={JoinDeskPage}/>
                         <Route path={`${match.path}/videos`} component={VideosPage}/>
                         <Route path={`${match.path}/settings`} component={SettingsPage}/>
                         <Route path={`${match.path}/debug`} component={DebugPage}/>
                         <Route path={`${match.path}/player`} component={PlayerPage}/>
+                        <Route path={`${match.path}/public-rooms`} component={PublicRoomsPage}/>
                         <Route path={`${match.path}`}>Page not found</Route>
                     </Switch>
                 </div>

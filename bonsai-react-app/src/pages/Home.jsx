@@ -1,19 +1,20 @@
 import React, {useEffect, useState} from 'react';
-import axios from 'axios';
 import {observer} from 'mobx-react-lite';
-import {BeatLoader, BounceLoader} from 'react-spinners';
-import {useHistory} from 'react-router-dom';
+import {BeatLoader} from 'react-spinners';
+import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
 
 import DoorOpen from '../static/door-open.svg';
+import HashImg from '../static/hash.svg';
 import LinkImg from '../static/link.svg';
 import ThinkingFace from '../static/thinking-face.svg';
-import {grayButtonClassInert, greenButtonClass, redButtonClass, roundButtonClass} from '../cssClasses';
+import {grayButtonClassInert, redButtonClass} from '../cssClasses';
 import {InfoItem} from '../components/InfoItem';
-import {Button} from '../components/Button';
-import {MenuContent} from '../components/MenuContent';
-import {apiBase} from '../utilities';
-import {postCloseRoom, postJoinRoom, postKickConnectionId, postLeaveRoom, postOpenRoom} from '../api';
+import {ForwardButton, InstantButton, NormalButton} from '../components/Button';
+import {MenuContent, MenuContentFixed} from '../components/MenuContent';
+import {postKickConnectionId, postLeaveRoom, postOpenPrivateRoom, postOpenPublicRoom} from '../api';
 import {NetworkManagerMode, useStore} from '../DataProvider';
+import {JoinDeskPage} from './JoinDesk';
+import {handleCloseRoom} from '../esUtils';
 
 function ConnectedClient(props) {
     let {info} = props;
@@ -38,7 +39,7 @@ function ConnectedClient(props) {
         );
     } else {
         return (
-                <Button className={clientClass} handleClick={() => {
+                <InstantButton className={clientClass} onClick={() => {
                     postKickConnectionId(ConnectionId);
                 }}>
                     <div
@@ -50,7 +51,7 @@ function ConnectedClient(props) {
                             {Name}
                         </div>
                     </div>
-                </Button>
+                </InstantButton>
         );
 
     }
@@ -58,37 +59,44 @@ function ConnectedClient(props) {
 }
 
 function OpenRoomItem() {
-    return <InfoItem title={'Room'} slug={'Invite others'} imgSrc={DoorOpen}>
-        <Button className={greenButtonClass} handleClick={postOpenRoom}>
-            Open Up
-        </Button>
+    let history = useHistory();
+    return <InfoItem title={'Open Your Room'} slug={'Let people join you'} imgSrc={DoorOpen}>
+        <div className={'flex space-x-4'}>
+            <ForwardButton onClick={() => {
+                history.push('/menu/home/open-up');
+            }}/>
+        </div>
     </InfoItem>;
+}
+
+function JoinDeskItem() {
+
+    let history = useHistory();
+    let match = useRouteMatch();
+
+    function onClick() {
+        history.push(`${match.path}/join-desk`);
+    }
+
+    return <InfoItem title={'Join Room'} slug={'Using a room code'} imgSrc={HashImg}>
+        <ForwardButton onClick={onClick}/>
+    </InfoItem>;
+
 }
 
 const CloseRoomItem = observer(() => {
     let {store} = useStore();
+    
+    let title = store.NetworkInfo.PublicRoom ? "Public Room" : "Private Room";
 
-    let handleCloseRoom = () => {
-        if (store.RoomCode) {
-            axios({
-                method: 'delete',
-                url: apiBase(store) + '/rooms/' + store.RoomCode,
-            }).then(r => {
-                if (r.status === 200) {
-                    console.log(`deleted room ${store.RoomCode}`);
-                }
-            }).catch(console.log);
-        }
-        postCloseRoom();
-    };
-
-    return <InfoItem title={'Room'} slug={'Ready to accept connections'}
+    return <InfoItem title={title} slug={'Ready to accept connections'}
                      imgSrc={DoorOpen}>
-        <Button className={redButtonClass} handleClick={handleCloseRoom}>
+        <NormalButton className={redButtonClass} onClick={handleCloseRoom(store)}>
             Close
-        </Button>
+        </NormalButton>
     </InfoItem>;
 });
+
 const DeskCodeItem = observer(() => {
     let {store} = useStore();
     const roomCodeCLass = 'text-5xl ';
@@ -107,6 +115,7 @@ const DeskCodeItem = observer(() => {
         </div>
     </InfoItem>;
 });
+
 const RoomInfo = observer(() => {
     let {store} = useStore();
 
@@ -121,213 +130,104 @@ const RoomInfo = observer(() => {
         return (
                 <React.Fragment>
                     <OpenRoomItem/>
+                    <JoinDeskItem/>
                 </React.Fragment>
         );
     }
 
 });
+
 export const HostHomePage = observer(() => {
 
     let {store} = useStore();
 
-    return (
-            <React.Fragment>
-                <RoomInfo/>
-                {store.PlayerInfos.length > 0 && store.NetworkInfo.RoomOpen ?
-                        <React.Fragment>
-                            <div className={'text-xl'}>People in Your Room</div>
-                            <div className={'flex space-x-2'}>
-                                {store.PlayerInfos.map(info => <ConnectedClient info={info}/>)}
-                            </div>
-                        </React.Fragment>
-                        :
-                        ''}
-            </React.Fragment>
-    );
-
+    return <MenuContent name={'Home'}>
+        <RoomInfo/>
+        {store.PlayerInfos.length > 0 && store.NetworkInfo.RoomOpen ?
+                <React.Fragment>
+                    <div className={'text-xl'}>People in Your Room</div>
+                    <div className={'flex space-x-2'}>
+                        {store.PlayerInfos.map(info => <ConnectedClient info={info}/>)}
+                    </div>
+                </React.Fragment>
+                :
+                ''}
+    </MenuContent>;
 });
 
 function LoadingHomePage() {
-    return <div className={'flex justify-center w-full flex-wrap'}>
-        <BounceLoader size={200} color={'#737373'}/>
+    let [inner, setInner] = useState("")
+    useEffect(()=>{
+        setTimeout(()=>{setInner(<BeatLoader size={25} color={'#737373'}/>)}, 500)
+    },[])
+    return <div className={'flex justify-center w-full flex-wrap content-center h-screen'}>
+        {inner}
     </div>;
 }
 
 function ClientHomePage() {
-    return (
-            <div className={'flex'}>
-                <InfoItem title={'Connected'} slug={'You are connected to a host'}
-                          imgSrc={LinkImg}>
-                    <Button handleClick={postLeaveRoom}
-                            className={redButtonClass}>Exit</Button>
-                </InfoItem>
-            </div>
-    );
+    return <MenuContent name={'Client Connected'}>
+        <div className={'flex'}>
+            <InfoItem title={'Connected'} slug={'You are connected to a host'}
+                      imgSrc={LinkImg}>
+                <NormalButton onClick={postLeaveRoom}
+                              className={redButtonClass}>Exit</NormalButton>
+            </InfoItem>
+        </div>
+
+    </MenuContent>;
+}
+
+function OpenRoomButton({children, onClick, privateRoom}) {
+    const privateClass =
+            'w-56 h-36 rounded flex flex-wrap content-center justify-center bg-gray-800 active:bg-gray-700 hover:bg-gray-600 cursor-pointer';
+    const publicClass =
+            'w-56 h-36 rounded flex flex-wrap content-center justify-center bg-green-800 active:bg-green-700 hover:bg-green-600 cursor-pointer';
+    const className = privateRoom ? privateClass : publicClass;
+    return <NormalButton onClick={onClick}
+                         className={className}>
+        <span className={'font-bold'}>
+        {children}
+        </span>
+    </NormalButton>;
+}
+
+function OpenUpPage({back}) {
+    return <MenuContentFixed name={'Open Up Room'} back={back}>
+        <div className={'flex flex-wrap h-full space-x-20 justify-center content-center'}>
+            <OpenRoomButton privateRoom={true} onClick={postOpenPrivateRoom}>private</OpenRoomButton>
+            <OpenRoomButton onClick={postOpenPublicRoom}>public</OpenRoomButton>
+        </div>
+    </MenuContentFixed>;
 }
 
 export const HomePage = observer(() => {
-
     let {store} = useStore();
+    let match = useRouteMatch();
 
     let Inner;
 
     switch (store.NetworkInfo.Mode) {
-        case NetworkManagerMode.ClientOnly:
-            Inner = <ClientHomePage/>;
-            break;
         case NetworkManagerMode.Host:
-            Inner = <HostHomePage/>;
+            Inner = HostHomePage;
+            break;
+        case NetworkManagerMode.ClientOnly:
+            Inner = ClientHomePage;
             break;
         default:
-            Inner = <LoadingHomePage/>;
+            Inner = LoadingHomePage;
             break;
     }
-
-    return (
-            <MenuContent name={'Home'}>
-                {Inner}
-            </MenuContent>
-    );
-});
-
-function JoinDeskButton(props) {
-    let {handleClick, char} = props;
-
-    return (
-            <Button className={roundButtonClass} handleClick={() => {
-                handleClick(char);
-            }}>
-            <span className={'w-full text-center'}>
-                {char}
-            </span>
-            </Button>
-    );
-}
-
-export let JoinDeskPage = observer(() => {
-    let {store} = useStore();
-
-    let [code, setCode] = useState('');
-    let [posting, setPosting] = useState(false);
-    let [message, setMessage] = useState('');
-
-    let {history} = useHistory();
-
-    let url = apiBase(store) + `/rooms/${code}`;
-
-    useEffect(() => {
-
-        function navHome() {
-            history.push('/menu/home');
-        }
-
-        if (posting) return;
-
-        if (code.length === 4) {
-            setPosting(true);
-            axios({
-                method: 'get',
-                url: url,
-            }).then(response => {
-
-                let networkAddressResponse = response.data.network_address.toString();
-                let networkAddressStore = store.NetworkInfo.NetworkAddress;
-
-                let {
-                    //network_address,
-                    //username,
-                    version,
-                } = response.data;
-
-                // todo networkAddress is not unique per user
-                console.log(networkAddressStore, networkAddressResponse);
-                console.log(store.FullVersion, version);
-
-                if (networkAddressResponse === networkAddressStore) {
-                    // trying to join your own room
-                    setMessage(`You can't join your own room`);
-                    setCode('');
-                    setPosting(false);
-                } else if (store.FullVersion !== version) {
-                    setMessage(`Your version (${store.FullVersion}) mismatch host (${version})`);
-                    setCode('');
-                    setPosting(false);
-                } else {
-                    postJoinRoom(response.data);
-                    setCode('');
-                    setPosting(false);
-                    navHome();
-                }
-            }).catch(err => {
-                console.log(err);
-                setMessage(`Could not find ${code} try again`);
-                setCode('');
-                setPosting(false);
-            });
-        }
-    }, [history, code, posting, url, store.NetworkInfo.NetworkAddress, store.FullVersion]);
-
-    function handleClick(char) {
-        setMessage('');
-        switch (code.length) {
-            case 4:
-                setCode(char);
-                break;
-            default:
-                setCode(code + char);
-                break;
-        }
+    
+    if (store.NetworkInfo.Connecting) {
+        Inner = LoadingHomePage;
     }
 
-    function handleBackspace() {
-        if (code.length > 0) {
-            setCode(code.slice(0, code.length - 1));
-        }
-    }
-
-    return (
-            <MenuContent name={'Join Desk'}>
-                <div className={'flex flex-wrap w-full content-center'}>
-                    <div className={' w-1/2'}>
-                        <div className={'text-xl'}>
-                            {message}
-                        </div>
-                        <div
-                                className={'text-9xl h-full flex flex-wrap content-center justify-center'}>
-                            {code.length < 4 ? code : ''}
-                        </div>
-                    </div>
-                    <div className={'p-2 rounded space-y-4 text-2xl'}>
-                        <div className={'flex space-x-4'}>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'1'}/>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'2'}/>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'3'}/>
-                        </div>
-                        <div className={'flex space-x-4'}>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'4'}/>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'5'}/>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'6'}/>
-                        </div>
-                        <div className={'flex space-x-4'}>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'7'}/>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'8'}/>
-                            <JoinDeskButton handleClick={handleClick}
-                                            char={'9'}/>
-                        </div>
-                        <div className={'flex flex-wrap w-full justify-around'}>
-                            <JoinDeskButton
-                                    handleClick={handleBackspace} char={'<'}/>
-                        </div>
-                    </div>
-                </div>
-            </MenuContent>
-    );
+    return <Switch>
+        <Route exact path={`${match.path}`} component={Inner}/>
+        <Route path={`${match.path}/join-desk`} component={JoinDeskPage}/>
+        <Route path={`${match.path}/open-up`}>
+            <OpenUpPage back={match.path}/>
+        </Route>
+    </Switch>;
 });
