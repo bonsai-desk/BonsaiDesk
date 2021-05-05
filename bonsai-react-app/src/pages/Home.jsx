@@ -86,8 +86,10 @@ function JoinDeskItem() {
 
 const CloseRoomItem = observer(() => {
     let {store} = useStore();
+    
+    let title = store.NetworkInfo.PublicRoom ? "Public Room" : "Private Room";
 
-    return <InfoItem title={'Room'} slug={'Ready to accept connections'}
+    return <InfoItem title={title} slug={'Ready to accept connections'}
                      imgSrc={DoorOpen}>
         <NormalButton className={redButtonClass} onClick={handleCloseRoom(store)}>
             Close
