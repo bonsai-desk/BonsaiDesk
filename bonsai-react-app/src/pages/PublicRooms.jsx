@@ -1,8 +1,9 @@
 import React, {useEffect, useState} from 'react';
+import {useHistory} from "react-router-dom"
 import {MenuContent, MenuContentFixed} from '../components/MenuContent';
 import {InfoItem} from '../components/InfoItem';
 import ThinkingFace from '../static/thinking-face.svg';
-import {useStore} from '../DataProvider';
+import {NetworkManagerMode, useStore} from '../DataProvider';
 import {observer} from 'mobx-react-lite';
 import {apiBase} from '../utilities';
 import SleepingImg from '../static/sleeping-face.svg';
@@ -10,12 +11,42 @@ import axios from 'axios';
 import {NormalButton} from '../components/Button';
 import {grayButtonClassInert, greenButtonClass} from '../cssClasses';
 import {postJoinRoom} from '../api';
+import {handleCloseRoom} from '../esUtils';
+import {BeatLoader} from 'react-spinners';
 
-function RoomInfo({username, network_address, inert}) {
+let RoomInfo = observer(({full, username, network_address}) => {
+
+    let history = useHistory()
+    let {store} = useStore();
+    
+    let NetworkAddress = store.NetworkInfo.NetworkAddress
+    let MyNetworkAddress = store.NetworkInfo.MyNetworkAddress
+    let connecting = store.NetworkInfo.Connecting;
+    let yourRoom = network_address === MyNetworkAddress;
+    let joined = NetworkAddress === network_address;
+    
+    let inert = joined || full || connecting || yourRoom;
+
+    let inner = 'Connect';
+    
+    if (joined) {
+        inner = "Joined"
+    }
+
+    if (yourRoom) {
+        inner = "Your Room";
+    }
+
+    if (connecting){
+        //inner = <BeatLoader size={8} color={'#737373'}/>
+    }
+
+    let closeRoom = handleCloseRoom(store)
 
     function onClick() {
         if (!inert) {
             console.log(network_address);
+            closeRoom()
             postJoinRoom({network_address: network_address});
         }
     }
@@ -24,11 +55,11 @@ function RoomInfo({username, network_address, inert}) {
 
     return <InfoItem title={username} imgSrc={ThinkingFace}>
         <NormalButton onClick={onClick} className={className}>
-            Connect
+            {inner}
         </NormalButton>
 
     </InfoItem>;
-}
+});
 
 let PublicRoomsPage = observer(() => {
 
@@ -42,10 +73,10 @@ let PublicRoomsPage = observer(() => {
 
             axios.get(url).then(res => {
                 setRooms(res.data.rooms);
-                setLoaded(true)
+                setLoaded(true);
             }).catch(err => {
-                console.log(err)
-                setLoaded(true)
+                console.log(err);
+                setLoaded(true);
             });
         }
 
@@ -56,8 +87,14 @@ let PublicRoomsPage = observer(() => {
             clearInterval(handle);
         };
     }, [store]);
-    
-    if (rooms.length === 0) {
+
+    if (rooms.length > 0) {
+        return <MenuContent name={'Public Rooms'}>
+            {rooms.map(room => {
+                return <RoomInfo {...room}/>;
+            })}
+        </MenuContent>;
+    } else {
         return <MenuContentFixed name={'Public Rooms'}>
             <div className={'flex flex-wrap content-center justify-center h-full'}>
                 {loaded ?
@@ -66,19 +103,13 @@ let PublicRoomsPage = observer(() => {
                             <div className={'w-full flex flex-wrap justify-center'}>
                                 No public rooms open right now
                             </div>
-                        </div> : ""
+                        </div> : ''
                 }
             </div>
         </MenuContentFixed>;
+
     }
 
-    return <MenuContent name={'Public Rooms'}>
-        {rooms.map(room => {
-            let netAd = store.NetworkInfo.NetworkAddress;
-            let inert = netAd === room.network_address;
-            return <RoomInfo {...room} inert={inert}/>;
-        })}
-    </MenuContent>;
 });
 
 export default PublicRoomsPage;

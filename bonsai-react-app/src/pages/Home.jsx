@@ -1,7 +1,6 @@
-import React from 'react';
-import axios from 'axios';
+import React, {useEffect, useState} from 'react';
 import {observer} from 'mobx-react-lite';
-import {BeatLoader, BounceLoader} from 'react-spinners';
+import {BeatLoader} from 'react-spinners';
 import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
 
 import DoorOpen from '../static/door-open.svg';
@@ -12,10 +11,10 @@ import {grayButtonClassInert, redButtonClass} from '../cssClasses';
 import {InfoItem} from '../components/InfoItem';
 import {ForwardButton, InstantButton, NormalButton} from '../components/Button';
 import {MenuContent, MenuContentFixed} from '../components/MenuContent';
-import {apiBase} from '../utilities';
-import {postCloseRoom, postKickConnectionId, postLeaveRoom, postOpenPrivateRoom, postOpenPublicRoom} from '../api';
+import {postKickConnectionId, postLeaveRoom, postOpenPrivateRoom, postOpenPublicRoom} from '../api';
 import {NetworkManagerMode, useStore} from '../DataProvider';
 import {JoinDeskPage} from './JoinDesk';
+import {handleCloseRoom} from '../esUtils';
 
 function ConnectedClient(props) {
     let {info} = props;
@@ -87,25 +86,10 @@ function JoinDeskItem() {
 
 const CloseRoomItem = observer(() => {
     let {store} = useStore();
-    let secret = store.RoomSecret;
-    let handleCloseRoom = () => {
-        if (store.RoomCode) {
-            console.log('secret ', secret);
-            axios({
-                method: 'delete',
-                url: apiBase(store) + '/rooms/' + store.RoomCode + `?secret=${secret}`,
-            }).then(r => {
-                if (r.status === 200) {
-                    console.log(`deleted room ${store.RoomCode}`);
-                }
-            }).catch(console.log);
-        }
-        postCloseRoom();
-    };
 
     return <InfoItem title={'Room'} slug={'Ready to accept connections'}
                      imgSrc={DoorOpen}>
-        <NormalButton className={redButtonClass} onClick={handleCloseRoom}>
+        <NormalButton className={redButtonClass} onClick={handleCloseRoom(store)}>
             Close
         </NormalButton>
     </InfoItem>;
@@ -170,8 +154,12 @@ export const HostHomePage = observer(() => {
 });
 
 function LoadingHomePage() {
+    let [inner, setInner] = useState("")
+    useEffect(()=>{
+        setTimeout(()=>{setInner(<BeatLoader size={25} color={'#737373'}/>)}, 500)
+    },[])
     return <div className={'flex justify-center w-full flex-wrap content-center h-screen'}>
-        <BounceLoader size={100} color={'#737373'}/>
+        {inner}
     </div>;
 }
 
@@ -227,6 +215,10 @@ export const HomePage = observer(() => {
         default:
             Inner = LoadingHomePage;
             break;
+    }
+    
+    if (store.NetworkInfo.Connecting) {
+        Inner = LoadingHomePage;
     }
 
     return <Switch>

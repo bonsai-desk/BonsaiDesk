@@ -87,9 +87,12 @@ public class TableBrowserMenu : MonoBehaviour
         {
             Online = NetworkManagerGame.Singleton.Online,
             NetworkAddress = NetworkManagerGame.Singleton.GetNetworkAddress(),
+            MyNetworkAddress = NetworkManagerGame.Singleton.GetMyNetworkAddress(),
             RoomOpen = NetworkManagerGame.Singleton.roomOpen,
             Mode = NetworkManagerGame.Singleton.mode,
-            PublicRoom = NetworkManagerGame.Singleton.publicRoom
+            PublicRoom = NetworkManagerGame.Singleton.publicRoom,
+            Full = NetworkManagerGame.Singleton.RoomFull,
+            Connecting = NetworkManagerGame.Singleton.connecting
         };
         var csm = new CsMessageKeyType<NetworkInfo>
         {
@@ -376,9 +379,12 @@ public class TableBrowserMenu : MonoBehaviour
     {
         public bool Online;
         public string NetworkAddress;
+        public string MyNetworkAddress;
         public bool RoomOpen;
         public NetworkManagerMode Mode;
         public bool PublicRoom;
+        public bool Full;
+        public bool Connecting;
     }
 
     private class ExperimentalInfo

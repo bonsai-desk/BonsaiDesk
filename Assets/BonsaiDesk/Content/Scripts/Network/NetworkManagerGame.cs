@@ -17,6 +17,7 @@ using UnityEditor;
 
 public class NetworkManagerGame : NetworkManager
 {
+    public bool connecting;
     public delegate void LoggedInHandler(User user);
 
     public delegate void ServerAddPlayerHandler(NetworkConnection conn, bool isLanOnly);
@@ -31,6 +32,8 @@ public class NetworkManagerGame : NetworkManager
     public static EventHandler<NetworkConnection> ClientDisconnect;
     public static EventHandler InternetTimeout;
     public static EventHandler InternetReconnect;
+
+    public bool RoomFull => PlayerInfos.Count >= maxConnections;
 
     public OculusTransport oculusTransport;
     public bool roomOpen;
@@ -247,6 +250,9 @@ public class NetworkManagerGame : NetworkManager
 
     private void JoinRoom(RoomData roomData)
     {
+        roomOpen = false;
+        connecting = true;
+        InfoChange?.Invoke(this, new EventArgs());
         BonsaiLog($"JoinRoom ({roomData.network_address})");
         if (!OculusCommon.CanParseId(roomData.network_address))
         {
@@ -270,12 +276,13 @@ public class NetworkManagerGame : NetworkManager
             networkAddress = roomData.network_address;
             BonsaiLog("StartClient");
             StartClient();
-            InfoChange?.Invoke(this, new EventArgs());
         }
         else
         {
             BonsaiLogError($"Did not get into offline state before joining room ({mode})");
         }
+        connecting = false;
+        InfoChange?.Invoke(this, new EventArgs());
     }
 
     private void StopXR()
@@ -569,6 +576,16 @@ public class NetworkManagerGame : NetworkManager
     }
 
     public event LoggedInHandler LoggedIn;
+
+    public string GetMyNetworkAddress()
+    {
+        if (User != null)
+        {
+            return User.ID.ToString();
+        }
+
+        return "";
+    }
 
     public string GetNetworkAddress()
     {

@@ -70,9 +70,12 @@ class Store {
     _networkInfo = {
         Online: true,
         NetworkAddress: 'none',
+        MyNetworkAddress: 'none',
         RoomOpen: false,
         Mode: NetworkManagerMode.Offline,
         PublicRoom: false,
+        Full: false,
+        Connecting: false
     };
     ContextInfo = {
         LeftBlockActive: Blocks.None,
@@ -157,7 +160,7 @@ class Store {
         axios({
             method: 'post',
             url: url,
-            data: `secret=${this.RoomSecret}`,
+            data: `secret=${this.RoomSecret}&full=${this.NetworkInfo.Full ? 1 : 0}`,
             header: {'content-type': 'application/x-www-form-urlencoded'},
         }).catch(err => {
             console.log(err);

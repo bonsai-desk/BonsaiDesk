@@ -27,9 +27,16 @@ export const DebugPage = observer(() => {
     });
 
     let toggleRoomOpen = action(store => {
-        //todo
         store.NetworkInfo.RoomOpen = !store.NetworkInfo.RoomOpen;
     });
+    
+    let toggleRoomPublic = action(store => {
+        store.NetworkInfo.PublicRoom = !store.NetworkInfo.PublicRoom;
+    })
+
+    let toggleRoomFull = action(store => {
+        store.NetworkInfo.Full = !store.NetworkInfo.Full;
+    })
 
     let addFakeVideoPlayerPaused = () => {
         store.MediaInfo = {
@@ -88,7 +95,17 @@ export const DebugPage = observer(() => {
                             <InstantButton onClick={() => {
                                 toggleRoomOpen(store);
                             }} className={grayButtonClass}>
-                                toggle
+                                toggle open
+                            </InstantButton>
+                            <InstantButton onClick={() => {
+                                toggleRoomPublic(store);
+                            }} className={grayButtonClass}>
+                                toggle public
+                            </InstantButton>
+                            <InstantButton onClick={() => {
+                                toggleRoomFull(store);
+                            }} className={grayButtonClass}>
+                                toggle full
                             </InstantButton>
                         </div>
 
