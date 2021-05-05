@@ -2,8 +2,8 @@ import React from 'react';
 
 import {postJson} from '../utilities';
 import {smallRoundButtonClass} from '../cssClasses';
-import ForwardImg from "../static/forward.svg"
-import BackImg from "../static/back.svg"
+import ForwardImg from '../static/forward.svg';
+import BackImg from '../static/back.svg';
 
 function postMouseDown() {
     postJson({Type: 'event', Message: 'mouseDown'});
@@ -44,14 +44,14 @@ export function ToggleButton(props) {
     );
 }
 
-export function NormalButton (props) {
+export function NormalButton(props) {
     let {onClick, children} = props;
-    return <Button {...props} handleClick={delay(onClick)}>{children}</Button>
+    return <Button {...props} handleClick={delay(onClick)}>{children}</Button>;
 }
 
-export function InstantButton(props){
+export function InstantButton(props) {
     let {onClick, children} = props;
-    return <Button {...props} handleClick={onClick}>{children}</Button>
+    return <Button {...props} handleClick={onClick}>{children}</Button>;
 }
 
 function Button(props) {
@@ -81,22 +81,25 @@ function Button(props) {
 
 function delay(onClick) {
     return () => {
-        setTimeout(onClick, 175)
-    }
+        setTimeout(onClick, 175);
+    };
 }
 
-export function ForwardButton ({onClick}) {
+export function ForwardButton({onClick}) {
     return <Button className={smallRoundButtonClass} handleClick={delay(onClick)}>
-        <img src={ForwardImg} alt={"forward"}/>
-    </Button>
+        <div className={'flex flex-wrap content-center justify-center'}>
+            <img className={'h-8 object-contain'} src={ForwardImg} alt={'forward'}/>
+        </div>
+    </Button>;
 }
 
-export function BackButton ({onClick}) {
+export function BackButton({onClick}) {
     return <Button className={smallRoundButtonClass} handleClick={delay(onClick)}>
-        <img src={BackImg} alt={"back"}/>
-    </Button>
+        <div className={'flex flex-wrap content-center justify-center'}>
+            <img className={'h-8 object-contain'} src={BackImg} alt={'back'}/>
+        </div>
+    </Button>;
 }
-
 
 export function UpButton(props) {
     let {

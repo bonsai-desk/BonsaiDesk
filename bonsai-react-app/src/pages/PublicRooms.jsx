@@ -1,9 +1,8 @@
 import React, {useEffect, useState} from 'react';
-import {useHistory} from "react-router-dom"
 import {MenuContent, MenuContentFixed} from '../components/MenuContent';
 import {InfoItem} from '../components/InfoItem';
 import ThinkingFace from '../static/thinking-face.svg';
-import {NetworkManagerMode, useStore} from '../DataProvider';
+import {useStore} from '../DataProvider';
 import {observer} from 'mobx-react-lite';
 import {apiBase} from '../utilities';
 import SleepingImg from '../static/sleeping-face.svg';
@@ -12,41 +11,43 @@ import {NormalButton} from '../components/Button';
 import {grayButtonClassInert, greenButtonClass} from '../cssClasses';
 import {postJoinRoom} from '../api';
 import {handleCloseRoom} from '../esUtils';
-import {BeatLoader} from 'react-spinners';
 
 let RoomInfo = observer(({full, username, network_address}) => {
 
-    let history = useHistory()
     let {store} = useStore();
-    
-    let NetworkAddress = store.NetworkInfo.NetworkAddress
-    let MyNetworkAddress = store.NetworkInfo.MyNetworkAddress
+
+    let NetworkAddress = store.NetworkInfo.NetworkAddress;
+    let MyNetworkAddress = store.NetworkInfo.MyNetworkAddress;
     let connecting = store.NetworkInfo.Connecting;
     let yourRoom = network_address === MyNetworkAddress;
     let joined = NetworkAddress === network_address;
-    
+
     let inert = joined || full || connecting || yourRoom;
 
-    let inner = 'Connect';
-    
+    let inner = '1/2';
+
+    if (full) {
+        inner = '2/2';
+    }
+   
     if (joined) {
-        inner = "Joined"
+        inner = 'Joined';
     }
 
     if (yourRoom) {
-        inner = "Your Room";
+        inner = 'Your Room';
     }
 
-    if (connecting){
+    if (connecting) {
         //inner = <BeatLoader size={8} color={'#737373'}/>
     }
 
-    let closeRoom = handleCloseRoom(store)
+    let closeRoom = handleCloseRoom(store);
 
     function onClick() {
         if (!inert) {
             console.log(network_address);
-            closeRoom()
+            closeRoom();
             postJoinRoom({network_address: network_address});
         }
     }

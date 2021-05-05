@@ -31,8 +31,18 @@ public class MoveToDeskTutorialSwap : MonoBehaviour
         leftController.SetActive(!handTracking);
         rightController.SetActive(!handTracking);
 
-        if (!_popupDismissed && !handTracking && (OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.LTouch) ||
-                                                  OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.RTouch)))
+        var lThumb = OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.LTouch);
+        var rThumb = OVRInput.GetDown(OVRInput.Button.PrimaryThumbstick, OVRInput.Controller.RTouch);
+        var A = OVRInput.GetDown(OVRInput.RawButton.A);
+        var B = OVRInput.GetDown(OVRInput.RawButton.B);
+        var X = OVRInput.GetDown(OVRInput.RawButton.X);
+        var Y = OVRInput.GetDown(OVRInput.RawButton.Y);
+        var lTrig = OVRInput.GetDown(OVRInput.RawButton.LIndexTrigger);
+        var rTrig = OVRInput.GetDown(OVRInput.RawButton.RIndexTrigger);
+        var lHand = OVRInput.GetDown(OVRInput.RawButton.LHandTrigger);
+        var rHand = OVRInput.GetDown(OVRInput.RawButton.RHandTrigger);
+
+        if (!_popupDismissed && !handTracking && (lThumb || rThumb || A || B || X || Y || lHand || rHand || lTrig || rTrig))
         {
             _popupDismissed = true;
             SaveSystem.Instance.BoolPairs["HidePopup"] = true;
