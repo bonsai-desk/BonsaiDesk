@@ -140,6 +140,8 @@ function NavTitle(props) {
 let Menu = observer(() => {
 
     let {store, pushStore} = useStore();
+    
+    let debug = store.AppInfo.Build === "DEVELOPMENT";
 
     let match = useRouteMatch();
 
@@ -231,7 +233,10 @@ let Menu = observer(() => {
                         <NavItem to={'/menu/public-rooms'}>Public Rooms</NavItem>
                         <NavItem to={'/menu/videos'}>Media</NavItem>
                         <NavItem to={'/menu/settings'}>Settings</NavItem>
-                        <NavItem to={'/menu/debug'} component={DebugPage}>Debug</NavItem>
+                        {debug ?
+                                <NavItem to={'/menu/debug'} component={DebugPage}>Debug</NavItem>
+                                : ""
+                        }
                     </NavList>
                     <div className={'w-full p-2'}>
                         <ExitButton/>
