@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Oculus.Platform;
 using Oculus.Platform.Models;
+using Smooth;
 using UnityEngine;
 
 namespace Mirror.OculusP2P
@@ -74,7 +75,7 @@ namespace Mirror.OculusP2P
         {
             // OnConnectionFailed();
 
-            OculusLog($"Connection state changed: {message.Data.State}");
+            OculusLog($"Connection state changed: {message.Data.State} for ({message.Data.ID})");
             switch (message.Data.State)
             {
                 case PeerConnectionState.Unknown:
@@ -99,7 +100,14 @@ namespace Mirror.OculusP2P
                 case PeerConnectionState.Timeout:
                     break;
                 case PeerConnectionState.Closed:
-                    InternalDisconnect();
+                    if (HostID == message.Data.ID)
+                    {
+                        InternalDisconnect();
+                    }
+                    else
+                    {
+                        OculusLog("Ignoring unknown connection closed");
+                    }
                     break;
             }
         }
@@ -109,6 +117,11 @@ namespace Mirror.OculusP2P
             if (Net.IsConnected(HostID))
             {
                 OculusLog("Sending Disconnect message");
+                Net.Close(HostID);
+            }
+            else
+            {
+                OculusLogWarning("Closing connection to non-connected host");
                 Net.Close(HostID);
             }
         }

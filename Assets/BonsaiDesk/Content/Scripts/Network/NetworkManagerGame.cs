@@ -426,6 +426,8 @@ public class NetworkManagerGame : NetworkManager
                 BonsaiLog($"Update connection ({conn.connectionId}) with ({userInfo.OculusId}) ({userInfo.ID})");
                 PlayerInfos[conn].OculusId = userInfo.OculusId;
                 PlayerInfos[conn].ID = userInfo.ID;
+                PlayerInfos[conn].Ok = true;
+
             }
             else
             {
@@ -447,6 +449,25 @@ public class NetworkManagerGame : NetworkManager
         _shouldDisconnect = true;
     }
 
+    private IEnumerator DelayKickIfNotReport(NetworkConnection conn)
+    {
+        yield return new WaitForSeconds(2);
+
+        if (PlayerInfos.TryGetValue(conn, out PlayerInfo playerInfo))
+        {
+            if (playerInfo.Ok)
+            {
+                yield break;
+            }
+        }
+
+        BonsaiLogWarning($"Kicking connection ({conn.connectionId}) for not reporting after joining");
+        conn.Disconnect();
+        PlayerInfos.Remove(conn);
+
+    }
+
+
     public override void OnServerAddPlayer(NetworkConnection conn)
     {
         BonsaiLog("ServerAddPlayer");
@@ -457,6 +478,7 @@ public class NetworkManagerGame : NetworkManager
             Spot = openSpot, OculusId = "None", ID = 0
         };
         PlayerInfos.Add(conn, playerInfo);
+        DelayKickIfNotReport(conn);
 
         SpawnPlayer(conn, openSpot);
 
@@ -629,6 +651,7 @@ public class NetworkManagerGame : NetworkManager
         public int Spot;
         public string OculusId;
         public ulong ID;
+        public bool Ok;
     }
 
     private struct ShouldDisconnectMessage : NetworkMessage { }

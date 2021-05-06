@@ -98,6 +98,7 @@ namespace Mirror.OculusP2P
             ClearMessagesFor(connId);
             if (_oculusIDToMirrorID.TryGetValue(userId, out int _))
             {
+                OculusLog($"Internal disconnect ({connId})");
                 _oculusIDToMirrorID.Remove(connId);
                 OnDisconnected.Invoke(connId);
             }

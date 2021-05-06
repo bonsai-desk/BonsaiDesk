@@ -154,12 +154,10 @@ public class TableBrowserMenu : MonoBehaviour
                         LeaveRoom?.Invoke();
                         break;
                     case "openPublicRoom":
-                        BonsaiLogWarning("public room not implemented yet");
                         OpenRoom?.Invoke(true);
                         browser.PostMessage(Browser.BrowserMessage.NavToMenu);
                         break;
                     case "openPrivateRoom":
-                        BonsaiLogWarning("private room not implemented yet");
                         OpenRoom?.Invoke(false);
                         browser.PostMessage(Browser.BrowserMessage.NavToMenu);
                         break;

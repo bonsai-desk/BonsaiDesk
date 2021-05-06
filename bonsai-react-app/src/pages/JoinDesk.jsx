@@ -30,7 +30,7 @@ export let JoinDeskPage = observer(() => {
     let [posting, setPosting] = useState(false);
     let [message, setMessage] = useState('');
 
-    let {history} = useHistory();
+    let history = useHistory();
 
     let url = apiBase(store) + `/rooms/${code}`;
 
@@ -53,14 +53,8 @@ export let JoinDeskPage = observer(() => {
                 let networkAddressStore = store.NetworkInfo.NetworkAddress;
 
                 let {
-                    //network_address,
-                    //username,
                     version,
                 } = response.data;
-
-                // todo networkAddress is not unique per user
-                console.log(networkAddressStore, networkAddressResponse);
-                console.log(store.FullVersion, version);
 
                 if (networkAddressResponse === networkAddressStore) {
                     // trying to join your own room
@@ -79,6 +73,7 @@ export let JoinDeskPage = observer(() => {
                     navHome();
                 }
             }).catch(err => {
+                console.log("Join room error")
                 console.log(err);
                 setMessage(`Could not find ${code} try again`);
                 setCode('');
