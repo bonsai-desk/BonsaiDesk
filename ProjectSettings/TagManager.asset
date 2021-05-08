@@ -16,6 +16,8 @@ TagManager:
   - FingerTip
   - IndexTip
   - KeepLayer
+  - NetworkHand
+  - NetworkHead
   layers:
   - Default
   - TransparentFX

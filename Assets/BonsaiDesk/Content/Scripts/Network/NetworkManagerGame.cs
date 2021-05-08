@@ -116,13 +116,24 @@ public class NetworkManagerGame : NetworkManager
             _internetBadMessageId = MessageStack.Singleton.AddMessage("Internet Disconnected", MessageStack.MessageType.Bad, Mathf.Infinity);
         }
 
-        if (User != null && mode == NetworkManagerMode.Offline)
+        if (User != null && mode == NetworkManagerMode.Offline && !connecting)
         {
             BonsaiLog("StartHost");
-            StartHost();
+            //StartHost();
+            StartCoroutine(DelayStartHost());
         }
     }
 
+    private IEnumerator DelayStartHost()
+    {
+        connecting = true;
+        InfoChange?.Invoke(this, new EventArgs());
+        yield return new WaitForSeconds(1f);
+        StartHost();
+        connecting = false;
+        InfoChange?.Invoke(this, new EventArgs());
+    }
+    
     public override void LateUpdate()
     {
         if (_shouldDisconnect)
@@ -248,10 +259,19 @@ public class NetworkManagerGame : NetworkManager
         }
     }
 
+    private IEnumerator DelayStartCLient()
+    {
+        connecting = true;
+        InfoChange?.Invoke(this, new EventArgs());
+        yield return new WaitForSeconds(1f);
+        StartClient();
+        connecting = false;
+        InfoChange?.Invoke(this, new EventArgs());
+    }
+
     private void JoinRoom(RoomData roomData)
     {
         roomOpen = false;
-        connecting = true;
         InfoChange?.Invoke(this, new EventArgs());
         BonsaiLog($"JoinRoom ({roomData.network_address})");
         if (!OculusCommon.CanParseId(roomData.network_address))
@@ -275,13 +295,13 @@ public class NetworkManagerGame : NetworkManager
         {
             networkAddress = roomData.network_address;
             BonsaiLog("StartClient");
-            StartClient();
+            //StartClient();
+            StartCoroutine(DelayStartCLient());
         }
         else
         {
             BonsaiLogError($"Did not get into offline state before joining room ({mode})");
         }
-        connecting = false;
         InfoChange?.Invoke(this, new EventArgs());
     }
 
@@ -538,17 +558,6 @@ public class NetworkManagerGame : NetworkManager
 
     public override void OnServerDisconnect(NetworkConnection conn)
     {
-        if (!conn.isAuthenticated)
-        {
-            return;
-        }
-        ServerDisconnect?.Invoke(this, conn);
-
-        PlayerInfos.Remove(conn);
-
-        // call the base after the ServerDisconnect event otherwise null reference gets passed to subscribers
-        base.OnServerDisconnect(conn);
-
         var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
         foreach (var identity in tmp)
         {
@@ -558,11 +567,28 @@ public class NetworkManagerGame : NetworkManager
                 if (autoAuthority.InUse)
                 {
                     autoAuthority.SetInUse(false);
-                }
+                } 
 
+                autoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
+                //identity.RemoveClientAuthority();
+            }
+            else if (!identity.gameObject.CompareTag("NetworkHand") && !identity.gameObject.CompareTag("NetworkHead")) 
+            {
                 identity.RemoveClientAuthority();
             }
         }
+        
+        if (!conn.isAuthenticated)
+        {
+            return;
+        }
+        
+        ServerDisconnect?.Invoke(this, conn);
+
+        PlayerInfos.Remove(conn);
+
+        // call the base after the ServerDisconnect event otherwise null reference gets passed to subscribers
+        base.OnServerDisconnect(conn);
 
         InfoChange?.Invoke(this, new EventArgs());
     }

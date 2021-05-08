@@ -2,7 +2,7 @@ import React from 'react';
 
 export function InfoItem({imgSrc, title, slug, children}) {
   return (
-      <div className={'flex w-full justify-between'}>
+      <div className={'flex w-full justify-between pr-4'}>
         <div className={'flex w-auto'}>
           <div className={'flex flex-wrap content-center p-2 mr-2'}>
             {imgSrc ?

@@ -235,9 +235,13 @@ public class AutoBrowserController : NetworkBehaviour
             _setVolumeLevelLast = Time.time;
         }
 
+        var clientReady = _clientPlayerStatus == PlayerState.Ready;
+        var scrubStarted = _idealScrub.IsStarted(NetworkTime.time);
+        //BonsaiLog($"{NetworkTime.time} {clientReady} {scrubStarted} {_clientPlayerStatus} {_idealScrub}");
         // post play message if paused/ready and player is behind ideal scrub
-        if (_clientPlayerStatus == PlayerState.Ready && _idealScrub.IsStarted(NetworkTime.time))
+        if (clientReady && scrubStarted)
         {
+            BonsaiLog("Issue Play");
             _autoBrowser.PostMessage(YouTubeMessage.Play);
         }
 
@@ -332,6 +336,7 @@ public class AutoBrowserController : NetworkBehaviour
         {
             if (!ClientInGracePeriod(entry.Key) && !ClientPingedRecently(entry.Value))
             {
+                BonsaiLog($"Client ({entry.Key}) bad last ping ({entry.Value})");
                 aBadPing = true;
             }
         }
@@ -448,9 +453,11 @@ public class AutoBrowserController : NetworkBehaviour
             case 150:
                 CmdEjectWithError("Can't Be Played in Embedded Player");
                 break;
+            default:
+                CmdEjectWithError($"Unknown Error ({code})");
+                break;
             
         }
-        throw new NotImplementedException();
     }
 
     private bool ClientInGracePeriod(uint id)
@@ -830,6 +837,11 @@ public class AutoBrowserController : NetworkBehaviour
         public readonly double Scrub;
         public readonly double NetworkTimeActivated;
         public readonly bool Active;
+
+        public override string ToString()
+        {
+            return $"{Scrub} {NetworkTimeActivated} {Active}";
+        }
 
         private ScrubData(double scrub, double networkTimeActivated, bool active)
         {
