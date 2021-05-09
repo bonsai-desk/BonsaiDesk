@@ -80,9 +80,8 @@ function Button(props) {
 }
 
 function delay(onClick) {
-    return () => {
-        setTimeout(onClick, 175);
-    };
+    // you can get rid of this :)
+    onClick()
 }
 
 export function ForwardButton({onClick}) {

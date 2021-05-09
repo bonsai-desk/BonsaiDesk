@@ -11,10 +11,10 @@ using Vuplex.WebView;
 public class AutoBrowserController : NetworkBehaviour
 {
     private const float ClientJoinGracePeriod = 10f;
-    private const float ClientPingTolerance = 1f;
+    private const float ClientPingTolerance = 2f;
     private const float ClientPingInterval = 0.1f;
     private const float MaxReadyUpPeriod = 10f;
-    private const float VideoSyncTolerance = 1f;
+    private const float VideoSyncTolerance = 2f;
     private const float NewVideoVolumeLevel = 0.25f;
     public TogglePause togglePause;
     public TabletSpot tabletSpot;
@@ -132,6 +132,12 @@ public class AutoBrowserController : NetworkBehaviour
         base.OnStopServer();
     }
 
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        _clientLastSentPing = Mathf.NegativeInfinity;
+    }
+
     public override void OnStopClient()
     {
         base.OnStopClient();
@@ -235,16 +241,23 @@ public class AutoBrowserController : NetworkBehaviour
             _setVolumeLevelLast = Time.time;
         }
 
+        var clientReady = _clientPlayerStatus == PlayerState.Ready;
+        var scrubStarted = _idealScrub.IsStarted(NetworkTime.time);
+        //BonsaiLog($"{NetworkTime.time} {clientReady} {scrubStarted} {_clientPlayerStatus} {_idealScrub}");
         // post play message if paused/ready and player is behind ideal scrub
-        if (_clientPlayerStatus == PlayerState.Ready && _idealScrub.IsStarted(NetworkTime.time))
+        if (clientReady && scrubStarted)
         {
+            BonsaiLog("Issue Play");
             _autoBrowser.PostMessage(YouTubeMessage.Play);
         }
 
         // ping the server with the current timestamp
         // todo _contentInfo.Active is always false on client
-        if (_contentActive && NetworkTime.time - _clientLastSentPing > ClientPingInterval && NetworkClient.connection != null &&
-            NetworkClient.connection.identity != null)
+
+        var shouldSendNewPing = NetworkTime.time - _clientLastSentPing > ClientPingInterval;
+        var connectionGood = NetworkClient.connection != null;
+        var identityGood = NetworkClient.connection.identity != null;
+        if (_contentActive && shouldSendNewPing && connectionGood && identityGood)
         {
             var id = NetworkClient.connection.identity.netId;
             var now = NetworkTime.time;
@@ -332,6 +345,7 @@ public class AutoBrowserController : NetworkBehaviour
         {
             if (!ClientInGracePeriod(entry.Key) && !ClientPingedRecently(entry.Value))
             {
+                BonsaiLog($"Client ({entry.Key}) bad last ping ({entry.Value}) @ ({NetworkTime.time})");
                 aBadPing = true;
             }
         }
@@ -448,9 +462,11 @@ public class AutoBrowserController : NetworkBehaviour
             case 150:
                 CmdEjectWithError("Can't Be Played in Embedded Player");
                 break;
+            default:
+                CmdEjectWithError($"Unknown Error ({code})");
+                break;
             
         }
-        throw new NotImplementedException();
     }
 
     private bool ClientInGracePeriod(uint id)
@@ -683,11 +699,16 @@ public class AutoBrowserController : NetworkBehaviour
         _autoBrowser.PostMessage(YouTubeMessage.NavHome);
     }
 
-    private static IEnumerator FetchYouTubeAspect(string videoId, Action<Vector2> callback)
+    private IEnumerator FetchYouTubeAspect(string videoId, Action<Vector2> callback)
     {
         var newAspect = new Vector2(16, 9);
 
-        var videoInfoUrl = $"https://api.desk.link/youtube/{videoId}";
+        // todo fix this
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+        var videoInfoUrl = $"https://api.desk.link:8080/v1/youtube/{videoId}";
+        #else
+        var videoInfoUrl = $"https://api.desk.link:1776/v1/youtube/{videoId}";
+        #endif
 
         using (var www = UnityWebRequest.Get(videoInfoUrl))
         {
@@ -702,6 +723,15 @@ public class AutoBrowserController : NetworkBehaviour
                 {
                     var width = (float) jsonNode["width"];
                     var height = (float) jsonNode["height"];
+                    var liveNow = (bool) jsonNode["liveNow"];
+
+                    Debug.Log($"xx {liveNow}");
+                    if (liveNow)
+                    {
+                        RpcAddMessageToStack("Livestreams not supported yet");
+                        tabletSpot.ServerEjectCurrentTablet();
+                    }
+                    
                     newAspect = new Vector2(width, height);
                 }
             }
@@ -734,17 +764,17 @@ public class AutoBrowserController : NetworkBehaviour
 
     private void BonsaiLog(string msg)
     {
-        Debug.Log("<color=orange>BonsaiAuth: </color>: " + msg);
+        Debug.Log("<color=orange>BonsaiABC: </color>: " + msg);
     }
 
     private void BonsaiLogWarning(string msg)
     {
-        Debug.LogWarning("<color=orange>BonsaiAuth: </color>: " + msg);
+        Debug.LogWarning("<color=orange>BonsaiABC: </color>: " + msg);
     }
 
     private void BonsaiLogError(string msg)
     {
-        Debug.LogError("<color=orange>BonsaiAuth: </color>: " + msg);
+        Debug.LogError("<color=orange>BonsaiABC: </color>: " + msg);
     }
 
     public MediaInfo GetMediaInfo()
@@ -830,6 +860,11 @@ public class AutoBrowserController : NetworkBehaviour
         public readonly double Scrub;
         public readonly double NetworkTimeActivated;
         public readonly bool Active;
+
+        public override string ToString()
+        {
+            return $"{Scrub} {NetworkTimeActivated} {Active}";
+        }
 
         private ScrubData(double scrub, double networkTimeActivated, bool active)
         {

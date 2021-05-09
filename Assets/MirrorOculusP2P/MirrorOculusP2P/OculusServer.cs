@@ -130,13 +130,13 @@ namespace Mirror.OculusP2P
                 OculusLog($"Closing connection {connectionId}");
                 Net.Close(userId);
                 //_oculusIDToMirrorID.Remove(connectionId);
-                return true;
             }
             else
             {
                 OculusLogWarning("Trying to disconnect unknown connection id: " + connectionId);
-                return false;
             }
+
+            return true;
         }
 
         public void FlushData()
@@ -181,13 +181,19 @@ namespace Mirror.OculusP2P
                 {
                     Debug.LogWarning("Ignoring packet from sender not in dictionary");
                 }
-                
             }
         }
         
         public void Send(int connectionId, byte[] data, int channelId)
         {
-            _messages.Add((connectionId, data, channelId));
+            if (_oculusIDToMirrorID.TryGetValue(connectionId, out ulong _))
+            {
+                _messages.Add((connectionId, data, channelId));
+            }
+            else
+            {
+                OculusLogWarning($"Ignoring attempt to add message for unknown id {connectionId}");
+            }
         }
 
         public string ServerGetClientAddress(int connectionId)

@@ -26,7 +26,6 @@ module.exports = {
                 DEFAULT: "#ff8400"
             },
             "bonsai-green" : {
-                500: "",
                 DEFAULT: "#209756"
             },
             "bonsai-brown" : {
