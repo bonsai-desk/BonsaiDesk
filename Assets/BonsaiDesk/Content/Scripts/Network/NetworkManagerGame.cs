@@ -272,6 +272,7 @@ public class NetworkManagerGame : NetworkManager
     private void JoinRoom(RoomData roomData)
     {
         roomOpen = false;
+        connecting = true;
         InfoChange?.Invoke(this, new EventArgs());
         BonsaiLog($"JoinRoom ({roomData.network_address})");
         if (!OculusCommon.CanParseId(roomData.network_address))
@@ -300,6 +301,7 @@ public class NetworkManagerGame : NetworkManager
         }
         else
         {
+            connecting = false;
             BonsaiLogError($"Did not get into offline state before joining room ({mode})");
         }
         InfoChange?.Invoke(this, new EventArgs());
@@ -437,6 +439,7 @@ public class NetworkManagerGame : NetworkManager
 
     public override void OnStartServer()
     {
+        NetworkTime.Reset();
         base.OnStartServer();
         PlayerInfos.Clear();
         UserInfoEvent = (conn, userInfo) =>

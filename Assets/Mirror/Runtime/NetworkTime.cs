@@ -76,8 +76,6 @@ namespace Mirror
                 clientTime = msg.clientTime,
                 serverTime = LocalTime()
             };
-            
-            Debug.Log($"server ping clientTime={pongMsg.clientTime} serverTime={pongMsg.serverTime} netTime={NetworkTime.time} offset={_offset.Value}");
 
             conn.Send(pongMsg);
         }
@@ -102,8 +100,6 @@ namespace Mirror
             double newOffsetMax = now - msg.serverTime;
             offsetMin = Math.Max(offsetMin, newOffsetMin);
             offsetMax = Math.Min(offsetMax, newOffsetMax);
-            
-            Debug.Log($"client pong now={now} newOffset{newOffset} serverTime={msg.serverTime} netTime={NetworkTime.time}");
 
             if (_offset.Value < offsetMin || _offset.Value > offsetMax)
             {

@@ -47,6 +47,23 @@ public class VoiceNetController : NetworkBehaviour
         }
     }
 
+    public void OnApplicationPause(bool pauseStatus)
+    {
+        if (!pauseStatus)
+        {
+            if (_lobbyChannelName.Length > 0)
+            {
+                BonsaiLog($"Re join voice channel ({_lobbyChannelName})");
+                VoiceManager.Singleton.StartJoinChannel(_lobbyChannelName);
+            }
+            else
+            {
+                BonsaiLogError("Lobby channel name was empty on restart so can't rejoin");
+            }
+        }
+        
+    }
+
     private void BonsaiLog(string msg)
     {
         Debug.Log("<color=green>BonsaiVoiceNet: </color>: " + msg);
