@@ -14,6 +14,7 @@ ANY KIND, either express or implied. See the License for the specific language g
 permissions and limitations under the License.
 ************************************************************************************/
 
+using System;
 using UnityEngine;
 using System.Collections; // required for Coroutines
 
@@ -28,8 +29,6 @@ public class BonsaiScreenFade : MonoBehaviour
     [Tooltip("Screen color at maximum fade")]
     public Color fadeColor = new Color(0.01f, 0.01f, 0.01f, 1.0f);
 
-    public bool fadeOnStart = true;
-
     /// <summary>
     /// The render queue used by the fade mesh. Reduce this if you need to render on top of it.
     /// </summary>
@@ -43,6 +42,7 @@ public class BonsaiScreenFade : MonoBehaviour
     private bool isFading = false;
 
     public float currentAlpha { get; private set; }
+
 
     /// <summary>
     /// Automatically starts a fade in
@@ -105,13 +105,8 @@ public class BonsaiScreenFade : MonoBehaviour
         uv[3] = new Vector2(1, 1);
 
         mesh.uv = uv;
-
+        
         SetFadeLevel(0);
-
-        if (fadeOnStart)
-        {
-            StartCoroutine(Fade(1, 0));
-        }
     }
 
     /// <summary>
@@ -127,7 +122,6 @@ public class BonsaiScreenFade : MonoBehaviour
         StartCoroutine(Fade(1, 0));
     }
 
-
     /// <summary>
     /// Starts a fade in when a new level is loaded
     /// </summary>
@@ -138,10 +132,6 @@ public class BonsaiScreenFade : MonoBehaviour
 
     void OnEnable()
     {
-        if (!fadeOnStart)
-        {
-            SetFadeLevel(0);
-        }
     }
 
     /// <summary>

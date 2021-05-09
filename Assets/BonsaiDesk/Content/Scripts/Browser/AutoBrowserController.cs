@@ -8,14 +8,14 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Vuplex.WebView;
 
-[RequireComponent(typeof(AutoBrowser))]
 public class AutoBrowserController : NetworkBehaviour
 {
     private const float ClientJoinGracePeriod = 10f;
-    private const float ClientPingTolerance = 1f;
+    private const float ClientPingTolerance = 2f;
     private const float ClientPingInterval = 0.1f;
     private const float MaxReadyUpPeriod = 10f;
-    private const float VideoSyncTolerance = 1f;
+    private const float VideoSyncTolerance = 2f;
+    private const float NewVideoVolumeLevel = 0.25f;
     public TogglePause togglePause;
     public TabletSpot tabletSpot;
     private readonly Dictionary<uint, double> _clientsJoinedNetworkTime = new Dictionary<uint, double>();
@@ -23,7 +23,7 @@ public class AutoBrowserController : NetworkBehaviour
     private readonly Dictionary<uint, PlayerState> _clientsPlayerStatus = new Dictionary<uint, PlayerState>();
     private readonly float _setVolumeLevelEvery = 0.5f;
     private bool _allGood;
-    private AutoBrowser _autoBrowser;
+    public AutoBrowser _autoBrowser;
     private double _beginReadyUpTime;
     private double _clientLastSentPing;
     private float _clientPlayerDuration;
@@ -44,8 +44,17 @@ public class AutoBrowserController : NetworkBehaviour
     {
         // so the server runs a browser but does not sync it yet
         // it will need to be synced for streamer mode
-        _autoBrowser = GetComponent<AutoBrowser>();
-        _autoBrowser.BrowserReady += (_, e) => { SetupBrowser(); };
+        if (_autoBrowser.Initialized)
+        {
+            SetupBrowser();
+        }
+        else
+        {
+            _autoBrowser.BrowserReady += (_, e) =>
+            {
+                SetupBrowser();
+            };
+        }
     }
 
     private void Update()
@@ -84,14 +93,14 @@ public class AutoBrowserController : NetworkBehaviour
         NetworkManagerGame.Singleton.ServerAddPlayer -= HandleServerAddPlayer;
         NetworkManagerGame.ServerDisconnect -= HandleServerDisconnect;
         togglePause.CmdSetPausedServer -= HandleCmdSetPausedServer;
-        TableBrowserMenu.Singleton.VolumeChange -= HandleVolumeChange;
+        TableBrowserMenu.Singleton.SetVolumeLevel -= HandleSetVolumeLevel;
         TableBrowserMenu.Singleton.SeekPlayer -= HandleSeekPlayer;
         TableBrowserMenu.Singleton.RestartVideo -= HandleRestartVideo;
 
         NetworkManagerGame.Singleton.ServerAddPlayer += HandleServerAddPlayer;
         NetworkManagerGame.ServerDisconnect += HandleServerDisconnect;
         togglePause.CmdSetPausedServer += HandleCmdSetPausedServer;
-        TableBrowserMenu.Singleton.VolumeChange += HandleVolumeChange;
+        TableBrowserMenu.Singleton.SetVolumeLevel += HandleSetVolumeLevel;
         TableBrowserMenu.Singleton.SeekPlayer += HandleSeekPlayer;
         TableBrowserMenu.Singleton.RestartVideo += HandleRestartVideo;
 
@@ -107,6 +116,11 @@ public class AutoBrowserController : NetworkBehaviour
         }
     }
 
+    private void HandleSetVolumeLevel(object sender, float level)
+    {
+        CmdSetVolumeLevel(level);
+    }
+
     private void HandleRestartVideo(object sender, EventArgs e)
     {
         CmdReadyUp(0);
@@ -116,6 +130,12 @@ public class AutoBrowserController : NetworkBehaviour
     {
         TLog("On Stop Server");
         base.OnStopServer();
+    }
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        _clientLastSentPing = Mathf.NegativeInfinity;
     }
 
     public override void OnStopClient()
@@ -221,16 +241,23 @@ public class AutoBrowserController : NetworkBehaviour
             _setVolumeLevelLast = Time.time;
         }
 
+        var clientReady = _clientPlayerStatus == PlayerState.Ready;
+        var scrubStarted = _idealScrub.IsStarted(NetworkTime.time);
+        //BonsaiLog($"{NetworkTime.time} {clientReady} {scrubStarted} {_clientPlayerStatus} {_idealScrub}");
         // post play message if paused/ready and player is behind ideal scrub
-        if (_clientPlayerStatus == PlayerState.Ready && _idealScrub.IsStarted(NetworkTime.time))
+        if (clientReady && scrubStarted)
         {
+            BonsaiLog("Issue Play");
             _autoBrowser.PostMessage(YouTubeMessage.Play);
         }
 
         // ping the server with the current timestamp
         // todo _contentInfo.Active is always false on client
-        if (_contentActive && NetworkTime.time - _clientLastSentPing > ClientPingInterval && NetworkClient.connection != null &&
-            NetworkClient.connection.identity != null)
+
+        var shouldSendNewPing = NetworkTime.time - _clientLastSentPing > ClientPingInterval;
+        var connectionGood = NetworkClient.connection != null;
+        var identityGood = NetworkClient.connection.identity != null;
+        if (_contentActive && shouldSendNewPing && connectionGood && identityGood)
         {
             var id = NetworkClient.connection.identity.netId;
             var now = NetworkTime.time;
@@ -318,6 +345,7 @@ public class AutoBrowserController : NetworkBehaviour
         {
             if (!ClientInGracePeriod(entry.Key) && !ClientPingedRecently(entry.Value))
             {
+                BonsaiLog($"Client ({entry.Key}) bad last ping ({entry.Value}) @ ({NetworkTime.time})");
                 aBadPing = true;
             }
         }
@@ -357,7 +385,7 @@ public class AutoBrowserController : NetworkBehaviour
 
         if (json?["type"] != "infoCurrentTime")
         {
-            TLog($"Received JSON {eventArgs.Value} at {NetworkTime.time}");
+            TLog($"AB Received JSON {eventArgs.Value} at {NetworkTime.time}");
         }
 
         if (json?["current_time"] != null)
@@ -434,14 +462,11 @@ public class AutoBrowserController : NetworkBehaviour
             case 150:
                 CmdEjectWithError("Can't Be Played in Embedded Player");
                 break;
+            default:
+                CmdEjectWithError($"Unknown Error ({code})");
+                break;
             
         }
-        throw new NotImplementedException();
-    }
-
-    private void HandleVolumeChange(object _, float delta)
-    {
-        CmdChangeVolumeLevel(delta);
     }
 
     private bool ClientInGracePeriod(uint id)
@@ -541,6 +566,7 @@ public class AutoBrowserController : NetworkBehaviour
             _contentActive = true;
             _contentInfoAtTime = NetworkTime.time;
             _idealScrub = ScrubData.PausedAtScrub(timeStamp);
+            _volumeLevel = NewVideoVolumeLevel;
 
             BeginSync("new video");
             RpcReloadYouTube(id, timeStamp, aspect);
@@ -613,6 +639,12 @@ public class AutoBrowserController : NetworkBehaviour
     {
         _volumeLevel = Mathf.Clamp(_volumeLevel + delta, 0, 1);
     }
+    
+    [Command(ignoreAuthority = true)]
+    public void CmdSetVolumeLevel(float volumeLevel)
+    {
+        _volumeLevel = Mathf.Clamp(volumeLevel, 0, 1);
+    }
 
     [Server]
     private void CloseVideo()
@@ -667,11 +699,16 @@ public class AutoBrowserController : NetworkBehaviour
         _autoBrowser.PostMessage(YouTubeMessage.NavHome);
     }
 
-    private static IEnumerator FetchYouTubeAspect(string videoId, Action<Vector2> callback)
+    private IEnumerator FetchYouTubeAspect(string videoId, Action<Vector2> callback)
     {
         var newAspect = new Vector2(16, 9);
 
-        var videoInfoUrl = $"https://api.desk.link/youtube/{videoId}";
+        // todo fix this
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+        var videoInfoUrl = $"https://api.desk.link:8080/v1/youtube/{videoId}";
+        #else
+        var videoInfoUrl = $"https://api.desk.link:1776/v1/youtube/{videoId}";
+        #endif
 
         using (var www = UnityWebRequest.Get(videoInfoUrl))
         {
@@ -686,6 +723,15 @@ public class AutoBrowserController : NetworkBehaviour
                 {
                     var width = (float) jsonNode["width"];
                     var height = (float) jsonNode["height"];
+                    var liveNow = (bool) jsonNode["liveNow"];
+
+                    Debug.Log($"xx {liveNow}");
+                    if (liveNow)
+                    {
+                        RpcAddMessageToStack("Livestreams not supported yet");
+                        tabletSpot.ServerEjectCurrentTablet();
+                    }
+                    
                     newAspect = new Vector2(width, height);
                 }
             }
@@ -718,17 +764,17 @@ public class AutoBrowserController : NetworkBehaviour
 
     private void BonsaiLog(string msg)
     {
-        Debug.Log("<color=orange>BonsaiAuth: </color>: " + msg);
+        Debug.Log("<color=orange>BonsaiABC: </color>: " + msg);
     }
 
     private void BonsaiLogWarning(string msg)
     {
-        Debug.LogWarning("<color=orange>BonsaiAuth: </color>: " + msg);
+        Debug.LogWarning("<color=orange>BonsaiABC: </color>: " + msg);
     }
 
     private void BonsaiLogError(string msg)
     {
-        Debug.LogError("<color=orange>BonsaiAuth: </color>: " + msg);
+        Debug.LogError("<color=orange>BonsaiABC: </color>: " + msg);
     }
 
     public MediaInfo GetMediaInfo()
@@ -814,6 +860,11 @@ public class AutoBrowserController : NetworkBehaviour
         public readonly double Scrub;
         public readonly double NetworkTimeActivated;
         public readonly bool Active;
+
+        public override string ToString()
+        {
+            return $"{Scrub} {NetworkTimeActivated} {Active}";
+        }
 
         private ScrubData(double scrub, double networkTimeActivated, bool active)
         {

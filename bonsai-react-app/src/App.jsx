@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     Link,
-    MemoryRouter as Router,
+    BrowserRouter as Router,
     Route,
     Switch,
     useHistory,
@@ -12,6 +12,7 @@ import Twitch from './pages/Twitch';
 import Menu from './pages/Menu';
 import Keyboard from './pages/Keyboard';
 import WebNav from './pages/WebNav';
+import Context from "./pages/Context"
 import {postJson} from './utilities';
 import {observer} from 'mobx-react-lite';
 import {useStore} from './DataProvider';
@@ -34,6 +35,7 @@ function genNavListeners(history) {
         switch (json.command) {
             case 'push':
                 console.log('command: nav ' + json.path);
+                // todo does this still work with BrowserRouter
                 history.push(json.path);
                 break;
             default:
@@ -73,20 +75,21 @@ const Boot = observer(() => {
 
     function handleKeyPress(e) {
         if (e.key === 'x') {
-            store.build = 'DEVELOPMENT';
+            store.AppInfo.Build = 'DEVELOPMENT';
         }
         if (e.key === 'm') {
-            store.app_info.MicrophonePermission = true;
+            store.AppInfo.MicrophonePermission = true;
         }
 
         if (e.key === 'b') {
-            store.build = 'DEVELOPMENT';
-            store.app_info.MicrophonePermission = true;
-            store.is_internet_good = true;
+            console.log('asdf');
+            store.AppInfo.Build = 'DEVELOPMENT';
+            store.AppInfo.MicrophonePermission = true;
+            store.NetworkInfo.Online = true;
         }
     }
 
-    if (store.build === 'DEVELOPMENT') {
+    if (store.AppInfo.Build === 'DEVELOPMENT') {
         return (
                 <div>
                     Boot
@@ -103,7 +106,7 @@ const Boot = observer(() => {
                             <Link to={'/twitch'}>twitch</Link>
                         </li>
                         <li>
-                            <Link to={'/menu'}>menu</Link>
+                            <Link to={'/menu/home'}>menu</Link>
                         </li>
                         <li>
                             <Link to={'/home'}>home</Link>
@@ -129,7 +132,7 @@ const Boot = observer(() => {
 });
 
 function Home() {
-    return <div className={'w-full h-full bg-gray-900'}></div>;
+    return <div className={'w-full h-full bg-gray-900'}/>;
 }
 
 function App() {
@@ -146,6 +149,8 @@ function App() {
                         <Route path={'/twitch'} component={Twitch}/>
 
                         <Route path={'/menu'} component={Menu}/>
+
+                        <Route path={'/context'} component={Context}/>
 
                         <Route path={'/keyboard'} component={Keyboard}/>
 

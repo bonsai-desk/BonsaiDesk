@@ -16,6 +16,7 @@ public class VoiceManager : MonoBehaviour
     public delegate void ParticipantValueUpdatedHandler(string username, ChannelId channel, double value);
 
     public static VoiceManager Singleton;
+    public bool verbose;
 
     [FormerlySerializedAs("headPosition")] public Transform headTransform;
 
@@ -23,11 +24,11 @@ public class VoiceManager : MonoBehaviour
     [SerializeField] private string _domain = "GET VALUE FROM VIVOX DEVELOPER PORTAL";
     [SerializeField] private string _tokenIssuer = "GET VALUE FROM VIVOX DEVELOPER PORTAL";
     [SerializeField] private string _tokenKey = "GET VALUE FROM VIVOX DEVELOPER PORTAL";
+    private readonly string _displayName = "John Doe";
     private readonly TimeSpan _tokenExpiration = TimeSpan.FromSeconds(90);
     private AccountId _accountId;
     private Coroutine _backoffLoginRoutine;
     private Client _client = new Client();
-    private readonly string _displayName = "John Doe";
     private bool _hasFocus = true;
     private Coroutine _joinChannelRoutine;
     private int _loginAttempts;
@@ -52,6 +53,19 @@ public class VoiceManager : MonoBehaviour
         {
             Singleton = this;
         }
+
+    #if UNITY_EDITOR || DEVELOPMENT_BUILD
+        _server = "https://mt1s.www.vivox.com/api2";
+        _domain = "mt1s.vivox.com";
+        _tokenIssuer = "bonsai8334-bo47-dev";
+        _tokenKey = "daze715";
+    #elif UNITY_ANDROID
+      _server = "https://mt2p.www.vivox.com/api2";
+      _domain = "mt2p.vivox.com";
+      _tokenIssuer = "bonsai8334-bo47";
+      _tokenKey = "sxJgPtuXlh4FcMGqxIkfwK1R048ezXAE";
+    #endif
+        
     }
 
     // Start is called before the first frame update
@@ -175,7 +189,7 @@ public class VoiceManager : MonoBehaviour
             StopCoroutine(_joinChannelRoutine);
             _joinChannelRoutine = null;
         }
-        
+
         RemovePositionalHandler();
 
         if (ActiveChannels?.Count > 0)
@@ -223,7 +237,8 @@ public class VoiceManager : MonoBehaviour
         }
 
         _joinChannelRoutine = null;
-        JoinChannel(lobbyName, ChannelType.Positional, properties: new Channel3DProperties());
+
+        JoinChannel(lobbyName, ChannelType.Positional, properties: new Channel3DProperties(32, 2, 1.0f, AudioFadeModel.InverseByDistance));
     }
 
     public event LoginStatusChangedHandler OnUserLoggedOutEvent;
@@ -468,7 +483,11 @@ public class VoiceManager : MonoBehaviour
         {
             case "SpeechDetected":
             {
-                BonsaiLog($"OnSpeechDetectedEvent: {username} in {channel}.");
+                if (verbose)
+                {
+                    BonsaiLog($"OnSpeechDetectedEvent: {username} in {channel}.");
+                }
+
                 OnSpeechDetectedEvent?.Invoke(username, channel, e.Value.SpeechDetected);
                 break;
             }

@@ -9,6 +9,7 @@ using Vuplex.WebView;
 
 public class Browser : MonoBehaviour
 {
+    [HideInInspector] public bool Initialized;
     public Vector2 startingAspect = new Vector2(16, 9);
     public float distanceEstimate = 1;
     public int pixelPerDegree = 16;
@@ -25,10 +26,11 @@ public class Browser : MonoBehaviour
     private GameObject _boundsObject;
     private OVROverlay _overlay;
     private bool _postedListenersReady;
-    private Material holePuncherMaterial;
+    protected Material holePuncherMaterial;
     protected Transform Resizer;
     protected Transform WebViewView;
     public Transform WebViewTransform;
+    public int compositionDepth = 0;
 
     protected virtual void Start()
     {
@@ -94,6 +96,8 @@ public class Browser : MonoBehaviour
         _overlay = overlayTransform.gameObject.AddComponent<OVROverlay>();
         _overlay.externalSurfaceWidth = resolution.x;
         _overlay.externalSurfaceHeight = resolution.y;
+        _overlay.compositionDepth = compositionDepth;
+        
 
         _overlay.currentOverlayType = OVROverlay.OverlayType.Underlay;
         _overlay.isExternalSurface = true;
@@ -120,6 +124,7 @@ public class Browser : MonoBehaviour
     {
         WebViewPrefab.Initialized += (sender, eventArgs) =>
         {
+            Initialized = true;
             BonsaiLog("Browser initialized");
             WebViewPrefab.WebView.MessageEmitted += HandleJavaScriptMessage;
             WebViewPrefab.DragMode = dragMode;
@@ -137,7 +142,7 @@ public class Browser : MonoBehaviour
     private void HandleJavaScriptMessage(object _, EventArgs<string> eventArgs)
     {
         var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
-
+        
         switch (message.Type)
         {
             case "event":
@@ -280,10 +285,11 @@ public class Browser : MonoBehaviour
 
     public static class BrowserMessage
     {
-        public static readonly string NavToMenu = PushPath("/menu");
+        public static readonly string NavToMenu = PushPath("/menu/home");
         public static readonly string NavHome = PushPath("/home");
         public static readonly string NavKeyboard = PushPath("/keyboard");
         public static readonly string NavWebNav = PushPath("/webnav");
+        public static readonly string NavContext = PushPath("/context");
 
         private static string PushPath(string path)
         {

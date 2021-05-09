@@ -49,10 +49,6 @@ public class WebBrowserParent : MonoBehaviour
         webBrowser.SetHidden(hidden);
         keyboardBrowser.SetHidden(hidden);
         webNavBrowser.SetHidden(hidden);
-        if (hidden)
-        {
-            LoadUrl("about:blank");
-        }
     }
 
     private void HandleWebNavBrowserReady(object sender, EventArgs eventArgs)
@@ -83,7 +79,7 @@ public class WebBrowserParent : MonoBehaviour
     {
         BonsaiLog($"Spawn YouTube ({e.Value})");
         YouTubeSpawner.Singleton.CmdSpawnYT(videoSpawnLocation.position, headTransform.position, e.Value);
-        tableBrowserParent.Sleep();
+        tableBrowserParent.MenuSleep();
     }
 
     private void SetupKeyboardBrowser()

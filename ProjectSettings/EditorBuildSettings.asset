@@ -11,6 +11,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/BonsaiDesk/Scene/Main.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 0
+    path: Assets/BonsaiDesk/Scene/Cursed.unity
+    guid: 79156e27384e9f34a8b34be9a321a0f0
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: d57f92069e1343041ab4379c579b7279,
       type: 2}

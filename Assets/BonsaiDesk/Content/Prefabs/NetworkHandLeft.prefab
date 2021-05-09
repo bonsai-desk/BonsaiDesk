@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: 8322357266005413965}
   m_Layer: 23
   m_Name: NetworkHandLeft
-  m_TagString: Untagged
+  m_TagString: NetworkHand
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -68,7 +68,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   interpolationBackTime: 0.1
-  extrapolationMode: 1
+  extrapolationMode: 0
   useExtrapolationTimeLimit: 1
   extrapolationTimeLimit: 5
   useExtrapolationDistanceLimit: 0

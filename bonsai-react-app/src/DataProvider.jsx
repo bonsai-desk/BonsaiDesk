@@ -2,42 +2,143 @@ import React, {useContext, useEffect, useState} from 'react';
 import {action, makeAutoObservable} from 'mobx';
 import {observer} from 'mobx-react-lite';
 import axios from 'axios';
+import {apiBase} from './utilities';
 
 export const StoreContext = React.createContext();
 export const useStore = () => useContext(StoreContext);
 
-let API_BASE = 'https://api.desk.link';
+export const NetworkManagerMode = {
+    Offline: 0,
+    ServerOnly: 1,
+    ClientOnly: 2,
+    Host: 3,
+};
+
+export const Blocks = {
+    None: 0,
+    Wood: 1,
+    Orange: 2,
+    Green: 3,
+    Brown: 4,
+    Pink: 5,
+    LightPurple: 6,
+    DarkPurple: 7,
+    Violet: 8,
+    LightNeutral: 9,
+    DarkNeutral: 10,
+};
+
+export function showBlock(block){
+    switch (block){
+        case Blocks.None:
+            return "None"
+        case Blocks.Wood:
+            return "Wood"
+        case Blocks.Orange:
+            return "Orange"
+        case Blocks.Green:
+            return "Green"
+        case Blocks.Brown:
+            return "Brown"
+        case Blocks.Pink:
+            return "Pink"
+        case Blocks.LightPurple:
+            return "Light Purple"
+        case Blocks.DarkPurple:
+            return "Dark Purple"
+        case Blocks.Violet:
+            return "Violet"
+        case Blocks.LightNeutral:
+            return "Light Neutral"
+        case Blocks.DarkNeutral:
+            return "Dark Neutral"
+        default:
+            return `Unknown (${block})`
+    }
+}
 
 class Store {
-    ip_address = null;
-    is_internet_good = false;
-    port = null;
-    network_state = null;
-    loading_room_code = false;
-    _refresh_room_code_handler = null;
-    user_info = {};
-    player_info = [];
-    build = 'PRODUCTION';
-    media_info = {
+    SocialInfo = {
+        UserName: 'NoName',
+    };
+    AppInfo = {
+        Build: 'DEVELOPMENT',
+        MicrophonePermission: true,
+        Version: '0.1.2',
+        BuildId: 41,
+    };
+    _networkInfo = {
+        Online: true,
+        NetworkAddress: 'none',
+        MyNetworkAddress: 'none',
+        RoomOpen: false,
+        Mode: NetworkManagerMode.Offline,
+        PublicRoom: false,
+        Full: false,
+        Connecting: false
+    };
+    ContextInfo = {
+        LeftBlockActive: Blocks.None,
+        RightBlockActive: Blocks.None,
+        LeftBlockBreak: false,
+        RightBlockBreak: false,
+    }
+    MediaInfo = {
         Active: false,
         Name: 'None',
         Paused: true,
         Scrub: 0,
         Duration: 1,
         VolumeLevel: 0,
-    }
-    experimental_info = {
+    };
+    ExperimentalInfo = {
         BlockBreakEnabled: false,
-        PinchPullEnabled: false
-    }
-    app_info = {
-        MicrophonePermission:false,
-        Version: "?",
-        BuildId: -1
-    }
+        PinchPullEnabled: false,
+    };
+    PlayerInfos = [];
+    LoadingRoomCode = false;
+    _refresh_room_code_handler = null;
+    RoomSecret = '';
+    _roomCode = null;
 
     constructor() {
         makeAutoObservable(this);
+    }
+
+    get FullVersion() {
+        return this.AppInfo.Version + 'b' + this.AppInfo.BuildId;
+    }
+
+    get NetworkInfo() {
+        return this._networkInfo;
+    }
+
+    set NetworkInfo(networkInfo) {
+        this._networkInfo = networkInfo;
+        if (!networkInfo.RoomOpen) {
+            this.RoomCode = '';
+        }
+
+    }
+
+    get RoomCode() {
+        return this._roomCode;
+    }
+
+    set RoomCode(code) {
+        this._roomCode = code;
+        if (code) {
+            this._refresh_room_code_handler = setInterval(() => {
+                        if (this.RoomCode) {
+                            this.refreshRoomCode();
+                        }
+                    }
+                    , 1000);
+        } else {
+            clearInterval(this._refresh_room_code_handler);
+            this._refresh_room_code_handler = null;
+            this.RoomSecret = '';
+        }
     }
 
     _room_open = false;
@@ -49,41 +150,23 @@ class Store {
     set room_open(open) {
         this._room_open = open;
         if (!open) {
-            this.room_code = '';
-        }
-    }
-
-    _room_code = null;
-
-    get room_code() {
-        return this._room_code;
-    }
-
-    set room_code(code) {
-        this._room_code = code;
-        if (code) {
-            this._refresh_room_code_handler = setInterval(() => {
-                        if (this.room_code) {
-                            this.refreshRoomCode();
-                        }
-                    }
-                    , 1000);
-        } else {
-            clearInterval(this._refresh_room_code_handler);
-            this._refresh_room_code_handler = null;
+            this.RoomCode = '';
         }
     }
 
     refreshRoomCode() {
+        let url = apiBase(this) + `/rooms/${store.RoomCode}/refresh`;
+        console.log(url);
         axios({
             method: 'post',
-            url: API_BASE + `/rooms/${store.room_code}/refresh`,
+            url: url,
+            data: `secret=${this.RoomSecret}&full=${this.NetworkInfo.Full ? 1 : 0}`,
+            header: {'content-type': 'application/x-www-form-urlencoded'},
         }).catch(err => {
             console.log(err);
-            this.room_code = null;
+            this.RoomCode = null;
         });
     }
-
 }
 
 const store = new Store();

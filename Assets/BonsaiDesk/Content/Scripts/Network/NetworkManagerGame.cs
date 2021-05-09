@@ -1,92 +1,80 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Mirror;
-using NobleConnect.Mirror;
+using Mirror.OculusP2P;
+using Oculus.Platform;
+using Oculus.Platform.Models;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.XR.Management;
-using Vuplex.WebView;
+using static TableBrowserMenu;
+using Application = UnityEngine.Application;
+#if UNITY_EDITOR
+using UnityEditor;
 
-// this is a modified version of NobleNetworkManager
-// this version cleans up AddListener properly
+#endif
 
-public class NetworkManagerGame : BonsaiNetworkManager
+public class NetworkManagerGame : NetworkManager
 {
-    public enum ConnectionState
-    {
-        RelayError,
-        Loading,
-        Hosting,
-        ClientConnecting,
-        ClientConnected
-    }
+    public bool connecting;
+    public delegate void LoggedInHandler(User user);
 
-    private const double StartHostCooldown = 0.5f;
+    public delegate void ServerAddPlayerHandler(NetworkConnection conn, bool isLanOnly);
 
     private const float HardKickDelay = 0.5f;
     private const float PingInternetEvery = 2.0f;
     private const int PingInternetRequestTimeout = 4;
-    private const float PingInternetTimeoutBeforeDisconnect = 5.0f;
-
-    public static NetworkManagerGame Singleton;
-
-    public delegate void ServerAddPlayerHandler(NetworkConnection conn, bool isLanOnly);
-    public event ServerAddPlayerHandler ServerAddPlayer;
-    
+    private const float PingInternetTimeoutBeforeDisconnect = 10f;
+    private const float UnpauseGracePeriod = 5.0f;
     public static EventHandler<NetworkConnection> ServerDisconnect;
-    public static EventHandler ServerPrepared;
     public static EventHandler<NetworkConnection> ClientConnect;
     public static EventHandler<NetworkConnection> ClientDisconnect;
     public static EventHandler InternetTimeout;
     public static EventHandler InternetReconnect;
 
-    [HideInInspector] public bool roomOpen;
-    public bool serverOnlyIfEditor;
+    public bool RoomFull => PlayerInfos.Count >= maxConnections;
 
-    public bool visualizeAuthority;
+    public OculusTransport oculusTransport;
+    public bool roomOpen;
+    public bool publicRoom;
 
     public GameObject networkHandLeftPrefab;
     public GameObject networkHandRightPrefab;
 
+    public bool visualizeAuthority;
+
+    public bool serverOnlyIfEditor;
+
     public int BuildId;
 
     public readonly Dictionary<NetworkConnection, PlayerInfo> PlayerInfos = new Dictionary<NetworkConnection, PlayerInfo>();
+    private int _internetBadMessageId;
 
     private double _lastGoodPingReceived = Mathf.NegativeInfinity;
     private float _lastPingNet = Mathf.NegativeInfinity;
-    private float _lastStartHost = Mathf.NegativeInfinity;
+    private float _lastUnpaused = Mathf.NegativeInfinity;
 
     private bool _roomJoinInProgress;
-
-    private float _unpausedAt = Mathf.NegativeInfinity;
+    private bool _shouldDisconnect;
 
     public EventHandler InfoChange;
+    public User User;
 
-    public ConnectionState State
-    {
-        get
-        {
-            switch (mode)
-            {
-                case NetworkManagerMode.Offline:
-                    return ConnectionState.RelayError;
-                case NetworkManagerMode.ServerOnly:
-                    return ConnectionState.Hosting;
-                case NetworkManagerMode.ClientOnly:
-                    return ConnectionState.ClientConnected;
-                case NetworkManagerMode.Host:
-                    return ConnectionState.Hosting;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-    }
+    private Action<NetworkConnection, UserInfoMessage> UserInfoEvent;
+
+    public string FullVersion => Version + "b" + BuildId;
+
+    public string Version => Application.version;
+
+    public bool Online => IsInternetGood();
+
+    public static NetworkManagerGame Singleton { get; private set; }
 
     public override void Awake()
     {
         base.Awake();
+
         if (Singleton == null)
         {
             Singleton = this;
@@ -99,55 +87,293 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
         // todo make these into EventHandler
         TableBrowserMenu.JoinRoom += HandleJoinRoom;
-        TableBrowserMenu.LeaveRoom += HandleLeaveRoom;
-        TableBrowserMenu.KickConnectionId += HandleKickConnectionId;
-        TableBrowserMenu.OpenRoom += HandleOpenRoom;
-        TableBrowserMenu.CloseRoom += HandleCloseRoom;
+        LeaveRoom += HandleLeaveRoom;
+        KickConnectionId += HandleKickConnectionId;
+        OpenRoom += HandleOpenRoom;
+        CloseRoom += HandleCloseRoom;
+
+    #if UNITY_EDITOR
+        EditorApplication.pauseStateChanged += HandleEditorPauseChange;
+    #endif
 
         if (Application.isEditor && !serverOnlyIfEditor)
         {
             StartCoroutine(StartXR());
         }
+
+        Core.AsyncInitialize().OnComplete(InitCallback);
+
+        _lastUnpaused = Time.realtimeSinceStartup;
     }
 
-    public override void Update()
+    public void Update()
     {
-        base.Update();
-
         HandlePingUpdate();
 
-        HandleNetworkUpdate();
+        if (!UnpausedRecently() && !IsInternetGood() && _internetBadMessageId == 0)
+        {
+            InternetTimeout?.Invoke(this, new EventArgs());
+            _internetBadMessageId = MessageStack.Singleton.AddMessage("Internet Disconnected", MessageStack.MessageType.Bad, Mathf.Infinity);
+        }
+
+        if (User != null && mode == NetworkManagerMode.Offline && !connecting)
+        {
+            BonsaiLog("StartHost");
+            //StartHost();
+            StartCoroutine(DelayStartHost());
+        }
     }
 
-    private void OnApplicationPause(bool pauseStatus)
+    private IEnumerator DelayStartHost()
     {
-        if (pauseStatus)
+        connecting = true;
+        InfoChange?.Invoke(this, new EventArgs());
+        yield return new WaitForSeconds(1f);
+        StartHost();
+        connecting = false;
+        InfoChange?.Invoke(this, new EventArgs());
+    }
+    
+    public override void LateUpdate()
+    {
+        if (_shouldDisconnect)
         {
-            if (mode == NetworkManagerMode.ClientOnly)
-            {
-                HandleLeaveRoom();
-            }
+            _shouldDisconnect = false;
+            StopClient();
+        }
 
-            if (mode == NetworkManagerMode.Host)
-            {
-                BonsaiLog("Stop Client/Server");
-                StopHost();
-            }
-        }
-        else
-        {
-            _unpausedAt = Time.realtimeSinceStartup;
-        }
+        base.LateUpdate();
+    }
+
+    public void OnApplicationPause(bool pause)
+    {
+        HandlePause(pause);
     }
 
     public override void OnApplicationQuit()
     {
         base.OnApplicationQuit();
-
         StopXR();
     }
 
-    public bool IsInternetGood()
+    public string UserName()
+    {
+        if (User != null)
+        {
+            return User.OculusID;
+        }
+
+        return "Player";
+    }
+
+#if UNITY_EDITOR
+    private void HandleEditorPauseChange(PauseState pause)
+    {
+        switch (pause)
+        {
+            case PauseState.Paused:
+                HandlePause(true);
+                break;
+            case PauseState.Unpaused:
+                HandlePause(false);
+                break;
+        }
+    }
+#endif
+
+    private void HandlePause(bool pause)
+    {
+        if (pause)
+        {
+            switch (mode)
+            {
+                case NetworkManagerMode.ClientOnly:
+                    HandleLeaveRoom();
+                    break;
+                case NetworkManagerMode.ServerOnly:
+                case NetworkManagerMode.Host:
+                    roomOpen = false;
+                    DisconnectAllClients();
+                    break;
+            }
+        }
+        else
+        {
+            _lastUnpaused = Time.realtimeSinceStartup;
+        }
+    }
+
+    private bool UnpausedRecently()
+    {
+        return Time.realtimeSinceStartup - _lastUnpaused < UnpauseGracePeriod;
+    }
+
+    public event ServerAddPlayerHandler ServerAddPlayer;
+
+    private void HandleCloseRoom()
+    {
+        BonsaiLog("CloseRoom");
+        roomOpen = false;
+        StartCoroutine(KickClients());
+        InfoChange?.Invoke(this, new EventArgs());
+    }
+
+    private void HandleOpenRoom(bool isPublicRoom)
+    {
+        BonsaiLog("OpenRoom");
+        roomOpen = true;
+        publicRoom = isPublicRoom;
+        InfoChange?.Invoke(this, new EventArgs());
+    }
+
+    private void HandleKickConnectionId(int id)
+    {
+        StartCoroutine(KickClient(id));
+    }
+
+    private void HandleLeaveRoom()
+    {
+        BonsaiLog("HandleLeaveRoom");
+        StopClient();
+        InfoChange?.Invoke(this, new EventArgs());
+    }
+
+    private void HandleJoinRoom(RoomData roomData)
+    {
+        JoinRoom(roomData);
+    }
+
+    private IEnumerator StartXR()
+    {
+        BonsaiLog("Initializing XR");
+        yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
+
+        if (XRGeneralSettings.Instance.Manager.activeLoader == null)
+        {
+            BonsaiLogError("Initializing XR Failed. Check Editor or Player log for details.");
+        }
+        else
+        {
+            BonsaiLog("Starting XR");
+            XRGeneralSettings.Instance.Manager.StartSubsystems();
+        }
+    }
+
+    private IEnumerator DelayStartCLient()
+    {
+        connecting = true;
+        InfoChange?.Invoke(this, new EventArgs());
+        yield return new WaitForSeconds(1f);
+        StartClient();
+        connecting = false;
+        InfoChange?.Invoke(this, new EventArgs());
+    }
+
+    private void JoinRoom(RoomData roomData)
+    {
+        roomOpen = false;
+        connecting = true;
+        InfoChange?.Invoke(this, new EventArgs());
+        BonsaiLog($"JoinRoom ({roomData.network_address})");
+        if (!OculusCommon.CanParseId(roomData.network_address))
+        {
+            BonsaiLogError("Can't parse network address");
+        }
+
+        if (mode == NetworkManagerMode.Host)
+        {
+            BonsaiLog("Stopping host before joining room");
+            StopHost();
+        }
+
+        if (mode == NetworkManagerMode.ClientOnly)
+        {
+            BonsaiLog("Stopping client before joining room");
+            StopClient();
+        }
+
+        if (mode == NetworkManagerMode.Offline)
+        {
+            networkAddress = roomData.network_address;
+            BonsaiLog("StartClient");
+            //StartClient();
+            StartCoroutine(DelayStartCLient());
+        }
+        else
+        {
+            connecting = false;
+            BonsaiLogError($"Did not get into offline state before joining room ({mode})");
+        }
+        InfoChange?.Invoke(this, new EventArgs());
+    }
+
+    private void StopXR()
+    {
+        if (XRGeneralSettings.Instance.Manager.isInitializationComplete)
+        {
+            BonsaiLog("Stopping XR");
+            XRGeneralSettings.Instance.Manager.StopSubsystems();
+            XRGeneralSettings.Instance.Manager.DeinitializeLoader();
+        }
+    }
+
+    private void BonsaiLog(string msg)
+    {
+        Debug.Log("<color=orange>BonsaiNetwork: </color>: " + msg);
+    }
+
+    private void BonsaiLogWarning(string msg)
+    {
+        Debug.LogWarning("<color=orange>BonsaiNetwork: </color>: " + msg);
+    }
+
+    private void BonsaiLogError(string msg)
+    {
+        Debug.LogError("<color=orange>BonsaiNetwork: </color>: " + msg);
+    }
+
+    private IEnumerator KickClients()
+    {
+        RequestDisconnectAllClients();
+
+        yield return new WaitForSeconds(HardKickDelay);
+
+        DisconnectAllClients();
+    }
+
+    private void RequestDisconnectAllClients()
+    {
+        foreach (var conn in NetworkServer.connections.Values)
+        {
+            if (conn.connectionId != NetworkConnection.LocalConnectionId)
+            {
+                RequestDisconnectClient(conn);
+            }
+        }
+    }
+
+    private void DisconnectAllClients()
+    {
+        foreach (var conn in NetworkServer.connections.Values)
+        {
+            if (conn.connectionId != NetworkConnection.LocalConnectionId)
+            {
+                DisconnectClient(conn);
+            }
+        }
+    }
+
+    private void DisconnectClient(NetworkConnectionToClient conn)
+    {
+        conn.Disconnect();
+    }
+
+    private void RequestDisconnectClient(NetworkConnectionToClient conn)
+    {
+        conn.Send(new ShouldDisconnectMessage());
+    }
+
+    private bool IsInternetGood()
     {
         return Time.realtimeSinceStartup - _lastGoodPingReceived < PingInternetTimeoutBeforeDisconnect;
     }
@@ -159,6 +385,13 @@ public class NetworkManagerGame : BonsaiNetworkManager
         if (uwr.responseCode == 204 && Time.realtimeSinceStartup > _lastGoodPingReceived)
         {
             _lastGoodPingReceived = Time.realtimeSinceStartup;
+            if (_internetBadMessageId != 0)
+            {
+                MessageStack.Singleton.PruneMessageID(_internetBadMessageId);
+                MessageStack.Singleton.AddMessage("Internet Good", MessageStack.MessageType.Good);
+                _internetBadMessageId = 0;
+                InternetReconnect?.Invoke(this, new EventArgs());
+            }
         }
     }
 
@@ -171,206 +404,133 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
     }
 
-    public override void OnStartServer()
+    public override void OnClientConnect(NetworkConnection conn)
     {
-        base.OnStartServer();
-        PlayerInfos.Clear();
-    }
+        base.OnClientConnect(conn);
 
-    private void HandleNetworkUpdate()
-    {
-        if (isDisconnecting || _roomJoinInProgress)
-        {
-            BonsaiLog($"Prevent Update while isDisconnecting={isDisconnecting} _roomJoinInProgress={_roomJoinInProgress}");
-            return;
-        }
+        BonsaiLog($"OnClientConnect (id={conn.connectionId}) {conn.isReady}");
 
-        if (Application.isEditor && serverOnlyIfEditor)
+        NetworkClient.RegisterHandler<ShouldDisconnectMessage>(OnShouldDisconnect);
+
+        if (User != null)
         {
-            if (mode != NetworkManagerMode.ServerOnly)
-            {
-                roomOpen = true;
-                StartServer();
-            }
+            NetworkClient.Send(new UserInfoMessage {ID = User.ID, OculusId = User.OculusID});
         }
         else
         {
-            var pingTimeout = Time.realtimeSinceStartup - _lastGoodPingReceived > PingInternetTimeoutBeforeDisconnect;
-            switch (mode)
+            BonsaiLogWarning("Did not fetch oculus id before joining room");
+        }
+
+        ClientConnect?.Invoke(this, conn);
+        InfoChange?.Invoke(this, new EventArgs());
+    }
+
+    public override void OnClientDisconnect(NetworkConnection conn)
+    {
+        BonsaiLog("OnClientDisconnect");
+
+        NetworkClient.UnregisterHandler<ShouldDisconnectMessage>();
+
+        ClientDisconnect?.Invoke(this, conn);
+
+        base.OnClientDisconnect(conn);
+        InfoChange?.Invoke(this, new EventArgs());
+    }
+
+    public override void OnStartServer()
+    {
+        NetworkTime.Reset();
+        base.OnStartServer();
+        PlayerInfos.Clear();
+        UserInfoEvent = (conn, userInfo) =>
+        {
+            if (PlayerInfos.TryGetValue(conn, out _))
             {
-                case NetworkManagerMode.Offline:
-                    MaybeStartHost();
-                    break;
-                case NetworkManagerMode.ServerOnly:
-                    break;
-                case NetworkManagerMode.ClientOnly:
-                    if (pingTimeout)
-                    {
-                        HandleInternetTimeout(mode);
-                    }
+                BonsaiLog($"Update connection ({conn.connectionId}) with ({userInfo.OculusId}) ({userInfo.ID})");
+                PlayerInfos[conn].OculusId = userInfo.OculusId;
+                PlayerInfos[conn].ID = userInfo.ID;
+                PlayerInfos[conn].Ok = true;
 
-                    break;
-                case NetworkManagerMode.Host:
-                    if (isLANOnly)
-                    {
-                        StopClientIfGoodPing();
-                    }
-                    else if (pingTimeout && Time.realtimeSinceStartup - _unpausedAt > 5.0f)
-                    {
-                        HandleInternetTimeout(mode);
-                    }
-
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-    }
-
-    private void HandleInternetTimeout(NetworkManagerMode netMode)
-    {
-        BonsaiLog($"Ping timeout as {netMode}");
-
-        InternetTimeout?.Invoke(this, new EventArgs());
-
-        switch (netMode)
-        {
-            case NetworkManagerMode.Host:
-                MessageStack.Singleton.AddMessage("Internet Disconnected: Closing Room");
-                StopHost();
-                break;
-            case NetworkManagerMode.ClientOnly:
-                MessageStack.Singleton.AddMessage("Internet Disconnected: Leaving Room");
-                StopClient();
-                break;
-            default:
-                BonsaiLogError($"Internet timeout not handled for {netMode}");
-                break;
-        }
-    }
-
-    private void StopClientIfGoodPing()
-    {
-        if (Time.realtimeSinceStartup - _lastGoodPingReceived < 1.0f)
-        {
-            BonsaiLog("Got a good ping, disconnecting from LAN");
-            InternetReconnect?.Invoke(this, new EventArgs());
-            MessageStack.Singleton.AddMessage("Reconnected to the Internet");
-            isLANOnly = false;
-            StopClient();
-        }
-    }
-
-    private void HandleKickConnectionId(int id)
-    {
-        BonsaiLog($"Kick (id={id})");
-        StartCoroutine(KickClient(id));
-    }
-
-    private void HandleLeaveRoom()
-    {
-        BonsaiLog("LeaveRoom and StopClient");
-        StopClient();
-    }
-
-    private void HandleJoinRoom(TableBrowserMenu.RoomData roomData)
-    {
-        if (!_roomJoinInProgress)
-        {
-            if (HostEndPoint.Address.ToString() == roomData.ip_address && HostEndPoint.Port == roomData.port)
-            {
-                BonsaiLogWarning("Tried to join own hosted room as client, ignoring");
             }
             else
             {
-                StartCoroutine(JoinRoom(roomData));
+                BonsaiLogWarning($"No connection in PlayerInfos to update with with ({userInfo.OculusId}) ({userInfo.ID})");
             }
-        }
-        else
-        {
-            BonsaiLogWarning("Ignoring attempt to join room while room join is in progress");
-        }
+        };
+        NetworkServer.RegisterHandler(UserInfoEvent, false);
     }
 
-    private IEnumerator JoinRoom(TableBrowserMenu.RoomData roomData)
+    public override void OnStopServer()
     {
-        BonsaiLog("Begin JoinRoom");
-        _roomJoinInProgress = true;
-        if (mode == NetworkManagerMode.Host || !(HostEndPoint is null))
-        {
-            BonsaiLog("StopHost before join room");
-            StopHost();
-            InfoChange?.Invoke(this, new EventArgs());
-        }
+        base.OnStopServer();
+        NetworkServer.UnregisterHandler<UserInfoMessage>();
+    }
 
-        var t0 = Time.realtimeSinceStartup;
-        while (!(HostEndPoint is null))
+    private void OnShouldDisconnect(ShouldDisconnectMessage _)
+    {
+        BonsaiLog("ShouldDisconnect");
+        _shouldDisconnect = true;
+    }
+
+    private IEnumerator DelayKickIfNotReport(NetworkConnection conn)
+    {
+        yield return new WaitForSeconds(2);
+
+        if (PlayerInfos.TryGetValue(conn, out PlayerInfo playerInfo))
         {
-            BonsaiLog($"Wait for HostEndPoint to be null in JoinRoom {HostEndPoint.Address} {HostEndPoint.Port}");
-            if (HostEndPoint.Address.ToString() == "127.0.0.1" || HostEndPoint.Address.ToString() == "localhost")
+            if (playerInfo.Ok)
             {
-                // This happens when you are a LAN host then try to join a room
-                BonsaiLog("Breaking HostEndPoint null check in JoinRoom since localhost");
-                break;
+                yield break;
             }
-
-            if (Time.realtimeSinceStartup - t0 > 2f)
-            {
-                BonsaiLog("Breaking loop since spent too long waiting for HostEndPoint to be null in JionRoom");
-                break;
-            }
-
-            yield return null;
         }
 
-        if (mode == NetworkManagerMode.Offline)
-        {
-            networkAddress = roomData.ip_address;
-            networkPort = roomData.port;
-            StartClient();
-            InfoChange?.Invoke(this, new EventArgs());
-        }
-        else
-        {
-            BonsaiLogWarning("Tried to join room while a hosting/client, ignoring");
-        }
+        BonsaiLogWarning($"Kicking connection ({conn.connectionId}) for not reporting after joining");
+        conn.Disconnect();
+        PlayerInfos.Remove(conn);
 
-        _roomJoinInProgress = false;
     }
 
-    private void HandleCloseRoom()
-    {
-        BonsaiLog("CloseRoom");
-        roomOpen = false;
-        StartCoroutine(KickClients());
-        InfoChange?.Invoke(this, new EventArgs());
-    }
 
-    private void HandleOpenRoom()
-    {
-        BonsaiLog("OpenRoom");
-        roomOpen = true;
-        InfoChange?.Invoke(this, new EventArgs());
-    }
-
-    public override void OnServerConnect(NetworkConnection conn)
-    {
-        base.OnServerConnect(conn);
-        BonsaiLog("ServerConnect");
-    }
-
-    //this doesn't call the base function because we need to instantiate and spawn the player ourselves here so we can change the spotId
     public override void OnServerAddPlayer(NetworkConnection conn)
     {
         BonsaiLog("ServerAddPlayer");
 
         var openSpot = OpenSpotId();
-        PlayerInfos.Add(conn, new PlayerInfo(openSpot, "NoName"));
+        var playerInfo = new PlayerInfo
+        {
+            Spot = openSpot, OculusId = "None", ID = 0
+        };
+        PlayerInfos.Add(conn, playerInfo);
+        DelayKickIfNotReport(conn);
 
         SpawnPlayer(conn, openSpot);
 
-        ServerAddPlayer?.Invoke(conn, isLANOnly);
+        // todo
+        var isLanOnly = false;
+        ServerAddPlayer?.Invoke(conn, isLanOnly);
         InfoChange?.Invoke(this, new EventArgs());
+    }
+
+    private int OpenSpotId()
+    {
+        var spots = new List<int>();
+        for (var i = 0; i < SpotManager.Instance.spotInfo.Length; i++)
+        {
+            spots.Add(i);
+        }
+
+        foreach (var info in PlayerInfos.Values)
+        {
+            spots.Remove(info.Spot);
+        }
+
+        if (spots.Count > 0)
+        {
+            return spots[0];
+        }
+
+        BonsaiLogError("No open spot");
+        return 0;
     }
 
     private void SpawnPlayer(NetworkConnection conn, int spot)
@@ -401,12 +561,6 @@ public class NetworkManagerGame : BonsaiNetworkManager
 
     public override void OnServerDisconnect(NetworkConnection conn)
     {
-        BonsaiLog("ServerDisconnect");
-
-        ServerDisconnect?.Invoke(this, conn);
-
-        PlayerInfos.Remove(conn);
-
         var tmp = new HashSet<NetworkIdentity>(conn.clientOwnedObjects);
         foreach (var identity in tmp)
         {
@@ -416,11 +570,25 @@ public class NetworkManagerGame : BonsaiNetworkManager
                 if (autoAuthority.InUse)
                 {
                     autoAuthority.SetInUse(false);
-                }
+                } 
 
+                autoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
+                //identity.RemoveClientAuthority();
+            }
+            else if (!identity.gameObject.CompareTag("NetworkHand") && !identity.gameObject.CompareTag("NetworkHead")) 
+            {
                 identity.RemoveClientAuthority();
             }
         }
+        
+        if (!conn.isAuthenticated)
+        {
+            return;
+        }
+        
+        ServerDisconnect?.Invoke(this, conn);
+
+        PlayerInfos.Remove(conn);
 
         // call the base after the ServerDisconnect event otherwise null reference gets passed to subscribers
         base.OnServerDisconnect(conn);
@@ -428,115 +596,61 @@ public class NetworkManagerGame : BonsaiNetworkManager
         InfoChange?.Invoke(this, new EventArgs());
     }
 
-    public override void OnClientConnect(NetworkConnection conn)
+    private void InitCallback(Message<PlatformInitialize> msg)
     {
-        base.OnClientConnect(conn);
-
-        BonsaiLog($"OnClientConnect {conn.connectionId} {conn.isReady}");
-
-        NetworkClient.RegisterHandler<ShouldDisconnectMessage>(OnShouldDisconnect);
-
-        ClientConnect?.Invoke(this, conn);
-    }
-
-    public override void OnClientDisconnect(NetworkConnection conn)
-    {
-        BonsaiLog("OnClientDisconnect");
-
-        NetworkClient.UnregisterHandler<ShouldDisconnectMessage>();
-
-        ClientDisconnect?.Invoke(this, conn);
-
-        base.OnClientDisconnect(conn);
-    }
-
-    public override void OnFatalError(string error)
-    {
-        BonsaiLogWarning($"OnFatalError: {error}");
-        base.OnFatalError(error);
-    }
-
-    public override void OnServerPrepared(string hostAddress, ushort hostPort)
-    {
-        BonsaiLog($"OnServerPrepared ({hostAddress}:{hostPort}) isLanOnly={isLANOnly}");
-        ServerPrepared?.Invoke(this, new EventArgs());
-    }
-
-    private void OnShouldDisconnect(ShouldDisconnectMessage _)
-    {
-        BonsaiLog("ShouldDisconnect");
-        StopClient();
-    }
-
-    private IEnumerator StartXR()
-    {
-        BonsaiLog("Initializing XR");
-        yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
-
-        if (XRGeneralSettings.Instance.Manager.activeLoader == null)
+        if (msg.IsError)
         {
-            BonsaiLogError("Initializing XR Failed. Check Editor or Player log for details.");
-        }
-        else
-        {
-            BonsaiLog("Starting XR");
-            XRGeneralSettings.Instance.Manager.StartSubsystems();
-        }
-    }
-
-    private void StopXR()
-    {
-        if (XRGeneralSettings.Instance.Manager.isInitializationComplete)
-        {
-            BonsaiLog("Stopping XR");
-            XRGeneralSettings.Instance.Manager.StopSubsystems();
-            XRGeneralSettings.Instance.Manager.DeinitializeLoader();
-        }
-    }
-
-    public void UpdateUserInfo(uint netId, UserInfo userInfo)
-    {
-        var updated = false;
-        foreach (var conn in PlayerInfos.Keys.ToList())
-        {
-            if (netId == conn.identity.netId)
-            {
-                PlayerInfos[conn].User = userInfo;
-                updated = true;
-            }
+            TerminateWithError(msg);
+            return;
         }
 
-        if (updated)
-        {
-            BonsaiLog($"Updated UserInfo in PlayerInfos -> {userInfo.DisplayName}");
-        }
-        else
-        {
-            BonsaiLogWarning("Tried to update PlayerInfos but failed");
-        }
-
-        InfoChange?.Invoke(this, new EventArgs());
+        Users.GetLoggedInUser().OnComplete(HandleGetLoggedInUser);
     }
 
-    private IEnumerator KickClients()
+    private void TerminateWithError(Message msg)
     {
-        foreach (var conn in NetworkServer.connections.Values)
+        BonsaiLogError($"Error {msg.GetError().Message}");
+        Application.Quit();
+    }
+
+    private void HandleGetLoggedInUser(Message<User> msg)
+    {
+        if (msg.IsError)
         {
-            if (conn.connectionId != NetworkConnection.LocalConnectionId)
-            {
-                RequestDisconnectClient(conn);
-            }
+            TerminateWithError(msg);
+            return;
         }
 
-        yield return new WaitForSeconds(HardKickDelay);
+        User = msg.Data;
+        oculusTransport.LoggedIn(User);
+        LoggedIn?.Invoke(User);
+    }
 
-        foreach (var conn in NetworkServer.connections.Values)
+    public event LoggedInHandler LoggedIn;
+
+    public string GetMyNetworkAddress()
+    {
+        if (User != null)
         {
-            if (conn.connectionId != NetworkConnection.LocalConnectionId)
-            {
-                DisconnectClient(conn);
-            }
+            return User.ID.ToString();
         }
+
+        return "";
+    }
+
+    public string GetNetworkAddress()
+    {
+        if (mode == NetworkManagerMode.ClientOnly)
+        {
+            return networkAddress;
+        }
+
+        if (User != null)
+        {
+            return User.ID.ToString();
+        }
+
+        return "";
     }
 
     private IEnumerator KickClient(int id)
@@ -560,96 +674,20 @@ public class NetworkManagerGame : BonsaiNetworkManager
         }
     }
 
-    private int OpenSpotId()
-    {
-        var spots = new List<int>();
-        for (var i = 0; i < SpotManager.Instance.spotInfo.Length; i++)
-        {
-            spots.Add(i);
-        }
-
-        foreach (var info in PlayerInfos.Values)
-        {
-            spots.Remove(info.Spot);
-        }
-
-        if (spots.Count > 0)
-        {
-            return spots[0];
-        }
-
-        BonsaiLogError("No open spot");
-        return 0;
-    }
-
-    private void RequestDisconnectClient(NetworkConnection conn)
-    {
-        conn.Send(new ShouldDisconnectMessage());
-    }
-
-    private void DisconnectClient(NetworkConnection conn)
-    {
-        conn.Disconnect();
-    }
-
-    private void MaybeStartHost()
-    {
-        if (Time.realtimeSinceStartup - _lastStartHost > StartHostCooldown && HostEndPoint is null)
-        {
-            BonsaiLog($"StartHost {mode} {State} ({HostEndPoint})");
-            StartHost();
-            _lastStartHost = Time.realtimeSinceStartup;
-        }
-        else if (!(HostEndPoint is null))
-        {
-            if (mode == NetworkManagerMode.Offline)
-            {
-                StartHost();
-                _lastStartHost = Time.realtimeSinceStartup;
-            }
-
-            // todo this can get stuck if somehow host mode is offline but HostEndPoint is not null
-            BonsaiLog("HostEndpoint is not null");
-        }
-    }
-
-    private void BonsaiLog(string msg)
-    {
-        Debug.Log("<color=orange>BonsaiNetwork: </color>: " + msg);
-    }
-
-    private void BonsaiLogWarning(string msg)
-    {
-        Debug.LogWarning("<color=orange>BonsaiNetwork: </color>: " + msg);
-    }
-
-    private void BonsaiLogError(string msg)
-    {
-        Debug.LogError("<color=orange>BonsaiNetwork: </color>: " + msg);
-    }
-
     [Serializable]
     public class PlayerInfo
     {
         public int Spot;
-        public UserInfo User;
-
-        public PlayerInfo(int spot, string user)
-        {
-            Spot = spot;
-            User = new UserInfo(user);
-        }
-    }
-
-    public readonly struct UserInfo
-    {
-        public readonly string DisplayName;
-
-        public UserInfo(string displayName)
-        {
-            DisplayName = displayName;
-        }
+        public string OculusId;
+        public ulong ID;
+        public bool Ok;
     }
 
     private struct ShouldDisconnectMessage : NetworkMessage { }
+
+    private struct UserInfoMessage : NetworkMessage
+    {
+        public string OculusId;
+        public ulong ID;
+    }
 }

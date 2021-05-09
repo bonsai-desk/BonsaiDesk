@@ -1,19 +1,28 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Android;
 using UnityEngine.SceneManagement;
-using UnityEngine.XR.Management;
 
 public class LaunchManager : MonoBehaviour
 {
-    // Start is called before the first frame update
+    public static LaunchManager Instance;
+    public Transform centerEyeAnchor;
+    public Transform logo;
+    public LogoMove logoMove;
+
+    private bool _run;
+
+    public void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+    }
+
     private void Start()
     {
-        if (Application.isEditor)
-        {
-            StartCoroutine(StartXR());
-        }
-
         if (!Permission.HasUserAuthorizedPermission(Permission.Microphone))
         {
             Permission.RequestUserPermission(Permission.Microphone);
@@ -22,29 +31,34 @@ public class LaunchManager : MonoBehaviour
         StartCoroutine(LoadAsync());
     }
 
-    private IEnumerator LoadAsync()
+    private void Update()
     {
-        var op = SceneManager.LoadSceneAsync(1);
-        while (!op.isDone)
+        if (!_run && centerEyeAnchor.transform.eulerAngles.sqrMagnitude != 0)
         {
-            Debug.Log(op.progress);
-            yield return null;
+            _run = true;
+            AlignWithView();
         }
     }
 
-    private IEnumerator StartXR()
+    private void AlignWithView()
     {
-        Debug.Log("Initializing XR...");
-        yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
+        var forward = centerEyeAnchor.forward;
+        forward.y = 0;
+        forward = forward.normalized;
 
-        if (XRGeneralSettings.Instance.Manager.activeLoader == null)
+        forward *= 3f;
+
+        logo.position = centerEyeAnchor.transform.position + forward;
+        logo.rotation = Quaternion.LookRotation(-forward);
+    }
+
+    private IEnumerator LoadAsync()
+    {
+        var op = SceneManager.LoadSceneAsync(1);
+
+        while (!op.isDone)
         {
-            Debug.LogError("Initializing XR Failed. Check Editor or Player log for details.");
-        }
-        else
-        {
-            Debug.Log("Starting XR...");
-            XRGeneralSettings.Instance.Manager.StartSubsystems();
+            yield return null;
         }
     }
 }

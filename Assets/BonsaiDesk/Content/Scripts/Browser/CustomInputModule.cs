@@ -45,6 +45,11 @@ public class CustomInputModule : StandaloneInputModule
     {
         var leftButtonData = mouseData.GetButtonState(PointerEventData.InputButton.Left).eventData;
 
+        if (leftButtonData.buttonData.clickCount > 1)
+        {
+            leftButtonData.buttonData.clickCount = 1;
+        }
+
         ProcessMousePress(leftButtonData);
         ProcessMove(leftButtonData.buttonData);
         ProcessDrag(leftButtonData.buttonData);

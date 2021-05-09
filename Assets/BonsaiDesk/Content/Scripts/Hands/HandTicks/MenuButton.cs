@@ -20,6 +20,7 @@ public class MenuButton : MonoBehaviour, IHandTick
     private bool _activated = false;
 
     private int emitterId = -1;
+    
     public SoundFXRef tickSound;
 
     public void Tick()
@@ -58,7 +59,7 @@ public class MenuButton : MonoBehaviour, IHandTick
 
         progressImage.fillAmount = Mathf.Clamp01(_activeTimer / ActivationTime);
 
-        if (!_activated && _activeTimer > ActivationTime)
+        if (buttonTransform.gameObject.activeInHierarchy && !_activated && _activeTimer > ActivationTime)
         {
             _activated = true;
             action?.Invoke();

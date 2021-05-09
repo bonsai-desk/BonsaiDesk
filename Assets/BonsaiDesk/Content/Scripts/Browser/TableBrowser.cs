@@ -14,7 +14,7 @@ public class TableBrowser : Browser
     public bool clickWithoutStealingFocus;
     public bool hoveringDisabled;
     public bool ready { get; private set; }
-
+    
     protected override void Start()
     {
         base.Start();
@@ -44,7 +44,7 @@ public class TableBrowser : Browser
     private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs)
     {
         var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
-
+        
         switch (message.Type)
         {
             case "event":
