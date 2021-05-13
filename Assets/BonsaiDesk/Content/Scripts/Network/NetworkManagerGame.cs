@@ -514,7 +514,7 @@ public class NetworkManagerGame : NetworkManager
     private int OpenSpotId()
     {
         var spots = new List<int>();
-        for (var i = 0; i < SpotManager.Instance.spotInfo.Length; i++)
+        for (var i = 0; i < SpotManager.Instance.TotalSpots; i++)
         {
             spots.Add(i);
         }
@@ -543,10 +543,10 @@ public class NetworkManagerGame : NetworkManager
         var networkVRPlayer = player.GetComponent<NetworkVRPlayer>();
         var pid = player.GetComponent<NetworkIdentity>();
 
-        var leftHand = Instantiate(networkHandLeftPrefab);
+        var leftHand = Instantiate(networkHandLeftPrefab, startPos.position, startPos.rotation);
         var lid = leftHand.GetComponent<NetworkIdentity>();
 
-        var rightHand = Instantiate(networkHandRightPrefab);
+        var rightHand = Instantiate(networkHandRightPrefab, startPos.position, startPos.rotation);
         var rid = rightHand.GetComponent<NetworkIdentity>();
 
         NetworkServer.Spawn(leftHand, conn);

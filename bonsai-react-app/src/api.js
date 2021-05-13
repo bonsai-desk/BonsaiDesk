@@ -97,4 +97,28 @@ export function postToggleBlockBreakHand(hand) {
     });
 }
 
+export const Layout = {
+    Across: 0, SideBySide: 1
+}
+
+export function postSetLayout(layout){
+    let layoutStr;
+    switch (layout) {
+        case Layout.Across:
+            layoutStr = "across"
+            break;
+        case Layout.SideBySide:
+            layoutStr = "sideBySide"
+            break;
+        default:
+            layoutStr = 'across';
+            break
+    }
+    postJson({
+        Type: 'command',
+        Message: 'layoutChange',
+        Data: layoutStr,
+    });
+}
+
 
