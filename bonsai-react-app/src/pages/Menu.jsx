@@ -17,6 +17,7 @@ import {SettingsPage} from './Settings';
 import {HomePage} from './Home';
 import {PlayerPage} from './Player';
 import PublicRoomsPage from './PublicRooms';
+import {YourRoom} from './YourRoom';
 
 function NoMicPage() {
 
@@ -232,6 +233,7 @@ let Menu = observer(() => {
                                 </NavItem> : ''}
                         <NavItem to={'/menu/public-rooms'}>Public Rooms</NavItem>
                         <NavItem to={'/menu/videos'}>Media</NavItem>
+                        <NavItem to={'/menu/room'}>Lights & Layout</NavItem>
                         <NavItem to={'/menu/settings'}>Settings</NavItem>
                         {debug ?
                                 <NavItem to={'/menu/debug'} component={DebugPage}>Debug</NavItem>
@@ -247,6 +249,7 @@ let Menu = observer(() => {
                     <Switch>
                         <Route path={`${match.path}/home`} component={HomePage}/>
                         <Route path={`${match.path}/videos`} component={VideosPage}/>
+                        <Route path={`${match.path}/room`} component={YourRoom}/>
                         <Route path={`${match.path}/settings`} component={SettingsPage}/>
                         <Route path={`${match.path}/debug`} component={DebugPage}/>
                         <Route path={`${match.path}/player`} component={PlayerPage}/>

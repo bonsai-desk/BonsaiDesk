@@ -11,13 +11,19 @@ public class AutoBrowser : Browser
 
     private void Update()
     {
-       //if (WebViewPrefab)
-       //{
-       //    
-       //    WebViewPrefab.transform.position = boundsTransform.position;
-       //    WebViewPrefab.transform.position = screenTransform.position;
-       //    WebViewPrefab.transform.localScale = boundsTransform.localScale;
-       //}
+        if (screenTransform.localPosition.sqrMagnitude > 1)
+        {
+            if (screenTransform.GetComponent<AutoAuthority>().HasAuthority())
+            {
+                BonsaiLogWarning("AutoBrowser's screen freaking out so I'm resetting its physics");
+                var rigidBody = screenTransform.GetComponent<Rigidbody>();
+                rigidBody.velocity = Vector3.zero;
+                rigidBody.angularVelocity = Vector3.zero;
+                rigidBody.MovePosition(screenTransform.parent.transform.position);
+                rigidBody.MoveRotation(screenTransform.parent.transform.rotation);
+            }
+        }
+        
     }
 
     protected override void Start()
