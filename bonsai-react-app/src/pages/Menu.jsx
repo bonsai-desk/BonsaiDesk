@@ -1,18 +1,17 @@
 import React, {useEffect} from 'react';
-import {Link, Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
+import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
 import axios from 'axios';
 import {observer} from 'mobx-react-lite';
 import {autorun} from 'mobx';
 
 import DotsImg from '../static/dots-vertical.svg';
-import {useStore} from '../DataProvider';
+import {NetworkManagerMode, useStore} from '../DataProvider';
 import {postCloseMenu, postRequestMicrophone} from '../api';
 
 import {apiBase} from '../utilities';
 import {InstantButton} from '../components/Button';
 import './Menu.css';
 import {DebugPage} from './Debug';
-import {VideosPage} from './Videos';
 import {SettingsPage} from './Settings';
 import {HomePage} from './Home';
 import {PlayerPage} from './Player';
@@ -73,6 +72,7 @@ function NavItem(props) {
         buttonClass = '',
         buttonClassInactive = '',
         to = '',
+        unread = false
     } = props;
 
     let history = useHistory();
@@ -110,9 +110,10 @@ function NavItem(props) {
                 <InstantButton className={className} onClick={() => {
                     history.push(to);
                 }}>
-                    <Link to={to}>
+                    <div className={"w-full flex flex-wrap justify-between content-center"}>
                         <span className={textClass}>{props.children}</span>
-                    </Link>
+                        {unread ? <div className={"mt-2 w-3 h-3 bg-gray-200 rounded-full"}/> : ""}
+                    </div>
                 </InstantButton>
         );
 
@@ -202,9 +203,16 @@ let Menu = observer(() => {
     if (!store.AppInfo.MicrophonePermission) {
         return <NoMicPage/>;
     }
-
-    const playerButtonClass = 'text-white py-4 px-8 hover:bg-gray-800 active:bg-gray-900 hover:text-white rounded cursor-pointer flex flex-wrap content-center border-4 border-green-400';
-    const playerButtonClassSelected = 'py-4 px-8 bg-blue-700 text-white rounded cursor-pointer flex flex-wrap content-center border-4 border-green-400';
+    
+    let mediaButtonClass = ""
+    let mediaButtonClassSelected = ""
+    
+    if (store.MediaInfo.Active){
+        mediaButtonClass = 'py-4 px-8 hover:bg-gray-800 active:bg-gray-900 hover:text-white rounded cursor-pointer flex flex-wrap content-center'
+        mediaButtonClassSelected = 'py-4 px-8 bg-bonsai-green text-white rounded cursor-pointer flex flex-wrap content-center'
+    }
+    
+    let homeActive = store.NetworkInfo.RoomOpen || store.NetworkInfo.Mode === NetworkManagerMode.ClientOnly;
 
     return (
             <div className={'flex text-lg text-gray-500 h-full static'}>
@@ -224,15 +232,16 @@ let Menu = observer(() => {
 
                     <div className={'h-16'}/>
                     <NavList>
-                        <NavItem to={'/menu/home'}>Home</NavItem>
-                        {store.MediaInfo.Active ?
-                                <NavItem to={'/menu/player'}
-                                         buttonClass={playerButtonClass}
-                                         buttonClassSelected={playerButtonClassSelected}>
-                                    Player
-                                </NavItem> : ''}
+                        <NavItem to={'/menu/home'} unread={homeActive}>Home</NavItem>
                         <NavItem to={'/menu/public-rooms'}>Public Rooms</NavItem>
-                        <NavItem to={'/menu/videos'}>Media</NavItem>
+                        <NavItem to={'/menu/player'}
+                                 buttonClass={mediaButtonClass}
+                                 buttonClassSelected={mediaButtonClassSelected}
+                                 unread={store.MediaInfo.Active}
+                        >
+                                
+                            Media
+                        </NavItem>
                         <NavItem to={'/menu/room'}>Lights & Layout</NavItem>
                         <NavItem to={'/menu/settings'}>Settings</NavItem>
                         {debug ?
@@ -248,7 +257,6 @@ let Menu = observer(() => {
                 <div className={'bg-gray-900 z-10 w-full overflow-auto scroll-host'}>
                     <Switch>
                         <Route path={`${match.path}/home`} component={HomePage}/>
-                        <Route path={`${match.path}/videos`} component={VideosPage}/>
                         <Route path={`${match.path}/room`} component={YourRoom}/>
                         <Route path={`${match.path}/settings`} component={SettingsPage}/>
                         <Route path={`${match.path}/debug`} component={DebugPage}/>
