@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/static/css/main.32d39b30.chunk.css",
-    "main.js": "/static/js/main.5c649d14.chunk.js",
-    "main.js.map": "/static/js/main.5c649d14.chunk.js.map",
+    "main.css": "/static/css/main.4a2bfc07.chunk.css",
+    "main.js": "/static/js/main.eb2dc8d1.chunk.js",
+    "main.js.map": "/static/js/main.eb2dc8d1.chunk.js.map",
     "runtime-main.js": "/static/js/runtime-main.8c24e311.js",
     "runtime-main.js.map": "/static/js/runtime-main.8c24e311.js.map",
-    "static/js/2.0e3b0415.chunk.js": "/static/js/2.0e3b0415.chunk.js",
-    "static/js/2.0e3b0415.chunk.js.map": "/static/js/2.0e3b0415.chunk.js.map",
+    "static/js/2.36dc2753.chunk.js": "/static/js/2.36dc2753.chunk.js",
+    "static/js/2.36dc2753.chunk.js.map": "/static/js/2.36dc2753.chunk.js.map",
     "index.html": "/index.html",
-    "static/css/main.32d39b30.chunk.css.map": "/static/css/main.32d39b30.chunk.css.map",
-    "static/js/2.0e3b0415.chunk.js.LICENSE.txt": "/static/js/2.0e3b0415.chunk.js.LICENSE.txt",
+    "static/css/main.4a2bfc07.chunk.css.map": "/static/css/main.4a2bfc07.chunk.css.map",
+    "static/js/2.36dc2753.chunk.js.LICENSE.txt": "/static/js/2.36dc2753.chunk.js.LICENSE.txt",
     "static/media/back.d3a137ff.svg": "/static/media/back.d3a137ff.svg",
     "static/media/backspace-hollow.5cb2158e.svg": "/static/media/backspace-hollow.5cb2158e.svg",
     "static/media/caret-square-up-hollow.5d65dc16.svg": "/static/media/caret-square-up-hollow.5d65dc16.svg",
@@ -28,14 +28,15 @@
     "static/media/play.8aa501b6.svg": "/static/media/play.8aa501b6.svg",
     "static/media/reset.0dd5934c.svg": "/static/media/reset.0dd5934c.svg",
     "static/media/sleeping-face.6260d8bf.svg": "/static/media/sleeping-face.6260d8bf.svg",
+    "static/media/table-regular.52831ea1.svg": "/static/media/table-regular.52831ea1.svg",
     "static/media/thinking-face.179ede86.svg": "/static/media/thinking-face.179ede86.svg",
     "static/media/volume-high.701f2269.svg": "/static/media/volume-high.701f2269.svg",
     "static/media/volume-off.fc42f15f.svg": "/static/media/volume-off.fc42f15f.svg"
   },
   "entrypoints": [
     "static/js/runtime-main.8c24e311.js",
-    "static/js/2.0e3b0415.chunk.js",
-    "static/css/main.32d39b30.chunk.css",
-    "static/js/main.5c649d14.chunk.js"
+    "static/js/2.36dc2753.chunk.js",
+    "static/css/main.4a2bfc07.chunk.css",
+    "static/js/main.eb2dc8d1.chunk.js"
   ]
 }

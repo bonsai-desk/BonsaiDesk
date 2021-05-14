@@ -12,8 +12,6 @@ using static AutoBrowserController;
 [RequireComponent(typeof(TableBrowser))]
 public class TableBrowserMenu : MonoBehaviour
 {
-    public ContextBrowserController contextBrowserController;
-    public TableBrowser contextBrowser;
     public enum LightState
     {
         Bright,
@@ -22,6 +20,8 @@ public class TableBrowserMenu : MonoBehaviour
 
     private const float PostRoomInfoEvery = 1f;
     public static TableBrowserMenu Singleton;
+    public ContextBrowserController contextBrowserController;
+    public TableBrowser contextBrowser;
     public AutoBrowserController autoBrowserController;
     public float postMediaInfoEvery = 0.5f;
     [FormerlySerializedAs("_browser")] public TableBrowser browser;
@@ -47,11 +47,6 @@ public class TableBrowserMenu : MonoBehaviour
         contextBrowserController.InfoChange += HandleChangeBlockActive;
     }
 
-    private void HandleChangeBlockActive()
-    {
-        PostContextInfo();
-    }
-
     public void Update()
     {
         if (Time.time - _postMediaInfoLast > postMediaInfoEvery)
@@ -74,6 +69,11 @@ public class TableBrowserMenu : MonoBehaviour
             PostSocialInfo();
             PostContextInfo();
         }
+    }
+
+    private void HandleChangeBlockActive()
+    {
+        PostContextInfo();
     }
 
     private void HandleNetworkInfoChange(object sender, EventArgs e)
@@ -188,6 +188,23 @@ public class TableBrowserMenu : MonoBehaviour
                         var level = JsonConvert.DeserializeObject<float>(message.Data);
                         SetVolumeLevel?.Invoke(this, level);
                         break;
+                    case "layoutChange":
+                        var isClient = NetworkManagerGame.Singleton.mode == NetworkManagerMode.ClientOnly;
+                        var guyInRoom = NetworkManagerGame.Singleton.PlayerInfos.Count > 1;
+                        if (isClient || guyInRoom)
+                        {
+                            switch (message.Data)
+                            {
+                                case "across":
+                                    LayoutChange?.Invoke(this, SpotManager.Layout.Opposite);
+                                    break;
+                                case "sideBySide":
+                                    LayoutChange?.Invoke(this, SpotManager.Layout.Side);
+                                    break;
+                            }
+                        }
+
+                        break;
                     case "lightsChange":
                         if (LightChange != null)
                         {
@@ -275,17 +292,9 @@ public class TableBrowserMenu : MonoBehaviour
             LeftBlockActive = contextBrowserController.LeftBlockActive,
             RightBlockActive = contextBrowserController.RightBlockActive,
             LeftBlockBreak = contextBrowserController.LeftBlockBreak,
-            RightBlockBreak =  contextBrowserController.RightBlockBreak
+            RightBlockBreak = contextBrowserController.RightBlockBreak
         };
         contextBrowser.PostMessage(Message(contextInfo, "ContextInfo"));
-    }
-
-    private class ContextInfo
-    {
-        public ContextBrowserController.Block LeftBlockActive;
-        public ContextBrowserController.Block RightBlockActive;
-        public bool LeftBlockBreak;
-        public bool RightBlockBreak;
     }
 
     private string Message<T>(T info, string KeyName)
@@ -353,10 +362,12 @@ public class TableBrowserMenu : MonoBehaviour
     public event EventHandler<float> SeekPlayer;
 
     public event EventHandler BrowseYouTube;
-    
+
     public event EventHandler<float> SetVolumeLevel;
 
     public event EventHandler<LightState> LightChange;
+
+    public event EventHandler<SpotManager.Layout> LayoutChange;
 
     private void BonsaiLog(string msg)
     {
@@ -371,6 +382,14 @@ public class TableBrowserMenu : MonoBehaviour
     private void BonsaiLogError(string msg)
     {
         Debug.LogError("<color=orange>BonsaiTableBrowserMenu: </color>: " + msg);
+    }
+
+    private class ContextInfo
+    {
+        public ContextBrowserController.Block LeftBlockActive;
+        public bool LeftBlockBreak;
+        public ContextBrowserController.Block RightBlockActive;
+        public bool RightBlockBreak;
     }
 
     private struct NetworkInfo

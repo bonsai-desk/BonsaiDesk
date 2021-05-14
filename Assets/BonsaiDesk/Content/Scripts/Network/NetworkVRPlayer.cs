@@ -9,17 +9,31 @@ public class NetworkVRPlayer : NetworkBehaviour
     [SyncVar] public NetworkIdentity _leftHandId;
     [SyncVar] public NetworkIdentity _rightHandId;
 
-    [SyncVar(hook = nameof(SpotChange))] private int spotId;
+    [SyncVar(hook = nameof(SpotChange))] public int spotId;
 
     public override void OnStartClient()
     {
         if (!isLocalPlayer)
             return;
+            
+        SpotManager.Instance.LayoutChange -= HandleLayoutChange;
+        SpotManager.Instance.LayoutChange += HandleLayoutChange;
 
-        var spotInfo = GetSpot();
-        GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(spotInfo.tableEdge);
-        InputManager.Hands.Left.SetHandTexture(spotInfo.handTexture);
-        InputManager.Hands.Right.SetHandTexture(spotInfo.handTexture);
+        var tableEdge = SpotManager.Instance.GetSpotTransform(spotId - 1);
+        GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(tableEdge);
+        
+        var textures = SpotManager.Instance.GetColorInfo(spotId - 1);
+        InputManager.Hands.Left.SetHandTexture(textures.handTexture);
+        InputManager.Hands.Right.SetHandTexture(textures.handTexture);
+    }
+    
+    private void HandleLayoutChange(object sender, SpotManager.Layout newLayout)
+    {
+        if (!isLocalPlayer)
+            return;
+        
+        var tableEdge = SpotManager.Instance.GetSpotTransform(spotId - 1, newLayout);
+        GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(tableEdge);
     }
 
     [Server]
@@ -30,12 +44,6 @@ public class NetworkVRPlayer : NetworkBehaviour
         SetTextures(spotId);
     }
 
-    public SpotManager.SpotInfo GetSpot()
-    {
-        //spot - 1 for same reason in SetSpot
-        return SpotManager.Instance.spotInfo[spotId - 1];
-    }
-
     private void SpotChange(int oldValue, int newValue)
     {
         SetTextures(newValue);
@@ -44,10 +52,10 @@ public class NetworkVRPlayer : NetworkBehaviour
     private void SetTextures(int spot)
     {
         //spot - 1 for same reason in SetSpot
-        var spotInfo = SpotManager.Instance.spotInfo[spot - 1];
-        GetComponentInChildren<MeshRenderer>().material.mainTexture = spotInfo.headTexture;
-        _leftHandId.GetComponent<NetworkHand>().ChangeHandTexture(spotInfo.handTexture);
-        _rightHandId.GetComponent<NetworkHand>().ChangeHandTexture(spotInfo.handTexture);
+        var textures = SpotManager.Instance.GetColorInfo(spot - 1);
+        GetComponentInChildren<MeshRenderer>().material.mainTexture = textures.headTexture;
+        _leftHandId.GetComponent<NetworkHand>().ChangeHandTexture(textures.handTexture);
+        _rightHandId.GetComponent<NetworkHand>().ChangeHandTexture(textures.handTexture);
     }
 
     [Server]

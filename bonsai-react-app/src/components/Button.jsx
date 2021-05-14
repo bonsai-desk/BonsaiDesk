@@ -46,7 +46,7 @@ export function ToggleButton(props) {
 
 export function NormalButton(props) {
     let {onClick, children} = props;
-    return <Button {...props} handleClick={delay(onClick)}>{children}</Button>;
+    return <Button {...props} handleClick={onClick}>{children}</Button>;
 }
 
 export function InstantButton(props) {
@@ -79,13 +79,8 @@ function Button(props) {
     );
 }
 
-function delay(onClick) {
-    // you can get rid of this :)
-    onClick()
-}
-
 export function ForwardButton({onClick}) {
-    return <Button className={smallRoundButtonClass} handleClick={delay(onClick)}>
+    return <Button className={smallRoundButtonClass} handleClick={onClick}>
         <div className={'flex flex-wrap content-center justify-center'}>
             <img className={'h-8 object-contain'} src={ForwardImg} alt={'forward'}/>
         </div>
@@ -93,7 +88,7 @@ export function ForwardButton({onClick}) {
 }
 
 export function BackButton({onClick}) {
-    return <Button className={smallRoundButtonClass} handleClick={delay(onClick)}>
+    return <Button className={smallRoundButtonClass} handleClick={onClick}>
         <div className={'flex flex-wrap content-center justify-center'}>
             <img className={'h-8 object-contain'} src={BackImg} alt={'back'}/>
         </div>

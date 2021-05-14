@@ -6,6 +6,7 @@ import {showInfo} from '../esUtils';
 import {InstantButton} from '../components/Button';
 import {grayButtonClass} from '../cssClasses';
 import React from 'react';
+import {Layout, postSetLayout} from '../api';
 
 export const DebugPage = observer(() => {
     let {store} = useStore();
@@ -37,6 +38,14 @@ export const DebugPage = observer(() => {
     let toggleRoomFull = action(store => {
         store.NetworkInfo.Full = !store.NetworkInfo.Full;
     })
+    
+    let setLayoutAcross = () => {
+        postSetLayout(Layout.Across)
+    }
+    
+    let setLayoutSideBySide = () => {
+        postSetLayout(Layout.SideBySide)
+    }
 
     let addFakeVideoPlayerPaused = () => {
         store.MediaInfo = {
@@ -155,6 +164,12 @@ export const DebugPage = observer(() => {
                                     className={grayButtonClass}>playing</InstantButton>
                             <InstantButton onClick={addFakeVideoPlayerPaused}
                                     className={grayButtonClass}>paused</InstantButton>
+                        </div>
+                        
+                        <div>Layout</div>
+                        <div className={containerClass}>
+                            <InstantButton onClick={setLayoutAcross} className={grayButtonClass}>across</InstantButton>
+                            <InstantButton onClick={setLayoutSideBySide} className={grayButtonClass}>side</InstantButton>
                         </div>
 
                     </div>

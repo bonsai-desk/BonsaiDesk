@@ -1,14 +1,13 @@
 import {MenuContent} from '../components/MenuContent';
 import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
-import {InstantButton, ForwardButton, ToggleButton} from '../components/Button';
+import {ForwardButton, ToggleButton} from '../components/Button';
 import {grayButtonClass, greenButtonClass} from '../cssClasses';
 import {apache, lgpl, mpl} from '../static/licenses';
 import React from 'react';
 import {InfoItem} from '../components/InfoItem';
 import {observer} from 'mobx-react-lite';
 import {useStore} from '../DataProvider';
-import {postLightsChange, postToggleBlockBreak, postTogglePinchPull} from '../api';
-import LightImg from '../static/lightbulb.svg';
+import {postToggleBlockBreak, postTogglePinchPull} from '../api';
 
 const Settings = observer(() => {
 
@@ -18,14 +17,6 @@ const Settings = observer(() => {
 
     function goToInfo() {
         history.push(`${match.path}/about`);
-    }
-
-    function handleClickVibes() {
-        postLightsChange('vibes');
-    }
-
-    function handleClickBright() {
-        postLightsChange('bright');
     }
 
     function handleClickPinchPull() {
@@ -38,16 +29,6 @@ const Settings = observer(() => {
     }
 
     return <MenuContent name={'Settings'}>
-        <InfoItem title={'Lights'} slug={'Set the mood'}
-                  imgSrc={LightImg}>
-            <div className={'flex space-x-2'}>
-                <InstantButton onClick={handleClickVibes}
-                        className={grayButtonClass}>Vibes</InstantButton>
-                <InstantButton onClick={handleClickBright}
-                        className={grayButtonClass}>Bright</InstantButton>
-
-            </div>
-        </InfoItem>
         <div className={'text-xl'}>
             Experimental
         </div>
