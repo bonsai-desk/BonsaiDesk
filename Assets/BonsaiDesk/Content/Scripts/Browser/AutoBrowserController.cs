@@ -17,7 +17,7 @@ public class AutoBrowserController : NetworkBehaviour
     private const float VideoSyncTolerance = 2f;
     private const float NewVideoVolumeLevel = 0.25f;
     public TogglePause togglePause;
-    public TabletSpot tabletSpot;
+    public VideoCubeSpot videoCubeSpot;
     private readonly Dictionary<uint, double> _clientsJoinedNetworkTime = new Dictionary<uint, double>();
     private readonly Dictionary<uint, double> _clientsLastPing = new Dictionary<uint, double>();
     private readonly Dictionary<uint, PlayerState> _clientsPlayerStatus = new Dictionary<uint, PlayerState>();
@@ -104,15 +104,19 @@ public class AutoBrowserController : NetworkBehaviour
         TableBrowserMenu.Singleton.SeekPlayer += HandleSeekPlayer;
         TableBrowserMenu.Singleton.RestartVideo += HandleRestartVideo;
 
-        if (tabletSpot != null)
+        if (videoCubeSpot)
         {
-            tabletSpot.SetNewVideo -= HandleSetNewVideo;
-            tabletSpot.PlayVideo -= HandlePlayVideo;
-            tabletSpot.StopVideo -= HandleStopVideo;
+            videoCubeSpot.SetNewVideo -= HandleSetNewVideo;
+            videoCubeSpot.PlayVideo -= HandlePlayVideo;
+            videoCubeSpot.StopVideo -= HandleStopVideo;
 
-            tabletSpot.SetNewVideo += HandleSetNewVideo;
-            tabletSpot.PlayVideo += HandlePlayVideo;
-            tabletSpot.StopVideo += HandleStopVideo;
+            videoCubeSpot.SetNewVideo += HandleSetNewVideo;
+            videoCubeSpot.PlayVideo += HandlePlayVideo;
+            videoCubeSpot.StopVideo += HandleStopVideo;
+        }
+        else
+        {
+            BonsaiLogError("No video cube spot.");
         }
     }
 
@@ -438,7 +442,7 @@ public class AutoBrowserController : NetworkBehaviour
         if (_serverContentInfo.Active)
         {
             RpcAddMessageToStack(text);
-            tabletSpot.ServerEjectCurrentTablet();
+            videoCubeSpot.ServerEjectCurrentVideo();
         }
     }
     
@@ -729,7 +733,7 @@ public class AutoBrowserController : NetworkBehaviour
                     if (liveNow)
                     {
                         RpcAddMessageToStack("Livestreams not supported yet");
-                        tabletSpot.ServerEjectCurrentTablet();
+                        videoCubeSpot.ServerEjectCurrentVideo();
                     }
                     
                     newAspect = new Vector2(width, height);

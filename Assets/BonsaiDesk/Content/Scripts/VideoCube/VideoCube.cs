@@ -15,8 +15,7 @@ public class VideoCube : NetworkBehaviour
     private List<Vector2> _uv = new List<Vector2>();
     private List<Vector3> _lerpDir = new List<Vector3>();
     private List<int> _triangles = new List<int>();
-
-    public string videoId;
+    
     public SmoothSyncVars smoothSyncVars;
     public Transform quad;
     public Transform triangle;
@@ -29,6 +28,14 @@ public class VideoCube : NetworkBehaviour
     private float _lerp;
     private const float AnimationTime = 0.25f;
     private const float ActivationRadius = 0.1f;
+
+    private void Awake()
+    {
+        _targetScale = quad.localScale;
+        quad.localScale = Vector3.zero;
+        triangle.localScale = Vector3.zero;
+        playIcon.localScale = Vector3.zero;
+    }
 
     void Start()
     {
@@ -53,13 +60,6 @@ public class VideoCube : NetworkBehaviour
         }
 
         GetComponent<MeshFilter>().sharedMesh = VideoCubeMesh;
-
-        if (!string.IsNullOrEmpty(videoId))
-        {
-            StartCoroutine(LoadThumbnail(videoId));
-        }
-
-        _targetScale = quad.localScale;
     }
 
     private void Update()
@@ -178,7 +178,7 @@ public class VideoCube : NetworkBehaviour
         _lerpDir[_lerpDir.Count - numVerticesAdded + 3 + 8] = up;
     }
 
-    private IEnumerator LoadThumbnail(string newVideoId, bool maxRes = true)
+    public IEnumerator LoadThumbnail(string newVideoId, bool maxRes = true)
     {
         if (string.IsNullOrEmpty(newVideoId))
         {
@@ -246,21 +246,24 @@ public class VideoCube : NetworkBehaviour
                 }
 
                 _material.SetFloat("_AspectRatio", aspectRatio);
-                // _material.SetColor("_AccentColor", Color.red);
 
                 var hologramQuad = quad.GetComponent<MeshRenderer>();
                 _hologramMaterial = new Material(hologramQuad.sharedMaterial);
                 hologramQuad.sharedMaterial = _hologramMaterial;
                 _hologramMaterial.mainTexture = newTexture;
 
-                var bounds = hologramQuad.transform.localScale.xy();
+                var bounds = _targetScale.xy();
                 var localScale = new Vector3(bounds.y * aspectRatio, bounds.y, 1);
                 if (localScale.x > bounds.x)
                 {
                     localScale = new Vector3(bounds.x, bounds.x * (1f / aspectRatio), 1);
                 }
 
-                hologramQuad.transform.localScale = localScale;
+                _targetScale = localScale;
+                
+                quad.gameObject.SetActive(true);
+                triangle.gameObject.SetActive(true);
+                playIcon.gameObject.SetActive(true);
 
                 Destroy(texture);
             }
