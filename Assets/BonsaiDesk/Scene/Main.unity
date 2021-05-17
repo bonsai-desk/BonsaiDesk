@@ -7417,7 +7417,7 @@ MonoBehaviour:
       soundClips:
       - {fileID: 8300000, guid: aeaf779424f64bb41b36411862af3f23, type: 3}
       visibilityToggle: 0
-    - name: returnToVoid
+    - name: hoverButtonProgressTick
       playback: 0
       volume: 1
       pitchVariance: {x: 1, y: 1}
@@ -7485,7 +7485,7 @@ MonoBehaviour:
         invSquareFalloff: {x: 1, y: 25}
       soundClips:
       - {fileID: 8300000, guid: 80f6f07b995ba2b4d9b7e56335789be6, type: 3}
-      visibilityToggle: 0
+      visibilityToggle: 1
     - name: MessageGood
       playback: 0
       volume: 1
@@ -8763,7 +8763,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
   tickSound:
-    soundFXName: returnToVoid
+    soundFXName: hoverButtonProgressTick
 --- !u!1 &632686398
 GameObject:
   m_ObjectHideFlags: 0
