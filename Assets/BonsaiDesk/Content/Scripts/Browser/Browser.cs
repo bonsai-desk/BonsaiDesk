@@ -161,7 +161,7 @@ public class Browser : MonoBehaviour
                         }
                         else
                         {
-                            BonsaiLogWarning("Browser trying to post listeners twice, ignoring");
+                            BonsaiLog("Browser trying to post listeners twice, ignoring");
                         }
 
 
