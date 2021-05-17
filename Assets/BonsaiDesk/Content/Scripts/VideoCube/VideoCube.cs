@@ -20,6 +20,7 @@ public class VideoCube : NetworkBehaviour
     public SmoothSyncVars smoothSyncVars;
     public Transform quad;
     public Transform triangle;
+    public Transform playIcon;
     private Vector3 _targetScale;
 
     private Material _material;
@@ -83,11 +84,15 @@ public class VideoCube : NetworkBehaviour
         toHead.y = 0;
         var atHead = Quaternion.LookRotation(-toHead);
         quad.rotation = atHead;
+        playIcon.rotation = atHead;
 
         var startPosition = transform.position;
         var targetPosition = transform.position + new Vector3(0, 2.5f * 0.05f, 0);
         quad.position = Vector3.Lerp(startPosition, targetPosition, _lerp);
         quad.localScale = Vector3.Lerp(Vector3.zero, _targetScale, _lerp);
+
+        playIcon.position = Vector3.Lerp(startPosition, targetPosition + atHead * Vector3.forward * -0.01f, _lerp);
+        playIcon.localScale = Vector3.Lerp(Vector3.zero, new Vector3(1.25f, 1.25f, 1f), _lerp);
 
         CalculateTriangle(atHead);
     }
