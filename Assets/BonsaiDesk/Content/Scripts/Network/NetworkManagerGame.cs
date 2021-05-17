@@ -85,6 +85,10 @@ public class NetworkManagerGame : NetworkManager
     {
         base.Start();
 
+    #if UNITY_EDITOR
+        EditorApplication.pauseStateChanged += HandleEditorPause;
+    #endif
+
         // todo make these into EventHandler
         TableBrowserMenu.JoinRoom += HandleJoinRoom;
         LeaveRoom += HandleLeaveRoom;
