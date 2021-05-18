@@ -23,13 +23,16 @@ public class HoverButton : MonoBehaviour
     private void Update()
     {
         var fingerTouchingButton = false;
-        for (int i = 0; i < InputManager.Hands.physicsFingerTipPositions.Length; i++)
+        if (!Mathf.Approximately(transform.lossyScale.sqrMagnitude, 0))
         {
-            if (Vector3.SqrMagnitude(InputManager.Hands.physicsFingerTipPositions[i] - transform.position) <
-                activationRadius * activationRadius)
+            for (int i = 0; i < InputManager.Hands.physicsFingerTipPositions.Length; i++)
             {
-                fingerTouchingButton = true;
-                break;
+                if (Vector3.SqrMagnitude(InputManager.Hands.physicsFingerTipPositions[i] - transform.position) <
+                    activationRadius * activationRadius)
+                {
+                    fingerTouchingButton = true;
+                    break;
+                }
             }
         }
 

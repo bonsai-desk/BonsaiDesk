@@ -27,9 +27,14 @@ public class VideoCube : NetworkBehaviour
 
     private float _lerp;
     private const float AnimationTime = 0.25f;
-    private const float ActivationRadius = 0.1f;
+    private const float ActivationRadius = 0.0875f;
+    private const float DeactivationRadius = 0.125f;
+    private bool _lastInRange = false;
 
     private Rigidbody _body;
+
+    private static VideoCube _localActiveCube = null;
+    private static float _localActiveCubeDistance = float.PositiveInfinity;
 
     private void Awake()
     {
@@ -68,8 +73,7 @@ public class VideoCube : NetworkBehaviour
 
     private void Update()
     {
-        var inRange = Vector3.Distance(InputManager.Hands.Left.PlayerHand.palm.position, transform.position) < ActivationRadius ||
-                      Vector3.Distance(InputManager.Hands.Right.PlayerHand.palm.position, transform.position) < ActivationRadius;
+        var inRange = InRange();
         var shouldShowThumbnail = inRange && !_body.isKinematic;
         var clientAuthority = smoothSyncVars.AutoAuthority.isClient && smoothSyncVars.AutoAuthority.ClientHasAuthority();
         var serverAuthority = smoothSyncVars.AutoAuthority.isServer && smoothSyncVars.AutoAuthority.ServerHasAuthority();
@@ -106,6 +110,81 @@ public class VideoCube : NetworkBehaviour
         playIcon.localScale = Vector3.Lerp(Vector3.zero, new Vector3(1.25f, 1.25f, 1f), _lerp);
 
         CalculateTriangle(atHead);
+
+        _lastInRange = inRange;
+    }
+
+    private bool InRange()
+    {
+        var inRange = false;
+        if (_lastInRange) //less strict requirements for in range if it was in range last frame
+        {
+            if (Vector2.SqrMagnitude(InputManager.Hands.Left.PlayerHand.palm.position.xz() - transform.position.xz()) < DeactivationRadius * DeactivationRadius ||
+                Vector2.SqrMagnitude(InputManager.Hands.Right.PlayerHand.palm.position.xz() - transform.position.xz()) < DeactivationRadius * DeactivationRadius)
+            {
+                inRange = true;
+            }
+            else
+            {
+                for (int i = 0; i < InputManager.Hands.physicsFingerTipPositions.Length; i++)
+                {
+                    var horizontalDistance = Vector2.SqrMagnitude(InputManager.Hands.physicsFingerTipPositions[i].xz() - transform.position.xz());
+                    if (horizontalDistance < DeactivationRadius * DeactivationRadius && InputManager.Hands.physicsFingerTipPositions[i].y > transform.position.y &&
+                        InputManager.Hands.physicsFingerTipPositions[i].y < transform.position.y + 0.2f)
+                    {
+                        inRange = true;
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (Vector3.SqrMagnitude(InputManager.Hands.Left.PlayerHand.palm.position - transform.position) < ActivationRadius * ActivationRadius ||
+                Vector3.SqrMagnitude(InputManager.Hands.Right.PlayerHand.palm.position - transform.position) < ActivationRadius * ActivationRadius)
+            {
+                inRange = true;
+            }
+        }
+
+        float closest = float.PositiveInfinity;
+        for (int i = 0; i < InputManager.Hands.physicsFingerTipPositions.Length; i++)
+        {
+            var distance = Vector3.SqrMagnitude(InputManager.Hands.physicsFingerTipPositions[i] - transform.position);
+            if (distance < closest)
+            {
+                closest = distance;
+            }
+            if (distance < ActivationRadius * ActivationRadius &&
+                InputManager.Hands.physicsFingerTipPositions[i].y > transform.position.y)
+            {
+                inRange = true;
+            }
+        }
+
+        if (_localActiveCube == this)
+        {
+            _localActiveCubeDistance = closest;
+        }
+
+        if (!inRange && _localActiveCube == this)
+        {
+            _localActiveCubeDistance = float.PositiveInfinity;
+            _localActiveCube = null;
+        }
+
+        if (inRange && (closest < _localActiveCubeDistance || !_localActiveCube))
+        {
+            _localActiveCubeDistance = closest;
+            _localActiveCube = this;
+        }
+
+        if (_localActiveCube != this)
+        {
+            inRange = false;
+        }
+
+        return inRange;
     }
 
     private void CalculateTriangle(Quaternion atHead)
