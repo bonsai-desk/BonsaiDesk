@@ -27,6 +27,8 @@ public class InputManager : MonoBehaviour
     [Header("")]
     public Transform cameraRig;
 
+    public Transform head;
+
     private static readonly Quaternion HandRotationOffset = Quaternion.AngleAxis(180f, Vector3.up);
 
     private static readonly Vector3 RightControllerOffset = new Vector3(0.02288249f, -0.03249159f, -0.11621020f);

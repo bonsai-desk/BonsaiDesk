@@ -25,7 +25,7 @@ public class AutoAuthority : NetworkBehaviour
     private int _lastSetNewOwnerFrame;
 
     private bool _visualizePinchPull = false;
-    private Material _cachedMaterial;
+    public Material cachedMaterial;
     private int _colorPropertyId;
     private int _colorId = 0;
 
@@ -61,7 +61,21 @@ public class AutoAuthority : NetworkBehaviour
         UpdateColor();
         _visualizePinchPull = false;
 
-        if (destroyIfBelow && isServer && transform.position.y < -1f)
+        // if (destroyIfBelow && HasAuthority() && transform.position.y < -1f)
+        // {
+        //     var blockObject = GetComponent<BlockObject>();
+        //     if (blockObject && blockObject.Blocks.Count > 4)
+        //     {
+        //         _body.velocity = Vector3.zero;
+        //         _body.angularVelocity = Vector3.zero;
+        //         transform.position = new Vector3(0, 2, 0);
+        //         transform.rotation = Quaternion.identity;
+        //         GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
+        //         return;
+        //     }
+        // }
+
+        if (destroyIfBelow && isServer && transform.position.y < -2f)
         {
             var blockObject = GetComponent<BlockObject>();
             if (blockObject && blockObject.Blocks.Count > 4)
@@ -75,7 +89,6 @@ public class AutoAuthority : NetworkBehaviour
             {
                 ServerStripOwnerAndDestroy();
             }
-
             return;
         }
 
@@ -126,7 +139,7 @@ public class AutoAuthority : NetworkBehaviour
 
     public void SetCachedMaterial(Material mat)
     {
-        _cachedMaterial = mat;
+        cachedMaterial = mat;
     }
 
     private void UpdateColor()
@@ -143,13 +156,13 @@ public class AutoAuthority : NetworkBehaviour
         else if (shouldVisualizeAuthority)
             newColorId = 2;
 
-        if (_cachedMaterial == null)
-            _cachedMaterial = meshRenderer.material;
+        if (cachedMaterial == null)
+            cachedMaterial = meshRenderer.material;
 
         if (newColorId != _colorId)
         {
             _colorId = newColorId;
-            _cachedMaterial.SetColor(_colorPropertyId, _colors[_colorId]);
+            cachedMaterial.SetColor(_colorPropertyId, _colors[_colorId]);
         }
     }
 
@@ -337,5 +350,10 @@ public class AutoAuthority : NetworkBehaviour
     private void OnCollisionStay(Collision collision)
     {
         HandleRecursiveAuthority(collision);
+    }
+
+    private void OnDestroy()
+    {
+        Destroy(cachedMaterial);
     }
 }
