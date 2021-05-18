@@ -15,12 +15,11 @@ public class VideoCube : NetworkBehaviour
     private List<Vector2> _uv = new List<Vector2>();
     private List<Vector3> _lerpDir = new List<Vector3>();
     private List<int> _triangles = new List<int>();
-
-    public string videoId;
+    
     public SmoothSyncVars smoothSyncVars;
     public Transform quad;
     public Transform triangle;
-    public Transform moveUp;
+    public Transform playIcon;
     private Vector3 _targetScale;
 
     private Material _material;
@@ -28,10 +27,27 @@ public class VideoCube : NetworkBehaviour
 
     private float _lerp;
     private const float AnimationTime = 0.25f;
-    private const float ActivationRadius = 0.1f;
+    private const float ActivationRadius = 0.0875f;
+    private const float DeactivationRadius = 0.125f;
+    private bool _lastInRange = false;
+
+    private Rigidbody _body;
+
+    private static VideoCube _localActiveCube = null;
+    private static float _localActiveCubeDistance = float.PositiveInfinity;
+
+    private void Awake()
+    {
+        _targetScale = quad.localScale;
+        quad.localScale = Vector3.zero;
+        triangle.localScale = Vector3.zero;
+        playIcon.localScale = Vector3.zero;
+    }
 
     void Start()
     {
+        _body = GetComponent<Rigidbody>();
+        
         if (!VideoCubeMesh)
         {
             var mesh = new Mesh();
@@ -53,29 +69,28 @@ public class VideoCube : NetworkBehaviour
         }
 
         GetComponent<MeshFilter>().sharedMesh = VideoCubeMesh;
-
-        if (!string.IsNullOrEmpty(videoId))
-        {
-            StartCoroutine(LoadThumbnail(videoId));
-        }
-
-        _targetScale = quad.localScale;
     }
 
     private void Update()
     {
-        var inRange = Vector3.Distance(InputManager.Hands.Left.PlayerHand.palm.position, transform.position) < ActivationRadius ||
-                      Vector3.Distance(InputManager.Hands.Right.PlayerHand.palm.position, transform.position) < ActivationRadius;
-        var authority = smoothSyncVars.HasAuthority();
+        var inRange = InRange();
+        var shouldShowThumbnail = inRange && !_body.isKinematic;
+        var clientAuthority = smoothSyncVars.AutoAuthority.isClient && smoothSyncVars.AutoAuthority.ClientHasAuthority();
+        var serverAuthority = smoothSyncVars.AutoAuthority.isServer && smoothSyncVars.AutoAuthority.ServerHasAuthority();
 
-        if (inRange && !authority)
+        if (shouldShowThumbnail && smoothSyncVars.AutoAuthority.isClient && !clientAuthority)
         {
             smoothSyncVars.RequestAuthority();
         }
 
-        if (authority)
+        if (clientAuthority)
         {
-            smoothSyncVars.Set("showThumbnail", inRange);
+            smoothSyncVars.Set("showThumbnail", shouldShowThumbnail);
+        }
+
+        if (serverAuthority)
+        {
+            smoothSyncVars.Set("showThumbnail", false);
         }
 
         _lerp = CubicBezier.EaseOut.MoveTowards01(_lerp, AnimationTime, smoothSyncVars.Get("showThumbnail"));
@@ -84,17 +99,92 @@ public class VideoCube : NetworkBehaviour
         toHead.y = 0;
         var atHead = Quaternion.LookRotation(-toHead);
         quad.rotation = atHead;
+        playIcon.rotation = atHead;
 
         var startPosition = transform.position;
         var targetPosition = transform.position + new Vector3(0, 2.5f * 0.05f, 0);
         quad.position = Vector3.Lerp(startPosition, targetPosition, _lerp);
         quad.localScale = Vector3.Lerp(Vector3.zero, _targetScale, _lerp);
 
-        moveUp.rotation = atHead;
-        moveUp.position = quad.position + new Vector3(0, quad.localScale.y / 2f * 0.05f, 0);
-        moveUp.localScale = Vector3.Lerp(Vector3.zero, Vector3.one, _lerp);
+        playIcon.position = Vector3.Lerp(startPosition, targetPosition + atHead * Vector3.forward * -0.01f, _lerp);
+        playIcon.localScale = Vector3.Lerp(Vector3.zero, new Vector3(1.25f, 1.25f, 1f), _lerp);
 
         CalculateTriangle(atHead);
+
+        _lastInRange = inRange;
+    }
+
+    private bool InRange()
+    {
+        var inRange = false;
+        if (_lastInRange) //less strict requirements for in range if it was in range last frame
+        {
+            if (Vector2.SqrMagnitude(InputManager.Hands.Left.PlayerHand.palm.position.xz() - transform.position.xz()) < DeactivationRadius * DeactivationRadius ||
+                Vector2.SqrMagnitude(InputManager.Hands.Right.PlayerHand.palm.position.xz() - transform.position.xz()) < DeactivationRadius * DeactivationRadius)
+            {
+                inRange = true;
+            }
+            else
+            {
+                for (int i = 0; i < InputManager.Hands.physicsFingerTipPositions.Length; i++)
+                {
+                    var horizontalDistance = Vector2.SqrMagnitude(InputManager.Hands.physicsFingerTipPositions[i].xz() - transform.position.xz());
+                    if (horizontalDistance < DeactivationRadius * DeactivationRadius && InputManager.Hands.physicsFingerTipPositions[i].y > transform.position.y &&
+                        InputManager.Hands.physicsFingerTipPositions[i].y < transform.position.y + 0.2f)
+                    {
+                        inRange = true;
+                        break;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (Vector3.SqrMagnitude(InputManager.Hands.Left.PlayerHand.palm.position - transform.position) < ActivationRadius * ActivationRadius ||
+                Vector3.SqrMagnitude(InputManager.Hands.Right.PlayerHand.palm.position - transform.position) < ActivationRadius * ActivationRadius)
+            {
+                inRange = true;
+            }
+        }
+
+        float closest = float.PositiveInfinity;
+        for (int i = 0; i < InputManager.Hands.physicsFingerTipPositions.Length; i++)
+        {
+            var distance = Vector3.SqrMagnitude(InputManager.Hands.physicsFingerTipPositions[i] - transform.position);
+            if (distance < closest)
+            {
+                closest = distance;
+            }
+            if (distance < ActivationRadius * ActivationRadius &&
+                InputManager.Hands.physicsFingerTipPositions[i].y > transform.position.y)
+            {
+                inRange = true;
+            }
+        }
+
+        if (_localActiveCube == this)
+        {
+            _localActiveCubeDistance = closest;
+        }
+
+        if (!inRange && _localActiveCube == this)
+        {
+            _localActiveCubeDistance = float.PositiveInfinity;
+            _localActiveCube = null;
+        }
+
+        if (inRange && (closest < _localActiveCubeDistance || !_localActiveCube))
+        {
+            _localActiveCubeDistance = closest;
+            _localActiveCube = this;
+        }
+
+        if (_localActiveCube != this)
+        {
+            inRange = false;
+        }
+
+        return inRange;
     }
 
     private void CalculateTriangle(Quaternion atHead)
@@ -178,7 +268,7 @@ public class VideoCube : NetworkBehaviour
         _lerpDir[_lerpDir.Count - numVerticesAdded + 3 + 8] = up;
     }
 
-    private IEnumerator LoadThumbnail(string newVideoId, bool maxRes = true)
+    public IEnumerator LoadThumbnail(string newVideoId, bool maxRes = true)
     {
         if (string.IsNullOrEmpty(newVideoId))
         {
@@ -247,21 +337,23 @@ public class VideoCube : NetworkBehaviour
 
                 _material.SetFloat("_AspectRatio", aspectRatio);
 
-                _material.SetColor("_AccentColor", Color.red);
-
                 var hologramQuad = quad.GetComponent<MeshRenderer>();
                 _hologramMaterial = new Material(hologramQuad.sharedMaterial);
                 hologramQuad.sharedMaterial = _hologramMaterial;
                 _hologramMaterial.mainTexture = newTexture;
 
-                var bounds = hologramQuad.transform.localScale.xy();
+                var bounds = _targetScale.xy();
                 var localScale = new Vector3(bounds.y * aspectRatio, bounds.y, 1);
                 if (localScale.x > bounds.x)
                 {
                     localScale = new Vector3(bounds.x, bounds.x * (1f / aspectRatio), 1);
                 }
 
-                hologramQuad.transform.localScale = localScale;
+                _targetScale = localScale;
+                
+                quad.gameObject.SetActive(true);
+                triangle.gameObject.SetActive(true);
+                playIcon.gameObject.SetActive(true);
 
                 Destroy(texture);
             }

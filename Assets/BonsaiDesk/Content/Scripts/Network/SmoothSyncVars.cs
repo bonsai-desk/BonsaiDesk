@@ -22,6 +22,8 @@ public class SmoothSyncVars : NetworkBehaviour
 
     private AutoAuthority _autoAuthority;
 
+    public AutoAuthority AutoAuthority => _autoAuthority;
+
     private void Start()
     {
         _autoAuthority = GetComponent<AutoAuthority>();

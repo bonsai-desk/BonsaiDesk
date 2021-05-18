@@ -63,7 +63,7 @@
                 fixed4 col = tex2D(_MainTex, i.uv);
                 col = lerp(col, _AccentColor, step(i.uv.x, 0)) * _Color;
                 col *= 0.25 + i.light;
-                return col;
+                return fixed4(col.rgb, 1);
             }
             ENDCG
         }

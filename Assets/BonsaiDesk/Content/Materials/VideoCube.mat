@@ -26,5 +26,5 @@ Material:
     m_Floats:
     - _AspectRatio: 1.7778
     m_Colors:
-    - _AccentColor: {r: 1, g: 1, b: 1, a: 1}
+    - _AccentColor: {r: 0.1882353, g: 0.1882353, b: 0.1882353, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
