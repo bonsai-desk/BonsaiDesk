@@ -29,6 +29,8 @@ public class VideoCube : NetworkBehaviour
     private const float AnimationTime = 0.25f;
     private const float ActivationRadius = 0.1f;
 
+    private Rigidbody _body;
+
     private void Awake()
     {
         _targetScale = quad.localScale;
@@ -39,6 +41,8 @@ public class VideoCube : NetworkBehaviour
 
     void Start()
     {
+        _body = GetComponent<Rigidbody>();
+        
         if (!VideoCubeMesh)
         {
             var mesh = new Mesh();
@@ -66,16 +70,23 @@ public class VideoCube : NetworkBehaviour
     {
         var inRange = Vector3.Distance(InputManager.Hands.Left.PlayerHand.palm.position, transform.position) < ActivationRadius ||
                       Vector3.Distance(InputManager.Hands.Right.PlayerHand.palm.position, transform.position) < ActivationRadius;
-        var authority = smoothSyncVars.HasAuthority();
+        var shouldShowThumbnail = inRange && !_body.isKinematic;
+        var clientAuthority = smoothSyncVars.AutoAuthority.isClient && smoothSyncVars.AutoAuthority.ClientHasAuthority();
+        var serverAuthority = smoothSyncVars.AutoAuthority.isServer && smoothSyncVars.AutoAuthority.ServerHasAuthority();
 
-        if (inRange && !authority)
+        if (shouldShowThumbnail && smoothSyncVars.AutoAuthority.isClient && !clientAuthority)
         {
             smoothSyncVars.RequestAuthority();
         }
 
-        if (authority)
+        if (clientAuthority)
         {
-            smoothSyncVars.Set("showThumbnail", inRange);
+            smoothSyncVars.Set("showThumbnail", shouldShowThumbnail);
+        }
+
+        if (serverAuthority)
+        {
+            smoothSyncVars.Set("showThumbnail", false);
         }
 
         _lerp = CubicBezier.EaseOut.MoveTowards01(_lerp, AnimationTime, smoothSyncVars.Get("showThumbnail"));
