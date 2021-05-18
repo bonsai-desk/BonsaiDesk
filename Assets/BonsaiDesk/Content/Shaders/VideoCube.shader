@@ -62,7 +62,8 @@
                 // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv);
                 col = lerp(col, _AccentColor, step(i.uv.x, 0)) * _Color;
-                col *= 0.25 + i.light;
+                bool isThumbnail = i.uv.x + i.uv.y > 0;
+                col *= lerp(0.25 + i.light, 1, isThumbnail); //full light if thumbnail
                 return fixed4(col.rgb, 1);
             }
             ENDCG

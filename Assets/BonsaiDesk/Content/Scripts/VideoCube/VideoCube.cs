@@ -15,7 +15,7 @@ public class VideoCube : NetworkBehaviour
     private List<Vector2> _uv = new List<Vector2>();
     private List<Vector3> _lerpDir = new List<Vector3>();
     private List<int> _triangles = new List<int>();
-    
+
     public SmoothSyncVars smoothSyncVars;
     public Transform quad;
     public Transform triangle;
@@ -27,9 +27,7 @@ public class VideoCube : NetworkBehaviour
 
     private float _lerp;
     private const float AnimationTime = 0.25f;
-    private const float ActivationRadius = 0.0875f;
-    private const float DeactivationRadius = 0.125f;
-    private bool _lastInRange = false;
+    private const float ActivationRadius = 0.125f;
 
     private Rigidbody _body;
 
@@ -47,7 +45,7 @@ public class VideoCube : NetworkBehaviour
     void Start()
     {
         _body = GetComponent<Rigidbody>();
-        
+
         if (!VideoCubeMesh)
         {
             var mesh = new Mesh();
@@ -110,55 +108,43 @@ public class VideoCube : NetworkBehaviour
         playIcon.localScale = Vector3.Lerp(Vector3.zero, new Vector3(1.25f, 1.25f, 1f), _lerp);
 
         CalculateTriangle(atHead);
-
-        _lastInRange = inRange;
     }
 
     private bool InRange()
     {
         var inRange = false;
-        if (_lastInRange) //less strict requirements for in range if it was in range last frame
+        float closest = float.PositiveInfinity;
+        var hd1 = Vector2.SqrMagnitude(InputManager.Hands.Left.PlayerHand.palm.position.xz() - transform.position.xz());
+        if (hd1 < ActivationRadius * ActivationRadius && InputManager.Hands.Left.PlayerHand.palm.position.y < transform.position.y + 0.2f)
         {
-            if (Vector2.SqrMagnitude(InputManager.Hands.Left.PlayerHand.palm.position.xz() - transform.position.xz()) < DeactivationRadius * DeactivationRadius ||
-                Vector2.SqrMagnitude(InputManager.Hands.Right.PlayerHand.palm.position.xz() - transform.position.xz()) < DeactivationRadius * DeactivationRadius)
-            {
-                inRange = true;
-            }
-            else
-            {
-                for (int i = 0; i < InputManager.Hands.physicsFingerTipPositions.Length; i++)
-                {
-                    var horizontalDistance = Vector2.SqrMagnitude(InputManager.Hands.physicsFingerTipPositions[i].xz() - transform.position.xz());
-                    if (horizontalDistance < DeactivationRadius * DeactivationRadius && InputManager.Hands.physicsFingerTipPositions[i].y > transform.position.y &&
-                        InputManager.Hands.physicsFingerTipPositions[i].y < transform.position.y + 0.2f)
-                    {
-                        inRange = true;
-                        break;
-                    }
-                }
-            }
+            inRange = true;
         }
-        else
+        if (hd1 < closest)
         {
-            if (Vector3.SqrMagnitude(InputManager.Hands.Left.PlayerHand.palm.position - transform.position) < ActivationRadius * ActivationRadius ||
-                Vector3.SqrMagnitude(InputManager.Hands.Right.PlayerHand.palm.position - transform.position) < ActivationRadius * ActivationRadius)
-            {
-                inRange = true;
-            }
+            closest = hd1;
+        }
+        var hd2 = Vector2.SqrMagnitude(InputManager.Hands.Right.PlayerHand.palm.position.xz() - transform.position.xz());
+        if (hd2 < ActivationRadius * ActivationRadius && InputManager.Hands.Right.PlayerHand.palm.position.y < transform.position.y + 0.2f)
+        {
+            inRange = true;
+        }
+        if (hd2 < closest)
+        {
+            closest = hd2;
         }
 
-        float closest = float.PositiveInfinity;
         for (int i = 0; i < InputManager.Hands.physicsFingerTipPositions.Length; i++)
         {
-            var distance = Vector3.SqrMagnitude(InputManager.Hands.physicsFingerTipPositions[i] - transform.position);
-            if (distance < closest)
-            {
-                closest = distance;
-            }
-            if (distance < ActivationRadius * ActivationRadius &&
-                InputManager.Hands.physicsFingerTipPositions[i].y > transform.position.y)
+            var horizontalDistance = Vector2.SqrMagnitude(InputManager.Hands.physicsFingerTipPositions[i].xz() - transform.position.xz());
+            if (horizontalDistance < ActivationRadius * ActivationRadius && InputManager.Hands.physicsFingerTipPositions[i].y > transform.position.y &&
+                InputManager.Hands.physicsFingerTipPositions[i].y < transform.position.y + 0.2f)
             {
                 inRange = true;
+            }
+            
+            if (horizontalDistance < closest)
+            {
+                closest = horizontalDistance;
             }
         }
 
@@ -240,7 +226,7 @@ public class VideoCube : NetworkBehaviour
                 _uv.Add(-Vector2.one);
             }
 
-            _lerpDir.Add(Vector2.zero);
+            _lerpDir.Add(Vector3.zero);
         }
     }
 
@@ -350,7 +336,7 @@ public class VideoCube : NetworkBehaviour
                 }
 
                 _targetScale = localScale;
-                
+
                 quad.gameObject.SetActive(true);
                 triangle.gameObject.SetActive(true);
                 playIcon.gameObject.SetActive(true);
