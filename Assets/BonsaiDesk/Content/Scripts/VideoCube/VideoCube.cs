@@ -114,27 +114,37 @@ public class VideoCube : NetworkBehaviour
     {
         var inRange = false;
         float closest = float.PositiveInfinity;
-        if (Vector3.SqrMagnitude(InputManager.Hands.Left.PlayerHand.palm.position - transform.position) < ActivationRadius * ActivationRadius ||
-            Vector3.SqrMagnitude(InputManager.Hands.Right.PlayerHand.palm.position - transform.position) < ActivationRadius * ActivationRadius)
+        var hd1 = Vector2.SqrMagnitude(InputManager.Hands.Left.PlayerHand.palm.position.xz() - transform.position.xz());
+        if (hd1 < ActivationRadius * ActivationRadius && InputManager.Hands.Left.PlayerHand.palm.position.y < transform.position.y + 0.2f)
         {
             inRange = true;
         }
-        else
+        if (hd1 < closest)
         {
-            for (int i = 0; i < InputManager.Hands.physicsFingerTipPositions.Length; i++)
-            {
-                var horizontalDistance = Vector2.SqrMagnitude(InputManager.Hands.physicsFingerTipPositions[i].xz() - transform.position.xz());
-                if (horizontalDistance < ActivationRadius * ActivationRadius && InputManager.Hands.physicsFingerTipPositions[i].y > transform.position.y &&
-                    InputManager.Hands.physicsFingerTipPositions[i].y < transform.position.y + 0.2f)
-                {
-                    inRange = true;
-                }
+            closest = hd1;
+        }
+        var hd2 = Vector2.SqrMagnitude(InputManager.Hands.Right.PlayerHand.palm.position.xz() - transform.position.xz());
+        if (hd2 < ActivationRadius * ActivationRadius && InputManager.Hands.Right.PlayerHand.palm.position.y < transform.position.y + 0.2f)
+        {
+            inRange = true;
+        }
+        if (hd2 < closest)
+        {
+            closest = hd2;
+        }
 
-                var distance = horizontalDistance + Mathf.Abs(InputManager.Hands.physicsFingerTipPositions[i].y - transform.position.y);
-                if (distance < closest)
-                {
-                    closest = distance;
-                }
+        for (int i = 0; i < InputManager.Hands.physicsFingerTipPositions.Length; i++)
+        {
+            var horizontalDistance = Vector2.SqrMagnitude(InputManager.Hands.physicsFingerTipPositions[i].xz() - transform.position.xz());
+            if (horizontalDistance < ActivationRadius * ActivationRadius && InputManager.Hands.physicsFingerTipPositions[i].y > transform.position.y &&
+                InputManager.Hands.physicsFingerTipPositions[i].y < transform.position.y + 0.2f)
+            {
+                inRange = true;
+            }
+            
+            if (horizontalDistance < closest)
+            {
+                closest = horizontalDistance;
             }
         }
 
