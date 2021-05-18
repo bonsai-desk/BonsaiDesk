@@ -24,7 +24,7 @@ public class YouTubeSpawner : NetworkBehaviour
         rot.z = 0;
         // todo this crashes when called without being a host/client
         var spawnedObject = Instantiate(VideoPrefab, position, rot);
+        spawnedObject.GetComponent<VideoCubeControl>().videoId = id;
         NetworkServer.Spawn(spawnedObject);
-        spawnedObject.GetComponent<TabletControl>().videoId = id;
     }
 }

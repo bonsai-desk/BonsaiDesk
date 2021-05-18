@@ -10077,7 +10077,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 841277314}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.020999972, y: 0.19800001, z: 0.23800002}
+  m_LocalPosition: {x: -0.021, y: 0.129, z: 0.215}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 877365330}
@@ -18401,8 +18401,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2062652334}
-  - component: {fileID: 2062652335}
   - component: {fileID: 2062652336}
+  - component: {fileID: 2062652335}
   m_Layer: 0
   m_Name: Spawner
   m_TagString: Untagged
@@ -18438,7 +18438,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  VideoPrefab: {fileID: 6876464847205822899, guid: 58577b8f94ebfd842a65f7340cee4843,
+  VideoPrefab: {fileID: 3343159806455607844, guid: ac8f9b523d182b64ebab55c4c9898c0a,
     type: 3}
 --- !u!114 &2062652336
 MonoBehaviour:
