@@ -76,7 +76,7 @@ public class VideoCube : NetworkBehaviour
         var clientAuthority = smoothSyncVars.AutoAuthority.isClient && smoothSyncVars.AutoAuthority.ClientHasAuthority();
         var serverAuthority = smoothSyncVars.AutoAuthority.isServer && smoothSyncVars.AutoAuthority.ServerHasAuthority();
 
-        if (shouldShowThumbnail && smoothSyncVars.AutoAuthority.isClient && !clientAuthority)
+        if (inRange && smoothSyncVars.AutoAuthority.isClient && !clientAuthority)
         {
             smoothSyncVars.RequestAuthority();
         }
