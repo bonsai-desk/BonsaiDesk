@@ -216,7 +216,7 @@ public class VideoCube : NetworkBehaviour
                 _uv.Add(-Vector2.one);
             }
 
-            _lerpDir.Add(Vector2.zero);
+            _lerpDir.Add(Vector3.zero);
         }
     }
 
