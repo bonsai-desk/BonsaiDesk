@@ -418,33 +418,41 @@ public class AutoBrowserController : NetworkBehaviour
                         _clientPlayerStatus = PlayerState.Ready;
                         break;
                     case "PAUSED":
-                        if (_clientPlayerStatus != PlayerState.Paused)
-                        {
-                            Mixpanel.Track("Video Pause or Stop");
-                        }
+                        // Debug.LogError("pause: " + _clientPlayerStatus);
+                        // if (_clientPlayerStatus != PlayerState.Paused)
+                        // {
+                        //     Mixpanel.Track("Video Pause or Stop");
+                        // }
                         _clientPlayerStatus = PlayerState.Paused;
                         break;
                     case "PLAYING":
-                        if (_clientPlayerStatus != PlayerState.Playing)
-                        {
-                            Mixpanel.StartTimedEvent("Video Pause or Stop");
-                        }
+                        // Debug.LogError("play: " + _clientPlayerStatus);
+                        // if (_clientPlayerStatus != PlayerState.Playing)
+                        // {
+                        //     Mixpanel.StartTimedEvent("Video Pause or Stop");
+                        // }
                         _clientPlayerStatus = PlayerState.Playing;
                         break;
                     case "BUFFERING":
                         _clientPlayerStatus = PlayerState.Buffering;
                         break;
                     case "ENDED":
-                        if (_clientPlayerStatus != PlayerState.Ended)
-                        {
-                            Mixpanel.Track("Video Pause or Stop");
-                        }
+                        // Debug.LogError("end: " + _clientPlayerStatus);
+                        // if (_clientPlayerStatus != PlayerState.Ended)
+                        // {
+                        //     Mixpanel.Track("Video Pause or Stop");
+                        // }
                         CmdHandleVideoEnded(_clientPlayerTimeStamp);
                         _clientPlayerStatus = PlayerState.Ended;
                         break;
+                    default:
+                        BonsaiLogError("Unknown stateChange case: " + json["message"]);
+                        break;
                 }
-
                 CmdUpdateClientPlayerStatus(NetworkClient.connection.identity.netId, _clientPlayerStatus);
+                break;
+            default:
+                BonsaiLogError("Unknown type case: " + json?["type"].Value);
                 break;
         }
     }

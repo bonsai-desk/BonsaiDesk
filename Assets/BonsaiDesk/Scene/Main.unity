@@ -8649,7 +8649,6 @@ GameObject:
   - component: {fileID: 630641729}
   - component: {fileID: 630641730}
   - component: {fileID: 630641731}
-  - component: {fileID: 630641732}
   - component: {fileID: 630641733}
   - component: {fileID: 630641734}
   - component: {fileID: 630641735}
@@ -8721,21 +8720,6 @@ MonoBehaviour:
   action:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &630641732
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 630641728}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f523ea0cbeb10e445b12274ad43507a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  angleToObject: {fileID: 514427703}
-  headAngleToObject: {fileID: 1129058234}
-  togglePause: {fileID: 96659938}
 --- !u!114 &630641733
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10900,7 +10884,6 @@ GameObject:
   - component: {fileID: 946290004}
   - component: {fileID: 946290005}
   - component: {fileID: 946290006}
-  - component: {fileID: 946290007}
   - component: {fileID: 946290008}
   - component: {fileID: 946290009}
   - component: {fileID: 946290010}
@@ -10992,21 +10975,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &946290007
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 946290003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f523ea0cbeb10e445b12274ad43507a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  angleToObject: {fileID: 2111808243}
-  headAngleToObject: {fileID: 1129058234}
-  togglePause: {fileID: 96659938}
 --- !u!114 &946290008
 MonoBehaviour:
   m_ObjectHideFlags: 0
