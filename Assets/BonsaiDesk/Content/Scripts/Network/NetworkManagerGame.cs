@@ -640,9 +640,8 @@ public class NetworkManagerGame : NetworkManager
         User = msg.Data;
         oculusTransport.LoggedIn(User);
         LoggedIn?.Invoke(User);
-
-        var oculusId = "test user";
-        // var oculusId = User.OculusID;
+        
+        var oculusId = User.OculusID;
         Mixpanel.Identify(oculusId);
         Mixpanel.People.Name = oculusId;
         Mixpanel.People.Email = oculusId + "@BonsaiDesk.com";
