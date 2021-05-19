@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using Mirror;
+using mixpanel;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Rendering;
@@ -41,6 +42,7 @@ public class VideoCubeControl : NetworkBehaviour
     public void StartVideo()
     {
         VideoCubeSpot.Instance.CmdSetNewVideo(netIdentity);
+        Mixpanel.Track("Start Video");
     }
 
     private void VideoIdHook(string oldValue, string newValue)

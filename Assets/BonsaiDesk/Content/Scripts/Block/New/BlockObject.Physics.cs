@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Mirror;
+using mixpanel;
 using UnityEngine;
 using BlockDictOp = Mirror.SyncDictionary<UnityEngine.Vector3Int, SyncBlock>.Operation;
 
@@ -114,6 +115,7 @@ public partial class BlockObject
 
                         var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
                         localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * BlockUtility.ByteToQuaternion(Blocks[coord].rotation);
+                        Mixpanel.Track("Add Block");
                         blockObject.CmdAddBlock(Blocks[coord].id, blockCoord, localRotation, netIdentity);
 
                         //client side prediction

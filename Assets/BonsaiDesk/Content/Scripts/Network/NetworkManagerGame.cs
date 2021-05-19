@@ -8,6 +8,7 @@ using Oculus.Platform.Models;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.XR.Management;
+using mixpanel;
 using static TableBrowserMenu;
 using Application = UnityEngine.Application;
 #if UNITY_EDITOR
@@ -148,10 +149,23 @@ public class NetworkManagerGame : NetworkManager
     public void OnApplicationPause(bool pause)
     {
         HandlePause(pause);
+        if (pause)
+        {
+            Mixpanel.Track("Session Stop or Pause");
+            Mixpanel.Flush();
+        }
+        else
+        {
+            Mixpanel.Track("Unpause");
+            Mixpanel.StartTimedEvent("Session Stop or Pause");
+        }
     }
 
     public override void OnApplicationQuit()
     {
+        Mixpanel.Track("Session Stop or Pause");
+        Mixpanel.Flush();
+        Mixpanel.Reset();
         base.OnApplicationQuit();
         StopXR();
     }
@@ -224,6 +238,8 @@ public class NetworkManagerGame : NetworkManager
         roomOpen = true;
         publicRoom = isPublicRoom;
         InfoChange?.Invoke(this, new EventArgs());
+        var roomType = publicRoom ? "Public" : "Private";
+        Mixpanel.Track($"Open {roomType} Room");
     }
 
     private void HandleKickConnectionId(int id)
@@ -624,6 +640,12 @@ public class NetworkManagerGame : NetworkManager
         User = msg.Data;
         oculusTransport.LoggedIn(User);
         LoggedIn?.Invoke(User);
+
+        var oculusId = "test user";
+        // var oculusId = User.OculusID;
+        Mixpanel.Identify(oculusId);
+        Mixpanel.People.Name = oculusId;
+        Mixpanel.People.Email = oculusId + "@BonsaiDesk.com";
     }
 
     public event LoggedInHandler LoggedIn;
