@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Mirror;
+using mixpanel;
 using OVRSimpleJSON;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -417,15 +418,27 @@ public class AutoBrowserController : NetworkBehaviour
                         _clientPlayerStatus = PlayerState.Ready;
                         break;
                     case "PAUSED":
+                        if (_clientPlayerStatus != PlayerState.Paused)
+                        {
+                            Mixpanel.Track("Video Pause or Stop");
+                        }
                         _clientPlayerStatus = PlayerState.Paused;
                         break;
                     case "PLAYING":
+                        if (_clientPlayerStatus != PlayerState.Playing)
+                        {
+                            Mixpanel.StartTimedEvent("Video Pause or Stop");
+                        }
                         _clientPlayerStatus = PlayerState.Playing;
                         break;
                     case "BUFFERING":
                         _clientPlayerStatus = PlayerState.Buffering;
                         break;
                     case "ENDED":
+                        if (_clientPlayerStatus != PlayerState.Ended)
+                        {
+                            Mixpanel.Track("Video Pause or Stop");
+                        }
                         CmdHandleVideoEnded(_clientPlayerTimeStamp);
                         _clientPlayerStatus = PlayerState.Ended;
                         break;
