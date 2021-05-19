@@ -238,6 +238,8 @@ public class NetworkManagerGame : NetworkManager
         roomOpen = true;
         publicRoom = isPublicRoom;
         InfoChange?.Invoke(this, new EventArgs());
+        var roomType = publicRoom ? "Public" : "Private";
+        Mixpanel.Track($"Open {roomType} Room");
     }
 
     private void HandleKickConnectionId(int id)
