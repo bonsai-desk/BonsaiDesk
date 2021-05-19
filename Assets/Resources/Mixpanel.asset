@@ -15,6 +15,6 @@ MonoBehaviour:
   ShowDebug: 0
   ManualInitialization: 0
   APIHostAddress: https://api.mixpanel.com/
-  RuntimeToken: 
-  DebugToken: 
+  RuntimeToken: 5150504fa5cd02b84b53953ebd0ac62c
+  DebugToken: a0bdec5813bd7c6d85c092638c418c0b
   FlushInterval: 60
