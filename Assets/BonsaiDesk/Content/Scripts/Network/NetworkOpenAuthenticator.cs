@@ -1,4 +1,5 @@
 ﻿using Mirror;
+using mixpanel;
 using UnityEngine;
 
 /*
@@ -65,6 +66,7 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator
         }
         else
         {
+            Mixpanel.Track("Authenticate Non-host Connection");
             SendSuccess(conn);
         }
     }
