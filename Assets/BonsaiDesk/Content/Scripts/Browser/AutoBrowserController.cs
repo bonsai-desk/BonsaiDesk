@@ -75,6 +75,7 @@ public class AutoBrowserController : NetworkBehaviour
 
     private void ResetClientPlayer()
     {
+        Mixpanel.Track("Video Pause or Stop");
         _autoBrowser.PostMessage(YouTubeMessage.NavHome);
         _clientPlayerStatus = PlayerState.Unstarted;
     }
@@ -415,33 +416,30 @@ public class AutoBrowserController : NetworkBehaviour
                 switch ((string) json["message"])
                 {
                     case "READY":
+                        if (_clientPlayerStatus != PlayerState.Ready)
+                        {
+                            Mixpanel.Track("Video Pause or Stop");
+                        }
                         _clientPlayerStatus = PlayerState.Ready;
                         break;
                     case "PAUSED":
-                        // Debug.LogError("pause: " + _clientPlayerStatus);
-                        // if (_clientPlayerStatus != PlayerState.Paused)
-                        // {
-                        //     Mixpanel.Track("Video Pause or Stop");
-                        // }
                         _clientPlayerStatus = PlayerState.Paused;
                         break;
                     case "PLAYING":
-                        // Debug.LogError("play: " + _clientPlayerStatus);
-                        // if (_clientPlayerStatus != PlayerState.Playing)
-                        // {
-                        //     Mixpanel.StartTimedEvent("Video Pause or Stop");
-                        // }
+                        if (_clientPlayerStatus != PlayerState.Playing)
+                        {
+                            Mixpanel.StartTimedEvent("Video Pause or Stop");
+                        }
                         _clientPlayerStatus = PlayerState.Playing;
                         break;
                     case "BUFFERING":
                         _clientPlayerStatus = PlayerState.Buffering;
                         break;
                     case "ENDED":
-                        // Debug.LogError("end: " + _clientPlayerStatus);
-                        // if (_clientPlayerStatus != PlayerState.Ended)
-                        // {
-                        //     Mixpanel.Track("Video Pause or Stop");
-                        // }
+                        if (_clientPlayerStatus != PlayerState.Ended)
+                        {
+                            Mixpanel.Track("Video Pause or Stop");
+                        }
                         CmdHandleVideoEnded(_clientPlayerTimeStamp);
                         _clientPlayerStatus = PlayerState.Ended;
                         break;
@@ -462,6 +460,7 @@ public class AutoBrowserController : NetworkBehaviour
     {
         if (_serverContentInfo.Active)
         {
+            Mixpanel.Track("Video Pause or Stop");
             RpcAddMessageToStack(text);
             videoCubeSpot.ServerEjectCurrentVideo();
         }
@@ -520,6 +519,7 @@ public class AutoBrowserController : NetworkBehaviour
     private void ReloadYouTube(string id, double timeStamp, Vector2 aspect)
     {
         TLog($"NavHome then load {id} at {timeStamp}");
+        Mixpanel.Track("Video Pause or Stop");
         var resolution = _autoBrowser.ChangeAspect(aspect);
         _autoBrowser.PostMessages(new[]
         {
@@ -721,6 +721,7 @@ public class AutoBrowserController : NetworkBehaviour
     private void RpcGoHome()
     {
         TLog("Navigating home");
+        Mixpanel.Track("Video Pause or Stop");
         _autoBrowser.PostMessage(YouTubeMessage.NavHome);
     }
 
@@ -953,4 +954,11 @@ public class AutoBrowserController : NetworkBehaviour
             VolumeLevel = 0f;
         }
     }
+
+    void OnApplicationQuit()
+    {
+        Mixpanel.Track("Video Pause or Stop");
+    }
+    
+
 }
