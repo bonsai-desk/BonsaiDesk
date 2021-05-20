@@ -7,6 +7,7 @@ using mixpanel;
 using OVRSimpleJSON;
 using UnityEngine;
 using UnityEngine.Networking;
+using VivoxUnity;
 using Vuplex.WebView;
 
 public class AutoBrowserController : NetworkBehaviour
@@ -16,7 +17,6 @@ public class AutoBrowserController : NetworkBehaviour
     private const float ClientPingInterval = 0.1f;
     private const float MaxReadyUpPeriod = 10f;
     private const float VideoSyncTolerance = 2f;
-    private const float NewVideoVolumeLevel = 0.25f;
     public TogglePause togglePause;
     public VideoCubeSpot videoCubeSpot;
     private readonly Dictionary<uint, double> _clientsJoinedNetworkTime = new Dictionary<uint, double>();
@@ -39,7 +39,8 @@ public class AutoBrowserController : NetworkBehaviour
     private ContentInfo _serverContentInfo;
     private bool _serverVideoEnded;
     private float _setVolumeLevelLast;
-    [SyncVar] private float _volumeLevel = 1.0f;
+    [SyncVar] private float _volumeLevel = 0.125f;
+    private const float VolumeMax = 0.25f;
 
     private void Start()
     {
@@ -385,6 +386,11 @@ public class AutoBrowserController : NetworkBehaviour
         }
     }
 
+    private void StopLoggingVideo()
+    {
+        Mixpanel.Track("Video Pause or Stop");
+    }
+
     private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs)
     {
         var json = JSONNode.Parse(eventArgs.Value) as JSONObject;
@@ -418,7 +424,7 @@ public class AutoBrowserController : NetworkBehaviour
                     case "READY":
                         if (_clientPlayerStatus != PlayerState.Ready)
                         {
-                            Mixpanel.Track("Video Pause or Stop");
+                            StopLoggingVideo();
                         }
                         _clientPlayerStatus = PlayerState.Ready;
                         break;
@@ -438,7 +444,7 @@ public class AutoBrowserController : NetworkBehaviour
                     case "ENDED":
                         if (_clientPlayerStatus != PlayerState.Ended)
                         {
-                            Mixpanel.Track("Video Pause or Stop");
+                            StopLoggingVideo();
                         }
                         CmdHandleVideoEnded(_clientPlayerTimeStamp);
                         _clientPlayerStatus = PlayerState.Ended;
@@ -449,9 +455,6 @@ public class AutoBrowserController : NetworkBehaviour
                 }
                 CmdUpdateClientPlayerStatus(NetworkClient.connection.identity.netId, _clientPlayerStatus);
                 break;
-            default:
-                BonsaiLogError("Unknown type case: " + json?["type"].Value);
-                break;
         }
     }
 
@@ -460,7 +463,7 @@ public class AutoBrowserController : NetworkBehaviour
     {
         if (_serverContentInfo.Active)
         {
-            Mixpanel.Track("Video Pause or Stop");
+            StopLoggingVideo();
             RpcAddMessageToStack(text);
             videoCubeSpot.ServerEjectCurrentVideo();
         }
@@ -519,7 +522,7 @@ public class AutoBrowserController : NetworkBehaviour
     private void ReloadYouTube(string id, double timeStamp, Vector2 aspect)
     {
         TLog($"NavHome then load {id} at {timeStamp}");
-        Mixpanel.Track("Video Pause or Stop");
+        StopLoggingVideo();
         var resolution = _autoBrowser.ChangeAspect(aspect);
         _autoBrowser.PostMessages(new[]
         {
@@ -591,7 +594,6 @@ public class AutoBrowserController : NetworkBehaviour
             _contentActive = true;
             _contentInfoAtTime = NetworkTime.time;
             _idealScrub = ScrubData.PausedAtScrub(timeStamp);
-            _volumeLevel = NewVideoVolumeLevel;
 
             BeginSync("new video");
             RpcReloadYouTube(id, timeStamp, aspect);
@@ -658,17 +660,11 @@ public class AutoBrowserController : NetworkBehaviour
         _serverVideoEnded = true;
         _idealScrub = ScrubData.PausedAtScrub(endingTimeStamp);
     }
-
-    [Command(ignoreAuthority = true)]
-    public void CmdChangeVolumeLevel(float delta)
-    {
-        _volumeLevel = Mathf.Clamp(_volumeLevel + delta, 0, 1);
-    }
     
     [Command(ignoreAuthority = true)]
     public void CmdSetVolumeLevel(float volumeLevel)
     {
-        _volumeLevel = Mathf.Clamp(volumeLevel, 0, 1);
+        _volumeLevel = Mathf.Clamp(VolumeMax * volumeLevel, 0, VolumeMax);
     }
 
     [Server]
@@ -721,7 +717,7 @@ public class AutoBrowserController : NetworkBehaviour
     private void RpcGoHome()
     {
         TLog("Navigating home");
-        Mixpanel.Track("Video Pause or Stop");
+        StopLoggingVideo();
         _autoBrowser.PostMessage(YouTubeMessage.NavHome);
     }
 
@@ -814,7 +810,8 @@ public class AutoBrowserController : NetworkBehaviour
                 Paused = !_idealScrub.Active,
                 Scrub = (float) _idealScrub.CurrentTimeStamp(NetworkTime.time),
                 Duration = _clientPlayerDuration,
-                VolumeLevel = _volumeLevel
+                VolumeLevel = _volumeLevel,
+                VolumeMax = VolumeMax
             };
         }
 
@@ -943,6 +940,7 @@ public class AutoBrowserController : NetworkBehaviour
         public bool Paused;
         public float Scrub;
         public float VolumeLevel;
+        public float VolumeMax;
 
         public MediaInfo()
         {
@@ -957,8 +955,16 @@ public class AutoBrowserController : NetworkBehaviour
 
     void OnApplicationQuit()
     {
-        Mixpanel.Track("Video Pause or Stop");
+        StopLoggingVideo();
     }
-    
 
+    void OnDestroy()
+    {
+        StopLoggingVideo();
+    }
+
+    private void OnDisable()
+    {
+        StopLoggingVideo();
+    }
 }

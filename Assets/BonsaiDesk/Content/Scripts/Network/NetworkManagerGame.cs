@@ -642,6 +642,7 @@ public class NetworkManagerGame : NetworkManager
         LoggedIn?.Invoke(User);
         
         var oculusId = User.OculusID;
+        Mixpanel.Reset();
         Mixpanel.Identify(oculusId);
         Mixpanel.People.Name = oculusId;
         Mixpanel.People.Email = oculusId + "@BonsaiDesk.com";

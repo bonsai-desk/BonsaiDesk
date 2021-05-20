@@ -46,6 +46,26 @@ public class VoiceManager : MonoBehaviour
 
         set => _server = value.ToString();
     }
+    
+    private void SetInitialVolume(IAudioDevices inputDevices, IAudioDevices outputDevices)
+    {
+        var arIn = inputDevices.BeginRefresh(new AsyncCallback((IAsyncResult result) =>
+        {
+            // Set the volume for the device
+            inputDevices.VolumeAdjustment = 5;
+        }));
+        // var arOut = outputDevices.BeginRefresh(new AsyncCallback((IAsyncResult result) =>
+        // {
+        //     // Set the volume for the device
+        //     outputDevices.VolumeAdjustment = 0;
+        // }));
+        
+    }
+
+    public int OutLevels()
+    {
+        return _client.AudioOutputDevices.VolumeAdjustment;
+    }
 
     private void Awake()
     {
@@ -238,7 +258,7 @@ public class VoiceManager : MonoBehaviour
 
         _joinChannelRoutine = null;
 
-        JoinChannel(lobbyName, ChannelType.Positional, properties: new Channel3DProperties(32, 2, 1.0f, AudioFadeModel.InverseByDistance));
+        JoinChannel(lobbyName, ChannelType.Positional, properties: new Channel3DProperties(32, 3, 1.0f, AudioFadeModel.InverseByDistance));
     }
 
     public event LoginStatusChangedHandler OnUserLoggedOutEvent;
@@ -373,6 +393,7 @@ public class VoiceManager : MonoBehaviour
                     {
                         _positionalChannelSession = channelSession;
                     }
+                    SetInitialVolume(_client.AudioInputDevices, _client.AudioOutputDevices);
                 }
                 catch (Exception e)
                 {
