@@ -124,7 +124,7 @@ export const PlayerPage = observer(() => {
                         <KeySVG handleClick={handleClickMute}
                                 imgSrc={volumeApproxZero ? VolumeOff : VolumeHigh}
                                 className={mediaClass}/>
-                        <Bar level={media.VolumeLevel} handleClickLevel={handleClickVolume}/>
+                        <Bar level={media.VolumeLevel/media.VolumeMax} handleClickLevel={handleClickVolume}/>
                     </div> : ''
             }
 

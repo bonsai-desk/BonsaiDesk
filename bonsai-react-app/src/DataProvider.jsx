@@ -90,6 +90,7 @@ class Store {
         Scrub: 0,
         Duration: 1,
         VolumeLevel: 0,
+        VolumeMax: 1
     };
     ExperimentalInfo = {
         BlockBreakEnabled: false,
