@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Mirror;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -62,6 +63,7 @@ public partial class BlockObject : NetworkBehaviour
         }
     }
 
+    //used to keep track of any full block effect such as duplicate or delete all
     private WholeEffectMode _activeWholeEffect = null;
 
     //mesh stuff
@@ -86,27 +88,30 @@ public partial class BlockObject : NetworkBehaviour
 
     //used to make sure Init is only called once
     private bool _isInit = false;
+    
+    //if this string contains a valid block file string when OnStartServer is called, it will be used to construct the block object
+    [TextArea]
+    public string initialBlocksString;
 
+    //for testing purposes
     public bool debug = false;
 
     public override void OnStartServer()
     {
-        if (debug)
+        var blocks = BlockUtility.DeserializeBlocks(initialBlocksString);
+        if (blocks != null)
         {
-            Blocks.Add(Vector3Int.zero, new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-
-            for (int i = 1; i < 6; i++)
+            while (blocks.Count > 0)
             {
-                Blocks.Add(new Vector3Int(0, 0, i), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+                Blocks.Add(blocks.Dequeue());
             }
+        }
 
-            // Blocks.Add(new Vector3Int(0, 0, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            // Blocks.Add(new Vector3Int(1, 0, 0), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            // Blocks.Add(new Vector3Int(1, 0, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            // Blocks.Add(new Vector3Int(0, 1, 0), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            // Blocks.Add(new Vector3Int(0, 1, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            // Blocks.Add(new Vector3Int(1, 1, 0), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
-            // Blocks.Add(new Vector3Int(1, 1, 1), new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
+        if (Blocks.Count <= 0)
+        {
+            Debug.LogError("Cannot have block object with no blocks");
+            NetworkServer.Destroy(gameObject);
+            return;
         }
 
         Init();
@@ -161,6 +166,11 @@ public partial class BlockObject : NetworkBehaviour
         ProcessBlockChanges();
         UpdateDamagedBlocks();
         UpdateWholeEffects();
+
+        if (debug && Input.GetKeyDown(KeyCode.S))
+        {
+            print(BlockUtility.SerializeBlocks(Blocks));
+        }
     }
 
     private void FixedUpdate()
@@ -478,6 +488,7 @@ public partial class BlockObject : NetworkBehaviour
                     {
                         CmdDuplicate(NetworkClient.connection.identity.netId);
                     }
+
                     break;
                 default:
                     Debug.LogError("Unknown mode: " + _activeWholeEffect.mode);
@@ -540,7 +551,7 @@ public partial class BlockObject : NetworkBehaviour
         blockObjectMaterial.SetFloat("_MaxHealth", 1);
         blockObjectMaterial.SetFloat("_DuplicateProgress", 0);
         blockObjectMaterial.SetFloat("_WholeDeleteProgress", 0);
-        
+
         if (_activeWholeEffect == null)
         {
             return;
@@ -714,6 +725,7 @@ public partial class BlockObject : NetworkBehaviour
         {
             blockObject.Blocks.Add(pair);
         }
+
         NetworkServer.Spawn(blockObjectGameObject);
         blockObjectGameObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time, false);
     }

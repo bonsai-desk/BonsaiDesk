@@ -12521,7 +12521,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b6b45f9eb598264fb11376b0e9f41e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  blockAreaPrefab: {fileID: 0}
   blockObjectPrefab: {fileID: 1897995405423690374, guid: 9665c8d8782c7584eb9e16bd36823d22,
     type: 3}
 --- !u!114 &1212259449
