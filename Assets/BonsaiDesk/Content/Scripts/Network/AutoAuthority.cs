@@ -300,6 +300,13 @@ public class AutoAuthority : NetworkBehaviour
         NetworkServer.Destroy(gameObject);
     }
 
+    [Command]
+    public void CmdDestroy()
+    {
+        gameObject.SetActive(false);
+        ServerStripOwnerAndDestroy();
+    }
+
     private void HandleRecursiveAuthority(Collision collision)
     {
         if (!HasAuthority())

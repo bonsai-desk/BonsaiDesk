@@ -252,8 +252,8 @@ public class TableBrowserMenu : MonoBehaviour
 
     private void ToggleBlockBreak()
     {
-        var blockBreakActive = InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().BreakModeActive;
-        InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().SetBreakMode(!blockBreakActive);
+        var blockBreakActive = InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().HandBreakMode != BlockBreakHand.BreakMode.None;
+        InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().SetBreakMode(blockBreakActive ? BlockBreakHand.BreakMode.None : BlockBreakHand.BreakMode.Single);
     }
 
     private void PostMediaInfo(MediaInfo mediaInfo)
@@ -326,7 +326,7 @@ public class TableBrowserMenu : MonoBehaviour
         var experimentalInfo = new ExperimentalInfo
         {
             PinchPullEnabled = InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled,
-            BlockBreakEnabled = InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().BreakModeActive
+            BlockBreakEnabled = InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().HandBreakMode != BlockBreakHand.BreakMode.None
         };
         Post(experimentalInfo, "ExperimentalInfo");
     }

@@ -8,6 +8,8 @@
         _Glossiness("Smoothness", Range(0,1)) = 0.5
         _Metallic("Metallic", Range(0,1)) = 0.0
         _MaxHealth("MaxHealth", Range(0, 1)) = 1.0
+        _DuplicateProgress("Duplicate Progress", Range(0, 1)) = 0.0
+        _WholeDeleteProgress("Whole Delete Progress", Range(0, 1)) = 0.0
     }
     SubShader
     {
@@ -38,7 +40,7 @@
         half _Glossiness;
         half _Metallic;
         fixed4 _Color;
-        half _MaxHealth;
+        half _MaxHealth, _DuplicateProgress, _WholeDeleteProgress;
 
         int numDamagedBlocks;
         float4 damagedBlocks[10];
@@ -59,7 +61,9 @@
 
         void surf(Input IN, inout SurfaceOutputStandard o)
         {
-            const fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
+            const fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color *
+                lerp(fixed4(1, 1, 1, 1), fixed4(0, 0, 1, 1), _DuplicateProgress) *
+                lerp(fixed4(1, 1, 1, 1), fixed4(1, 0, 0, 1), _WholeDeleteProgress);
 
             const float3 checkBlockPos = IN.vertexPos.xyz + float3(0.5, 0.5, 0.5) - (IN.normal.xyz * 0.5);;
             const int xc = floor(checkBlockPos.x);

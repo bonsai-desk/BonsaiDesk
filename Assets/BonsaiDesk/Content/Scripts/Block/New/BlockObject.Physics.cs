@@ -216,22 +216,40 @@ public partial class BlockObject
         }
 
         var skeletonType = physicsHandController.skeletonType;
-        var breakMoveActive = InputManager.Hands.GetHand(skeletonType).PlayerHand.GetIHandTick<BlockBreakHand>().BreakModeActive;
+        var handBreakMode = InputManager.Hands.GetHand(skeletonType).PlayerHand.GetIHandTick<BlockBreakHand>().HandBreakMode;
 
-        if (!breakMoveActive)
+        if (handBreakMode == BlockBreakHand.BreakMode.None)
         {
             return;
         }
 
-        ContactPoint contact = collision.GetContact(0);
-        Vector3 blockPosition = contact.point;
-        blockPosition += contact.normal * (BlockArea.cubeScale / 2f);
-        Vector3 positionLocalToCubeArea = transform.InverseTransformPoint(blockPosition);
-        Vector3Int blockCoord = Vector3Int.RoundToInt(positionLocalToCubeArea);
-
-        if (_meshBlocks.ContainsKey(blockCoord))
+        if (handBreakMode == BlockBreakHand.BreakMode.Whole && Blocks.Count == 1)
         {
-            DamageBlock(blockCoord);
+            handBreakMode = BlockBreakHand.BreakMode.Single;
+        }
+
+        switch (handBreakMode)
+        {
+            case BlockBreakHand.BreakMode.Single:
+                ContactPoint contact = collision.GetContact(0);
+                Vector3 blockPosition = contact.point;
+                blockPosition += contact.normal * (BlockArea.cubeScale / 2f);
+                Vector3 positionLocalToCubeArea = transform.InverseTransformPoint(blockPosition);
+                Vector3Int blockCoord = Vector3Int.RoundToInt(positionLocalToCubeArea);
+
+                if (_meshBlocks.ContainsKey(blockCoord))
+                {
+                    DamageBlock(blockCoord);
+                }
+
+                break;
+            case BlockBreakHand.BreakMode.Whole:
+            case BlockBreakHand.BreakMode.Duplicate:
+                IncrementWholeEffect(handBreakMode);
+                break;
+            default:
+                Debug.LogError("Unknown mode: " + handBreakMode);
+                break;
         }
     }
 

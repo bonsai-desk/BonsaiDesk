@@ -48,6 +48,22 @@ public partial class BlockObject : NetworkBehaviour
     //the entire _meshBlocks to check for damaged blocks
     private HashSet<Vector3Int> _damagedBlocks = new HashSet<Vector3Int>();
 
+    public class WholeEffectMode
+    {
+        public float progress;
+        public int framesSinceLastDamage;
+        public BlockBreakHand.BreakMode mode;
+
+        public WholeEffectMode(BlockBreakHand.BreakMode mode)
+        {
+            progress = 0;
+            framesSinceLastDamage = 100;
+            this.mode = mode;
+        }
+    }
+
+    private WholeEffectMode _activeWholeEffect = null;
+
     //mesh stuff
     private MeshFilter _meshFilter;
     private Mesh _mesh;
@@ -75,8 +91,6 @@ public partial class BlockObject : NetworkBehaviour
 
     public override void OnStartServer()
     {
-        base.OnStartServer();
-
         if (debug)
         {
             Blocks.Add(Vector3Int.zero, new SyncBlock(0, BlockUtility.QuaternionToByte(Quaternion.identity)));
@@ -100,8 +114,6 @@ public partial class BlockObject : NetworkBehaviour
 
     public override void OnStartClient()
     {
-        base.OnStartClient();
-
         Init();
     }
 
@@ -148,6 +160,7 @@ public partial class BlockObject : NetworkBehaviour
     {
         ProcessBlockChanges();
         UpdateDamagedBlocks();
+        UpdateWholeEffects();
     }
 
     private void FixedUpdate()
@@ -437,6 +450,44 @@ public partial class BlockObject : NetworkBehaviour
         _meshBlocks.Remove(coord);
     }
 
+    private void IncrementWholeEffect(BlockBreakHand.BreakMode mode)
+    {
+        if (_activeWholeEffect == null)
+        {
+            _activeWholeEffect = new WholeEffectMode(mode);
+        }
+
+        if (_activeWholeEffect.mode != mode)
+        {
+            return;
+        }
+
+        const float ActiveTime = 1f;
+        _activeWholeEffect.progress += Time.deltaTime / ActiveTime;
+        _activeWholeEffect.framesSinceLastDamage = 0;
+
+        if (_activeWholeEffect.progress > 1)
+        {
+            switch (_activeWholeEffect.mode)
+            {
+                case BlockBreakHand.BreakMode.Whole:
+                    _autoAuthority.CmdDestroy();
+                    break;
+                case BlockBreakHand.BreakMode.Duplicate:
+                    if (NetworkClient.connection != null && NetworkClient.connection.identity)
+                    {
+                        CmdDuplicate(NetworkClient.connection.identity.netId);
+                    }
+                    break;
+                default:
+                    Debug.LogError("Unknown mode: " + _activeWholeEffect.mode);
+                    break;
+            }
+
+            _activeWholeEffect = null;
+        }
+    }
+
     private void DamageBlock(Vector3Int coord)
     {
         if (!Blocks.ContainsKey(coord) || !_meshBlocks.ContainsKey(coord))
@@ -484,6 +535,41 @@ public partial class BlockObject : NetworkBehaviour
         }
     }
 
+    private void UpdateWholeEffects()
+    {
+        blockObjectMaterial.SetFloat("_MaxHealth", 1);
+        blockObjectMaterial.SetFloat("_DuplicateProgress", 0);
+        blockObjectMaterial.SetFloat("_WholeDeleteProgress", 0);
+        
+        if (_activeWholeEffect == null)
+        {
+            return;
+        }
+
+        _activeWholeEffect.framesSinceLastDamage++;
+        if (_activeWholeEffect.framesSinceLastDamage >= 3)
+        {
+            _activeWholeEffect.progress = 0;
+            _activeWholeEffect = null;
+            return;
+        }
+
+        switch (_activeWholeEffect.mode)
+        {
+            case BlockBreakHand.BreakMode.Whole:
+                blockObjectMaterial.SetFloat("_WholeDeleteProgress", Mathf.Clamp01(_activeWholeEffect.progress));
+                blockObjectMaterial.SetFloat("_MaxHealth", 1 - Mathf.Clamp01(_activeWholeEffect.progress));
+                break;
+            case BlockBreakHand.BreakMode.Duplicate:
+                blockObjectMaterial.SetFloat("_DuplicateProgress", Mathf.Clamp01(_activeWholeEffect.progress));
+                blockObjectMaterial.SetFloat("_MaxHealth", 1 - Mathf.Clamp01(_activeWholeEffect.progress));
+                break;
+            default:
+                Debug.LogError("Unknown case: " + _activeWholeEffect.mode);
+                break;
+        }
+    }
+
     private void UpdateDamagedBlocks()
     {
         var damagedBlocksForShader = new Vector4[10];
@@ -520,28 +606,8 @@ public partial class BlockObject : NetworkBehaviour
         blockObjectMaterial.SetInt("numDamagedBlocks", i);
     }
 
-    enum UpdateType
-    {
-        AddBlock,
-        RemoveBlock
-    }
-
     private void UpdateMesh()
     {
-        //the order of updating the mesh matters depending on if adding or removing parts of the mesh
-        // switch (updateType)
-        // {
-        //     case UpdateType.AddBlock:
-        //         _mesh.vertices = _vertices.ToArray();
-        //         _mesh.triangles = _triangles.ToArray();
-        //         break;
-        //     case UpdateType.RemoveBlock:
-        //         _mesh.triangles = _triangles.ToArray();
-        //         _mesh.vertices = _vertices.ToArray();
-        //         //_mesh.SetVertices()
-        //         break;
-        // }
-
         //first set triangles to empty so we can update the vertices without triangles referencing (now) invalid vertices
         _mesh.triangles = new int[0];
         _mesh.vertices = _vertices.ToArray();
@@ -553,15 +619,6 @@ public partial class BlockObject : NetworkBehaviour
         _mesh.RecalculateNormals();
         _mesh.RecalculateTangents();
         _mesh.RecalculateBounds();
-
-        // if (blocks.Count == 1)
-        // {
-        //     if (blocks[OnlyBlock()].blockObject != null)
-        //     {
-        //         transform.GetChild(5).localPosition = (Vector3) OnlyBlock() * CubeScale;
-        //         transform.GetChild(5).gameObject.SetActive(true);
-        //     }
-        // }
 
         var (boxCollidersNotNeeded, mass, destroySphere) = BlockUtility.UpdateHitBox(Blocks, _boxCollidersInUse, _physicsBoxesObject, _sphereObject,
             blockPhysicMaterial, spherePhysicMaterial);
@@ -646,5 +703,18 @@ public partial class BlockObject : NetworkBehaviour
         // {
         return transform.rotation * BlockUtility.SnapToNearestRightAngle(Quaternion.Inverse(transform.rotation) * blockRotation);
         // }
+    }
+
+    [Command]
+    private void CmdDuplicate(uint ownerId)
+    {
+        var blockObjectGameObject = Instantiate(StaticPrefabs.instance.blockObjectPrefab, new Vector3(0, 1.5f, 0), Quaternion.identity);
+        var blockObject = blockObjectGameObject.GetComponent<BlockObject>();
+        foreach (var pair in Blocks)
+        {
+            blockObject.Blocks.Add(pair);
+        }
+        NetworkServer.Spawn(blockObjectGameObject);
+        blockObjectGameObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time, false);
     }
 }

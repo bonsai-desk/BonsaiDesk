@@ -643,7 +643,8 @@ public class BlockArea : NetworkBehaviour
                     {
                         if (!(structure.Count == 1 && Blocks.blocks[structure[OnlyBlock(structure)].id].blockType == Block.BlockType.bearing))
                         {
-                            GameObject blockArea = Instantiate(StaticPrefabs.instance.blockAreaPrefab);
+                            // GameObject blockArea = Instantiate(StaticPrefabs.instance.blockAreaPrefab);
+                            GameObject blockArea = null;
                             blockArea.transform.parent = transform.parent;
                             blockArea.transform.position = transform.position;
                             blockArea.transform.rotation = transform.rotation;

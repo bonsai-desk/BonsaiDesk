@@ -58,6 +58,7 @@ public class TableBrowserParent : MonoBehaviour
     private void HandleOrientationChange(bool oriented)
     {
         MenuSleep();
+        ContextSleep();
     }
 
     private void HandleCloseWeb(object _, EventArgs e)

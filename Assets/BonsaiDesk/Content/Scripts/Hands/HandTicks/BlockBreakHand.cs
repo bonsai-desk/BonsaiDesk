@@ -8,11 +8,23 @@ public class BlockBreakHand : MonoBehaviour, IHandTick
     public PlayerHand playerHand { get; set; }
     private bool _init = false;
 
-    public bool BreakModeActive { get; private set; }
+    public enum BreakMode
+    {
+        None,
+        Single,
+        Whole,
+        Duplicate
+    }
+
+    private BreakMode _breakMode = BreakMode.None;
+
+    public BreakMode HandBreakMode => _breakMode;
 
     public GameObject particlePrefab;
 
     private GameObject _particleObject;
+    private ParticleSystem _particleSystem;
+    private ParticleSystem.MainModule _mainModule;
 
     public void Tick()
     {
@@ -23,20 +35,41 @@ public class BlockBreakHand : MonoBehaviour, IHandTick
         }
 
         var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
-        _particleObject.SetActive(playerHand.HandComponents.TrackingRecently && BreakModeActive && playing);
+        _particleObject.SetActive(playerHand.HandComponents.TrackingRecently && HandBreakMode != BreakMode.None && playing);
     }
 
     private void Init()
     {
         _particleObject = Instantiate(particlePrefab);
         _particleObject.transform.SetParent(playerHand.HandComponents.PhysicsFingerTips[1], false);
-        // SetBreakMode(playerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft);
-        SetBreakMode(false);
+        _particleSystem = _particleObject.GetComponent<ParticleSystem>();
+        _mainModule = _particleSystem.main;
+        SetBreakMode(BreakMode.None);
+        // if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandRight)
+        // {
+        //     SetBreakMode(BreakMode.Duplicate);
+        // }
     }
 
-    public void SetBreakMode(bool active)
+    public void SetBreakMode(BreakMode breakMode)
     {
-        _particleObject.SetActive(active);
-        BreakModeActive = active;
+        _breakMode = breakMode;
+        switch (breakMode)
+        {
+            case BreakMode.None:
+                break;
+            case BreakMode.Single:
+                _mainModule.startColor = new ParticleSystem.MinMaxGradient(Color.red);
+                break;
+            case BreakMode.Whole:
+                _mainModule.startColor = new ParticleSystem.MinMaxGradient(new Color(1, 0.5f, 0));
+                break;
+            case BreakMode.Duplicate:
+                _mainModule.startColor = new ParticleSystem.MinMaxGradient(Color.blue);
+                break;
+            default:
+                Debug.LogError("Unknown break mode: " + breakMode);
+                break;
+        }
     }
 }
