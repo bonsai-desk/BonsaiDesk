@@ -10,6 +10,7 @@
         _MaxHealth("MaxHealth", Range(0, 1)) = 1.0
         _DuplicateProgress("Duplicate Progress", Range(0, 1)) = 0.0
         _WholeDeleteProgress("Whole Delete Progress", Range(0, 1)) = 0.0
+        _SaveProgress("Save Progress", Range(0, 1)) = 0.0
     }
     SubShader
     {
@@ -40,7 +41,7 @@
         half _Glossiness;
         half _Metallic;
         fixed4 _Color;
-        half _MaxHealth, _DuplicateProgress, _WholeDeleteProgress;
+        half _MaxHealth, _DuplicateProgress, _WholeDeleteProgress, _SaveProgress;
 
         int numDamagedBlocks;
         float4 damagedBlocks[10];
@@ -63,7 +64,8 @@
         {
             const fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color *
                 lerp(fixed4(1, 1, 1, 1), fixed4(0, 0, 1, 1), _DuplicateProgress) *
-                lerp(fixed4(1, 1, 1, 1), fixed4(1, 0, 0, 1), _WholeDeleteProgress);
+                lerp(fixed4(1, 1, 1, 1), fixed4(1, 0, 0, 1), _WholeDeleteProgress) *
+                lerp(fixed4(1, 1, 1, 1), fixed4(1, 1, 0, 1), _SaveProgress);
 
             const float3 checkBlockPos = IN.vertexPos.xyz + float3(0.5, 0.5, 0.5) - (IN.normal.xyz * 0.5);;
             const int xc = floor(checkBlockPos.x);

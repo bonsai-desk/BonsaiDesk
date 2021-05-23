@@ -54,7 +54,10 @@ MonoBehaviour:
     type: 2}
   spherePhysicMaterial: {fileID: 13400000, guid: 2ce95ee1c6692e24b93fd320d0345b99,
     type: 2}
+  saveDialogPrefab: {fileID: 7346527677141888563, guid: 6634a319ba107ea44b09d00c8ae99dde,
+    type: 3}
   potentialBlocksParent: {fileID: 0}
+  initialBlocksString: 
   debug: 0
 --- !u!54 &1897995405423690379
 Rigidbody:
@@ -160,5 +163,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.033333335
   isKinematic: 0
+  destroyIfBelow: 1
   allowPinchPull: 1
   meshRenderer: {fileID: 0}
+  cachedMaterial: {fileID: 0}

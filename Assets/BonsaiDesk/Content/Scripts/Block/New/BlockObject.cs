@@ -40,6 +40,7 @@ public partial class BlockObject : NetworkBehaviour
     public Material blockObjectMaterial;
     public PhysicMaterial blockPhysicMaterial;
     public PhysicMaterial spherePhysicMaterial;
+    public GameObject saveDialogPrefab;
 
     //contains the information about the local state of the mesh. The structure of the mesh can be slightly
     //different depending on the order of block add/remove even though the final result looks the same
@@ -54,17 +55,23 @@ public partial class BlockObject : NetworkBehaviour
         public float progress;
         public int framesSinceLastDamage;
         public BlockBreakHand.BreakMode mode;
+        public bool activated;
 
         public WholeEffectMode(BlockBreakHand.BreakMode mode)
         {
             progress = 0;
             framesSinceLastDamage = 100;
             this.mode = mode;
+            activated = false;
         }
     }
 
     //used to keep track of any full block effect such as duplicate or delete all
     private WholeEffectMode _activeWholeEffect = null;
+
+    //stores any active save popup. otherwise is null
+    private GameObject _activeSaveDialog;
+    private Vector3 _saveDialogLocalPositionRoot;
 
     //mesh stuff
     private MeshFilter _meshFilter;
@@ -88,7 +95,7 @@ public partial class BlockObject : NetworkBehaviour
 
     //used to make sure Init is only called once
     private bool _isInit = false;
-    
+
     //if this string contains a valid block file string when OnStartServer is called, it will be used to construct the block object
     [TextArea]
     public string initialBlocksString;
@@ -166,11 +173,7 @@ public partial class BlockObject : NetworkBehaviour
         ProcessBlockChanges();
         UpdateDamagedBlocks();
         UpdateWholeEffects();
-
-        if (debug && Input.GetKeyDown(KeyCode.S))
-        {
-            print(BlockUtility.SerializeBlocks(Blocks));
-        }
+        UpdateSaveDialogPosition();
     }
 
     private void FixedUpdate()
@@ -460,7 +463,7 @@ public partial class BlockObject : NetworkBehaviour
         _meshBlocks.Remove(coord);
     }
 
-    private void IncrementWholeEffect(BlockBreakHand.BreakMode mode)
+    private void IncrementWholeEffect(BlockBreakHand.BreakMode mode, Vector3 contactPoint)
     {
         if (_activeWholeEffect == null)
         {
@@ -476,7 +479,7 @@ public partial class BlockObject : NetworkBehaviour
         _activeWholeEffect.progress += Time.deltaTime / ActiveTime;
         _activeWholeEffect.framesSinceLastDamage = 0;
 
-        if (_activeWholeEffect.progress > 1)
+        if (_activeWholeEffect.progress > 1 && !_activeWholeEffect.activated)
         {
             switch (_activeWholeEffect.mode)
             {
@@ -490,12 +493,22 @@ public partial class BlockObject : NetworkBehaviour
                     }
 
                     break;
+                case BlockBreakHand.BreakMode.Save:
+                    if (!_activeSaveDialog)
+                    {
+                        _saveDialogLocalPositionRoot = transform.InverseTransformPoint(contactPoint);
+                        _activeSaveDialog = Instantiate(saveDialogPrefab);
+                        UpdateSaveDialogPosition();
+                        _activeSaveDialog.transform.GetChild(0).GetComponent<HoverButton>().action.AddListener(CloseSaveDialog);
+                        _activeSaveDialog.transform.GetChild(1).GetComponent<HoverButton>().action.AddListener(Save);
+                    }
+                    break;
                 default:
                     Debug.LogError("Unknown mode: " + _activeWholeEffect.mode);
                     break;
             }
 
-            _activeWholeEffect = null;
+            _activeWholeEffect.activated = true;
         }
     }
 
@@ -551,6 +564,7 @@ public partial class BlockObject : NetworkBehaviour
         blockObjectMaterial.SetFloat("_MaxHealth", 1);
         blockObjectMaterial.SetFloat("_DuplicateProgress", 0);
         blockObjectMaterial.SetFloat("_WholeDeleteProgress", 0);
+        blockObjectMaterial.SetFloat("_SaveProgress", 0);
 
         if (_activeWholeEffect == null)
         {
@@ -573,6 +587,10 @@ public partial class BlockObject : NetworkBehaviour
                 break;
             case BlockBreakHand.BreakMode.Duplicate:
                 blockObjectMaterial.SetFloat("_DuplicateProgress", Mathf.Clamp01(_activeWholeEffect.progress));
+                blockObjectMaterial.SetFloat("_MaxHealth", 1 - Mathf.Clamp01(_activeWholeEffect.progress));
+                break;
+            case BlockBreakHand.BreakMode.Save:
+                blockObjectMaterial.SetFloat("_SaveProgress", Mathf.Clamp01(_activeWholeEffect.progress));
                 blockObjectMaterial.SetFloat("_MaxHealth", 1 - Mathf.Clamp01(_activeWholeEffect.progress));
                 break;
             default:
@@ -649,6 +667,9 @@ public partial class BlockObject : NetworkBehaviour
 
         _body.mass = mass;
         _resetCoM = true;
+
+        //if any blocks are added or removed, close the save dialog if it is up
+        CloseSaveDialog();
     }
 
     private void CreateInitialMesh()
@@ -728,5 +749,33 @@ public partial class BlockObject : NetworkBehaviour
 
         NetworkServer.Spawn(blockObjectGameObject);
         blockObjectGameObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time, false);
+    }
+    
+    private void UpdateSaveDialogPosition()
+    {
+        if (!_activeSaveDialog)
+        {
+            return;
+        }
+
+        _activeSaveDialog.transform.position = transform.TransformPoint(_saveDialogLocalPositionRoot) + new Vector3(0, 0.1f, 0);
+
+        var forwardFlat = _activeSaveDialog.transform.position - InputManager.Hands.head.position;
+        forwardFlat.y = 0;
+        _activeSaveDialog.transform.rotation = Quaternion.LookRotation(forwardFlat);
+    }
+
+    private void CloseSaveDialog()
+    {
+        if (_activeSaveDialog)
+        {
+            Destroy(_activeSaveDialog);
+        }
+    }
+
+    private void Save()
+    {
+        CloseSaveDialog();
+        print(BlockUtility.SerializeBlocks(Blocks));
     }
 }

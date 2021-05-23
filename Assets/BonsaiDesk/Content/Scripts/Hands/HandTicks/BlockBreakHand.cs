@@ -13,7 +13,8 @@ public class BlockBreakHand : MonoBehaviour, IHandTick
         None,
         Single,
         Whole,
-        Duplicate
+        Duplicate,
+        Save
     }
 
     private BreakMode _breakMode = BreakMode.None;
@@ -45,10 +46,10 @@ public class BlockBreakHand : MonoBehaviour, IHandTick
         _particleSystem = _particleObject.GetComponent<ParticleSystem>();
         _mainModule = _particleSystem.main;
         SetBreakMode(BreakMode.None);
-        // if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandRight)
-        // {
-        //     SetBreakMode(BreakMode.Duplicate);
-        // }
+        if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandRight)
+        {
+            SetBreakMode(BreakMode.Save);
+        }
     }
 
     public void SetBreakMode(BreakMode breakMode)
@@ -66,6 +67,9 @@ public class BlockBreakHand : MonoBehaviour, IHandTick
                 break;
             case BreakMode.Duplicate:
                 _mainModule.startColor = new ParticleSystem.MinMaxGradient(Color.blue);
+                break;
+            case BreakMode.Save:
+                _mainModule.startColor = new ParticleSystem.MinMaxGradient(Color.yellow);
                 break;
             default:
                 Debug.LogError("Unknown break mode: " + breakMode);

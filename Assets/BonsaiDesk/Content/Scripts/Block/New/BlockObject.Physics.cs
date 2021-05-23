@@ -245,7 +245,10 @@ public partial class BlockObject
                 break;
             case BlockBreakHand.BreakMode.Whole:
             case BlockBreakHand.BreakMode.Duplicate:
-                IncrementWholeEffect(handBreakMode);
+                IncrementWholeEffect(handBreakMode, collision.GetContact(0).point);
+                break;
+            case BlockBreakHand.BreakMode.Save:
+                IncrementWholeEffect(handBreakMode, collision.GetContact(0).point);
                 break;
             default:
                 Debug.LogError("Unknown mode: " + handBreakMode);
