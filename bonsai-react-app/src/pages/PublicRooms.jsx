@@ -1,16 +1,20 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {MenuContent, MenuContentFixed} from '../components/MenuContent';
 import {InfoItem} from '../components/InfoItem';
 import ThinkingFace from '../static/thinking-face.svg';
-import {useStore} from '../DataProvider';
+import {NetworkManagerMode, useStore} from '../DataProvider';
 import {observer} from 'mobx-react-lite';
 import {apiBase} from '../utilities';
 import SleepingImg from '../static/sleeping-face.svg';
 import axios from 'axios';
-import {NormalButton} from '../components/Button';
-import {grayButtonClassInert, greenButtonClass} from '../cssClasses';
-import {postJoinRoom} from '../api';
+import {InstantButton, NormalButton} from '../components/Button';
+import {grayButtonClassInert, greenButtonClass, redButtonClass} from '../cssClasses';
+import {postJoinRoom, postOpenPublicRoom} from '../api';
 import {handleCloseRoom} from '../esUtils';
+import DoorOpen from '../static/door-open.svg';
+import {SubHeader} from '../components/SubHeader';
+import {ClientConnectedItem} from '../components/ClientConnectedItem';
+import HashImg from '../static/hash.svg';
 
 let RoomInfo = observer(({full, username, network_address}) => {
 
@@ -29,7 +33,7 @@ let RoomInfo = observer(({full, username, network_address}) => {
     if (full) {
         inner = '2/2';
     }
-   
+
     if (joined) {
         inner = 'Joined';
     }
@@ -62,35 +66,112 @@ let RoomInfo = observer(({full, username, network_address}) => {
     </InfoItem>;
 });
 
+function OpenRoomItem() {
+    return <InfoItem title={'Open Public Room'} slug={'Let people join you'} imgSrc={DoorOpen}>
+        <div className={'flex space-x-4'}>
+            <InstantButton className={greenButtonClass} onClick={postOpenPublicRoom}>Open Up</InstantButton>
+        </div>
+    </InfoItem>;
+}
+
+const ClosePublicRoom = observer(({onClick}) => {
+    return <InfoItem title={'Your Room is Open'} slug={'Ready for people to join'}
+                     imgSrc={DoorOpen}>
+        <NormalButton className={redButtonClass} onClick={onClick}>
+            Close
+        </NormalButton>
+    </InfoItem>;
+});
+
+const ClosePrivateRoom = observer(({onClick}) => {
+    return <InfoItem title={'Your Room is Private'} slug={'Close and open a public room'}
+                     imgSrc={HashImg}>
+        <NormalButton className={redButtonClass} onClick={onClick}>
+            Close
+        </NormalButton>
+    </InfoItem>;
+});
+
+const RoomAction = observer(({clickCloseRoom}) => {
+    let {store} = useStore();
+
+    let publicRoom = store.NetworkInfo.PublicRoom;
+    let roomOpen = store.NetworkInfo.RoomOpen;
+
+    let isClient = store.NetworkInfo.Mode === NetworkManagerMode.ClientOnly;
+    let isHost = store.NetworkInfo.Mode === NetworkManagerMode.Host;
+
+    if (isHost) {
+        if (roomOpen) {
+            if (publicRoom) {
+                return <ClosePublicRoom onClick={clickCloseRoom}/>;
+            } else {
+                return <ClosePrivateRoom onClick={clickCloseRoom}/>;
+            }
+        } else {
+            return <OpenRoomItem/>;
+        }
+    } else if (isClient) {
+        return <ClientConnectedItem/>;
+    }
+});
+
 let PublicRoomsPage = observer(() => {
 
     let {store} = useStore();
     let [loaded, setLoaded] = useState(false);
     let [rooms, setRooms] = useState([]);
 
+    let roomOpen = store.NetworkInfo.RoomOpen;
+    let publicRoom = store.NetworkInfo.PublicRoom;
+    let closeRoom = handleCloseRoom(store)
+
+    let fetchRooms = useCallback(() => {
+
+        let url = apiBase(store) + '/rooms_public';
+
+        axios.get(url).then(res => {
+            setRooms(res.data.rooms);
+            setLoaded(true);
+        }).catch(err => {
+            console.log(err);
+            setLoaded(true);
+        });
+
+    }, [store]);
+
     useEffect(() => {
-        function fetchRooms() {
-            let url = apiBase(store) + '/rooms_public';
-
-            axios.get(url).then(res => {
-                setRooms(res.data.rooms);
-                setLoaded(true);
-            }).catch(err => {
-                console.log(err);
-                setLoaded(true);
-            });
-        }
-
         fetchRooms();
         let handle = setInterval(fetchRooms, 1500);
-
         return () => {
             clearInterval(handle);
         };
-    }, [store]);
+    }, [store, fetchRooms]);
+    
+    function clickOpenRoom () {
+        postOpenPublicRoom(false);
+        setTimeout(()=>{fetchRooms()}, 50)
+    }
+
+    function clickCloseRoom() {
+        closeRoom();
+        setTimeout(()=>{fetchRooms()}, 50)
+    }
+
+    let ActionButton = <InstantButton className={greenButtonClass} onClick={clickOpenRoom}>
+        Open One
+    </InstantButton>;
+   
+    if (!publicRoom && roomOpen) {
+        ActionButton = <InstantButton className={redButtonClass} onClick={clickCloseRoom}>
+            Close Your Private Room
+        </InstantButton>;
+    }
 
     if (rooms.length > 0) {
         return <MenuContent name={'Public Rooms'}>
+            <RoomAction clickCloseRoom={clickCloseRoom}/>
+            <SubHeader>Join a Room</SubHeader>
             {rooms.map(room => {
                 return <RoomInfo {...room}/>;
             })}
@@ -104,6 +185,7 @@ let PublicRoomsPage = observer(() => {
                             <div className={'w-full flex flex-wrap justify-center'}>
                                 No public rooms open right now
                             </div>
+                            {ActionButton}
                         </div> : ''
                 }
             </div>

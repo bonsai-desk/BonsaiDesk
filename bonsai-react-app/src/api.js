@@ -24,8 +24,8 @@ export function postOpenPrivateRoom() {
     postJson({Type: 'command', Message: 'openPrivateRoom'});
 }
 
-export function postOpenPublicRoom() {
-    postJson({Type: 'command', Message: 'openPublicRoom'});
+export function postOpenPublicRoom(resetNav = true) {
+    postJson({Type: 'command', Message: 'openPublicRoom', Data: resetNav});
 }
 
 export function postCloseRoom() {
@@ -98,21 +98,21 @@ export function postToggleBlockBreakHand(hand) {
 }
 
 export const Layout = {
-    Across: 0, SideBySide: 1
-}
+    Across: 0, SideBySide: 1,
+};
 
-export function postSetLayout(layout){
+export function postSetLayout(layout) {
     let layoutStr;
     switch (layout) {
         case Layout.Across:
-            layoutStr = "across"
+            layoutStr = 'across';
             break;
         case Layout.SideBySide:
-            layoutStr = "sideBySide"
+            layoutStr = 'sideBySide';
             break;
         default:
             layoutStr = 'across';
-            break
+            break;
     }
     postJson({
         Type: 'command',

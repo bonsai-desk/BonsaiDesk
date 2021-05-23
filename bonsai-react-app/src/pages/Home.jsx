@@ -11,10 +11,11 @@ import {grayButtonClassInert, redButtonClass} from '../cssClasses';
 import {InfoItem} from '../components/InfoItem';
 import {ForwardButton, InstantButton, NormalButton} from '../components/Button';
 import {MenuContent, MenuContentFixed} from '../components/MenuContent';
-import {postKickConnectionId, postLeaveRoom, postOpenPrivateRoom, postOpenPublicRoom} from '../api';
+import {postKickConnectionId, postOpenPrivateRoom, postOpenPublicRoom} from '../api';
 import {NetworkManagerMode, useStore} from '../DataProvider';
 import {JoinDeskPage} from './JoinDesk';
 import {handleCloseRoom} from '../esUtils';
+import {ClientConnectedItem} from '../components/ClientConnectedItem';
 
 function ConnectedClient(props) {
     let {info} = props;
@@ -62,7 +63,7 @@ function OpenRoomItem() {
     let history = useHistory();
     return <InfoItem title={'Open Your Room'} slug={'Let people join you'} imgSrc={DoorOpen}>
         <div className={'flex space-x-4'}>
-            <ForwardButton onClick={() => {
+            <ForwardButton variant={"green"} onClick={() => {
                 history.push('/menu/home/open-up');
             }}/>
         </div>
@@ -78,7 +79,7 @@ function JoinDeskItem() {
         history.push(`${match.path}/join-desk`);
     }
 
-    return <InfoItem title={'Join Room'} slug={'Using a room code'} imgSrc={HashImg}>
+    return <InfoItem title={'Join Private Room'} slug={'Using a room code'} imgSrc={HashImg}>
         <ForwardButton onClick={onClick}/>
     </InfoItem>;
 
@@ -168,11 +169,7 @@ function LoadingHomePage() {
 function ClientHomePage() {
     return <MenuContent name={'Client Connected'}>
         <div className={'flex'}>
-            <InfoItem title={'Connected'} slug={'You are connected to a host'}
-                      imgSrc={LinkImg}>
-                <NormalButton onClick={postLeaveRoom}
-                              className={redButtonClass}>Exit</NormalButton>
-            </InfoItem>
+            <ClientConnectedItem/>
         </div>
 
     </MenuContent>;
