@@ -155,7 +155,11 @@ public class TableBrowserMenu : MonoBehaviour
                         break;
                     case "openPublicRoom":
                         OpenRoom?.Invoke(true);
-                        browser.PostMessage(Browser.BrowserMessage.NavToMenu);
+                        var resetNav = JsonConvert.DeserializeObject<bool>(message.Data);
+                        if (resetNav)
+                        {
+                            browser.PostMessage(Browser.BrowserMessage.NavToMenu);
+                        }
                         break;
                     case "openPrivateRoom":
                         OpenRoom?.Invoke(false);
