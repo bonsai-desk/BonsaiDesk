@@ -8,6 +8,7 @@ import {InfoItem} from '../components/InfoItem';
 import {observer} from 'mobx-react-lite';
 import {useStore} from '../DataProvider';
 import {postToggleBlockBreak, postTogglePinchPull} from '../api';
+import {showVersionFromStore} from '../esUtils';
 
 const Settings = observer(() => {
 
@@ -59,7 +60,7 @@ const Settings = observer(() => {
             Info
         </div>
         <InfoItem title={'About'}
-                  slug={store.AppInfo.Version + 'b' + store.AppInfo.BuildId}>
+                  slug={showVersionFromStore(store)}>
             <ForwardButton onClick={goToInfo}/>
         </InfoItem>
     </MenuContent>;

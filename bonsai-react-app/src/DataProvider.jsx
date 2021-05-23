@@ -64,7 +64,7 @@ class Store {
     AppInfo = {
         Build: 'DEVELOPMENT',
         MicrophonePermission: true,
-        Version: '0.1.5',
+        Version: '0.1.6',
         BuildId: 54,
     };
     _networkInfo = {
