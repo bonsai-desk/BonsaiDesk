@@ -1723,7 +1723,7 @@ MonoBehaviour:
     type: 3}
   visualizeAuthority: 0
   serverOnlyIfEditor: 0
-  BuildId: 50
+  BuildId: 54
 --- !u!4 &217350384
 Transform:
   m_ObjectHideFlags: 0
@@ -2071,7 +2071,7 @@ PrefabInstance:
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
       propertyPath: initialUrl
-      value: http://localhost:9696/
+      value: http://localhost:3000/
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}

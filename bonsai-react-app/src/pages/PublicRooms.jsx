@@ -66,10 +66,10 @@ let RoomInfo = observer(({full, username, network_address}) => {
     </InfoItem>;
 });
 
-function OpenRoomItem() {
+function OpenRoomItem({onClick}) {
     return <InfoItem title={'Open Public Room'} slug={'Let people join you'} imgSrc={DoorOpen}>
         <div className={'flex space-x-4'}>
-            <InstantButton className={greenButtonClass} onClick={postOpenPublicRoom}>Open Up</InstantButton>
+            <InstantButton className={greenButtonClass} onClick={onClick}>Open Up</InstantButton>
         </div>
     </InfoItem>;
 }
@@ -77,9 +77,6 @@ function OpenRoomItem() {
 const ClosePublicRoom = observer(({onClick}) => {
     return <InfoItem title={'Your Room is Open'} slug={'Ready for people to join'}
                      imgSrc={DoorOpen}>
-        <NormalButton className={redButtonClass} onClick={onClick}>
-            Close
-        </NormalButton>
     </InfoItem>;
 });
 
@@ -114,6 +111,7 @@ const RoomAction = observer(({clickCloseRoom}) => {
     } else if (isClient) {
         return <ClientConnectedItem/>;
     }
+    return <InfoItem title={"Loading"} slug={"Setting up your room"} imgSrc={DoorOpen}/>
 });
 
 let PublicRoomsPage = observer(() => {
@@ -125,6 +123,7 @@ let PublicRoomsPage = observer(() => {
     let roomOpen = store.NetworkInfo.RoomOpen;
     let publicRoom = store.NetworkInfo.PublicRoom;
     let closeRoom = handleCloseRoom(store)
+
 
     let fetchRooms = useCallback(() => {
 
@@ -167,7 +166,7 @@ let PublicRoomsPage = observer(() => {
             Close Your Private Room
         </InstantButton>;
     }
-
+    
     if (rooms.length > 0) {
         return <MenuContent name={'Public Rooms'}>
             <RoomAction clickCloseRoom={clickCloseRoom}/>
@@ -177,6 +176,7 @@ let PublicRoomsPage = observer(() => {
             })}
         </MenuContent>;
     } else {
+        console.log("2")
         return <MenuContentFixed name={'Public Rooms'}>
             <div className={'flex flex-wrap content-center justify-center h-full'}>
                 {loaded ?
@@ -190,8 +190,8 @@ let PublicRoomsPage = observer(() => {
                 }
             </div>
         </MenuContentFixed>;
-
     }
+    
 
 });
 
