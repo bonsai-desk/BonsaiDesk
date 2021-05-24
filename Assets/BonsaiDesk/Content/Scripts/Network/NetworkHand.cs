@@ -100,6 +100,8 @@ public class NetworkHand : NetworkBehaviour
             _handMaterial.mainTexture = _handTexture;
         }
 
+        HandComponents.SetLayerRecursive(hand.transform.GetChild(0), LayerMask.NameToLayer("onlyHands"));
+
         OnActiveChange(false, _active);
     }
 

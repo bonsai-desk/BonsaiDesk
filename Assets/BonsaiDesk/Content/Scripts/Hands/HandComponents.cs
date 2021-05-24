@@ -288,7 +288,7 @@ public class HandComponents
         Physics.IgnoreLayerCollision(_touchScreenSurfaceLayer, _onlyScreenLayer, !active);
     }
 
-    private static void SetLayerRecursive(Transform go, int layer)
+    public static void SetLayerRecursive(Transform go, int layer)
     {
         if (!go.CompareTag("KeepLayer"))
         {
@@ -308,11 +308,5 @@ public class HandComponents
         {
             SetTagRecursive(child, tag);
         }
-    }
-
-    public enum Colors
-    {
-        Green,
-        Orange
     }
 }
