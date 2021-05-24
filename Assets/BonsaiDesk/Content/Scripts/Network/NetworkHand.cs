@@ -1,4 +1,5 @@
-﻿using Mirror;
+﻿using System.Collections;
+using Mirror;
 using UnityEngine;
 
 public class NetworkHand : NetworkBehaviour
@@ -34,6 +35,8 @@ public class NetworkHand : NetworkBehaviour
 
     [SyncVar(hook = nameof(OnActiveChange))]
     private bool _active;
+
+    private bool _disableWaitPeriodDone = false;
 
     private GameObject physicsHand;
     private PhysicsHandController _physicsHandController;
@@ -101,7 +104,17 @@ public class NetworkHand : NetworkBehaviour
         }
 
         HandComponents.SetLayerRecursive(hand.transform.GetChild(0), LayerMask.NameToLayer("onlyHands"));
-
+        
+        _physicsHandController.overrideCapsulesActive = true;
+        _physicsHandRenderer.enabled = false;
+        _physicsHandController.overrideCapsulesActiveTarget = false;
+        StartCoroutine(WaitThenActivate());
+    }
+    
+    private IEnumerator WaitThenActivate()
+    {
+        yield return new WaitForSeconds(1f);
+        _disableWaitPeriodDone = true;
         OnActiveChange(false, _active);
     }
 
@@ -118,7 +131,7 @@ public class NetworkHand : NetworkBehaviour
             return;
         }
 
-        if (_physicsHandController && _physicsHandRenderer)
+        if (_physicsHandController && _physicsHandRenderer && _disableWaitPeriodDone)
         {
             var active = newValue;
             if (active)

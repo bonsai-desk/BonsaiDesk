@@ -1,11 +1,12 @@
-﻿using Mirror;
+﻿using System;
+using System.Collections;
+using Mirror;
 using UnityEngine;
 
 public class NetworkVRPlayer : NetworkBehaviour
 {
-    public GameObject networkHandLeftPrefab;
-    public GameObject networkHandRightPrefab;
-
+    public GameObject headObject;
+    
     [SyncVar] public NetworkIdentity _leftHandId;
     [SyncVar] public NetworkIdentity _rightHandId;
 
@@ -13,6 +14,9 @@ public class NetworkVRPlayer : NetworkBehaviour
 
     public override void OnStartClient()
     {
+        headObject.SetActive(false);
+        StartCoroutine(WaitThenActivate());
+        
         if (!isLocalPlayer)
             return;
             
@@ -26,7 +30,13 @@ public class NetworkVRPlayer : NetworkBehaviour
         InputManager.Hands.Left.SetHandTexture(textures.handTexture);
         InputManager.Hands.Right.SetHandTexture(textures.handTexture);
     }
-    
+
+    private IEnumerator WaitThenActivate()
+    {
+        yield return new WaitForSeconds(1f);
+        headObject.SetActive(true);
+    }
+
     private void HandleLayoutChange(object sender, SpotManager.Layout newLayout)
     {
         if (!isLocalPlayer)
