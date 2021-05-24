@@ -177,7 +177,7 @@ PlayerSettings:
     Standalone: 0
     iPhone: 0
     tvOS: 0
-  AndroidBundleVersionCode: 54
+  AndroidBundleVersionCode: 55
   AndroidMinSdkVersion: 25
   AndroidTargetSdkVersion: 0
   AndroidPreferredInstallLocation: 0

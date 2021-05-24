@@ -24,6 +24,7 @@ public class HandComponents
     public bool MapperTargetsInitialized = false;
     public bool Tracking { get; private set; } = false;
     public bool TrackingRecently { get; private set; } = false;
+    private bool _lastTrackingRecently = false;
 
     private readonly int _physicsLayer;
     private readonly int _indexPhysicsLayer;
@@ -152,6 +153,16 @@ public class HandComponents
         {
             TrackingRecently = false;
         }
+
+        if (NetworkHand)
+        {
+            if (TrackingRecently != _lastTrackingRecently)
+            {
+                NetworkHand.CmdSetActive(TrackingRecently);
+            }
+        }
+
+        _lastTrackingRecently = TrackingRecently;
 
         UpdateRendererTransparency();
     }
