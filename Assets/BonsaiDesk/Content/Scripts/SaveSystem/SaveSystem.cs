@@ -85,4 +85,9 @@ public class SaveSystem : MonoBehaviour
         bf.Serialize(file, dictionaries);
         file.Close();
     }
+
+    private void OnDestroy()
+    {
+        Save();
+    }
 }

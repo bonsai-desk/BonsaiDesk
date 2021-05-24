@@ -20,8 +20,24 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
     public bool pinchPullEnabled = false;
 
+    private bool _init = false;
+
+    private void Init()
+    {
+        if (SaveSystem.Instance.BoolPairs.TryGetValue("PinchPullEnabled", out var value))
+        {
+            pinchPullEnabled = value;
+        }
+    }
+
     public void Tick()
     {
+        if (!_init)
+        {
+            Init();
+            _init = true;
+        }
+
         pinchPullJointBody.MovePosition(playerHand.PinchPosition());
 
         //detach if pinch pull is not enabled

@@ -14,8 +14,8 @@ public class TableBrowserMenu : MonoBehaviour
 {
     public enum LightState
     {
-        Bright,
-        Vibes
+        Bright = 0,
+        Vibes = 1
     }
 
     private const float PostRoomInfoEvery = 1f;
@@ -250,8 +250,11 @@ public class TableBrowserMenu : MonoBehaviour
     private void TogglePinchPull()
     {
         var pinchPullEnabled = InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled;
-        InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled = !pinchPullEnabled;
-        InputManager.Hands.Right.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled = !pinchPullEnabled;
+        var newPinchPullState = !pinchPullEnabled; //toggle state
+        InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled = newPinchPullState;
+        InputManager.Hands.Right.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled = newPinchPullState;
+        SaveSystem.Instance.BoolPairs["PinchPullEnabled"] = newPinchPullState;
+        SaveSystem.Instance.Save();
     }
 
     private void ToggleBlockBreak()

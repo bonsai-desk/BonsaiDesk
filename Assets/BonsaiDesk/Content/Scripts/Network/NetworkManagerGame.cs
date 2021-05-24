@@ -163,6 +163,7 @@ public class NetworkManagerGame : NetworkManager
 
     public override void OnApplicationQuit()
     {
+        Mixpanel.Track("Application Quit");
         Mixpanel.Track("Session Stop or Pause");
         Mixpanel.Flush();
         Mixpanel.Reset();
@@ -646,6 +647,7 @@ public class NetworkManagerGame : NetworkManager
         Mixpanel.Identify(oculusId);
         Mixpanel.People.Name = oculusId;
         Mixpanel.People.Email = oculusId + "@BonsaiDesk.com";
+        Mixpanel.Track("Login");
     }
 
     public event LoggedInHandler LoggedIn;

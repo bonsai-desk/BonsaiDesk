@@ -12,6 +12,14 @@ public class LightNetController : NetworkBehaviour
         TableBrowserMenu.Singleton.LightChange += HandleLightsChange;
     }
 
+    public override void OnStartServer()
+    {
+        if (SaveSystem.Instance.IntPairs.TryGetValue("LightState", out var value))
+        {
+            ServerSetLights((TableBrowserMenu.LightState) value);
+        }
+    }
+
     private void HandleLightsChange(object sender, TableBrowserMenu.LightState e)
     {
         CmdSetLights(e);
@@ -27,6 +35,12 @@ public class LightNetController : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdSetLights(TableBrowserMenu.LightState state)
     {
+        ServerSetLights(state);
+    }
+    
+    [Server]
+    private void ServerSetLights(TableBrowserMenu.LightState state)
+    {
         switch (state)
         {
             case TableBrowserMenu.LightState.Bright:
@@ -38,5 +52,8 @@ public class LightNetController : NetworkBehaviour
                 backRoomLevelTarget = 0.507f;
                 break;
         }
+        
+        SaveSystem.Instance.IntPairs["LightState"] = (int)state;
+        SaveSystem.Instance.Save();
     }
 }
