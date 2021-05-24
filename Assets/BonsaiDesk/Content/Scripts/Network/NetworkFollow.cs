@@ -12,7 +12,7 @@ public class NetworkFollow : NetworkBehaviour
     public enum RenderBehaviour
     {
         Normal,
-        DissableRenderers,
+        DisableRenderers,
         DoNotRenderLayer
     };
 
@@ -20,48 +20,25 @@ public class NetworkFollow : NetworkBehaviour
 
     public RenderBehaviour renderBehaviour = RenderBehaviour.Normal;
 
-    // void Start()
-    // {
-    //     if (!(isLocalPlayer || (hasAuthority && !isServer)))
-    //         return;
-    // }
-
-    private void init()
+    private void Init()
     {
         inited = true;
 
         int layer = LayerMask.NameToLayer("doNotRender");
-        var r = GetComponent<MeshRenderer>();
-        var sr = GetComponent<SkinnedMeshRenderer>();
-        if (r != null)
-        {
-            if (renderBehaviour == RenderBehaviour.DoNotRenderLayer)
-                r.gameObject.layer = layer;
-            if (renderBehaviour == RenderBehaviour.DissableRenderers)
-                r.enabled = false;
-        }
 
-        if (sr != null)
-        {
-            if (renderBehaviour == RenderBehaviour.DoNotRenderLayer)
-                sr.gameObject.layer = layer;
-            if (renderBehaviour == RenderBehaviour.DissableRenderers)
-                sr.enabled = false;
-        }
-
-        foreach (var rend in GetComponentsInChildren<MeshRenderer>())
+        foreach (var rend in GetComponentsInChildren<MeshRenderer>(true))
         {
             if (renderBehaviour == RenderBehaviour.DoNotRenderLayer)
                 rend.gameObject.layer = layer;
-            if (renderBehaviour == RenderBehaviour.DissableRenderers)
+            if (renderBehaviour == RenderBehaviour.DisableRenderers)
                 rend.enabled = false;
         }
 
-        foreach (var rend in GetComponentsInChildren<SkinnedMeshRenderer>())
+        foreach (var rend in GetComponentsInChildren<SkinnedMeshRenderer>(true))
         {
             if (renderBehaviour == RenderBehaviour.DoNotRenderLayer)
                 rend.gameObject.layer = layer;
-            if (renderBehaviour == RenderBehaviour.DissableRenderers)
+            if (renderBehaviour == RenderBehaviour.DisableRenderers)
                 rend.enabled = false;
         }
 
@@ -76,7 +53,7 @@ public class NetworkFollow : NetworkBehaviour
             return;
 
         if (!inited)
-            init();
+            Init();
 
         if (target != null)
         {
