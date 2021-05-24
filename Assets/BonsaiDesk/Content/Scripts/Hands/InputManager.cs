@@ -107,8 +107,8 @@ public class InputManager : MonoBehaviour
         //set controllers on/off
         var controllersActive = !UsingHandTracking && !MoveToDesk.Singleton.oriented;
         var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
-        leftControllerModel.SetActive(controllersActive);
-        rightControllerModel.SetActive(controllersActive);
+        leftControllerModel.SetActive(controllersActive && playing);
+        rightControllerModel.SetActive(controllersActive && playing);
     }
 
     public void UpdateHandTargets(bool updateTracking = true)
