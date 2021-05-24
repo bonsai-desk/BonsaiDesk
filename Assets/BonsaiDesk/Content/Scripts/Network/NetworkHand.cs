@@ -99,6 +99,8 @@ public class NetworkHand : NetworkBehaviour
         {
             _handMaterial.mainTexture = _handTexture;
         }
+
+        OnActiveChange(false, _active);
     }
 
     [Command]
@@ -114,19 +116,22 @@ public class NetworkHand : NetworkBehaviour
             return;
         }
 
-        var active = newValue;
-        if (active)
+        if (_physicsHandController && _physicsHandRenderer)
         {
-            _physicsHandController.overrideCapsulesActive = false;
-            _physicsHandRenderer.enabled = true;
-        }
-        else
-        {
-            _physicsHandController.overrideCapsulesActive = true;
-            _physicsHandRenderer.enabled = false;
-        }
+            var active = newValue;
+            if (active)
+            {
+                _physicsHandController.overrideCapsulesActive = false;
+                _physicsHandRenderer.enabled = true;
+            }
+            else
+            {
+                _physicsHandController.overrideCapsulesActive = true;
+                _physicsHandRenderer.enabled = false;
+            }
 
-        _physicsHandController.overrideCapsulesActiveTarget = false;
+            _physicsHandController.overrideCapsulesActiveTarget = false;
+        }
     }
 
     public void ChangeHandTexture(Texture texture)
