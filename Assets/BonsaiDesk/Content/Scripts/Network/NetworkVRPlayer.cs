@@ -1,10 +1,13 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using Mirror;
 using Smooth;
 using UnityEngine;
 
 public class NetworkVRPlayer : NetworkBehaviour
 {
+    public static NetworkVRPlayer localPlayer;
+    
     public GameObject headObject;
 
     [SyncVar] public NetworkIdentity _leftHandId;
@@ -13,11 +16,6 @@ public class NetworkVRPlayer : NetworkBehaviour
     [SyncVar(hook = nameof(SpotChange))] public int spotId;
 
     private MoveToDesk _moveToDesk;
-
-    private void Awake()
-    {
-        Debug.LogError(Time.time + " awakele layotu");
-    }
 
     public override void OnStartClient()
     {
@@ -29,9 +27,7 @@ public class NetworkVRPlayer : NetworkBehaviour
             return;
         }
 
-        Debug.LogError(Time.time + " start al ");
-        SpotManager.Instance.LayoutChange -= HandleLayoutChange;
-        SpotManager.Instance.LayoutChange += HandleLayoutChange;
+        localPlayer = this;
 
         if (!_moveToDesk)
         {
@@ -46,13 +42,27 @@ public class NetworkVRPlayer : NetworkBehaviour
         InputManager.Hands.Right.SetHandTexture(textures.handTexture);
     }
 
-    private IEnumerator WaitThenActivate()
+    public override void OnStopClient()
     {
-        yield return new WaitForSeconds(1f);
-        headObject.SetActive(true);
+        if (!isLocalPlayer)
+        {
+            return;
+        }
+
+        localPlayer = null;
     }
 
-    private void HandleLayoutChange(object sender, SpotManager.Layout newLayout)
+    private void OnDestroy()
+    {
+        if (!isLocalPlayer)
+        {
+            return;
+        }
+
+        localPlayer = null;
+    }
+
+    public void LayoutChange(SpotManager.Layout newLayout)
     {
         if (!isLocalPlayer)
         {
@@ -67,25 +77,29 @@ public class NetworkVRPlayer : NetworkBehaviour
         var tableEdge = SpotManager.Instance.GetSpotTransform(spotId - 1, newLayout);
         _moveToDesk.SetTableEdge(tableEdge);
 
-        //Debug.LogError($" {gameObject}");
-        //Debug.LogError($"{this} ");
+        Debug.LogError($"go: {gameObject}");
+        Debug.LogError($"this: {this}");
 
-        if (gameObject != null && this)
+        if (gameObject)
         {
             var ssm = gameObject.GetComponent<SmoothSyncMirror>();
-            Debug.LogError(Time.time + " handle layotu");
             if (ssm)
             {
                 ssm.teleportOwnedObjectFromOwner();
                 InputManager.Hands.Left.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
                 InputManager.Hands.Right.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
-                
             }
             else
             {
                 Debug.LogError("oof");
             }
         }
+    }
+
+    private IEnumerator WaitThenActivate()
+    {
+        yield return new WaitForSeconds(1f);
+        headObject.SetActive(true);
     }
 
     [Server]
