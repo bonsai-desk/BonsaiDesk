@@ -1,31 +1,39 @@
 ﻿using System;
 using System.Collections;
 using Mirror;
+using Smooth;
 using UnityEngine;
 
 public class NetworkVRPlayer : NetworkBehaviour
 {
     public GameObject headObject;
-    
+
     [SyncVar] public NetworkIdentity _leftHandId;
     [SyncVar] public NetworkIdentity _rightHandId;
 
     [SyncVar(hook = nameof(SpotChange))] public int spotId;
 
+    private MoveToDesk _moveToDesk;
+
     public override void OnStartClient()
     {
         headObject.SetActive(false);
         StartCoroutine(WaitThenActivate());
-        
+
         if (!isLocalPlayer)
             return;
-            
+
         SpotManager.Instance.LayoutChange -= HandleLayoutChange;
         SpotManager.Instance.LayoutChange += HandleLayoutChange;
 
+        if (!_moveToDesk)
+        {
+            _moveToDesk = GameObject.Find("GameManager").GetComponent<MoveToDesk>();
+        }
+
         var tableEdge = SpotManager.Instance.GetSpotTransform(spotId - 1);
-        GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(tableEdge);
-        
+        _moveToDesk.SetTableEdge(tableEdge);
+
         var textures = SpotManager.Instance.GetColorInfo(spotId - 1);
         InputManager.Hands.Left.SetHandTexture(textures.handTexture);
         InputManager.Hands.Right.SetHandTexture(textures.handTexture);
@@ -41,9 +49,18 @@ public class NetworkVRPlayer : NetworkBehaviour
     {
         if (!isLocalPlayer)
             return;
-        
+
+        if (!_moveToDesk)
+        {
+            _moveToDesk = GameObject.Find("GameManager").GetComponent<MoveToDesk>();
+        }
+
         var tableEdge = SpotManager.Instance.GetSpotTransform(spotId - 1, newLayout);
-        GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(tableEdge);
+        _moveToDesk.SetTableEdge(tableEdge);
+
+        GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
+        InputManager.Hands.Left.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
+        InputManager.Hands.Right.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
     }
 
     [Server]
