@@ -181,8 +181,9 @@ public class HandComponents
     {
         bool isTransparent = _handMaterial.GetInt("_DstBlend") == (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
 
-        //0 if not tracking, 0.65 if tracking and menu open, 1 if tracking and menu closed
-        float handAlphaTarget = Tracking ? (_tableBrowserParent.AllMenusClosed() ? 1f : 0.65f) : 0f;
+        //0 if not tracking, 0.25 if tracking and menu open, 1 if tracking and menu closed
+        //note that if the hand is over a menu, it uses the hard coded alpha of 1 in the shader
+        float handAlphaTarget = Tracking ? (_tableBrowserParent.AllMenusClosed() ? 1f : 0.5f) : 0f;
         _handAlpha = Mathf.MoveTowards(_handAlpha, handAlphaTarget, Time.deltaTime / RecentTrackingThreshold);
         var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
         var controllersAndInVoid = !InputManager.Hands.UsingHandTracking && !MoveToDesk.Singleton.oriented;

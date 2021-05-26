@@ -16,6 +16,7 @@ public class Browser : MonoBehaviour
     public Transform boundsTransform;
     public Transform overlayTransform;
     public Transform holePuncherTransform;
+    public Transform stencilTransform;
     public Transform screenTransform;
     public string initialUrl;
     public bool useBuiltHtml;
@@ -177,6 +178,7 @@ public class Browser : MonoBehaviour
         hidden = choice;
         var renderEnabled = !choice;
 
+        stencilTransform.gameObject.SetActive(!choice);
 
 #if UNITY_ANDROID && !UNITY_EDITOR
 		if (_overlay != null) {
