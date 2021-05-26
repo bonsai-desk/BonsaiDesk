@@ -48,7 +48,7 @@ public class BlockBreakHand : MonoBehaviour, IHandTick
         SetBreakMode(BreakMode.None);
         // if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandRight)
         // {
-        //     SetBreakMode(BreakMode.Save);
+        //     SetBreakMode(BreakMode.Whole);
         // }
     }
 

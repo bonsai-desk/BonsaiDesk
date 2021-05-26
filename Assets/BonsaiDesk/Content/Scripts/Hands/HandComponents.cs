@@ -39,6 +39,8 @@ public class HandComponents
     private float _handAlpha = 1f;
     private bool _zTestOverlay = false;
 
+    private TableBrowserParent _tableBrowserParent;
+
     public HandComponents(PlayerHand playerHand, Transform handAnchor, Transform handObject, RuntimeAnimatorController animationController)
     {
         PlayerHand = playerHand;
@@ -107,6 +109,8 @@ public class HandComponents
         TargetHandAnimatorController.controller =
             PlayerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft ? OVRInput.Controller.LTouch : OVRInput.Controller.RTouch;
         TargetHandAnimatorController.animator = handTargetAnimator;
+
+        _tableBrowserParent = GameObject.FindObjectOfType<TableBrowserParent>();
     }
 
     public void SetPhysicsLayerRegular()
@@ -177,7 +181,8 @@ public class HandComponents
     {
         bool isTransparent = _handMaterial.GetInt("_DstBlend") == (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
 
-        float handAlphaTarget = Tracking ? 1f : 0f;
+        //0 if not tracking, 0.65 if tracking and menu open, 1 if tracking and menu closed
+        float handAlphaTarget = Tracking ? (_tableBrowserParent.AllMenusClosed() ? 1f : 0.65f) : 0f;
         _handAlpha = Mathf.MoveTowards(_handAlpha, handAlphaTarget, Time.deltaTime / RecentTrackingThreshold);
         var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
         var controllersAndInVoid = !InputManager.Hands.UsingHandTracking && !MoveToDesk.Singleton.oriented;
