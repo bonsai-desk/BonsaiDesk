@@ -7,7 +7,7 @@ using UnityEngine;
 public class NetworkVRPlayer : NetworkBehaviour
 {
     public static NetworkVRPlayer localPlayer;
-    
+
     public GameObject headObject;
 
     [SyncVar] public NetworkIdentity _leftHandId;
@@ -76,24 +76,13 @@ public class NetworkVRPlayer : NetworkBehaviour
 
         var tableEdge = SpotManager.Instance.GetSpotTransform(spotId - 1, newLayout);
         _moveToDesk.SetTableEdge(tableEdge);
+        
+        InputManager.Hands.Left.NetworkHand.GetComponent<NetworkFollow>().MoveToTarget();
+        InputManager.Hands.Right.NetworkHand.GetComponent<NetworkFollow>().MoveToTarget();
 
-        Debug.LogError($"go: {gameObject}");
-        Debug.LogError($"this: {this}");
-
-        if (gameObject)
-        {
-            var ssm = gameObject.GetComponent<SmoothSyncMirror>();
-            if (ssm)
-            {
-                ssm.teleportOwnedObjectFromOwner();
-                InputManager.Hands.Left.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
-                InputManager.Hands.Right.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
-            }
-            else
-            {
-                Debug.LogError("oof");
-            }
-        }
+        GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
+        InputManager.Hands.Left.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
+        InputManager.Hands.Right.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
     }
 
     private IEnumerator WaitThenActivate()

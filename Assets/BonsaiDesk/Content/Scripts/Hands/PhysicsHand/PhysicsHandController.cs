@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Smooth;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -19,6 +20,8 @@ public class PhysicsHandController : MonoBehaviour
     public Transform[] fingerTargets;
 
     public Vector3 jointOffset = new Vector3(0.035f, 0, 0);
+
+    public bool isOwnHand = false;
 
     private bool _initialized = false;
     private ConfigurableJoint _joint;
@@ -327,6 +330,15 @@ public class PhysicsHandController : MonoBehaviour
             {
                 ResetTransform(fingerJointBodies[i], joint.connectedAnchor, target.localRotation, true);
             }
+        }
+
+        if (isOwnHand && InputManager.Hands.Left.NetworkHand && InputManager.Hands.Right.NetworkHand)
+        {
+            InputManager.Hands.Left.NetworkHand.GetComponent<NetworkFollow>().MoveToTarget();
+            InputManager.Hands.Left.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
+            
+            InputManager.Hands.Right.NetworkHand.GetComponent<NetworkFollow>().MoveToTarget();
+            InputManager.Hands.Right.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
         }
     }
 

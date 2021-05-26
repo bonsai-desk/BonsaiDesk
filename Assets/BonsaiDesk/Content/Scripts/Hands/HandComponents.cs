@@ -56,6 +56,7 @@ public class HandComponents
         _handMaterial.SetInt("_ZWrite", 1);
         MakeMaterialOpaque();
         PhysicsHandController = PhysicsHand.GetComponent<PhysicsHandController>();
+        PhysicsHandController.isOwnHand = true;
         TargetHand = handObject.GetChild(1);
         PlayerHand.transform.SetParent(PhysicsHand, false);
         TargetHand.GetComponentInChildren<SkinnedMeshRenderer>().enabled = InputManager.Hands.renderTargetHands;
