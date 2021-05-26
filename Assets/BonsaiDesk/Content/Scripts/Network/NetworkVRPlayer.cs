@@ -70,7 +70,7 @@ public class NetworkVRPlayer : NetworkBehaviour
         //Debug.LogError($" {gameObject}");
         //Debug.LogError($"{this} ");
 
-        if (gameObject && this)
+        if (gameObject != null && this)
         {
             var ssm = gameObject.GetComponent<SmoothSyncMirror>();
             Debug.LogError(Time.time + " handle layotu");
