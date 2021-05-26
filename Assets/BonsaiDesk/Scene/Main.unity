@@ -8778,6 +8778,7 @@ MonoBehaviour:
   pinchPullJoint: {fileID: 1994331529}
   pinchPullJointBody: {fileID: 1994331530}
   lineRenderer: {fileID: 1510384917}
+  tableBrowserParent: {fileID: 955373203}
   pinchPullEnabled: 0
 --- !u!114 &630641734
 MonoBehaviour:
@@ -8792,6 +8793,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   joint: {fileID: 0}
+  tableBrowserParent: {fileID: 955373203}
 --- !u!114 &630641735
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11034,6 +11036,7 @@ MonoBehaviour:
   pinchPullJoint: {fileID: 1293423861}
   pinchPullJointBody: {fileID: 1293423862}
   lineRenderer: {fileID: 649121919}
+  tableBrowserParent: {fileID: 955373203}
   pinchPullEnabled: 0
 --- !u!114 &946290009
 MonoBehaviour:
@@ -11048,6 +11051,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   joint: {fileID: 0}
+  tableBrowserParent: {fileID: 955373203}
 --- !u!114 &946290010
 MonoBehaviour:
   m_ObjectHideFlags: 0

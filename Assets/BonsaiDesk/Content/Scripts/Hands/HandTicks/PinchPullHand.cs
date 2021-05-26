@@ -9,6 +9,8 @@ public class PinchPullHand : MonoBehaviour, IHandTick
     public Rigidbody pinchPullJointBody;
     public LineRenderer lineRenderer;
 
+    public TableBrowserParent tableBrowserParent;
+
     private float _ropeLength;
     private uint _attachedToId;
     private Vector3 _localHitPoint;
@@ -57,6 +59,12 @@ public class PinchPullHand : MonoBehaviour, IHandTick
             }
         }
 
+        //detach if menu is open
+        if (pinchPullJoint.connectedBody && !tableBrowserParent.AllMenusClosed())
+        {
+            DetachObject();
+        }
+
         bool drawLocal = false;
 
         //detach pinch pull object if both hands are not pinching
@@ -77,8 +85,8 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         }
 
         //start pinch pull action. note that the action is started by the hand which grabs the rope
-        if (pinchPullEnabled && InputManager.Hands.TrackingRecently() && playerHand.GetGestureStart(PlayerHand.Gesture.IndexPinching) &&
-            playerHand.OtherHand.GetGesture(PlayerHand.Gesture.IndexPinching) &&
+        if (pinchPullEnabled && tableBrowserParent.AllMenusClosed() && InputManager.Hands.TrackingRecently() &&
+            playerHand.GetGestureStart(PlayerHand.Gesture.IndexPinching) && playerHand.OtherHand.GetGesture(PlayerHand.Gesture.IndexPinching) &&
             Vector3.Distance(playerHand.PinchPosition(), playerHand.OtherHand.PinchPosition()) < PinchPullGestureStartDistance &&
             playerHand.OtherHand.GetIHandTick<PinchPullHand>().pinchPullJoint.connectedBody == null)
         {
@@ -90,7 +98,8 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         }
 
         //visualize pinch pull candidates
-        if (pinchPullEnabled && pinchPullJoint.connectedBody == null && playerHand.OtherHand.GetIHandTick<PinchPullHand>().pinchPullJoint.connectedBody == null)
+        if (pinchPullEnabled && tableBrowserParent.AllMenusClosed() && pinchPullJoint.connectedBody == null &&
+            playerHand.OtherHand.GetIHandTick<PinchPullHand>().pinchPullJoint.connectedBody == null)
         {
             //get pinch pull candidate each frame for visual indication
             var hit = GetPinchPullCandidate();
@@ -106,7 +115,8 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         //tell network hands how to render the rope
         if (InputManager.Hands.GetHand(playerHand.skeletonType).NetworkHand != null)
         {
-            if (pinchPullEnabled && pinchPullJoint.connectedBody != null && NetworkIdentity.spawned.TryGetValue(_attachedToId, out NetworkIdentity value))
+            if (pinchPullEnabled && tableBrowserParent.AllMenusClosed() && pinchPullJoint.connectedBody != null &&
+                NetworkIdentity.spawned.TryGetValue(_attachedToId, out NetworkIdentity value))
             {
                 var from = playerHand.OtherHand.PinchPosition();
                 var to = playerHand.PinchPosition();

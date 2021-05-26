@@ -152,13 +152,17 @@ public class TableBrowserParent : MonoBehaviour
         }
     }
 
+    public bool AllMenusClosed()
+    {
+        return MenuAsleep && ContextAsleep;
+    }
+
     private void ContextWake()
     {
         ContextAsleep = false;
         contentBoxCollider.enabled = true;
         ContextMenu.SetHidden(false);
         SetHandsForActiveBrowser();
-        
     }
 
     private void ContextSleep()
