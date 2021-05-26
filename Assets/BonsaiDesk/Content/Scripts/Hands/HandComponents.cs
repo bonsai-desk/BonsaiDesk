@@ -279,11 +279,22 @@ public class HandComponents
     }
 
     /// <summary>
+    /// The wording for SetHandColliderActiveForScreen is confusing, so this function makes it easier to use.
+    /// If usingScreen is true, your hand clips through the screen. If it is false, your whole hand hits it like normal
+    /// </summary>
+    /// <param name="usingScreen">true if a screen is up and your hand should clip through it</param>
+    public void SetPhysicsForUsingScreen(bool usingScreen)
+    {
+        SetHandColliderActiveForScreen(!usingScreen);
+    }
+
+    /// <summary>
+    /// Use SetPhysicsForUsingScreen instead.
     /// changes the layer collision matrix for TouchScreenSurface to not collide or not collide with this hand
     /// excluding the index tip collider
     /// </summary>
-    /// <param name="active"></param>
-    public void SetHandColliderActiveForScreen(bool active)
+    /// <param name="active">if active is true, your hand will hit the screen like normal</param>
+    private void SetHandColliderActiveForScreen(bool active)
     {
         Physics.IgnoreLayerCollision(_touchScreenSurfaceLayer, _physicsLayer, !active);
         Physics.IgnoreLayerCollision(_touchScreenSurfaceLayer, _onlyScreenLayer, !active);

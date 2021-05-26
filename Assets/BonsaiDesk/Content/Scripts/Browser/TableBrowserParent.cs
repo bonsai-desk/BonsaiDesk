@@ -135,6 +135,8 @@ public class TableBrowserParent : MonoBehaviour
         InputManager.Hands.Right.ZTestOverlay();
         InputManager.Hands.Left.SetPhysicsLayerForTouchScreen();
         InputManager.Hands.Right.SetPhysicsLayerForTouchScreen();
+        InputManager.Hands.Left.SetPhysicsForUsingScreen(true);
+        InputManager.Hands.Right.SetPhysicsForUsingScreen(true);
     }
 
     private void SetHandForInactiveBrowser()
@@ -145,6 +147,8 @@ public class TableBrowserParent : MonoBehaviour
             InputManager.Hands.Right.ZTestRegular();
             InputManager.Hands.Left.SetPhysicsLayerRegular();
             InputManager.Hands.Right.SetPhysicsLayerRegular();
+            InputManager.Hands.Left.SetPhysicsForUsingScreen(false);
+            InputManager.Hands.Right.SetPhysicsForUsingScreen(false);
         }
     }
 
