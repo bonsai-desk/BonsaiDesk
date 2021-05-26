@@ -12,7 +12,7 @@ public class AutoAuthority : NetworkBehaviour
     [SyncVar] private uint _ownerIdentityId = uint.MaxValue;
     [SyncVar] private bool _inUse = false;
     [SyncVar] public bool isKinematic = false;
-    public bool destroyIfBelow = true;
+    public bool destroyIfBelow = true; //also if far from origin or high above
 
     public bool InUse => _inUse;
 
@@ -61,21 +61,25 @@ public class AutoAuthority : NetworkBehaviour
         UpdateColor();
         _visualizePinchPull = false;
 
-        if (isServer && (destroyIfBelow && transform.position.y < -2f || PhysicsHandController.InvalidTransform(transform)))
+        if (isServer && destroyIfBelow)
         {
-            var blockObject = GetComponent<BlockObject>();
-            if (blockObject && blockObject.Blocks.Count > 4)
+            var distanceSquared = Vector3.SqrMagnitude(transform.position);
+            if (distanceSquared > 20f * 20f || transform.position.y < -2f || transform.position.y > 5f || PhysicsHandController.InvalidTransform(transform))
             {
-                ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
-                _body.velocity = Vector3.zero;
-                _body.angularVelocity = Vector3.zero;
-                GetComponent<SmoothSyncMirror>().teleportAnyObjectFromServer(new Vector3(0, 2, 0), Quaternion.identity, transform.localScale);
+                var blockObject = GetComponent<BlockObject>();
+                if (blockObject && blockObject.Blocks.Count > 4)
+                {
+                    ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
+                    _body.velocity = Vector3.zero;
+                    _body.angularVelocity = Vector3.zero;
+                    GetComponent<SmoothSyncMirror>().teleportAnyObjectFromServer(new Vector3(0, 2, 0), Quaternion.identity, transform.localScale);
+                }
+                else
+                {
+                    ServerStripOwnerAndDestroy();
+                }
+                return;
             }
-            else
-            {
-                ServerStripOwnerAndDestroy();
-            }
-            return;
         }
 
         //if you don't have control over the object
