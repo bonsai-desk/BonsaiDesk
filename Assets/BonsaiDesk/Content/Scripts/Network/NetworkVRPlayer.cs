@@ -31,7 +31,7 @@ public class NetworkVRPlayer : NetworkBehaviour
         Debug.LogError(Time.time + " start al ");
         SpotManager.Instance.LayoutChange -= HandleLayoutChange;
         SpotManager.Instance.LayoutChange += HandleLayoutChange;
-
+        
         if (!_moveToDesk)
         {
             _moveToDesk = GameObject.Find("GameManager").GetComponent<MoveToDesk>();
@@ -64,6 +64,10 @@ public class NetworkVRPlayer : NetworkBehaviour
         var tableEdge = SpotManager.Instance.GetSpotTransform(spotId - 1, newLayout);
         _moveToDesk.SetTableEdge(tableEdge);
 
+        Debug.LogError($"{this} {gameObject}");
+        
+        if (gameObject)
+        {
         var ssm = GetComponent<SmoothSyncMirror>();
         Debug.LogError(Time.time + " handle layotu");
         if (ssm)
@@ -73,6 +77,7 @@ public class NetworkVRPlayer : NetworkBehaviour
         else
         {
             Debug.LogError("oof");
+        }
         }
 
         InputManager.Hands.Left.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
