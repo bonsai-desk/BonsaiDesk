@@ -136,7 +136,7 @@ public class PhysicsHandController : MonoBehaviour
         return false;
     }
 
-    private bool InvalidTransform(Transform t)
+    public static bool InvalidTransform(Transform t)
     {
         return float.IsNaN(t.position.x) || float.IsNaN(t.position.y) || float.IsNaN(t.position.z) || float.IsInfinity(t.position.x) ||
                float.IsInfinity(t.position.y) || float.IsInfinity(t.position.z) || float.IsNaN(t.rotation.x) || float.IsNaN(t.rotation.y) ||

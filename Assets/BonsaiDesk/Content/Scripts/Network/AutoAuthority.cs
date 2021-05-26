@@ -61,21 +61,7 @@ public class AutoAuthority : NetworkBehaviour
         UpdateColor();
         _visualizePinchPull = false;
 
-        // if (destroyIfBelow && HasAuthority() && transform.position.y < -1f)
-        // {
-        //     var blockObject = GetComponent<BlockObject>();
-        //     if (blockObject && blockObject.Blocks.Count > 4)
-        //     {
-        //         _body.velocity = Vector3.zero;
-        //         _body.angularVelocity = Vector3.zero;
-        //         transform.position = new Vector3(0, 2, 0);
-        //         transform.rotation = Quaternion.identity;
-        //         GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
-        //         return;
-        //     }
-        // }
-
-        if (destroyIfBelow && isServer && transform.position.y < -2f)
+        if (isServer && (destroyIfBelow && transform.position.y < -2f || PhysicsHandController.InvalidTransform(transform)))
         {
             var blockObject = GetComponent<BlockObject>();
             if (blockObject && blockObject.Blocks.Count > 4)
