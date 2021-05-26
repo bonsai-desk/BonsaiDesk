@@ -15,6 +15,11 @@ public class NetworkVRPlayer : NetworkBehaviour
 
     private MoveToDesk _moveToDesk;
 
+    private void Awake()
+    {
+        Debug.LogError(Time.time + " awakele layotu");
+
+    }
     public override void OnStartClient()
     {
         headObject.SetActive(false);
@@ -23,6 +28,7 @@ public class NetworkVRPlayer : NetworkBehaviour
         if (!isLocalPlayer)
             return;
 
+        Debug.LogError(Time.time + " start al ");
         SpotManager.Instance.LayoutChange -= HandleLayoutChange;
         SpotManager.Instance.LayoutChange += HandleLayoutChange;
 
@@ -38,7 +44,7 @@ public class NetworkVRPlayer : NetworkBehaviour
         InputManager.Hands.Left.SetHandTexture(textures.handTexture);
         InputManager.Hands.Right.SetHandTexture(textures.handTexture);
     }
-
+    
     private IEnumerator WaitThenActivate()
     {
         yield return new WaitForSeconds(1f);
@@ -58,7 +64,17 @@ public class NetworkVRPlayer : NetworkBehaviour
         var tableEdge = SpotManager.Instance.GetSpotTransform(spotId - 1, newLayout);
         _moveToDesk.SetTableEdge(tableEdge);
 
-        GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
+        var ssm = GetComponent<SmoothSyncMirror>();
+        Debug.LogError(Time.time + " handle layotu");
+        if (ssm)
+        {
+            ssm.teleportOwnedObjectFromOwner();
+        }
+        else
+        {
+            Debug.LogError("oof");
+        }
+
         InputManager.Hands.Left.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
         InputManager.Hands.Right.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
     }
