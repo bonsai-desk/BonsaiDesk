@@ -152,7 +152,11 @@ public class InputManager : MonoBehaviour
         }
         else if (controller == OVRInput.Controller.Touch)
         {
-            handComponents.SetTracking(true);
+            if (updateTracking)
+            {
+                handComponents.SetTracking(true);
+            }
+
             if (handComponents.Tracking)
             {
                 handComponents.TargetHand.position = handComponents.HandAnchor.TransformPoint(controllerOffset);
@@ -160,6 +164,21 @@ public class InputManager : MonoBehaviour
                 handComponents.TargetMapper.UpdateBonesToStartPose();
 
                 handComponents.PhysicsHandController.SetHandScale(1f);
+            }
+        }
+        else if (controller == OVRInput.Controller.None) //usually controller type none means the oculus menu is open and the app doesn't have focus
+        {
+            if (updateTracking)
+            {
+                handComponents.SetTracking(false);
+            }
+        }
+        else
+        {
+            Debug.LogError("Unknown controller type: " + controller);
+            if (updateTracking)
+            {
+                handComponents.SetTracking(false);
             }
         }
     }
@@ -251,10 +270,10 @@ public class InputManager : MonoBehaviour
             {
                 rightMenu.TurnOffMenus();
             }
-            
+
             leftControllerModel.SetActive(false);
             rightControllerModel.SetActive(false);
-            
+
             Left.PlayerHand.stylus.parent.gameObject.SetActive(false);
             Right.PlayerHand.stylus.parent.gameObject.SetActive(false);
         }

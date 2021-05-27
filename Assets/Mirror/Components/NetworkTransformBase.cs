@@ -400,6 +400,12 @@ namespace Mirror
             ServerTeleport(position, rotation);
         }
 
+        [Command]
+        public void CmdTeleport(Vector3 position, Quaternion rotation)
+        {
+            ServerTeleport(position, rotation);
+        }
+
         /// <summary>
         /// Server side teleportation.
         /// This method will override this GameObject's current Transform.Position and Transform.Rotation

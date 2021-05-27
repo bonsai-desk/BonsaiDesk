@@ -54,7 +54,7 @@ public class NetworkHand : NetworkBehaviour
 
     public override void OnStartServer()
     {
-        _active = true;
+        _active = false;
 
         if (!isClient)
         {
@@ -74,6 +74,8 @@ public class NetworkHand : NetworkBehaviour
             InputManager.Hands.Left.NetworkHand = this;
         if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
             InputManager.Hands.Right.NetworkHand = this;
+
+        StartCoroutine(WaitThenActivateClientAuthority());
     }
 
     private void SetupPhysicsHand()
@@ -116,6 +118,12 @@ public class NetworkHand : NetworkBehaviour
         yield return new WaitForSeconds(1f);
         _disableWaitPeriodDone = true;
         OnActiveChange(false, _active);
+    }
+    
+    private IEnumerator WaitThenActivateClientAuthority()
+    {
+        yield return new WaitForSeconds(1f);
+        CmdSetActive(InputManager.Hands.GetHand(_skeletonType).TrackingRecently);
     }
 
     [Command]

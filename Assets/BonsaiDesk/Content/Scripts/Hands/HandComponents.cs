@@ -139,22 +139,31 @@ public class HandComponents
 
     public void SetTracking(bool tracking)
     {
+        var currentlyTracking = tracking;
+
+        //if you are not playing (in oculus menu, etc.) we will just say you don't have tracking
+        var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
+        if (!playing)
+        {
+            currentlyTracking = false;
+        }
+
         //if tracking just started this frame
-        // if (!Tracking && tracking)
-        // {
-        //     PhysicsHandController.SetCapsulesActiveTarget(false);
-        //     PhysicsHandController.ResetFingerJoints();
-        //     PhysicsHandController.SetCapsulesActiveTarget(true);
-        // }
+        if (!TrackingRecently && currentlyTracking)
+        {
+            PhysicsHandController.SetCapsulesActiveTarget(false);
+            PhysicsHandController.ResetFingerJoints();
+            PhysicsHandController.SetCapsulesActiveTarget(true);
+        }
 
-        Tracking = tracking;
+        Tracking = currentlyTracking;
 
-        if (tracking)
+        if (currentlyTracking)
         {
             _lastTrackingTime = Time.time;
             TrackingRecently = true;
         }
-        else if (Time.time - _lastTrackingTime > RecentTrackingThreshold)
+        else if (Time.time - _lastTrackingTime > RecentTrackingThreshold || !playing)
         {
             TrackingRecently = false;
         }
@@ -184,7 +193,10 @@ public class HandComponents
         //0 if not tracking, 0.25 if tracking and menu open, 1 if tracking and menu closed
         //note that if the hand is over a menu, it uses the hard coded alpha of 1 in the shader
         float handAlphaTarget = Tracking ? (_tableBrowserParent.AllMenusClosed() ? 1f : 0.5f) : 0f;
+
+        //move alpha towards target
         _handAlpha = Mathf.MoveTowards(_handAlpha, handAlphaTarget, Time.deltaTime / RecentTrackingThreshold);
+
         var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
         var controllersAndInVoid = !InputManager.Hands.UsingHandTracking && !MoveToDesk.Singleton.oriented;
         if (!playing || controllersAndInVoid)

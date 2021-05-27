@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Mirror;
 using Smooth;
 using UnityEngine;
 
@@ -332,13 +333,15 @@ public class PhysicsHandController : MonoBehaviour
             }
         }
 
-        if (isOwnHand && InputManager.Hands.Left.NetworkHand && InputManager.Hands.Right.NetworkHand)
+        if (isOwnHand)
         {
-            InputManager.Hands.Left.NetworkHand.GetComponent<NetworkFollow>().MoveToTarget();
-            InputManager.Hands.Left.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
-            
-            InputManager.Hands.Right.NetworkHand.GetComponent<NetworkFollow>().MoveToTarget();
-            InputManager.Hands.Right.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
+            var networkHand = InputManager.Hands.GetHand(skeletonType).NetworkHand;
+            if (networkHand)
+            {
+                networkHand.GetComponent<NetworkFollow>().MoveToTarget();
+                networkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
+                // networkHand.GetComponent<NetworkTransform>().CmdTeleport(networkHand.transform.position, networkHand.transform.rotation);
+            }
         }
     }
 

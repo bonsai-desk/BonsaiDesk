@@ -76,13 +76,10 @@ public class NetworkVRPlayer : NetworkBehaviour
 
         var tableEdge = SpotManager.Instance.GetSpotTransform(spotId - 1, newLayout);
         _moveToDesk.SetTableEdge(tableEdge);
-        
-        InputManager.Hands.Left.NetworkHand.GetComponent<NetworkFollow>().MoveToTarget();
-        InputManager.Hands.Right.NetworkHand.GetComponent<NetworkFollow>().MoveToTarget();
 
+        //move head (hands are teleported as part of SetTableEdge)
+        GetComponent<NetworkFollow>().MoveToTarget();
         GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
-        InputManager.Hands.Left.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
-        InputManager.Hands.Right.NetworkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
     }
 
     private IEnumerator WaitThenActivate()
