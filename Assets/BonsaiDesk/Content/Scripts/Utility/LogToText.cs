@@ -26,12 +26,14 @@ public class LogToText : MonoBehaviour
         public string condition;
         public string stackTrace;
         public LogType type;
+        public float time;
 
-        public Log(string condition, string stackTrace, LogType type)
+        public Log(string condition, string stackTrace, LogType type, float time)
         {
             this.condition = condition;
             this.stackTrace = stackTrace;
             this.type = type;
+            this.time = time;
         }
     }
 
@@ -93,6 +95,7 @@ public class LogToText : MonoBehaviour
         log.condition = condition;
         log.stackTrace = stackTrace;
         log.type = type;
+        log.time = Time.realtimeSinceStartup;
         logs.Enqueue(log);
     }
 
@@ -139,7 +142,7 @@ public class LogToText : MonoBehaviour
             while (logs.Count > 0)
             {
                 Log log = logs.Dequeue();
-                sw.WriteLine(log.type.ToString());
+                sw.WriteLine(log.type + " at time: " + log.time);
                 sw.WriteLine(log.condition);
                 sw.WriteLine(log.stackTrace);
                 _numLogged++;
