@@ -150,7 +150,7 @@ public class InputManager : MonoBehaviour
                 handComponents.SetTracking(tracking);
             }
         }
-        else if (controller == OVRInput.Controller.Touch)
+        else if (controller == OVRInput.Controller.Touch || controller == OVRInput.Controller.LTouch || controller == OVRInput.Controller.RTouch)
         {
             if (updateTracking)
             {

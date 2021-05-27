@@ -114,7 +114,7 @@ public static partial class BlockUtility
         new Vector3Int(0, 0, -1)
     };
 
-    public static (Vector3[] vertices, Vector2[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(int id, Vector3Int coord, Quaternion rotation,
+    public static (Vector3[] vertices, Vector3[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(int id, Vector3Int coord, Quaternion rotation,
         float texturePadding)
     {
         if (id < 0)
@@ -124,13 +124,13 @@ public static partial class BlockUtility
         }
 
         Vector3[] vertices = new Vector3[6 * 4];
-        Vector2[] uv = new Vector2[6 * 4];
+        Vector3[] uv = new Vector3[6 * 4];
         Vector2[] uv2 = new Vector2[6 * 4];
         int[] triangles = new int[6 * 6];
 
-        Vector2 topBlockuv = GetBlockuv(Blocks.blocks[id].topTextureIndex);
-        Vector2 sideBlockuv = GetBlockuv(Blocks.blocks[id].sideTextureIndex);
-        Vector2 bottomBlockuv = GetBlockuv(Blocks.blocks[id].bottomTextureIndex);
+        // Vector2 topBlockuv = GetBlockuv(Blocks.blocks[id].topTextureIndex);
+        // Vector2 sideBlockuv = GetBlockuv(Blocks.blocks[id].sideTextureIndex);
+        // Vector2 bottomBlockuv = GetBlockuv(Blocks.blocks[id].bottomTextureIndex);
 
         for (int face = 0; face < 6; face++)
         {
@@ -139,18 +139,23 @@ public static partial class BlockUtility
                 vertices[face * 4 + v] = (rotation * _cubeVertices[face * 4 + v]) + coord;
             }
 
-            Vector2 blockuv;
-
-            if (face < 4)
-                blockuv = sideBlockuv;
-            else if (face < 5)
-                blockuv = topBlockuv;
-            else
-                blockuv = bottomBlockuv;
-            uv[face * 4 + 0] = blockuv + new Vector2(texturePadding, texturePadding);
-            uv[face * 4 + 1] = blockuv + new Vector2(Block.textureWidth, 0) + new Vector2(-texturePadding, texturePadding);
-            uv[face * 4 + 2] = blockuv + new Vector2(Block.textureWidth, Block.textureWidth) + new Vector2(-texturePadding, -texturePadding);
-            uv[face * 4 + 3] = blockuv + new Vector2(0, Block.textureWidth) + new Vector2(texturePadding, -texturePadding);
+            // Vector2 blockuv;
+            //
+            // if (face < 4)
+            //     blockuv = sideBlockuv;
+            // else if (face < 5)
+            //     blockuv = topBlockuv;
+            // else
+            //     blockuv = bottomBlockuv;
+            // uv[face * 4 + 0] = blockuv + new Vector2(texturePadding, texturePadding);
+            // uv[face * 4 + 1] = blockuv + new Vector2(Block.textureWidth, 0) + new Vector2(-texturePadding, texturePadding);
+            // uv[face * 4 + 2] = blockuv + new Vector2(Block.textureWidth, Block.textureWidth) + new Vector2(-texturePadding, -texturePadding);
+            // uv[face * 4 + 3] = blockuv + new Vector2(0, Block.textureWidth) + new Vector2(texturePadding, -texturePadding);
+            
+            uv[face * 4 + 0] = new Vector3(0, 0, 0);
+            uv[face * 4 + 1] = new Vector3(1, 0, 0);
+            uv[face * 4 + 2] = new Vector3(1, 1, 0);
+            uv[face * 4 + 3] = new Vector3(0, 1, 0);
 
             uv2[face * 4 + 0] = new Vector2(0, 0);
             uv2[face * 4 + 1] = new Vector2(Block.breakTextureWidth, 0);

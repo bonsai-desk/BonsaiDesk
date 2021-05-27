@@ -29,6 +29,9 @@ public partial class BlockObject : NetworkBehaviour
     //contains all of the AutoAuthority of all BlockObjects in the scene
     private static HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
 
+    //2DArray for block textures. value is calculated once then cached
+    private static Texture2DArray blockTextureArray = null;
+
     //contains all of the information required to construct this BlockObject
     public readonly SyncDictionary<Vector3Int, SyncBlock> Blocks = new SyncDictionary<Vector3Int, SyncBlock>();
 
@@ -77,7 +80,7 @@ public partial class BlockObject : NetworkBehaviour
     private MeshFilter _meshFilter;
     private Mesh _mesh;
     private List<Vector3> _vertices = new List<Vector3>();
-    private List<Vector2> _uv = new List<Vector2>();
+    private List<Vector3> _uv = new List<Vector3>();
     private List<Vector2> _uv2 = new List<Vector2>();
     private List<int> _triangles = new List<int>();
     private float _texturePadding = 0f;
@@ -140,6 +143,12 @@ public partial class BlockObject : NetworkBehaviour
 
         //make copy of material so material asset is not changed
         blockObjectMaterial = new Material(blockObjectMaterial);
+        if (blockTextureArray == null)
+        {
+            blockTextureArray = BlockUtility.GenerateBlockTextureArray();
+        }
+
+        blockObjectMaterial.SetTexture("_TextureArray", blockTextureArray);
 
         PhysicsStart();
 
@@ -174,6 +183,11 @@ public partial class BlockObject : NetworkBehaviour
         UpdateDamagedBlocks();
         UpdateWholeEffects();
         UpdateSaveDialogPosition();
+
+        if (debug && Input.GetKeyDown(KeyCode.S))
+        {
+            Save();
+        }
     }
 
     private void FixedUpdate()
@@ -502,6 +516,7 @@ public partial class BlockObject : NetworkBehaviour
                         _activeSaveDialog.transform.GetChild(0).GetComponent<HoverButton>().action.AddListener(CloseSaveDialog);
                         _activeSaveDialog.transform.GetChild(1).GetComponent<HoverButton>().action.AddListener(Save);
                     }
+
                     break;
                 default:
                     Debug.LogError("Unknown mode: " + _activeWholeEffect.mode);
@@ -642,8 +657,8 @@ public partial class BlockObject : NetworkBehaviour
         _mesh.vertices = _vertices.ToArray();
         _mesh.triangles = _triangles.ToArray();
 
-        _mesh.uv = _uv.ToArray();
-        _mesh.uv2 = _uv2.ToArray();
+        _mesh.SetUVs(0, _uv);
+        _mesh.SetUVs(1, _uv2);
 
         _mesh.RecalculateNormals();
         _mesh.RecalculateTangents();
@@ -750,7 +765,7 @@ public partial class BlockObject : NetworkBehaviour
         NetworkServer.Spawn(blockObjectGameObject);
         blockObjectGameObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time, false);
     }
-    
+
     private void UpdateSaveDialogPosition()
     {
         if (!_activeSaveDialog)
