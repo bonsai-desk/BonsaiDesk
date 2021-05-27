@@ -129,9 +129,9 @@ public static partial class BlockUtility
         Vector2[] uv2 = new Vector2[6 * 4];
         int[] triangles = new int[6 * 6];
 
-        var topBlockIndex = block.topTextureIndex;
-        var sideBlockIndex = block.sideTextureIndex;
-        var bottomBlockIndex = block.bottomTextureIndex;
+        var topBlockIndex = block.TopTextureIndex;
+        var sideBlockIndex = block.SideTextureIndex;
+        var bottomBlockIndex = block.BottomTextureIndex;
 
         for (int face = 0; face < 6; face++)
         {
@@ -335,7 +335,7 @@ public static partial class BlockUtility
         return blockObject.Blocks.ContainsKey(testPosition);
     }
 
-    public static (bool isInCubeArea, bool isNearHole) InCubeArea(BlockObject blockObject, Vector3Int testPosition, int id)
+    public static (bool isInCubeArea, bool isNearHole) InCubeArea(BlockObject blockObject, Vector3Int testPosition, string name)
     {
         if (ContainsBlock(blockObject, testPosition))
         {
@@ -415,7 +415,7 @@ public static partial class BlockUtility
             if (!filledBlocks.ContainsKey(checkPosition) && blocks.ContainsKey(checkPosition))
             {
                 filledBlocks.Add(checkPosition, blocks[checkPosition]);
-                if (Blocks.GetBlock("wood1").blockType == Block.BlockType.Normal) //230495877 was blocks[checkPosition].id
+                if (Blocks.GetBlock(blocks[checkPosition].name).blockType == Block.BlockType.Normal)
                     for (int i = 0; i < 6; i++)
                         if (checkPosition + Directions[i] != ignoreBlock)
                             blocksToCheck.Push(checkPosition + Directions[i]);

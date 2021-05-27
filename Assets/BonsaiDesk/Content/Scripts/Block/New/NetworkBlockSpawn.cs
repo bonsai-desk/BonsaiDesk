@@ -46,7 +46,7 @@ public class NetworkBlockSpawn : NetworkBehaviour
         if (!Physics.CheckBox(position, new Vector3(halfBlock, halfBlock, halfBlock), rotation))
         {
             var spawnedObject = Instantiate(spawnObjectPrefab, position, rotation);
-            spawnedObject.GetComponent<BlockObject>().Blocks.Add(Vector3Int.zero, new SyncBlock(0, 0));
+            spawnedObject.GetComponent<BlockObject>().Blocks.Add(Vector3Int.zero, new SyncBlock("wood1", 0));
             NetworkServer.Spawn(spawnedObject);
             spawnedObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time, false);
         }

@@ -11,12 +11,12 @@ using BlockDictOp = Mirror.SyncDictionary<UnityEngine.Vector3Int, SyncBlock>.Ope
 
 public struct SyncBlock
 {
-    public byte id;
+    public string name;
     public byte rotation;
 
-    public SyncBlock(byte id, byte rotation)
+    public SyncBlock(string name, byte rotation)
     {
-        this.id = id;
+        this.name = name;
         this.rotation = rotation;
     }
 }
@@ -31,6 +31,7 @@ public partial class BlockObject : NetworkBehaviour
 
     //2DArray for block textures. value is calculated once then cached
     private static Texture2DArray _blockTextureArray = null;
+
     public static Texture2DArray BlockTextureArray
     {
         get
@@ -49,7 +50,7 @@ public partial class BlockObject : NetworkBehaviour
         _blockTextureArray = BlockUtility.GenerateBlockTextureArray();
     }
 
-    //contains all of the information required to construct this BlockObject
+    //all of the data required to reconstruct this block object
     public readonly SyncDictionary<Vector3Int, SyncBlock> Blocks = new SyncDictionary<Vector3Int, SyncBlock>();
 
     //caches changes made to the sync dictionary so all block changes can be made at once with a single mesh update
@@ -279,7 +280,7 @@ public partial class BlockObject : NetworkBehaviour
                 case BlockDictOp.OP_ADD:
                     if (!_meshBlocks.ContainsKey(coord))
                     {
-                        AddBlockToMesh(syncBlock.id, coord, BlockUtility.ByteToQuaternion(syncBlock.rotation));
+                        AddBlockToMesh(syncBlock.name, coord, BlockUtility.ByteToQuaternion(syncBlock.rotation));
                     }
 
                     break;
@@ -300,7 +301,7 @@ public partial class BlockObject : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdAddBlock(byte id, Vector3Int coord, Quaternion rotation, NetworkIdentity blockToDestroy)
+    private void CmdAddBlock(string blockName, Vector3Int coord, Quaternion rotation, NetworkIdentity blockToDestroy)
     {
         blockToDestroy.GetComponent<AutoAuthority>().ServerStripOwnerAndDestroy();
 
@@ -310,10 +311,10 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        Blocks.Add(coord, new SyncBlock(id, BlockUtility.QuaternionToByte(rotation)));
+        Blocks.Add(coord, new SyncBlock(blockName, BlockUtility.QuaternionToByte(rotation)));
     }
 
-    private void AddBlockToMesh(byte id, Vector3Int coord, Quaternion rotation)
+    private void AddBlockToMesh(string blockName, Vector3Int coord, Quaternion rotation)
     {
         if (_meshBlocks.ContainsKey(coord))
         {
@@ -321,7 +322,7 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        var blockMesh = BlockUtility.GetBlockMesh("wood1", coord, rotation, _texturePadding); //230495877 was id
+        var blockMesh = BlockUtility.GetBlockMesh(blockName, coord, rotation, _texturePadding);
         _vertices.AddRange(blockMesh.vertices);
         _uv.AddRange(blockMesh.uv);
         _uv2.AddRange(blockMesh.uv2);
@@ -701,7 +702,7 @@ public partial class BlockObject : NetworkBehaviour
     {
         foreach (var block in Blocks)
         {
-            AddBlockToMesh(block.Value.id, block.Key, BlockUtility.ByteToQuaternion(block.Value.rotation));
+            AddBlockToMesh(block.Value.name, block.Key, BlockUtility.ByteToQuaternion(block.Value.rotation));
         }
 
         UpdateMesh();

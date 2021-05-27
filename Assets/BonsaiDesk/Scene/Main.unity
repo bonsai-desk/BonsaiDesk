@@ -18091,17 +18091,17 @@ PrefabInstance:
 
         File created by: app version 0.1.6b55
 
+        0
+        0 0 wood1 0
+
+        -1 0 0 wood1 36
+
+        1 0 0 wood1 36
+
         -2
-        0 0 0 0
+        0 0 wood1 36
 
-        -1 0 0 0 0
-
-        0 0 0 0 0
-
-        1 0 0 1 36
-
-        2
-        0 0 2 36'
+        -3 0 0 wood1 36'
       objectReference: {fileID: 0}
     - target: {fileID: 1897995405423690373, guid: 9665c8d8782c7584eb9e16bd36823d22,
         type: 3}
