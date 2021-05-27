@@ -114,13 +114,14 @@ public static partial class BlockUtility
         new Vector3Int(0, 0, -1)
     };
 
-    public static (Vector3[] vertices, Vector3[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(int id, Vector3Int coord, Quaternion rotation,
+    public static (Vector3[] vertices, Vector3[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(string blockName, Vector3Int coord, Quaternion rotation,
         float texturePadding)
     {
-        if (id < 0)
+        var block = Blocks.GetBlock(blockName);
+        if (block == null)
         {
-            id = 0;
-            Debug.LogError("Attempted to getBlockMesh with id of " + id);
+            Debug.LogError("Attempted to getBlockMesh with name " + blockName);
+            return (null, null, null, null);
         }
 
         Vector3[] vertices = new Vector3[6 * 4];
@@ -128,9 +129,9 @@ public static partial class BlockUtility
         Vector2[] uv2 = new Vector2[6 * 4];
         int[] triangles = new int[6 * 6];
 
-        // Vector2 topBlockuv = GetBlockuv(Blocks.blocks[id].topTextureIndex);
-        // Vector2 sideBlockuv = GetBlockuv(Blocks.blocks[id].sideTextureIndex);
-        // Vector2 bottomBlockuv = GetBlockuv(Blocks.blocks[id].bottomTextureIndex);
+        var topBlockIndex = block.topTextureIndex;
+        var sideBlockIndex = block.sideTextureIndex;
+        var bottomBlockIndex = block.bottomTextureIndex;
 
         for (int face = 0; face < 6; face++)
         {
@@ -139,54 +140,50 @@ public static partial class BlockUtility
                 vertices[face * 4 + v] = (rotation * _cubeVertices[face * 4 + v]) + coord;
             }
 
-            // Vector2 blockuv;
-            //
-            // if (face < 4)
-            //     blockuv = sideBlockuv;
-            // else if (face < 5)
-            //     blockuv = topBlockuv;
-            // else
-            //     blockuv = bottomBlockuv;
-            // uv[face * 4 + 0] = blockuv + new Vector2(texturePadding, texturePadding);
-            // uv[face * 4 + 1] = blockuv + new Vector2(Block.textureWidth, 0) + new Vector2(-texturePadding, texturePadding);
-            // uv[face * 4 + 2] = blockuv + new Vector2(Block.textureWidth, Block.textureWidth) + new Vector2(-texturePadding, -texturePadding);
-            // uv[face * 4 + 3] = blockuv + new Vector2(0, Block.textureWidth) + new Vector2(texturePadding, -texturePadding);
+            int blockIndex;
             
-            uv[face * 4 + 0] = new Vector3(0, 0, 0);
-            uv[face * 4 + 1] = new Vector3(1, 0, 0);
-            uv[face * 4 + 2] = new Vector3(1, 1, 0);
-            uv[face * 4 + 3] = new Vector3(0, 1, 0);
+            if (face < 4)
+                blockIndex = sideBlockIndex;
+            else if (face < 5)
+                blockIndex = topBlockIndex;
+            else
+                blockIndex = bottomBlockIndex;
+
+            uv[face * 4 + 0] = new Vector3(0, 0, blockIndex);
+            uv[face * 4 + 1] = new Vector3(1, 0, blockIndex);
+            uv[face * 4 + 2] = new Vector3(1, 1, blockIndex);
+            uv[face * 4 + 3] = new Vector3(0, 1, blockIndex);
 
             uv2[face * 4 + 0] = new Vector2(0, 0);
-            uv2[face * 4 + 1] = new Vector2(Block.breakTextureWidth, 0);
-            uv2[face * 4 + 2] = new Vector2(Block.breakTextureWidth, 1);
+            uv2[face * 4 + 1] = new Vector2(Block.BreakTextureWidth, 0);
+            uv2[face * 4 + 2] = new Vector2(Block.BreakTextureWidth, 1);
             uv2[face * 4 + 3] = new Vector2(0, 1);
 
-            if (Blocks.blocks[id].blockObject == null)
-            {
-                int v0 = face * 4;
-                triangles[face * 6 + 0] = v0 + 0;
-                triangles[face * 6 + 1] = v0 + 3;
-                triangles[face * 6 + 2] = v0 + 2;
-                triangles[face * 6 + 3] = v0 + 0;
-                triangles[face * 6 + 4] = v0 + 2;
-                triangles[face * 6 + 5] = v0 + 1;
-            }
+            // if (Blocks.blocks[id].blockObject == null)
+            // {
+            int v0 = face * 4;
+            triangles[face * 6 + 0] = v0 + 0;
+            triangles[face * 6 + 1] = v0 + 3;
+            triangles[face * 6 + 2] = v0 + 2;
+            triangles[face * 6 + 3] = v0 + 0;
+            triangles[face * 6 + 4] = v0 + 2;
+            triangles[face * 6 + 5] = v0 + 1;
+            // }
         }
 
-        if (Blocks.blocks[id].blockObject != null)
-            for (int i = 0; i < triangles.Length; i++)
-                triangles[i] = 0;
+        // if (Blocks.blocks[id].blockObject != null)
+        //     for (int i = 0; i < triangles.Length; i++)
+        //         triangles[i] = 0;
 
         return (vertices, uv, triangles, uv2);
     }
 
-    private static Vector2 GetBlockuv(int textureId)
-    {
-        int xTexture = textureId % Block.xTextures;
-        int yTexture = textureId / Block.xTextures;
-        return new Vector2(xTexture * Block.textureWidth, 1 - Block.textureWidth - (yTexture * Block.textureWidth));
-    }
+    // private static Vector2 GetBlockuv(int textureId)
+    // {
+    //     int xTexture = textureId % Block.xTextures;
+    //     int yTexture = textureId / Block.xTextures;
+    //     return new Vector2(xTexture * Block.textureWidth, 1 - Block.textureWidth - (yTexture * Block.textureWidth));
+    // }
 
     private static readonly Vector3[] _cubeVertices = new Vector3[]
     {
@@ -418,7 +415,7 @@ public static partial class BlockUtility
             if (!filledBlocks.ContainsKey(checkPosition) && blocks.ContainsKey(checkPosition))
             {
                 filledBlocks.Add(checkPosition, blocks[checkPosition]);
-                if (Blocks.blocks[blocks[checkPosition].id].blockType == Block.BlockType.normal)
+                if (Blocks.GetBlock("wood1").blockType == Block.BlockType.Normal) //230495877 was blocks[checkPosition].id
                     for (int i = 0; i < 6; i++)
                         if (checkPosition + Directions[i] != ignoreBlock)
                             blocksToCheck.Push(checkPosition + Directions[i]);

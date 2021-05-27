@@ -30,7 +30,24 @@ public partial class BlockObject : NetworkBehaviour
     private static HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
 
     //2DArray for block textures. value is calculated once then cached
-    private static Texture2DArray blockTextureArray = null;
+    private static Texture2DArray _blockTextureArray = null;
+    public static Texture2DArray BlockTextureArray
+    {
+        get
+        {
+            if (_blockTextureArray == null)
+            {
+                GenerateBlockTextureArray();
+            }
+
+            return _blockTextureArray;
+        }
+    }
+
+    public static void GenerateBlockTextureArray()
+    {
+        _blockTextureArray = BlockUtility.GenerateBlockTextureArray();
+    }
 
     //contains all of the information required to construct this BlockObject
     public readonly SyncDictionary<Vector3Int, SyncBlock> Blocks = new SyncDictionary<Vector3Int, SyncBlock>();
@@ -143,12 +160,7 @@ public partial class BlockObject : NetworkBehaviour
 
         //make copy of material so material asset is not changed
         blockObjectMaterial = new Material(blockObjectMaterial);
-        if (blockTextureArray == null)
-        {
-            blockTextureArray = BlockUtility.GenerateBlockTextureArray();
-        }
-
-        blockObjectMaterial.SetTexture("_TextureArray", blockTextureArray);
+        blockObjectMaterial.SetTexture("_TextureArray", BlockTextureArray);
 
         PhysicsStart();
 
@@ -309,7 +321,7 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        var blockMesh = BlockUtility.GetBlockMesh(id, coord, rotation, _texturePadding);
+        var blockMesh = BlockUtility.GetBlockMesh("wood1", coord, rotation, _texturePadding); //230495877 was id
         _vertices.AddRange(blockMesh.vertices);
         _uv.AddRange(blockMesh.uv);
         _uv2.AddRange(blockMesh.uv2);
@@ -622,11 +634,6 @@ public partial class BlockObject : NetworkBehaviour
         int i = 0;
         foreach (var block in _damagedBlocks)
         {
-            if (i >= damagedBlocksForShader.Length)
-            {
-                break;
-            }
-
             if (_meshBlocks.TryGetValue(block, out var meshBlock))
             {
                 meshBlock.framesSinceLastDamage++;
@@ -636,8 +643,11 @@ public partial class BlockObject : NetworkBehaviour
                     noLongerDamagedBlocks.Enqueue(block);
                 }
 
-                damagedBlocksForShader[i] = new Vector4(block.x, block.y, block.z, meshBlock.health);
-                i++;
+                if (i < damagedBlocksForShader.Length)
+                {
+                    damagedBlocksForShader[i] = new Vector4(block.x, block.y, block.z, meshBlock.health);
+                    i++;
+                }
             }
         }
 

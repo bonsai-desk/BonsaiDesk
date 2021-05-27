@@ -101,7 +101,7 @@ public partial class BlockObject
                     // }
 
                     var position = blockObject.transform.TransformPoint(blockCoord);
-                    var rotation = blockObject.GetTargetRotation(transform.rotation, blockCoord, global::Blocks.blocks[Blocks[coord].id].blockType);
+                    var rotation = blockObject.GetTargetRotation(transform.rotation, blockCoord, global::Blocks.GetBlock("wood1").blockType); //230495877 was Blocks[coord].id
 
                     if (BlockUtility.AboutEquals(blockPosition, position) && BlockUtility.AboutEquals(transform.rotation, rotation))
                     {
@@ -233,7 +233,7 @@ public partial class BlockObject
             case BlockBreakHand.BreakMode.Single:
                 ContactPoint contact = collision.GetContact(0);
                 Vector3 blockPosition = contact.point;
-                blockPosition += contact.normal * (BlockArea.cubeScale / 2f);
+                blockPosition += contact.normal * (CubeScale / 2f);
                 Vector3 positionLocalToCubeArea = transform.InverseTransformPoint(blockPosition);
                 Vector3Int blockCoord = Vector3Int.RoundToInt(positionLocalToCubeArea);
 

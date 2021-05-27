@@ -319,6 +319,7 @@ public class AutoAuthority : NetworkBehaviour
     {
         ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true);
         gameObject.SetActive(false);
+        GetComponent<SmoothSyncMirror>().clearBuffer();
         NetworkServer.Destroy(gameObject);
     }
 

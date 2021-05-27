@@ -4,6 +4,21 @@ using UnityEngine;
 
 public static partial class BlockUtility
 {
+    private static Dictionary<string, int> _blockTextureNameToTextureArrayIndex = null;
+
+    public static Dictionary<string, int> BlockTextureNameToTextureArrayIndex
+    {
+        get
+        {
+            if (_blockTextureNameToTextureArrayIndex == null)
+            {
+                BlockObject.GenerateBlockTextureArray();
+            }
+
+            return _blockTextureNameToTextureArrayIndex;
+        }
+    }
+    
     public static Texture2DArray GenerateBlockTextureArray()
     {
         var textures = Resources.LoadAll("Blocks", typeof(Texture2D));
@@ -38,6 +53,8 @@ public static partial class BlockUtility
         texture2DArray.filterMode = sampleTexture.filterMode;
         texture2DArray.wrapMode = sampleTexture.wrapMode;
 
+        _blockTextureNameToTextureArrayIndex = new Dictionary<string, int>();
+
         for (int i = 0; i < textures.Length; i++)
         {
             var texture = (Texture2D) textures[i];
@@ -48,6 +65,7 @@ public static partial class BlockUtility
                 return null;
             }
             texture2DArray.SetPixels(texture.GetPixels(), i);
+            _blockTextureNameToTextureArrayIndex.Add(texture.name, i);
         }
 
         texture2DArray.Apply();
