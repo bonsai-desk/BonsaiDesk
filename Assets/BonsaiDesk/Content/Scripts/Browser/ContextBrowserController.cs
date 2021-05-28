@@ -12,6 +12,12 @@ public class ContextBrowserController : MonoBehaviour
         Right
     }
 
+    private string _leftHandMode = "";
+    private string _rightHandMode = "";
+
+    public string LeftHandMode => _leftHandMode;
+    public string RightHandMode => _rightHandMode;
+
     private string _leftBlockActive = "wood1";
     private string _rightBlockActive = string.Empty;
 
@@ -46,20 +52,18 @@ public class ContextBrowserController : MonoBehaviour
             case "command":
                 switch (message.Message)
                 {
-                    case "toggleBlockBreakHand":
-                        var toggleBlockBreakHand = message.Data == "left" ? Hand.Left : Hand.Right;
-                        if (toggleBlockBreakHand == Hand.Left)
+                    case "setHandMode":
+                        var handModeData = JsonConvert.DeserializeObject<HandMode>(message.Data);
+                        if (handModeData.Hand == "left")
                         {
-                            _leftBlockBreak = !_leftBlockBreak;
-                            InfoChange?.Invoke();
+                            _leftHandMode = handModeData.Mode;
                         }
-
-                        if (toggleBlockBreakHand == Hand.Right)
+                        if (handModeData.Hand == "right")
                         {
-                            _rightBlockBreak = !_rightBlockBreak;
-                            InfoChange?.Invoke();
+                            _rightHandMode = handModeData.Mode;
                         }
-
+                        
+                        InfoChange.Invoke();
                         break;
 
                     case "toggleBlockActive":
@@ -135,5 +139,11 @@ public class ContextBrowserController : MonoBehaviour
     {
         public string Hand;
         public string BlockName;
+    }
+
+    private struct HandMode
+    {
+        public string Hand;
+        public string Mode;
     }
 }
