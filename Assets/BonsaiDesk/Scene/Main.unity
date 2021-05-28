@@ -11198,6 +11198,7 @@ MonoBehaviour:
   ContextMenu: {fileID: 1341499996}
   TableBrowserMenu: {fileID: 1361515863}
   WebBrowserParent: {fileID: 328235781}
+  moveToDesk: {fileID: 1212259449}
   contentBoxCollider: {fileID: 1907945390}
 --- !u!1001 &985979879
 PrefabInstance:

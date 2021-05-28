@@ -10,6 +10,7 @@ public class TableBrowserParent : MonoBehaviour
     public TableBrowser ContextMenu;
     public TableBrowserMenu TableBrowserMenu;
     public WebBrowserParent WebBrowserParent;
+    public MoveToDesk moveToDesk;
     public bool MenuAsleep { get; private set; }
     public bool ContextAsleep { get; private set; }
     
@@ -175,6 +176,11 @@ public class TableBrowserParent : MonoBehaviour
 
     public void ToggleContextAwake()
     {
+        if (!moveToDesk.oriented)
+        {
+            return;
+        }
+        
         if (ContextAsleep)
         {
             ContextWake();
@@ -187,6 +193,11 @@ public class TableBrowserParent : MonoBehaviour
 
     public void ToggleAwake()
     {
+        if (!moveToDesk.oriented)
+        {
+            return;
+        }
+        
         if (MenuAsleep)
         {
             MenuWake();
