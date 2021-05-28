@@ -10,12 +10,10 @@ public class Block
 
     public readonly bool AllowRotation;
 
-    // public GameObject blockObject;
-
     public enum BlockType
     {
         Normal,
-        Bearing
+        SurfaceMounted
     }
 
     public readonly BlockType blockType;
@@ -36,5 +34,16 @@ public class Block
         BottomTextureIndex = TopTextureIndex;
         blockType = BlockType.Normal;
         AllowRotation = allowRotation;
+    }
+    
+    public Block(BlockType blockType)
+    {
+        if (blockType != BlockType.SurfaceMounted)
+        {
+            Debug.LogError("This constructor is only valid for surface mounted blocks (currently only bearings)");
+        }
+        
+        this.blockType = blockType;
+        AllowRotation = true;
     }
 }
