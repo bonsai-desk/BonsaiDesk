@@ -1,5 +1,5 @@
 import {observer} from 'mobx-react-lite';
-import {Blocks, showBlock, useStore} from '../DataProvider';
+import {useStore} from '../DataProvider';
 import {postChangeActiveBlock, postToggleBlockActive, postToggleBlockBreakHand} from '../api';
 
 function Button({children, onClick}) {
@@ -10,7 +10,7 @@ function BlockButton({hand, blockId}) {
     let onClick = () => {
         postChangeActiveBlock(hand, blockId);
     };
-    return <Button onClick={onClick}>{showBlock(blockId)}</Button>;
+    return <Button onClick={onClick}>{blockId}</Button>;
 }
 
 function ButtonRow({children}) {
@@ -24,7 +24,7 @@ function ButtonContainer({children}) {
 const ActiveItem = observer(({hand}) => {
 
     let {store} = useStore();
-    let activeBlock = Blocks.None;
+    let activeBlock = "";
     if (hand === 'left') {
         activeBlock = store.ContextInfo.LeftBlockActive;
     }
@@ -33,7 +33,7 @@ const ActiveItem = observer(({hand}) => {
     }
 
     return <div className={'w-full flex justify-center'}>
-        <Button>{showBlock(activeBlock)}</Button>
+        <Button>{activeBlock}</Button>
     </div>;
 });
 
@@ -44,10 +44,10 @@ const ToggleBlocks = observer(({hand}) => {
 
     switch (hand) {
         case 'left':
-            switchOff = store.ContextInfo.LeftBlockActive === Blocks.None;
+            switchOff = store.ContextInfo.LeftBlockActive === "";
             break;
         case 'right':
-            switchOff = store.ContextInfo.RightBlockActive === Blocks.None;
+            switchOff = store.ContextInfo.RightBlockActive === "";
             break;
         default:
             console.log(`Toggle blocks for ${hand} not handled`);
@@ -75,14 +75,14 @@ function ButtonGrid({hand}) {
             <ButtonContainer>
                 <ActiveItem hand={hand}/>
                 <ButtonRow>
-                    <BlockButton hand={hand} blockId={Blocks.Wood}/>
-                    <BlockButton hand={hand} blockId={Blocks.Orange}/>
-                    <BlockButton hand={hand} blockId={Blocks.Green}/>
+                    <BlockButton hand={hand} blockId={"wood1"}/>
+                    <BlockButton hand={hand} blockId={"wood2"}/>
+                    <BlockButton hand={hand} blockId={"wood3"}/>
                 </ButtonRow>
                 <ButtonRow>
-                    <BlockButton hand={hand} blockId={Blocks.Pink}/>
-                    <BlockButton hand={hand} blockId={Blocks.Violet}/>
-                    <BlockButton hand={hand} blockId={Blocks.DarkNeutral}/>
+                    <BlockButton hand={hand} blockId={"wood4"}/>
+                    <BlockButton hand={hand} blockId={"wood5"}/>
+                    <BlockButton hand={hand} blockId={"wood6"}/>
                 </ButtonRow>
                 <ToggleBlocks hand={hand}/>
             </ButtonContainer>

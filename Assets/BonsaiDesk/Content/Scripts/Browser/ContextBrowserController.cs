@@ -6,29 +6,14 @@ using Vuplex.WebView;
 [RequireComponent(typeof(TableBrowser))]
 public class ContextBrowserController : MonoBehaviour
 {
-    public enum Block
-    {
-        None,
-        Wood,
-        Orange,
-        Green,
-        Brown,
-        Pink,
-        LightPurple,
-        DarkPurple,
-        Violet,
-        LightNeutral,
-        DarkNeutral
-    }
-
     public enum Hand
     {
         Left,
         Right
     }
 
-    public Block LeftBlockActive = Block.None;
-    public Block RightBlockActive = Block.None;
+    public string LeftBlockActive = "";
+    public string RightBlockActive = "";
 
     public bool LeftBlockBreak;
     public bool RightBlockBreak;
@@ -74,13 +59,13 @@ public class ContextBrowserController : MonoBehaviour
                         var toggleHand = message.Data == "left" ? Hand.Left : Hand.Right;
                         if (toggleHand == Hand.Left)
                         {
-                            LeftBlockActive = LeftBlockActive == Block.None ? Block.Wood : Block.None;
+                            LeftBlockActive = string.IsNullOrEmpty(LeftBlockActive) ? "wood1" : "";
                             InfoChange?.Invoke();
                         }
 
                         if (toggleHand == Hand.Right)
                         {
-                            RightBlockActive = RightBlockActive == Block.None ? Block.Wood : Block.None;
+                            RightBlockActive = string.IsNullOrEmpty(RightBlockActive) ? "wood1" : "";
                             InfoChange?.Invoke();
                         }
 
@@ -88,20 +73,20 @@ public class ContextBrowserController : MonoBehaviour
                     case "changeActiveBlock":
                         var data = JsonConvert.DeserializeObject<ActiveBlockString>(message.Data);
                         var hand = data.Hand == "left" ? Hand.Left : Hand.Right;
-                        var block = (Block) data.BlockId;
-                        if (!Enum.IsDefined(typeof(Block), data.BlockId))
+                        var blockName = data.BlockName;
+                        if (Blocks.GetBlock(blockName) == null)
                         {
-                            BonsaiLogWarning("Failed to match block id, defaulting to None");
+                            BonsaiLogWarning($"Block {blockName} does not exist in blocks");
                         }
 
-                        BonsaiLog($"changeActiveBlock: {hand} {block}");
+                        BonsaiLog($"changeActiveBlock: {hand} {blockName}");
                         switch (hand)
                         {
                             case Hand.Left:
-                                LeftBlockActive = block;
+                                LeftBlockActive = blockName;
                                 break;
                             case Hand.Right:
-                                RightBlockActive = block;
+                                RightBlockActive = blockName;
                                 break;
                         }
 
@@ -138,6 +123,6 @@ public class ContextBrowserController : MonoBehaviour
     private struct ActiveBlockString
     {
         public string Hand;
-        public int BlockId;
+        public string BlockName;
     }
 }

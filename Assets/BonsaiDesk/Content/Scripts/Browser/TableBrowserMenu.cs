@@ -393,9 +393,9 @@ public class TableBrowserMenu : MonoBehaviour
 
     private class ContextInfo
     {
-        public ContextBrowserController.Block LeftBlockActive;
+        public string LeftBlockActive;
         public bool LeftBlockBreak;
-        public ContextBrowserController.Block RightBlockActive;
+        public string RightBlockActive;
         public bool RightBlockBreak;
     }
 
