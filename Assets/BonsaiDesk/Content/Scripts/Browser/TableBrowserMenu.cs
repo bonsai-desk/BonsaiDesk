@@ -298,8 +298,8 @@ public class TableBrowserMenu : MonoBehaviour
         {
             LeftBlockActive = contextBrowserController.LeftBlockActive,
             RightBlockActive = contextBrowserController.RightBlockActive,
-            LeftBlockBreak = contextBrowserController.LeftBlockBreak,
-            RightBlockBreak = contextBrowserController.RightBlockBreak
+            LeftHandMode = contextBrowserController.LeftHandMode,
+            RightHandMode = contextBrowserController.RightHandMode
         };
         contextBrowser.PostMessage(Message(contextInfo, "ContextInfo"));
     }
@@ -394,9 +394,9 @@ public class TableBrowserMenu : MonoBehaviour
     private class ContextInfo
     {
         public string LeftBlockActive;
-        public bool LeftBlockBreak;
         public string RightBlockActive;
-        public bool RightBlockBreak;
+        public string LeftHandMode;
+        public string RightHandMode;
     }
 
     private struct NetworkInfo

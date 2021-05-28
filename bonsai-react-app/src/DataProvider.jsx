@@ -35,10 +35,10 @@ class Store {
         Connecting: false
     };
     ContextInfo = {
-        LeftBlockActive: "",
+        LeftHandMode: "", // break, wholeBreak, save, duplicate, clear
+        RightHandMode: "",
+        LeftBlockActive: "wood1",
         RightBlockActive: "",
-        LeftBlockBreak: false,
-        RightBlockBreak: false,
     }
     MediaInfo = {
         Active: false,

@@ -81,19 +81,11 @@ export function postChangeActiveBlock(hand, blockId) {
     });
 }
 
-export function postToggleBlockActive(hand) {
+export function postSetHandMode(hand, mode) {
     postJson({
         Type: 'command',
-        Message: 'toggleBlockActive',
-        Data: hand,
-    });
-}
-
-export function postToggleBlockBreakHand(hand) {
-    postJson({
-        Type: 'command',
-        Message: 'toggleBlockBreakHand',
-        Data: hand,
+        Message: 'setHandMode',
+        Data: JSON.stringify({Hand: hand, Mode: mode}),
     });
 }
 
