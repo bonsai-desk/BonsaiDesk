@@ -10,11 +10,11 @@ public class BlockBreakHand : MonoBehaviour, IHandTick
 
     public enum BreakMode
     {
-        None,
-        Single,
-        Whole,
-        Duplicate,
-        Save
+        None = 0,
+        Single = 1,
+        Whole = 2,
+        Duplicate = 3,
+        Save = 4
     }
 
     private BreakMode _breakMode = BreakMode.None;
@@ -46,14 +46,6 @@ public class BlockBreakHand : MonoBehaviour, IHandTick
         _particleSystem = _particleObject.GetComponent<ParticleSystem>();
         _mainModule = _particleSystem.main;
         SetBreakMode(BreakMode.None);
-        if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandRight)
-        {
-            SetBreakMode(BreakMode.Save);
-        }
-        if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft)
-        {
-            SetBreakMode(BreakMode.Whole);
-        }
     }
 
     public void SetBreakMode(BreakMode breakMode)

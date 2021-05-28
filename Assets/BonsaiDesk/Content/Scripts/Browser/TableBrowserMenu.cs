@@ -395,8 +395,8 @@ public class TableBrowserMenu : MonoBehaviour
     {
         public string LeftBlockActive;
         public string RightBlockActive;
-        public string LeftHandMode;
-        public string RightHandMode;
+        public BlockBreakHand.BreakMode LeftHandMode;
+        public BlockBreakHand.BreakMode RightHandMode;
     }
 
     private struct NetworkInfo

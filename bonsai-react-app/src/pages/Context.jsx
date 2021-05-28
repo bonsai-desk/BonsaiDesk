@@ -1,5 +1,5 @@
 import {observer} from 'mobx-react-lite';
-import {useStore} from '../DataProvider';
+import {HandMode, useStore} from '../DataProvider';
 import {postChangeActiveBlock, postSetHandMode} from '../api';
 
 function Button({children, onClick, active}) {
@@ -109,10 +109,10 @@ const BlockBreak = observer(({hand}) => {
     let blockBreakOn = false;
 
     if (hand === 'left') {
-        blockBreakOn = store.ContextInfo.LeftHandMode === 'blockBreak';
+        blockBreakOn = store.ContextInfo.LeftHandMode === HandMode.Single;
     }
     if (hand === 'right') {
-        blockBreakOn = store.ContextInfo.RightHandMode === 'blockBreak';
+        blockBreakOn = store.ContextInfo.RightHandMode === HandMode.Single;
     }
 
     let className = blockBreakOn ? 'bg-red-400 h-10' : 'bg-gray-900 h-10';
@@ -122,7 +122,7 @@ const BlockBreak = observer(({hand}) => {
     }
 
     function onClick() {
-        postSetHandMode(hand, 'blockBreak');
+        postSetHandMode(hand, HandMode.Single);
     }
 
     return <div className={'flex flex-wrap content-center'}>
@@ -137,10 +137,10 @@ const WholeBreak = observer(({hand}) => {
     let blockBreakOn = false;
 
     if (hand === 'left') {
-        blockBreakOn = store.ContextInfo.LeftHandMode === 'wholeBreak';
+        blockBreakOn = store.ContextInfo.LeftHandMode === HandMode.Whole;
     }
     if (hand === 'right') {
-        blockBreakOn = store.ContextInfo.RightHandMode === 'wholeBreak';
+        blockBreakOn = store.ContextInfo.RightHandMode === HandMode.Whole;
     }
 
     let className = blockBreakOn ? 'bg-red-400 h-10' : 'bg-gray-900 h-10';
@@ -150,7 +150,7 @@ const WholeBreak = observer(({hand}) => {
     }
 
     function onClick() {
-        postSetHandMode(hand, 'wholeBreak');
+        postSetHandMode(hand, HandMode.Whole);
     }
 
     return <div className={'flex flex-wrap content-center'}>
@@ -165,10 +165,10 @@ const Save = observer(({hand}) => {
     let blockBreakOn = false;
 
     if (hand === 'left') {
-        blockBreakOn = store.ContextInfo.LeftHandMode === 'save';
+        blockBreakOn = store.ContextInfo.LeftHandMode === HandMode.Save;
     }
     if (hand === 'right') {
-        blockBreakOn = store.ContextInfo.RightHandMode === 'save';
+        blockBreakOn = store.ContextInfo.RightHandMode === HandMode.Save;
     }
 
     let className = blockBreakOn ? 'bg-red-400 h-10' : 'bg-gray-900 h-10';
@@ -178,7 +178,7 @@ const Save = observer(({hand}) => {
     }
 
     function onClick() {
-        postSetHandMode(hand, 'save');
+        postSetHandMode(hand, HandMode.Save);
     }
 
     return <div className={'flex flex-wrap content-center'}>
@@ -193,10 +193,10 @@ const Duplicate = observer(({hand}) => {
     let active = false;
 
     if (hand === 'left') {
-        active = store.ContextInfo.LeftHandMode === 'duplicate';
+        active = store.ContextInfo.LeftHandMode === HandMode.Duplicate;
     }
     if (hand === 'right') {
-        active = store.ContextInfo.RightHandMode === 'duplicate';
+        active = store.ContextInfo.RightHandMode === HandMode.Duplicate;
     }
 
     let className = active ? 'bg-red-400 h-10' : 'bg-gray-900 h-10';
@@ -206,7 +206,7 @@ const Duplicate = observer(({hand}) => {
     }
 
     function onClick() {
-        postSetHandMode(hand, 'duplicate');
+        postSetHandMode(hand, HandMode.Duplicate);
     }
 
     return <div className={'flex flex-wrap content-center'}>
@@ -221,10 +221,10 @@ const ClearHand = observer(({hand}) => {
     let active = false;
 
     if (hand === 'left') {
-        active = store.ContextInfo.LeftHandMode === '';
+        active = store.ContextInfo.LeftHandMode === HandMode.None;
     }
     if (hand === 'right') {
-        active = store.ContextInfo.RightHandMode === '';
+        active = store.ContextInfo.RightHandMode === HandMode.None;
     }
 
     let className = active ? 'bg-red-400 h-10' : 'bg-gray-900 h-10';
@@ -234,7 +234,7 @@ const ClearHand = observer(({hand}) => {
     }
 
     function onClick() {
-        postSetHandMode(hand, 'clear');
+        postSetHandMode(hand, HandMode.None);
     }
 
     return <div className={'flex flex-wrap content-center'}>

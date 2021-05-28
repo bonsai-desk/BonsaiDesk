@@ -13514,6 +13514,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f349dca275e36604883978521079ae9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  blockBreakHandLeft: {fileID: 946290010}
+  blockBreakHandRight: {fileID: 630641735}
 --- !u!114 &1341499996 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
