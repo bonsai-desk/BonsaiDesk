@@ -13,7 +13,7 @@ public class ContextBrowserController : MonoBehaviour
     }
 
     private string _leftBlockActive = "wood1";
-    private string _rightBlockActive = string.Empty;
+    private string _rightBlockActive = "bearing";
 
     private bool _leftBlockBreak;
     private bool _rightBlockBreak;

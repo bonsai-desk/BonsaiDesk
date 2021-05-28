@@ -120,7 +120,7 @@ public static partial class BlockUtility
         var block = Blocks.GetBlock(blockName);
         if (block == null)
         {
-            Debug.LogError("Attempted to getBlockMesh with name " + blockName);
+            Debug.LogError("Attempted to getBlockMesh with name which does not exist: " + blockName);
             return (null, null, null, null);
         }
 

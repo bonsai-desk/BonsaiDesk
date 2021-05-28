@@ -82,7 +82,7 @@ function ButtonGrid({hand}) {
                 <ButtonRow>
                     <BlockButton hand={hand} blockId={"wood4"}/>
                     <BlockButton hand={hand} blockId={"wood5"}/>
-                    <BlockButton hand={hand} blockId={"wood6"}/>
+                    <BlockButton hand={hand} blockId={"bearing"}/>
                 </ButtonRow>
                 <ToggleBlocks hand={hand}/>
             </ButtonContainer>

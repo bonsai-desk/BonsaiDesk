@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -18,14 +19,33 @@ public static partial class BlockUtility
             return _blockTextureNameToTextureArrayIndex;
         }
     }
-    
+
     public static Texture2DArray GenerateBlockTextureArray()
     {
-        var textures = Resources.LoadAll("Blocks", typeof(Texture2D));
-        if (textures.Length == 0)
+        var objects = Resources.LoadAll("Blocks", typeof(Texture2D));
+        if (objects.Length == 0)
         {
             Debug.LogError("Found no textures in Blocks folder");
             return null;
+        }
+
+        //convert object array to Texture2D list where the first element is the invalid texture
+        var textures = new List<Texture2D>();
+        for (int i = 0; i < objects.Length; i++)
+        {
+            if (String.Compare(objects[i].name, "invalid", StringComparison.Ordinal) == 0)
+            {
+                textures.Add((Texture2D) objects[i]);
+                break;
+            }
+        }
+
+        for (int i = 0; i < objects.Length; i++)
+        {
+            if (String.Compare(objects[i].name, "invalid", StringComparison.Ordinal) != 0)
+            {
+                textures.Add((Texture2D) objects[i]);
+            }
         }
 
         var sampleTexture = (Texture2D) textures[0];
@@ -41,29 +61,30 @@ public static partial class BlockUtility
             Debug.LogError($"Sample texture {sampleTexture.name} should have format RGBA32");
             return null;
         }
-        
+
         if (sampleTexture.filterMode != FilterMode.Trilinear)
         {
             Debug.LogError($"Sample texture {sampleTexture.name} should have filter mode trilinear");
             return null;
         }
 
-        var texture2DArray = new Texture2DArray(sampleTexture.width, sampleTexture.height, textures.Length, sampleTexture.format, true);
+        var texture2DArray = new Texture2DArray(sampleTexture.width, sampleTexture.height, textures.Count, sampleTexture.format, true);
 
         texture2DArray.filterMode = sampleTexture.filterMode;
         texture2DArray.wrapMode = sampleTexture.wrapMode;
 
         _blockTextureNameToTextureArrayIndex = new Dictionary<string, int>();
 
-        for (int i = 0; i < textures.Length; i++)
+        for (int i = 0; i < textures.Count; i++)
         {
-            var texture = (Texture2D) textures[i];
+            var texture = textures[i];
             if (texture.width != sampleTexture.width || texture.height != sampleTexture.height || texture.format != sampleTexture.format ||
                 texture.filterMode != sampleTexture.filterMode || texture.wrapMode != sampleTexture.wrapMode)
             {
                 Debug.LogError($"Texture {texture.name} does not match parameters of sample texture {sampleTexture.name}");
                 return null;
             }
+
             texture2DArray.SetPixels(texture.GetPixels(), i);
             _blockTextureNameToTextureArrayIndex.Add(texture.name, i);
         }
