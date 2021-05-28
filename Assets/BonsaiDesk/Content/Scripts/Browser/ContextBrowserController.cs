@@ -12,11 +12,16 @@ public class ContextBrowserController : MonoBehaviour
         Right
     }
 
-    public string LeftBlockActive = "";
-    public string RightBlockActive = "";
+    private string _leftBlockActive = "wood1";
+    private string _rightBlockActive = string.Empty;
 
-    public bool LeftBlockBreak;
-    public bool RightBlockBreak;
+    private bool _leftBlockBreak;
+    private bool _rightBlockBreak;
+    
+    public string LeftBlockActive => _leftBlockActive;
+    public string RightBlockActive => _rightBlockActive;
+    public bool LeftBlockBreak => _leftBlockBreak;
+    public bool RightBlockBreak => _rightBlockBreak;
 
     private TableBrowser _browser;
 
@@ -26,8 +31,10 @@ public class ContextBrowserController : MonoBehaviour
         _browser = GetComponent<TableBrowser>();
         _browser.ListenersReady += SetupBrowser;
         _browser.BrowserReady += (sender, _) => { _browser.OnMessageEmitted(HandleJavascriptMessage); };
+        
+        NetworkBlockSpawn.InstanceLeft.SetSpawnBlockName(LeftBlockActive);
+        NetworkBlockSpawn.InstanceRight.SetSpawnBlockName(RightBlockActive);
     }
-
 
     public event Action InfoChange;
 
@@ -43,29 +50,31 @@ public class ContextBrowserController : MonoBehaviour
                         var toggleBlockBreakHand = message.Data == "left" ? Hand.Left : Hand.Right;
                         if (toggleBlockBreakHand == Hand.Left)
                         {
-                            LeftBlockBreak = !LeftBlockBreak;
+                            _leftBlockBreak = !_leftBlockBreak;
                             InfoChange?.Invoke();
                         }
 
                         if (toggleBlockBreakHand == Hand.Right)
                         {
-                            RightBlockBreak = !RightBlockBreak;
+                            _rightBlockBreak = !_rightBlockBreak;
                             InfoChange?.Invoke();
                         }
 
                         break;
-                        
+
                     case "toggleBlockActive":
                         var toggleHand = message.Data == "left" ? Hand.Left : Hand.Right;
                         if (toggleHand == Hand.Left)
                         {
-                            LeftBlockActive = string.IsNullOrEmpty(LeftBlockActive) ? "wood1" : "";
+                            _leftBlockActive = string.IsNullOrEmpty(_leftBlockActive) ? "wood1" : string.Empty;
+                            NetworkBlockSpawn.InstanceLeft.SetSpawnBlockName(_leftBlockActive);
                             InfoChange?.Invoke();
                         }
 
                         if (toggleHand == Hand.Right)
                         {
-                            RightBlockActive = string.IsNullOrEmpty(RightBlockActive) ? "wood1" : "";
+                            _rightBlockActive = string.IsNullOrEmpty(_rightBlockActive) ? "wood1" : string.Empty;
+                            NetworkBlockSpawn.InstanceRight.SetSpawnBlockName(_rightBlockActive);
                             InfoChange?.Invoke();
                         }
 
@@ -74,7 +83,7 @@ public class ContextBrowserController : MonoBehaviour
                         var data = JsonConvert.DeserializeObject<ActiveBlockString>(message.Data);
                         var hand = data.Hand == "left" ? Hand.Left : Hand.Right;
                         var blockName = data.BlockName;
-                        if (Blocks.GetBlock(blockName) == null)
+                        if (blockName != string.Empty && Blocks.GetBlock(blockName) == null)
                         {
                             BonsaiLogWarning($"Block {blockName} does not exist in blocks");
                         }
@@ -83,10 +92,12 @@ public class ContextBrowserController : MonoBehaviour
                         switch (hand)
                         {
                             case Hand.Left:
-                                LeftBlockActive = blockName;
+                                _leftBlockActive = blockName;
+                                NetworkBlockSpawn.InstanceLeft.SetSpawnBlockName(blockName);
                                 break;
                             case Hand.Right:
-                                RightBlockActive = blockName;
+                                _rightBlockActive = blockName;
+                                NetworkBlockSpawn.InstanceRight.SetSpawnBlockName(blockName);
                                 break;
                         }
 
