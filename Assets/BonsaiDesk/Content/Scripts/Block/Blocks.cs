@@ -7,9 +7,9 @@ public static class Blocks
         {"wood1", new Block("wood1")},
         {"wood2", new Block("wood2")},
         {"wood3", new Block("wood3")},
-        {"wood4", new Block("wood4")},
-        {"wood5", new Block("wood5")},
-        {"wood6", new Block("wood6")},
+        {"wood4", new Block("wood4", false)},
+        {"wood5", new Block("wood5", false)},
+        {"wood6", new Block("wood6", false)},
     };
 
     public static Block GetBlock(string blockName)

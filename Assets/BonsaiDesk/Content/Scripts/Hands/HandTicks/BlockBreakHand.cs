@@ -46,10 +46,14 @@ public class BlockBreakHand : MonoBehaviour, IHandTick
         _particleSystem = _particleObject.GetComponent<ParticleSystem>();
         _mainModule = _particleSystem.main;
         SetBreakMode(BreakMode.None);
-        // if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandRight)
-        // {
-        //     SetBreakMode(BreakMode.Whole);
-        // }
+        if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandRight)
+        {
+            SetBreakMode(BreakMode.Save);
+        }
+        if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        {
+            SetBreakMode(BreakMode.Whole);
+        }
     }
 
     public void SetBreakMode(BreakMode breakMode)

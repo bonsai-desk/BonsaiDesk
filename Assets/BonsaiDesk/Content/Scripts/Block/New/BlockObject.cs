@@ -62,6 +62,7 @@ public partial class BlockObject : NetworkBehaviour
     public PhysicMaterial blockPhysicMaterial;
     public PhysicMaterial spherePhysicMaterial;
     public GameObject saveDialogPrefab;
+    public GameObject breakWholeDialogPrefab;
 
     //contains the information about the local state of the mesh. The structure of the mesh can be slightly
     //different depending on the order of block add/remove even though the final result looks the same
@@ -90,9 +91,9 @@ public partial class BlockObject : NetworkBehaviour
     //used to keep track of any full block effect such as duplicate or delete all
     private WholeEffectMode _activeWholeEffect = null;
 
-    //stores any active save popup. otherwise is null
-    private GameObject _activeSaveDialog;
-    private Vector3 _saveDialogLocalPositionRoot;
+    //stores any active dialog. otherwise is null
+    private GameObject _activeDialog;
+    private Vector3 _dialogLocalPositionRoot;
 
     //mesh stuff
     private MeshFilter _meshFilter;
@@ -195,7 +196,7 @@ public partial class BlockObject : NetworkBehaviour
         ProcessBlockChanges();
         UpdateDamagedBlocks();
         UpdateWholeEffects();
-        UpdateSaveDialogPosition();
+        UpdateDialogPosition();
 
         if (debug && Input.GetKeyDown(KeyCode.S))
         {
@@ -227,6 +228,8 @@ public partial class BlockObject : NetworkBehaviour
 
     private void OnDestroy()
     {
+        CloseDialog();
+        
         if (_blockObjectAuthorities.Contains(_autoAuthority))
         {
             _blockObjectAuthorities.Remove(_autoAuthority);
@@ -511,7 +514,17 @@ public partial class BlockObject : NetworkBehaviour
             switch (_activeWholeEffect.mode)
             {
                 case BlockBreakHand.BreakMode.Whole:
-                    _autoAuthority.CmdDestroy();
+                    if (_activeDialog)
+                    {
+                        Destroy(_activeDialog);
+                        _activeDialog = null;
+                    }
+
+                    _dialogLocalPositionRoot = transform.InverseTransformPoint(contactPoint);
+                    _activeDialog = Instantiate(breakWholeDialogPrefab);
+                    UpdateDialogPosition();
+                    _activeDialog.transform.GetChild(0).GetComponent<HoverButton>().action.AddListener(CloseDialog);
+                    _activeDialog.transform.GetChild(1).GetComponent<HoverButton>().action.AddListener(Delete);
                     break;
                 case BlockBreakHand.BreakMode.Duplicate:
                     if (NetworkClient.connection != null && NetworkClient.connection.identity)
@@ -521,14 +534,17 @@ public partial class BlockObject : NetworkBehaviour
 
                     break;
                 case BlockBreakHand.BreakMode.Save:
-                    if (!_activeSaveDialog)
+                    if (_activeDialog)
                     {
-                        _saveDialogLocalPositionRoot = transform.InverseTransformPoint(contactPoint);
-                        _activeSaveDialog = Instantiate(saveDialogPrefab);
-                        UpdateSaveDialogPosition();
-                        _activeSaveDialog.transform.GetChild(0).GetComponent<HoverButton>().action.AddListener(CloseSaveDialog);
-                        _activeSaveDialog.transform.GetChild(1).GetComponent<HoverButton>().action.AddListener(Save);
+                        Destroy(_activeDialog);
+                        _activeDialog = null;
                     }
+
+                    _dialogLocalPositionRoot = transform.InverseTransformPoint(contactPoint);
+                    _activeDialog = Instantiate(saveDialogPrefab);
+                    UpdateDialogPosition();
+                    _activeDialog.transform.GetChild(0).GetComponent<HoverButton>().action.AddListener(CloseDialog);
+                    _activeDialog.transform.GetChild(1).GetComponent<HoverButton>().action.AddListener(Save);
 
                     break;
                 default:
@@ -695,7 +711,7 @@ public partial class BlockObject : NetworkBehaviour
         _resetCoM = true;
 
         //if any blocks are added or removed, close the save dialog if it is up
-        CloseSaveDialog();
+        CloseDialog();
     }
 
     private void CreateInitialMesh()
@@ -777,31 +793,38 @@ public partial class BlockObject : NetworkBehaviour
         blockObjectGameObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time, false);
     }
 
-    private void UpdateSaveDialogPosition()
+    private void UpdateDialogPosition()
     {
-        if (!_activeSaveDialog)
+        if (!_activeDialog)
         {
             return;
         }
 
-        _activeSaveDialog.transform.position = transform.TransformPoint(_saveDialogLocalPositionRoot) + new Vector3(0, 0.1f, 0);
+        _activeDialog.transform.position = transform.TransformPoint(_dialogLocalPositionRoot) + new Vector3(0, 0.1f, 0);
 
-        var forwardFlat = _activeSaveDialog.transform.position - InputManager.Hands.head.position;
+        var forwardFlat = _activeDialog.transform.position - InputManager.Hands.head.position;
         forwardFlat.y = 0;
-        _activeSaveDialog.transform.rotation = Quaternion.LookRotation(forwardFlat);
+        _activeDialog.transform.rotation = Quaternion.LookRotation(forwardFlat);
     }
 
-    private void CloseSaveDialog()
+    private void CloseDialog()
     {
-        if (_activeSaveDialog)
+        if (_activeDialog)
         {
-            Destroy(_activeSaveDialog);
+            Destroy(_activeDialog);
+            _activeDialog = null;
         }
     }
 
     private void Save()
     {
-        CloseSaveDialog();
+        CloseDialog();
         print(BlockUtility.SerializeBlocks(Blocks));
+    }
+
+    private void Delete()
+    {
+        CloseDialog();
+        _autoAuthority.CmdDestroy();
     }
 }

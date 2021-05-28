@@ -8,6 +8,8 @@ public class Block
     public readonly int SideTextureIndex;
     public readonly int BottomTextureIndex;
 
+    public readonly bool AllowRotation;
+
     // public GameObject blockObject;
 
     public enum BlockType
@@ -18,19 +20,21 @@ public class Block
 
     public readonly BlockType blockType;
 
-    public Block(string topTextureName, string sideTextureName, string bottomTextureName, BlockType blockType)
+    public Block(string topTextureName, string sideTextureName, string bottomTextureName, BlockType blockType, bool allowRotation)
     {
         TopTextureIndex = BlockUtility.BlockTextureNameToTextureArrayIndex[topTextureName];
         SideTextureIndex = BlockUtility.BlockTextureNameToTextureArrayIndex[sideTextureName];
         BottomTextureIndex = BlockUtility.BlockTextureNameToTextureArrayIndex[bottomTextureName];
         this.blockType = blockType;
+        AllowRotation = allowRotation;
     }
 
-    public Block(string textureName)
+    public Block(string textureName, bool allowRotation = true)
     {
         TopTextureIndex = BlockUtility.BlockTextureNameToTextureArrayIndex[textureName];
         SideTextureIndex = TopTextureIndex;
         BottomTextureIndex = TopTextureIndex;
         blockType = BlockType.Normal;
+        AllowRotation = allowRotation;
     }
 }

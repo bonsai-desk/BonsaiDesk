@@ -124,6 +124,11 @@ public static partial class BlockUtility
             return (null, null, null, null);
         }
 
+        if (!block.AllowRotation)
+        {
+            rotation = Quaternion.identity;
+        }
+
         Vector3[] vertices = new Vector3[6 * 4];
         Vector3[] uv = new Vector3[6 * 4];
         Vector2[] uv2 = new Vector2[6 * 4];
