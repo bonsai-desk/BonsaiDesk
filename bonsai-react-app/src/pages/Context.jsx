@@ -1,17 +1,30 @@
 import {observer} from 'mobx-react-lite';
-import {useStore} from '../DataProvider';
-import {postChangeActiveBlock, postToggleBlockActive, postToggleBlockBreakHand} from '../api';
+import {HandMode, useStore} from '../DataProvider';
+import {postChangeActiveBlock, postSetHandMode} from '../api';
 
-function Button({children, onClick}) {
-    return <div className={'h-20 w-20 bg-gray-600 rounded'} onPointerDown={onClick}>{children}</div>;
+function Button({children, onClick, active}) {
+    let classInactive = 'h-20 w-20 bg-gray-600 rounded';
+    let classActive = 'h-20 w-20 bg-gray-600 rounded border-bonsai-orange border-solid border-4 border-light-blue-500';
+    return <div className={active ? classActive : classInactive} onPointerDown={onClick}>{children}</div>;
 }
 
-function BlockButton({hand, blockId}) {
+const BlockButton = observer(({hand, blockId}) => {
+
+    let {store} = useStore();
+    let activeBlock = '';
+    let active = false;
+    if (hand === 'left') {
+        active = store.ContextInfo.LeftBlockActive == blockId;
+    }
+    if (hand === 'right') {
+        active = store.ContextInfo.RightBlockActive == blockId;
+    }
+
     let onClick = () => {
         postChangeActiveBlock(hand, blockId);
     };
-    return <Button onClick={onClick}>{blockId}</Button>;
-}
+    return <Button onClick={onClick} active={active}>{blockId}</Button>;
+});
 
 function ButtonRow({children}) {
     return <div className={'flex flex-wrap space-x-4'}>{children}</div>;
@@ -24,7 +37,7 @@ function ButtonContainer({children}) {
 const ActiveItem = observer(({hand}) => {
 
     let {store} = useStore();
-    let activeBlock = "";
+    let activeBlock = '';
     if (hand === 'left') {
         activeBlock = store.ContextInfo.LeftBlockActive;
     }
@@ -37,17 +50,17 @@ const ActiveItem = observer(({hand}) => {
     </div>;
 });
 
-const ToggleBlocks = observer(({hand}) => {
+const ClearBlock = observer(({hand}) => {
     let {store} = useStore();
 
     let switchOff = false;
 
     switch (hand) {
         case 'left':
-            switchOff = store.ContextInfo.LeftBlockActive === "";
+            switchOff = store.ContextInfo.LeftBlockActive === '';
             break;
         case 'right':
-            switchOff = store.ContextInfo.RightBlockActive === "";
+            switchOff = store.ContextInfo.RightBlockActive === '';
             break;
         default:
             console.log(`Toggle blocks for ${hand} not handled`);
@@ -58,7 +71,7 @@ const ToggleBlocks = observer(({hand}) => {
 
     let onClick = () => {
         if (hand === 'left' || hand === 'right') {
-            postToggleBlockActive(hand);
+            postChangeActiveBlock(hand, '');
         }
     };
 
@@ -73,32 +86,33 @@ const ToggleBlocks = observer(({hand}) => {
 function ButtonGrid({hand}) {
     return (
             <ButtonContainer>
-                <ActiveItem hand={hand}/>
                 <ButtonRow>
-                    <BlockButton hand={hand} blockId={"wood1"}/>
-                    <BlockButton hand={hand} blockId={"wood2"}/>
-                    <BlockButton hand={hand} blockId={"wood3"}/>
+                    <BlockButton hand={hand} blockId={'wood1'}/>
+                    <BlockButton hand={hand} blockId={'wood2'}/>
+                    <BlockButton hand={hand} blockId={'wood3'}/>
                 </ButtonRow>
                 <ButtonRow>
                     <BlockButton hand={hand} blockId={"wood4"}/>
                     <BlockButton hand={hand} blockId={"wood5"}/>
                     <BlockButton hand={hand} blockId={"bearing"}/>
                 </ButtonRow>
-                <ToggleBlocks hand={hand}/>
+                <div className={"w-full flex justify-center"}>
+                    <BlockButton hand={hand} blockId={''}/>
+                </div>
             </ButtonContainer>
     );
 }
 
-const HandButton = observer(({hand}) => {
+const BlockBreak = observer(({hand}) => {
     let {store} = useStore();
 
     let blockBreakOn = false;
 
     if (hand === 'left') {
-        blockBreakOn = store.ContextInfo.LeftBlockBreak;
+        blockBreakOn = store.ContextInfo.LeftHandMode === HandMode.Single;
     }
     if (hand === 'right') {
-        blockBreakOn = store.ContextInfo.RightBlockBreak;
+        blockBreakOn = store.ContextInfo.RightHandMode === HandMode.Single;
     }
 
     let className = blockBreakOn ? 'bg-red-400 h-10' : 'bg-gray-900 h-10';
@@ -108,7 +122,119 @@ const HandButton = observer(({hand}) => {
     }
 
     function onClick() {
-        postToggleBlockBreakHand(hand);
+        postSetHandMode(hand, HandMode.Single);
+    }
+
+    return <div className={'flex flex-wrap content-center'}>
+        <Button onClick={onClick}><Inner/></Button>
+    </div>;
+
+});
+
+const WholeBreak = observer(({hand}) => {
+    let {store} = useStore();
+
+    let blockBreakOn = false;
+
+    if (hand === 'left') {
+        blockBreakOn = store.ContextInfo.LeftHandMode === HandMode.Whole;
+    }
+    if (hand === 'right') {
+        blockBreakOn = store.ContextInfo.RightHandMode === HandMode.Whole;
+    }
+
+    let className = blockBreakOn ? 'bg-red-400 h-10' : 'bg-gray-900 h-10';
+
+    function Inner() {
+        return <div className={className}>whole break</div>;
+    }
+
+    function onClick() {
+        postSetHandMode(hand, HandMode.Whole);
+    }
+
+    return <div className={'flex flex-wrap content-center'}>
+        <Button onClick={onClick}><Inner/></Button>
+    </div>;
+
+});
+
+const Save = observer(({hand}) => {
+    let {store} = useStore();
+
+    let blockBreakOn = false;
+
+    if (hand === 'left') {
+        blockBreakOn = store.ContextInfo.LeftHandMode === HandMode.Save;
+    }
+    if (hand === 'right') {
+        blockBreakOn = store.ContextInfo.RightHandMode === HandMode.Save;
+    }
+
+    let className = blockBreakOn ? 'bg-red-400 h-10' : 'bg-gray-900 h-10';
+
+    function Inner() {
+        return <div className={className}>save</div>;
+    }
+
+    function onClick() {
+        postSetHandMode(hand, HandMode.Save);
+    }
+
+    return <div className={'flex flex-wrap content-center'}>
+        <Button onClick={onClick}><Inner/></Button>
+    </div>;
+
+});
+
+const Duplicate = observer(({hand}) => {
+    let {store} = useStore();
+
+    let active = false;
+
+    if (hand === 'left') {
+        active = store.ContextInfo.LeftHandMode === HandMode.Duplicate;
+    }
+    if (hand === 'right') {
+        active = store.ContextInfo.RightHandMode === HandMode.Duplicate;
+    }
+
+    let className = active ? 'bg-red-400 h-10' : 'bg-gray-900 h-10';
+
+    function Inner() {
+        return <div className={className}>duplicate</div>;
+    }
+
+    function onClick() {
+        postSetHandMode(hand, HandMode.Duplicate);
+    }
+
+    return <div className={'flex flex-wrap content-center'}>
+        <Button onClick={onClick}><Inner/></Button>
+    </div>;
+
+});
+
+const ClearHand = observer(({hand}) => {
+    let {store} = useStore();
+
+    let active = false;
+
+    if (hand === 'left') {
+        active = store.ContextInfo.LeftHandMode === HandMode.None;
+    }
+    if (hand === 'right') {
+        active = store.ContextInfo.RightHandMode === HandMode.None;
+    }
+
+    let className = active ? 'bg-red-400 h-10' : 'bg-gray-900 h-10';
+
+    function Inner() {
+        return <div className={className}>Clear Hand</div>;
+    }
+
+    function onClick() {
+        postSetHandMode(hand, HandMode.None);
     }
 
     return <div className={'flex flex-wrap content-center'}>
@@ -119,10 +245,22 @@ const HandButton = observer(({hand}) => {
 
 const Context = observer(() => {
     return <div className={'bg-gray-900 h-screen flex flex-wrap justify-center space-x-20 content-center'}>
-        <HandButton hand={'left'}/>
+        <div className={'space-y-2'}>
+            <BlockBreak hand={'left'}/>
+            <WholeBreak hand={'left'}/>
+            <Save hand={'left'}/>
+            <Duplicate hand={'left'}/>
+            <ClearHand hand={'left'}/>
+        </div>
         <ButtonGrid hand={'left'}/>
         <ButtonGrid hand={'right'}/>
-        <HandButton hand={'right'}/>
+        <div className={'space-y-2'}>
+            <BlockBreak hand={'right'}/>
+            <WholeBreak hand={'right'}/>
+            <Save hand={'right'}/>
+            <Duplicate hand={'right'}/>
+            <ClearHand hand={'right'}/>
+        </div>
     </div>;
 });
 

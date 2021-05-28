@@ -14,6 +14,14 @@ export const NetworkManagerMode = {
     Host: 3,
 };
 
+export const HandMode = {
+    None: 0,
+    Single: 1,
+    Whole: 2,
+    Duplicate: 3,
+    Save: 4
+}
+
 class Store {
     SocialInfo = {
         UserName: 'NoName',
@@ -35,10 +43,10 @@ class Store {
         Connecting: false
     };
     ContextInfo = {
+        LeftHandMode: HandMode.None,
+        RightHandMode: HandMode.None,
         LeftBlockActive: "",
         RightBlockActive: "",
-        LeftBlockBreak: false,
-        RightBlockBreak: false,
     }
     MediaInfo = {
         Active: false,
