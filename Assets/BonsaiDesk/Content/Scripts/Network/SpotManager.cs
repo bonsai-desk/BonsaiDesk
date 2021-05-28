@@ -25,8 +25,6 @@ public class SpotManager : NetworkBehaviour
 
     public ColorInfo[] colorInfo;
 
-    public EventHandler<Layout> LayoutChange;
-
     private Transform[][] playerSpots;
 
     public int TotalSpots => playerSpots.Length;
@@ -89,7 +87,10 @@ public class SpotManager : NetworkBehaviour
         autoBrowser.transform.parent.rotation = autoBrowserPositions.GetChild((int) newLayout).rotation;
         autoBrowser.screenRigidBody.MovePosition(autoBrowser.transform.parent.position);
         autoBrowser.screenRigidBody.MoveRotation(autoBrowser.transform.parent.rotation);
-        LayoutChange.Invoke(this, newLayout);
+        if (NetworkVRPlayer.localPlayer != null)
+        {
+            NetworkVRPlayer.localPlayer.LayoutChange(newLayout);
+        }
     }
 
     private void HandleServerDisconnect(object sender, NetworkConnection e)

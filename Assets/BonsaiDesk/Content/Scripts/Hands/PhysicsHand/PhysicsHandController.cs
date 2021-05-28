@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Mirror;
+using Smooth;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -19,6 +21,8 @@ public class PhysicsHandController : MonoBehaviour
     public Transform[] fingerTargets;
 
     public Vector3 jointOffset = new Vector3(0.035f, 0, 0);
+
+    public bool isOwnHand = false;
 
     private bool _initialized = false;
     private ConfigurableJoint _joint;
@@ -133,7 +137,7 @@ public class PhysicsHandController : MonoBehaviour
         return false;
     }
 
-    private bool InvalidTransform(Transform t)
+    public static bool InvalidTransform(Transform t)
     {
         return float.IsNaN(t.position.x) || float.IsNaN(t.position.y) || float.IsNaN(t.position.z) || float.IsInfinity(t.position.x) ||
                float.IsInfinity(t.position.y) || float.IsInfinity(t.position.z) || float.IsNaN(t.rotation.x) || float.IsNaN(t.rotation.y) ||
@@ -326,6 +330,17 @@ public class PhysicsHandController : MonoBehaviour
             else
             {
                 ResetTransform(fingerJointBodies[i], joint.connectedAnchor, target.localRotation, true);
+            }
+        }
+
+        if (isOwnHand)
+        {
+            var networkHand = InputManager.Hands.GetHand(skeletonType).NetworkHand;
+            if (networkHand)
+            {
+                networkHand.GetComponent<NetworkFollow>().MoveToTarget();
+                networkHand.GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
+                // networkHand.GetComponent<NetworkTransform>().CmdTeleport(networkHand.transform.position, networkHand.transform.rotation);
             }
         }
     }

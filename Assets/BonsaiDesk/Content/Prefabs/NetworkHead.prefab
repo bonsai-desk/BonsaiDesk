@@ -140,11 +140,11 @@ GameObject:
   m_Component:
   - component: {fileID: 8502092791694960067}
   - component: {fileID: 7227673606183855354}
-  - component: {fileID: 5220972946680504722}
   - component: {fileID: 397433653346894428}
   - component: {fileID: 2482834880378478163}
   - component: {fileID: 9215190182876982407}
   - component: {fileID: 3765429293320518224}
+  - component: {fileID: 5220972946680504722}
   m_Layer: 23
   m_Name: NetworkHead
   m_TagString: NetworkHead
@@ -184,24 +184,6 @@ MonoBehaviour:
   serverOnly: 0
   m_AssetId: 
   hasSpawned: 0
---- !u!114 &5220972946680504722
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8502092791694960064}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4315637a105bbce40af50568941b54c1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  syncMode: 0
-  syncInterval: 0.1
-  headObject: {fileID: 7351998015057912635}
-  _leftHandId: {fileID: 0}
-  _rightHandId: {fileID: 0}
-  spotId: 0
 --- !u!114 &397433653346894428
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -305,6 +287,24 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &5220972946680504722
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8502092791694960064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4315637a105bbce40af50568941b54c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
+  headObject: {fileID: 7351998015057912635}
+  _leftHandId: {fileID: 0}
+  _rightHandId: {fileID: 0}
+  spotId: 0
 --- !u!1001 &3843194958250371987
 PrefabInstance:
   m_ObjectHideFlags: 0

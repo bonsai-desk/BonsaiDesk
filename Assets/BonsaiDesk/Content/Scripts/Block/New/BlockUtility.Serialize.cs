@@ -13,7 +13,7 @@ public static partial class BlockUtility
         data += "\nFile created by: app version " + NetworkManagerGame.Singleton.FullVersion;
         foreach (var pair in blocks)
         {
-            data += $"\n{pair.Key.x} {pair.Key.y} {pair.Key.z} {pair.Value.id} {pair.Value.rotation}";
+            data += $"\n{pair.Key.x} {pair.Key.y} {pair.Key.z} {pair.Value.name} {pair.Value.rotation}";
         }
 
         return data;
@@ -106,9 +106,9 @@ public static partial class BlockUtility
                 }
 
                 var coord = new Vector3Int(int.Parse(line[0]), int.Parse(line[1]), int.Parse(line[2]));
-                var id = byte.Parse(line[3]);
+                var name = line[3];
                 var rotation = byte.Parse(line[4]);
-                var pair = new KeyValuePair<Vector3Int, SyncBlock>(coord, new SyncBlock(id, rotation));
+                var pair = new KeyValuePair<Vector3Int, SyncBlock>(coord, new SyncBlock(name, rotation));
                 blocks.Enqueue(pair);
             }
         }

@@ -33,12 +33,56 @@
         {
             "Queue" = "Geometry"
         }
-
+        
+        //this pass just writes to the depth buffer so the next pass can render only the outer transparent surface
         Pass
+        {
+            Blend Zero One
+            
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+
+            #include "UnityCG.cginc"
+
+            struct appdata
+            {
+                float4 vertex : POSITION;
+            };
+
+            struct v2f
+            {
+                float4 vertex : SV_POSITION;
+            };
+
+            sampler2D _MainTex;
+            float4 _MainTex_ST;
+
+            v2f vert (appdata v)
+            {
+                v2f o;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                return o;
+            }
+
+            fixed4 frag (v2f i) : SV_Target
+            {
+                return float4(0, 0, 0, 0);
+            }
+            ENDCG
+        }
+
+        Pass //default pass
         {
             Tags
             {
                 "LightMode" = "ForwardBase"
+            }
+            
+            Stencil
+            {
+                Ref 2
+                Comp NotEqual
             }
 
             Blend [_SrcBlend] [_DstBlend]
@@ -128,6 +172,109 @@
 
 
                 return float4(rim + max(0, phong) + warpedDiffuse, _Color.a);
+            }
+            ENDCG
+        }
+        
+        Pass //over screen
+        {
+            Tags
+            {
+                "LightMode" = "ForwardBase"
+            }
+            
+            Stencil
+            {
+                Ref 2
+                Comp Equal
+            }
+
+            Blend [_SrcBlend] [_DstBlend]
+
+            CGPROGRAM
+            #pragma shader_feature_local _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
+
+            #pragma vertex MyVertexProgram
+            #pragma fragment MyFragmentProgram
+
+            #include "UnityCG.cginc"
+            #include "UnityStandardBRDF.cginc"
+
+            float4 _Color;
+            sampler2D _MainTex;
+            sampler2D _RampTex;
+            float4 _MainTex_ST;
+
+            float _k_s;
+            sampler2D _k_s_Tex;
+
+            float _f_s;
+            float _k_spec;
+            sampler2D _k_spec_Tex;
+
+            float _f_r;
+            sampler2D _k_r_Tex;
+            float _k_rim;
+
+            float _Alpha;
+            float _Beta;
+            float _Gamma;
+
+            struct VertexData
+            {
+                float4 position : POSITION;
+                float3 normal : NORMAL;
+                float2 uv : TEXCOORD0;
+            };
+
+            struct Interpolators
+            {
+                float4 position : SV_POSITION;
+                float2 uv : TEXCOORD0;
+                float3 normal : TEXCOORD1;
+                float3 worldPos : TEXCOORD2;
+            };
+
+            Interpolators MyVertexProgram(VertexData v)
+            {
+                Interpolators i;
+                i.position = UnityObjectToClipPos(v.position);
+                i.worldPos = mul(unity_ObjectToWorld, v.position);
+                i.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                i.normal = normalize(UnityObjectToWorldNormal(v.normal));
+                return i;
+            }
+
+            float4 MyFragmentProgram(Interpolators i) : SV_TARGET
+            {
+                i.normal = normalize(i.normal);
+                float3 lightDir = _WorldSpaceLightPos0.xyz;
+                float3 lightColor = _LightColor0.rgb;
+
+                float3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);
+                float3 reflectionDir = reflect(-lightDir, i.normal);
+
+                float3 albedo = _Color * tex2D(_MainTex, i.uv).rgb;
+
+                float VdotR = dot(viewDir, reflectionDir);
+                float NdotV = dot(i.normal, viewDir);
+
+                float _f_r = pow(1 - NdotV, 4);
+                float phongSpec = _f_s * pow(VdotR, _k_spec * tex2D(_k_spec_Tex, i.uv));
+                float rimCoeff = _f_r * tex2D(_k_r_Tex, i.uv);
+                float phongRim = rimCoeff * pow(VdotR, _k_rim);
+                float phong = lightColor * _k_s * tex2D(_k_s_Tex, i.uv) * max(phongSpec, phongRim);
+
+                float3 rim = dot(i.normal, float3(0, 1, 0)) * rimCoeff * ShadeSH9(float4(viewDir, 1));
+
+                float NdotL = dot(lightDir, i.normal);
+                float diff = pow(_Alpha * NdotL + _Beta, _Gamma);
+                float3 ramp = 2 * tex2D(_RampTex, float2(diff, diff)).rgb;
+                float3 litRamp = lightColor * ramp;
+                float3 ambient = ShadeSH9(float4(i.normal, 1));
+                float3 warpedDiffuse = albedo * (ambient + litRamp);
+                
+                return float4(rim + max(0, phong) + warpedDiffuse, 1);
             }
             ENDCG
         }

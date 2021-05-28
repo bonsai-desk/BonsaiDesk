@@ -10,6 +10,7 @@ public class TableBrowserParent : MonoBehaviour
     public TableBrowser ContextMenu;
     public TableBrowserMenu TableBrowserMenu;
     public WebBrowserParent WebBrowserParent;
+    public MoveToDesk moveToDesk;
     public bool MenuAsleep { get; private set; }
     public bool ContextAsleep { get; private set; }
     
@@ -135,6 +136,8 @@ public class TableBrowserParent : MonoBehaviour
         InputManager.Hands.Right.ZTestOverlay();
         InputManager.Hands.Left.SetPhysicsLayerForTouchScreen();
         InputManager.Hands.Right.SetPhysicsLayerForTouchScreen();
+        InputManager.Hands.Left.SetPhysicsForUsingScreen(true);
+        InputManager.Hands.Right.SetPhysicsForUsingScreen(true);
     }
 
     private void SetHandForInactiveBrowser()
@@ -145,7 +148,14 @@ public class TableBrowserParent : MonoBehaviour
             InputManager.Hands.Right.ZTestRegular();
             InputManager.Hands.Left.SetPhysicsLayerRegular();
             InputManager.Hands.Right.SetPhysicsLayerRegular();
+            InputManager.Hands.Left.SetPhysicsForUsingScreen(false);
+            InputManager.Hands.Right.SetPhysicsForUsingScreen(false);
         }
+    }
+
+    public bool AllMenusClosed()
+    {
+        return MenuAsleep && ContextAsleep;
     }
 
     private void ContextWake()
@@ -154,7 +164,6 @@ public class TableBrowserParent : MonoBehaviour
         contentBoxCollider.enabled = true;
         ContextMenu.SetHidden(false);
         SetHandsForActiveBrowser();
-        
     }
 
     private void ContextSleep()
@@ -167,6 +176,11 @@ public class TableBrowserParent : MonoBehaviour
 
     public void ToggleContextAwake()
     {
+        if (!moveToDesk.oriented)
+        {
+            return;
+        }
+        
         if (ContextAsleep)
         {
             ContextWake();
@@ -179,6 +193,11 @@ public class TableBrowserParent : MonoBehaviour
 
     public void ToggleAwake()
     {
+        if (!moveToDesk.oriented)
+        {
+            return;
+        }
+        
         if (MenuAsleep)
         {
             MenuWake();

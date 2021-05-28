@@ -10,6 +10,8 @@ public class LockObjectHand : MonoBehaviour, IHandTick
 
     [HideInInspector] public ConfigurableJoint joint;
 
+    public TableBrowserParent tableBrowserParent;
+
     public void Tick()
     {
         //TODO add drag if picking up larger object/blockArea with more than 4 blocks
@@ -31,7 +33,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
             }
         }
 
-        if (joint && (!playerHand.HandComponents.TrackingRecently ||
+        if (joint && (!playerHand.HandComponents.TrackingRecently || !tableBrowserParent.AllMenusClosed() ||
                       !playerHand.GetGesture(PlayerHand.Gesture.IndexTargetPinching) && !playerHand.GetGesture(PlayerHand.Gesture.Fist)))
         {
             DetachObject();
@@ -43,7 +45,8 @@ public class LockObjectHand : MonoBehaviour, IHandTick
 
         //code below here if not holding object
 
-        if (playerHand.GetGestureStart(PlayerHand.Gesture.IndexTargetPinching) || playerHand.GetGestureStart(PlayerHand.Gesture.Fist))
+        if (tableBrowserParent.AllMenusClosed() &&
+            (playerHand.GetGestureStart(PlayerHand.Gesture.IndexTargetPinching) || playerHand.GetGestureStart(PlayerHand.Gesture.Fist)))
         {
             var hitAutoAuthority = GetLockObjectCandidate();
             if (hitAutoAuthority && !hitAutoAuthority.isKinematic && !hitAutoAuthority.InUse)

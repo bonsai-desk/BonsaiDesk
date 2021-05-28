@@ -80,7 +80,7 @@ public partial class BlockObject
                 Vector3 blockPosition = transform.TransformPoint(coord);
                 Vector3 positionLocalToCubeArea = blockObject.transform.InverseTransformPoint(blockPosition);
                 Vector3Int blockCoord = Vector3Int.RoundToInt(positionLocalToCubeArea);
-                var inArea = BlockUtility.InCubeArea(blockObject, blockCoord, Blocks[coord].id);
+                var inArea = BlockUtility.InCubeArea(blockObject, blockCoord, Blocks[coord].name);
                 if (inArea.isNearHole)
                     isNearHole = true;
                 isInCubeArea = inArea.isInCubeArea;
@@ -101,7 +101,7 @@ public partial class BlockObject
                     // }
 
                     var position = blockObject.transform.TransformPoint(blockCoord);
-                    var rotation = blockObject.GetTargetRotation(transform.rotation, blockCoord, global::Blocks.blocks[Blocks[coord].id].blockType);
+                    var rotation = blockObject.GetTargetRotation(transform.rotation, blockCoord, global::Blocks.GetBlock(Blocks[coord].name).blockType);
 
                     if (BlockUtility.AboutEquals(blockPosition, position) && BlockUtility.AboutEquals(transform.rotation, rotation))
                     {
@@ -116,10 +116,10 @@ public partial class BlockObject
                         var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
                         localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * BlockUtility.ByteToQuaternion(Blocks[coord].rotation);
                         Mixpanel.Track("Add Block");
-                        blockObject.CmdAddBlock(Blocks[coord].id, blockCoord, localRotation, netIdentity);
+                        blockObject.CmdAddBlock(Blocks[coord].name, blockCoord, localRotation, netIdentity);
 
                         //client side prediction
-                        var syncBlock = new SyncBlock(Blocks[coord].id, BlockUtility.QuaternionToByte(localRotation));
+                        var syncBlock = new SyncBlock(Blocks[coord].name, BlockUtility.QuaternionToByte(localRotation));
                         blockObject.BlockChanges.Enqueue((blockCoord, syncBlock, BlockDictOp.OP_ADD));
 
                         return;
@@ -233,7 +233,7 @@ public partial class BlockObject
             case BlockBreakHand.BreakMode.Single:
                 ContactPoint contact = collision.GetContact(0);
                 Vector3 blockPosition = contact.point;
-                blockPosition += contact.normal * (BlockArea.cubeScale / 2f);
+                blockPosition += contact.normal * (CubeScale / 2f);
                 Vector3 positionLocalToCubeArea = transform.InverseTransformPoint(blockPosition);
                 Vector3Int blockCoord = Vector3Int.RoundToInt(positionLocalToCubeArea);
 

@@ -55,10 +55,17 @@ public class NetworkFollow : NetworkBehaviour
         if (!inited)
             Init();
 
+        MoveToTarget();
+    }
+
+    public void MoveToTarget()
+    {
         if (target != null)
         {
             if (body)
             {
+                transform.position = target.position;
+                transform.rotation = target.rotation;
                 body.MovePosition(target.position);
                 body.MoveRotation(target.rotation);
             }

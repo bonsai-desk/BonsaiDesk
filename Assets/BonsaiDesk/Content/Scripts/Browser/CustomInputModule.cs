@@ -178,8 +178,8 @@ public class CustomInputModule : StandaloneInputModule
             var fakeRayCast = new RaycastResult();
             leftData.pointerCurrentRaycast = fakeRayCast;
 
-            InputManager.Hands.Left.SetHandColliderActiveForScreen(true);
-            InputManager.Hands.Right.SetHandColliderActiveForScreen(true);
+            // InputManager.Hands.Left.SetPhysicsForUsingScreen(false);
+            // InputManager.Hands.Right.SetPhysicsForUsingScreen(false);
         }
 
         var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
@@ -218,8 +218,8 @@ public class CustomInputModule : StandaloneInputModule
 
         leftData.pointerCurrentRaycast = fakeRayCast;
 
-        InputManager.Hands.Left.SetHandColliderActiveForScreen(!leftValid);
-        InputManager.Hands.Right.SetHandColliderActiveForScreen(!rightValid);
+        // InputManager.Hands.Left.SetPhysicsForUsingScreen(leftValid);
+        // InputManager.Hands.Right.SetPhysicsForUsingScreen(rightValid);
     }
 
     private PointerEventData.FramePressState GetGazeButtonState()

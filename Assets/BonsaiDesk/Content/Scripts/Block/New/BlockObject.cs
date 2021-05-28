@@ -11,12 +11,12 @@ using BlockDictOp = Mirror.SyncDictionary<UnityEngine.Vector3Int, SyncBlock>.Ope
 
 public struct SyncBlock
 {
-    public byte id;
+    public string name;
     public byte rotation;
 
-    public SyncBlock(byte id, byte rotation)
+    public SyncBlock(string name, byte rotation)
     {
-        this.id = id;
+        this.name = name;
         this.rotation = rotation;
     }
 }
@@ -29,7 +29,28 @@ public partial class BlockObject : NetworkBehaviour
     //contains all of the AutoAuthority of all BlockObjects in the scene
     private static HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
 
-    //contains all of the information required to construct this BlockObject
+    //2DArray for block textures. value is calculated once then cached
+    private static Texture2DArray _blockTextureArray = null;
+
+    public static Texture2DArray BlockTextureArray
+    {
+        get
+        {
+            if (_blockTextureArray == null)
+            {
+                GenerateBlockTextureArray();
+            }
+
+            return _blockTextureArray;
+        }
+    }
+
+    public static void GenerateBlockTextureArray()
+    {
+        _blockTextureArray = BlockUtility.GenerateBlockTextureArray();
+    }
+
+    //all of the data required to reconstruct this block object
     public readonly SyncDictionary<Vector3Int, SyncBlock> Blocks = new SyncDictionary<Vector3Int, SyncBlock>();
 
     //caches changes made to the sync dictionary so all block changes can be made at once with a single mesh update
@@ -41,6 +62,7 @@ public partial class BlockObject : NetworkBehaviour
     public PhysicMaterial blockPhysicMaterial;
     public PhysicMaterial spherePhysicMaterial;
     public GameObject saveDialogPrefab;
+    public GameObject breakWholeDialogPrefab;
 
     //contains the information about the local state of the mesh. The structure of the mesh can be slightly
     //different depending on the order of block add/remove even though the final result looks the same
@@ -69,15 +91,15 @@ public partial class BlockObject : NetworkBehaviour
     //used to keep track of any full block effect such as duplicate or delete all
     private WholeEffectMode _activeWholeEffect = null;
 
-    //stores any active save popup. otherwise is null
-    private GameObject _activeSaveDialog;
-    private Vector3 _saveDialogLocalPositionRoot;
+    //stores any active dialog. otherwise is null
+    private GameObject _activeDialog;
+    private Vector3 _dialogLocalPositionRoot;
 
     //mesh stuff
     private MeshFilter _meshFilter;
     private Mesh _mesh;
     private List<Vector3> _vertices = new List<Vector3>();
-    private List<Vector2> _uv = new List<Vector2>();
+    private List<Vector3> _uv = new List<Vector3>();
     private List<Vector2> _uv2 = new List<Vector2>();
     private List<int> _triangles = new List<int>();
     private float _texturePadding = 0f;
@@ -140,6 +162,7 @@ public partial class BlockObject : NetworkBehaviour
 
         //make copy of material so material asset is not changed
         blockObjectMaterial = new Material(blockObjectMaterial);
+        blockObjectMaterial.SetTexture("_TextureArray", BlockTextureArray);
 
         PhysicsStart();
 
@@ -173,7 +196,12 @@ public partial class BlockObject : NetworkBehaviour
         ProcessBlockChanges();
         UpdateDamagedBlocks();
         UpdateWholeEffects();
-        UpdateSaveDialogPosition();
+        UpdateDialogPosition();
+
+        if (debug && Input.GetKeyDown(KeyCode.S))
+        {
+            Save();
+        }
     }
 
     private void FixedUpdate()
@@ -200,6 +228,8 @@ public partial class BlockObject : NetworkBehaviour
 
     private void OnDestroy()
     {
+        CloseDialog();
+        
         if (_blockObjectAuthorities.Contains(_autoAuthority))
         {
             _blockObjectAuthorities.Remove(_autoAuthority);
@@ -253,7 +283,7 @@ public partial class BlockObject : NetworkBehaviour
                 case BlockDictOp.OP_ADD:
                     if (!_meshBlocks.ContainsKey(coord))
                     {
-                        AddBlockToMesh(syncBlock.id, coord, BlockUtility.ByteToQuaternion(syncBlock.rotation));
+                        AddBlockToMesh(syncBlock.name, coord, BlockUtility.ByteToQuaternion(syncBlock.rotation));
                     }
 
                     break;
@@ -274,7 +304,7 @@ public partial class BlockObject : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdAddBlock(byte id, Vector3Int coord, Quaternion rotation, NetworkIdentity blockToDestroy)
+    private void CmdAddBlock(string blockName, Vector3Int coord, Quaternion rotation, NetworkIdentity blockToDestroy)
     {
         blockToDestroy.GetComponent<AutoAuthority>().ServerStripOwnerAndDestroy();
 
@@ -284,10 +314,10 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        Blocks.Add(coord, new SyncBlock(id, BlockUtility.QuaternionToByte(rotation)));
+        Blocks.Add(coord, new SyncBlock(blockName, BlockUtility.QuaternionToByte(rotation)));
     }
 
-    private void AddBlockToMesh(byte id, Vector3Int coord, Quaternion rotation)
+    private void AddBlockToMesh(string blockName, Vector3Int coord, Quaternion rotation)
     {
         if (_meshBlocks.ContainsKey(coord))
         {
@@ -295,7 +325,7 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        var blockMesh = BlockUtility.GetBlockMesh(id, coord, rotation, _texturePadding);
+        var blockMesh = BlockUtility.GetBlockMesh(blockName, coord, rotation, _texturePadding);
         _vertices.AddRange(blockMesh.vertices);
         _uv.AddRange(blockMesh.uv);
         _uv2.AddRange(blockMesh.uv2);
@@ -484,7 +514,17 @@ public partial class BlockObject : NetworkBehaviour
             switch (_activeWholeEffect.mode)
             {
                 case BlockBreakHand.BreakMode.Whole:
-                    _autoAuthority.CmdDestroy();
+                    if (_activeDialog)
+                    {
+                        Destroy(_activeDialog);
+                        _activeDialog = null;
+                    }
+
+                    _dialogLocalPositionRoot = transform.InverseTransformPoint(contactPoint);
+                    _activeDialog = Instantiate(breakWholeDialogPrefab);
+                    UpdateDialogPosition();
+                    _activeDialog.transform.GetChild(0).GetComponent<HoverButton>().action.AddListener(CloseDialog);
+                    _activeDialog.transform.GetChild(1).GetComponent<HoverButton>().action.AddListener(Delete);
                     break;
                 case BlockBreakHand.BreakMode.Duplicate:
                     if (NetworkClient.connection != null && NetworkClient.connection.identity)
@@ -494,14 +534,18 @@ public partial class BlockObject : NetworkBehaviour
 
                     break;
                 case BlockBreakHand.BreakMode.Save:
-                    if (!_activeSaveDialog)
+                    if (_activeDialog)
                     {
-                        _saveDialogLocalPositionRoot = transform.InverseTransformPoint(contactPoint);
-                        _activeSaveDialog = Instantiate(saveDialogPrefab);
-                        UpdateSaveDialogPosition();
-                        _activeSaveDialog.transform.GetChild(0).GetComponent<HoverButton>().action.AddListener(CloseSaveDialog);
-                        _activeSaveDialog.transform.GetChild(1).GetComponent<HoverButton>().action.AddListener(Save);
+                        Destroy(_activeDialog);
+                        _activeDialog = null;
                     }
+
+                    _dialogLocalPositionRoot = transform.InverseTransformPoint(contactPoint);
+                    _activeDialog = Instantiate(saveDialogPrefab);
+                    UpdateDialogPosition();
+                    _activeDialog.transform.GetChild(0).GetComponent<HoverButton>().action.AddListener(CloseDialog);
+                    _activeDialog.transform.GetChild(1).GetComponent<HoverButton>().action.AddListener(Save);
+
                     break;
                 default:
                     Debug.LogError("Unknown mode: " + _activeWholeEffect.mode);
@@ -607,11 +651,6 @@ public partial class BlockObject : NetworkBehaviour
         int i = 0;
         foreach (var block in _damagedBlocks)
         {
-            if (i >= damagedBlocksForShader.Length)
-            {
-                break;
-            }
-
             if (_meshBlocks.TryGetValue(block, out var meshBlock))
             {
                 meshBlock.framesSinceLastDamage++;
@@ -621,8 +660,11 @@ public partial class BlockObject : NetworkBehaviour
                     noLongerDamagedBlocks.Enqueue(block);
                 }
 
-                damagedBlocksForShader[i] = new Vector4(block.x, block.y, block.z, meshBlock.health);
-                i++;
+                if (i < damagedBlocksForShader.Length)
+                {
+                    damagedBlocksForShader[i] = new Vector4(block.x, block.y, block.z, meshBlock.health);
+                    i++;
+                }
             }
         }
 
@@ -642,8 +684,8 @@ public partial class BlockObject : NetworkBehaviour
         _mesh.vertices = _vertices.ToArray();
         _mesh.triangles = _triangles.ToArray();
 
-        _mesh.uv = _uv.ToArray();
-        _mesh.uv2 = _uv2.ToArray();
+        _mesh.SetUVs(0, _uv);
+        _mesh.SetUVs(1, _uv2);
 
         _mesh.RecalculateNormals();
         _mesh.RecalculateTangents();
@@ -669,14 +711,14 @@ public partial class BlockObject : NetworkBehaviour
         _resetCoM = true;
 
         //if any blocks are added or removed, close the save dialog if it is up
-        CloseSaveDialog();
+        CloseDialog();
     }
 
     private void CreateInitialMesh()
     {
         foreach (var block in Blocks)
         {
-            AddBlockToMesh(block.Value.id, block.Key, BlockUtility.ByteToQuaternion(block.Value.rotation));
+            AddBlockToMesh(block.Value.name, block.Key, BlockUtility.ByteToQuaternion(block.Value.rotation));
         }
 
         UpdateMesh();
@@ -750,32 +792,39 @@ public partial class BlockObject : NetworkBehaviour
         NetworkServer.Spawn(blockObjectGameObject);
         blockObjectGameObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time, false);
     }
-    
-    private void UpdateSaveDialogPosition()
+
+    private void UpdateDialogPosition()
     {
-        if (!_activeSaveDialog)
+        if (!_activeDialog)
         {
             return;
         }
 
-        _activeSaveDialog.transform.position = transform.TransformPoint(_saveDialogLocalPositionRoot) + new Vector3(0, 0.1f, 0);
+        _activeDialog.transform.position = transform.TransformPoint(_dialogLocalPositionRoot) + new Vector3(0, 0.1f, 0);
 
-        var forwardFlat = _activeSaveDialog.transform.position - InputManager.Hands.head.position;
+        var forwardFlat = _activeDialog.transform.position - InputManager.Hands.head.position;
         forwardFlat.y = 0;
-        _activeSaveDialog.transform.rotation = Quaternion.LookRotation(forwardFlat);
+        _activeDialog.transform.rotation = Quaternion.LookRotation(forwardFlat);
     }
 
-    private void CloseSaveDialog()
+    private void CloseDialog()
     {
-        if (_activeSaveDialog)
+        if (_activeDialog)
         {
-            Destroy(_activeSaveDialog);
+            Destroy(_activeDialog);
+            _activeDialog = null;
         }
     }
 
     private void Save()
     {
-        CloseSaveDialog();
+        CloseDialog();
         print(BlockUtility.SerializeBlocks(Blocks));
+    }
+
+    private void Delete()
+    {
+        CloseDialog();
+        _autoAuthority.CmdDestroy();
     }
 }

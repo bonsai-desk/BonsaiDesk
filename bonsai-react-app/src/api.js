@@ -77,7 +77,7 @@ export function postChangeActiveBlock(hand, blockId) {
     postJson({
         Type: 'command',
         Message: 'changeActiveBlock',
-        Data: JSON.stringify({Hand: hand, BlockId: blockId}),
+        Data: JSON.stringify({Hand: hand, BlockName: blockId}),
     });
 }
 

@@ -6,32 +6,22 @@ using Vuplex.WebView;
 [RequireComponent(typeof(TableBrowser))]
 public class ContextBrowserController : MonoBehaviour
 {
-    public enum Block
-    {
-        None,
-        Wood,
-        Orange,
-        Green,
-        Brown,
-        Pink,
-        LightPurple,
-        DarkPurple,
-        Violet,
-        LightNeutral,
-        DarkNeutral
-    }
-
     public enum Hand
     {
         Left,
         Right
     }
 
-    public Block LeftBlockActive = Block.None;
-    public Block RightBlockActive = Block.None;
+    private string _leftBlockActive = "wood1";
+    private string _rightBlockActive = string.Empty;
 
-    public bool LeftBlockBreak;
-    public bool RightBlockBreak;
+    private bool _leftBlockBreak;
+    private bool _rightBlockBreak;
+    
+    public string LeftBlockActive => _leftBlockActive;
+    public string RightBlockActive => _rightBlockActive;
+    public bool LeftBlockBreak => _leftBlockBreak;
+    public bool RightBlockBreak => _rightBlockBreak;
 
     private TableBrowser _browser;
 
@@ -41,8 +31,10 @@ public class ContextBrowserController : MonoBehaviour
         _browser = GetComponent<TableBrowser>();
         _browser.ListenersReady += SetupBrowser;
         _browser.BrowserReady += (sender, _) => { _browser.OnMessageEmitted(HandleJavascriptMessage); };
+        
+        NetworkBlockSpawn.InstanceLeft.SetSpawnBlockName(LeftBlockActive);
+        NetworkBlockSpawn.InstanceRight.SetSpawnBlockName(RightBlockActive);
     }
-
 
     public event Action InfoChange;
 
@@ -58,29 +50,31 @@ public class ContextBrowserController : MonoBehaviour
                         var toggleBlockBreakHand = message.Data == "left" ? Hand.Left : Hand.Right;
                         if (toggleBlockBreakHand == Hand.Left)
                         {
-                            LeftBlockBreak = !LeftBlockBreak;
+                            _leftBlockBreak = !_leftBlockBreak;
                             InfoChange?.Invoke();
                         }
 
                         if (toggleBlockBreakHand == Hand.Right)
                         {
-                            RightBlockBreak = !RightBlockBreak;
+                            _rightBlockBreak = !_rightBlockBreak;
                             InfoChange?.Invoke();
                         }
 
                         break;
-                        
+
                     case "toggleBlockActive":
                         var toggleHand = message.Data == "left" ? Hand.Left : Hand.Right;
                         if (toggleHand == Hand.Left)
                         {
-                            LeftBlockActive = LeftBlockActive == Block.None ? Block.Wood : Block.None;
+                            _leftBlockActive = string.IsNullOrEmpty(_leftBlockActive) ? "wood1" : string.Empty;
+                            NetworkBlockSpawn.InstanceLeft.SetSpawnBlockName(_leftBlockActive);
                             InfoChange?.Invoke();
                         }
 
                         if (toggleHand == Hand.Right)
                         {
-                            RightBlockActive = RightBlockActive == Block.None ? Block.Wood : Block.None;
+                            _rightBlockActive = string.IsNullOrEmpty(_rightBlockActive) ? "wood1" : string.Empty;
+                            NetworkBlockSpawn.InstanceRight.SetSpawnBlockName(_rightBlockActive);
                             InfoChange?.Invoke();
                         }
 
@@ -88,20 +82,22 @@ public class ContextBrowserController : MonoBehaviour
                     case "changeActiveBlock":
                         var data = JsonConvert.DeserializeObject<ActiveBlockString>(message.Data);
                         var hand = data.Hand == "left" ? Hand.Left : Hand.Right;
-                        var block = (Block) data.BlockId;
-                        if (!Enum.IsDefined(typeof(Block), data.BlockId))
+                        var blockName = data.BlockName;
+                        if (blockName != string.Empty && Blocks.GetBlock(blockName) == null)
                         {
-                            BonsaiLogWarning("Failed to match block id, defaulting to None");
+                            BonsaiLogWarning($"Block {blockName} does not exist in blocks");
                         }
 
-                        BonsaiLog($"changeActiveBlock: {hand} {block}");
+                        BonsaiLog($"changeActiveBlock: {hand} {blockName}");
                         switch (hand)
                         {
                             case Hand.Left:
-                                LeftBlockActive = block;
+                                _leftBlockActive = blockName;
+                                NetworkBlockSpawn.InstanceLeft.SetSpawnBlockName(blockName);
                                 break;
                             case Hand.Right:
-                                RightBlockActive = block;
+                                _rightBlockActive = blockName;
+                                NetworkBlockSpawn.InstanceRight.SetSpawnBlockName(blockName);
                                 break;
                         }
 
@@ -138,6 +134,6 @@ public class ContextBrowserController : MonoBehaviour
     private struct ActiveBlockString
     {
         public string Hand;
-        public int BlockId;
+        public string BlockName;
     }
 }

@@ -9,10 +9,16 @@ using UnityEngine;
 public class AutoAuthority : NetworkBehaviour
 {
     [SyncVar] private double _lastInteractTime;
-    [SyncVar] private uint _ownerIdentityId = uint.MaxValue;
+
+    [SyncVar(hook = nameof(OnOwnerChange))]
+    private uint _ownerIdentityId;
+
+    private float _serverLastOwnerChange;
+    private const float OwnerChangeCooldown = 0.25f;
+
     [SyncVar] private bool _inUse = false;
     [SyncVar] public bool isKinematic = false;
-    public bool destroyIfBelow = true;
+    public bool destroyIfBelow = true; //also if far from origin or high above
 
     public bool InUse => _inUse;
 
@@ -40,7 +46,13 @@ public class AutoAuthority : NetworkBehaviour
 
     public override void OnStartServer()
     {
-        base.OnStartServer();
+        _serverLastOwnerChange = 0;
+        
+        if (_ownerIdentityId == 0)
+        {
+            _ownerIdentityId = uint.MaxValue;
+        }
+
         _lastInteractTime = NetworkTime.time;
         if (connectionToClient != null)
             _ownerIdentityId = connectionToClient.identity.netId;
@@ -61,35 +73,28 @@ public class AutoAuthority : NetworkBehaviour
         UpdateColor();
         _visualizePinchPull = false;
 
-        // if (destroyIfBelow && HasAuthority() && transform.position.y < -1f)
-        // {
-        //     var blockObject = GetComponent<BlockObject>();
-        //     if (blockObject && blockObject.Blocks.Count > 4)
-        //     {
-        //         _body.velocity = Vector3.zero;
-        //         _body.angularVelocity = Vector3.zero;
-        //         transform.position = new Vector3(0, 2, 0);
-        //         transform.rotation = Quaternion.identity;
-        //         GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
-        //         return;
-        //     }
-        // }
-
-        if (destroyIfBelow && isServer && transform.position.y < -2f)
+        if (isServer && destroyIfBelow)
         {
-            var blockObject = GetComponent<BlockObject>();
-            if (blockObject && blockObject.Blocks.Count > 4)
+            var distanceSquared = Vector3.SqrMagnitude(transform.position);
+            if (distanceSquared > 20f * 20f || transform.position.y < -2f || transform.position.y > 5f || PhysicsHandController.InvalidTransform(transform))
             {
-                ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
-                _body.velocity = Vector3.zero;
-                _body.angularVelocity = Vector3.zero;
-                GetComponent<SmoothSyncMirror>().teleportAnyObjectFromServer(new Vector3(0, 2, 0), Quaternion.identity, transform.localScale);
+                var blockObject = GetComponent<BlockObject>();
+                if (blockObject && blockObject.Blocks.Count > 4)
+                {
+                    ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
+                    GetComponent<SmoothSyncMirror>().clearBuffer();
+                    _body.velocity = Vector3.zero;
+                    _body.angularVelocity = Vector3.zero;
+
+                    GetComponent<SmoothSyncMirror>().teleportAnyObjectFromServer(new Vector3(0, 2, 0), Quaternion.identity, transform.localScale);
+                }
+                else
+                {
+                    ServerStripOwnerAndDestroy();
+                }
+
+                return;
             }
-            else
-            {
-                ServerStripOwnerAndDestroy();
-            }
-            return;
         }
 
         //if you don't have control over the object
@@ -106,6 +111,11 @@ public class AutoAuthority : NetworkBehaviour
         {
             _body.WakeUp();
         }
+    }
+
+    private void OnOwnerChange(uint oldValue, uint newValue)
+    {
+        GetComponent<SmoothSyncMirror>().clearBuffer();
     }
 
     //Hello function. I am a client. Do I have authority over this object?
@@ -243,6 +253,11 @@ public class AutoAuthority : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     public void CmdSetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime, bool inUse)
     {
+        if (Time.time - _serverLastOwnerChange < OwnerChangeCooldown)
+        {
+            return;
+        }
+        
         //cannot switch owner if it is in use (held/pinch pulled/ect)
         if (_inUse)
             return;
@@ -270,11 +285,17 @@ public class AutoAuthority : NetworkBehaviour
 
         _lastInteractTime = fromLastInteractTime;
         _ownerIdentityId = newOwnerIdentityId;
+        _serverLastOwnerChange = Time.time;
     }
 
     [Server]
     public void ServerForceNewOwner(uint newOwnerIdentityId, double fromLastInteractTime, bool inUse)
     {
+        if (Time.time - _serverLastOwnerChange < OwnerChangeCooldown)
+        {
+            return;
+        }
+        
         //remove objects owner if it had one
         if (netIdentity.connectionToClient != null)
         {
@@ -289,6 +310,7 @@ public class AutoAuthority : NetworkBehaviour
 
         _lastInteractTime = fromLastInteractTime;
         _ownerIdentityId = newOwnerIdentityId;
+        _serverLastOwnerChange = Time.time;
         _inUse = inUse;
     }
 
@@ -297,6 +319,7 @@ public class AutoAuthority : NetworkBehaviour
     {
         ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true);
         gameObject.SetActive(false);
+        GetComponent<SmoothSyncMirror>().clearBuffer();
         NetworkServer.Destroy(gameObject);
     }
 
