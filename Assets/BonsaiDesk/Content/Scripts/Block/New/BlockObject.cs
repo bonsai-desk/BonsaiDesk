@@ -247,6 +247,11 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         Destroy(blockObjectMaterial); //auto authority will also destroy this material
+
+        foreach (var coord in _blockGameObjects)
+        {
+            Destroy(_meshBlocks[coord].material);
+        }
     }
 
     private void SetupChildren()
