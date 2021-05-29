@@ -45,7 +45,7 @@ public partial class BlockObject : NetworkBehaviour
 
     //contains the information about the local state of the mesh. The structure of the mesh can be slightly
     //different depending on the order of block add/remove even though the final result looks the same
-    private readonly Dictionary<Vector3Int, MeshBlock> _meshBlocks = new Dictionary<Vector3Int, MeshBlock>();
+    public readonly Dictionary<Vector3Int, MeshBlock> MeshBlocks = new Dictionary<Vector3Int, MeshBlock>();
 
     //contains the keys for entries in _meshBlocks which have blockGameObjects. This saves having to loop through
     //the entire _meshBlocks to check for blockGameObject
@@ -85,13 +85,13 @@ public partial class BlockObject : NetworkBehaviour
     private List<Vector3> _uv = new List<Vector3>();
     private List<Vector2> _uv2 = new List<Vector2>();
     private List<int> _triangles = new List<int>();
-    private float _texturePadding = 0f;
 
     //holds blockGameObjects
     private Transform _blockGameObjectsParent;
 
     //is active if there is only one block and it has a blockGameObject
     private GameObject _transparentCube;
+    private BoxCollider _transparentCubeCollider = null;
     public GameObject transparentCubePrefab;
 
     //physics
@@ -170,8 +170,6 @@ public partial class BlockObject : NetworkBehaviour
 
         SetupChildren();
 
-        _texturePadding = 1f / blockObjectMaterial.mainTexture.width / 2f;
-
         _mesh = new Mesh();
         _mesh.MarkDynamic();
         _meshFilter.mesh = _mesh;
@@ -229,7 +227,7 @@ public partial class BlockObject : NetworkBehaviour
 
         foreach (var coord in _blockGameObjects)
         {
-            Destroy(_meshBlocks[coord].material);
+            Destroy(MeshBlocks[coord].material);
         }
     }
 
@@ -285,14 +283,14 @@ public partial class BlockObject : NetworkBehaviour
             switch (op)
             {
                 case BlockDictOp.OP_ADD:
-                    if (!_meshBlocks.ContainsKey(coord))
+                    if (!MeshBlocks.ContainsKey(coord))
                     {
                         AddBlockToMesh(syncBlock.name, coord, BlockUtility.ByteToQuaternion(syncBlock.rotation));
                     }
 
                     break;
                 case BlockDictOp.OP_REMOVE:
-                    if (_meshBlocks.ContainsKey(coord))
+                    if (MeshBlocks.ContainsKey(coord))
                     {
                         RemoveBlockFromMesh(coord);
                     }
@@ -323,13 +321,13 @@ public partial class BlockObject : NetworkBehaviour
 
     private void AddBlockToMesh(string blockName, Vector3Int coord, Quaternion rotation)
     {
-        if (_meshBlocks.ContainsKey(coord))
+        if (MeshBlocks.ContainsKey(coord))
         {
             Debug.LogError("Attempted to add block to mesh which already exists in _meshBlocks");
             return;
         }
 
-        var blockMesh = BlockUtility.GetBlockMesh(blockName, coord, rotation, _texturePadding);
+        var blockMesh = BlockUtility.GetBlockMesh(blockName, coord, rotation);
         _vertices.AddRange(blockMesh.vertices);
         _uv.AddRange(blockMesh.uv);
         _uv2.AddRange(blockMesh.uv2);
@@ -353,7 +351,7 @@ public partial class BlockObject : NetworkBehaviour
             blockGameObjectMaterial = blockGameObject.GetComponentInChildren<MeshRenderer>().material;
         }
 
-        _meshBlocks.Add(coord, new MeshBlock(_meshBlocks.Count, blockGameObject, blockGameObjectMaterial));
+        MeshBlocks.Add(coord, new MeshBlock(MeshBlocks.Count, blockGameObject, blockGameObjectMaterial));
     }
 
     [Command(ignoreAuthority = true)]
@@ -449,22 +447,22 @@ public partial class BlockObject : NetworkBehaviour
 
     private void RemoveBlockFromMesh(Vector3Int coord)
     {
-        if (!_meshBlocks.ContainsKey(coord))
+        if (!MeshBlocks.ContainsKey(coord))
         {
             Debug.LogError("Attempted to remove block which does not exist in _meshBlocks.");
             return;
         }
 
-        int vStart = _meshBlocks[coord].positionInList * 6 * 4;
-        int tStart = _meshBlocks[coord].positionInList * 6 * 6;
+        int vStart = MeshBlocks[coord].positionInList * 6 * 4;
+        int tStart = MeshBlocks[coord].positionInList * 6 * 6;
 
-        int vLastStart = _meshBlocks.Count * 6 * 4 - (6 * 4);
-        int tLastStart = _meshBlocks.Count * 6 * 6 - (6 * 6);
+        int vLastStart = MeshBlocks.Count * 6 * 4 - (6 * 4);
+        int tLastStart = MeshBlocks.Count * 6 * 6 - (6 * 6);
 
         //move the last block mesh into where the block you want to remove is
         for (int i = 0; i < 6 * 6; i++)
         {
-            _triangles[tStart + i] = _triangles[tLastStart + i] - ((_meshBlocks.Count - 1 - _meshBlocks[coord].positionInList) * 6 * 4);
+            _triangles[tStart + i] = _triangles[tLastStart + i] - ((MeshBlocks.Count - 1 - MeshBlocks[coord].positionInList) * 6 * 4);
         }
 
         _triangles.RemoveRange(tLastStart, 6 * 6);
@@ -481,10 +479,10 @@ public partial class BlockObject : NetworkBehaviour
         _uv.RemoveRange(vLastStart, 6 * 4);
         _uv2.RemoveRange(vLastStart, 6 * 4);
 
-        if (_meshBlocks[coord].blockGameObject)
+        if (MeshBlocks[coord].blockGameObject)
         {
-            Destroy(_meshBlocks[coord].material);
-            Destroy(_meshBlocks[coord].blockGameObject);
+            Destroy(MeshBlocks[coord].material);
+            Destroy(MeshBlocks[coord].blockGameObject);
             _blockGameObjects.Remove(coord);
         }
 
@@ -492,7 +490,7 @@ public partial class BlockObject : NetworkBehaviour
         //this block is no longer the last block, but the positionInList has not been updated yet, so we can find it like this
         int max = -1;
         Vector3Int key = Vector3Int.zero;
-        foreach (var entry in _meshBlocks)
+        foreach (var entry in MeshBlocks)
         {
             if (entry.Value.positionInList > max)
             {
@@ -502,10 +500,10 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         //update the positionInList for the block which moved
-        _meshBlocks[key].positionInList = _meshBlocks[coord].positionInList;
+        MeshBlocks[key].positionInList = MeshBlocks[coord].positionInList;
 
         //finally remove the block from the mesh blocks
-        _meshBlocks.Remove(coord);
+        MeshBlocks.Remove(coord);
     }
 
     private void IncrementWholeEffect(BlockBreakHand.BreakMode mode, Vector3 contactPoint)
@@ -573,12 +571,12 @@ public partial class BlockObject : NetworkBehaviour
 
     private void DamageBlock(Vector3Int coord)
     {
-        if (!Blocks.ContainsKey(coord) || !_meshBlocks.ContainsKey(coord))
+        if (!Blocks.ContainsKey(coord) || !MeshBlocks.ContainsKey(coord))
         {
             return;
         }
 
-        var meshBlock = _meshBlocks[coord];
+        var meshBlock = MeshBlocks[coord];
 
         //if health is already below 0, then we have probably already sent a command to remove the block
         //we don't want to send a duplicate command, so just return
@@ -604,7 +602,7 @@ public partial class BlockObject : NetworkBehaviour
             CmdRemoveBlock(coord, nId);
 
             //client side prediction - remove block locally
-            if (_meshBlocks.ContainsKey(coord))
+            if (MeshBlocks.ContainsKey(coord))
             {
                 BlockChanges.Enqueue((coord, new SyncBlock(), BlockDictOp.OP_REMOVE));
             }
@@ -624,8 +622,8 @@ public partial class BlockObject : NetworkBehaviour
         blockObjectMaterial.SetColor("_EffectColor", Color.red);
         foreach (var coord in _blockGameObjects)
         {
-            _meshBlocks[coord].material.SetFloat("_EffectProgress", 1);
-            _meshBlocks[coord].material.SetColor("_EffectColor", Color.red);
+            MeshBlocks[coord].material.SetFloat("_EffectProgress", 1);
+            MeshBlocks[coord].material.SetColor("_EffectColor", Color.red);
         }
 
         if (_activeWholeEffect == null)
@@ -662,8 +660,8 @@ public partial class BlockObject : NetworkBehaviour
         blockObjectMaterial.SetColor("_EffectColor", color);
         foreach (var coord in _blockGameObjects)
         {
-            _meshBlocks[coord].material.SetFloat("_EffectProgress", 1 - Mathf.Clamp01(_activeWholeEffect.progress));
-            _meshBlocks[coord].material.SetColor("_EffectColor", color);
+            MeshBlocks[coord].material.SetFloat("_EffectProgress", 1 - Mathf.Clamp01(_activeWholeEffect.progress));
+            MeshBlocks[coord].material.SetColor("_EffectColor", color);
         }
     }
 
@@ -675,7 +673,7 @@ public partial class BlockObject : NetworkBehaviour
         int i = 0;
         foreach (var block in _damagedBlocks)
         {
-            if (_meshBlocks.TryGetValue(block, out var meshBlock))
+            if (MeshBlocks.TryGetValue(block, out var meshBlock))
             {
                 meshBlock.framesSinceLastDamage++;
                 if (meshBlock.framesSinceLastDamage >= 3)
@@ -738,14 +736,24 @@ public partial class BlockObject : NetworkBehaviour
             }
         }
 
-        if (_meshBlocks.Count == 1 && GetOnlyBlock().blockGameObjectPrefab)
+        if (MeshBlocks.Count == 1 && GetOnlyBlock().blockGameObjectPrefab)
         {
             _transparentCube.transform.localPosition = GetOnlyBlockCoord();
             _transparentCube.SetActive(true);
+            if (!_transparentCubeCollider)
+            {
+                _transparentCubeCollider = _transparentCube.AddComponent<BoxCollider>();
+                _transparentCubeCollider.material = blockPhysicMaterial;
+            }
         }
         else
         {
             _transparentCube.SetActive(false);
+            if (_transparentCubeCollider)
+            {
+                Destroy(_transparentCubeCollider);
+                _transparentCubeCollider = null;
+            }
         }
 
         _body.mass = mass;
@@ -790,44 +798,44 @@ public partial class BlockObject : NetworkBehaviour
         return global::Blocks.GetBlock(Blocks[GetOnlyBlockCoord()].name);
     }
 
-    public Quaternion GetTargetRotation(Quaternion blockRotation, Vector3Int coord, Block.BlockType blockType)
+    private Quaternion GetTargetRotation(Quaternion blockRotation, Vector3Int coord, Block.BlockType blockType)
     {
-        // if (blockType == Block.BlockType.bearing)
-        // {
-        //     List<Vector3> upCheckAxes = new List<Vector3>();
-        //     for (var i = 0; i < 6; i++)
-        //     {
-        //         Vector3Int testBlock = coord + BlockUtility.Directions[i];
-        //         if (blocks.TryGetValue(testBlock, out MeshBlock block))
-        //         {
-        //             if (Blocks.blocks[block.id].blockType == Block.BlockType.normal)
-        //             {
-        //                 upCheckAxes.Add(-BlockUtility.Directions[i]);
-        //             }
-        //         }
-        //     }
-        //
-        //     Quaternion rotationLocalToArea = Quaternion.Inverse(transform.rotation) * blockRotation;
-        //     Vector3 up = ClosestToAxis(rotationLocalToArea, Vector3.up, upCheckAxes.ToArray());
-        //     Vector3[] forwardCheckAxes = new Vector3[4];
-        //     int n = 0;
-        //     Vector3Int upInt = Vector3Int.RoundToInt(up);
-        //     for (int i = 0; i < directions.Length; i++)
-        //     {
-        //         if (!(directions[i] == upInt || directions[i] == -upInt))
-        //         {
-        //             forwardCheckAxes[n] = directions[i];
-        //             n++;
-        //         }
-        //     }
-        //
-        //     Vector3 forward = ClosestToAxis(rotationLocalToArea, Vector3.forward, forwardCheckAxes);
-        //     return transform.rotation * Quaternion.LookRotation(forward, up);
-        // }
-        // else
-        // {
-        return transform.rotation * BlockUtility.SnapToNearestRightAngle(Quaternion.Inverse(transform.rotation) * blockRotation);
-        // }
+        if (blockType == Block.BlockType.SurfaceMounted)
+        {
+            List<Vector3> upCheckAxes = new List<Vector3>();
+            for (var i = 0; i < 6; i++)
+            {
+                Vector3Int testBlock = coord + BlockUtility.Directions[i];
+                if (MeshBlocks.TryGetValue(testBlock, out MeshBlock block))
+                {
+                    if (!block.blockGameObject)
+                    {
+                        upCheckAxes.Add(-BlockUtility.Directions[i]);
+                    }
+                }
+            }
+
+            Quaternion rotationLocalToArea = Quaternion.Inverse(transform.rotation) * blockRotation;
+            Vector3 up = BlockUtility.ClosestToAxis(rotationLocalToArea, Vector3.up, upCheckAxes.ToArray());
+            Vector3[] forwardCheckAxes = new Vector3[4];
+            int n = 0;
+            Vector3Int upInt = Vector3Int.RoundToInt(up);
+            for (int i = 0; i < BlockUtility.Directions.Length; i++)
+            {
+                if (!(BlockUtility.Directions[i] == upInt || BlockUtility.Directions[i] == -upInt))
+                {
+                    forwardCheckAxes[n] = BlockUtility.Directions[i];
+                    n++;
+                }
+            }
+
+            Vector3 forward = BlockUtility.ClosestToAxis(rotationLocalToArea, Vector3.forward, forwardCheckAxes);
+            return transform.rotation * Quaternion.LookRotation(forward, up);
+        }
+        else
+        {
+            return transform.rotation * BlockUtility.SnapToNearestRightAngle(Quaternion.Inverse(transform.rotation) * blockRotation);
+        }
     }
 
     [Command]

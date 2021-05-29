@@ -41,6 +41,27 @@ public static partial class BlockUtility
         }
     }
 
+    //finds the axis that is closest to the currentRotations local axis
+    public static Vector3 ClosestToAxis(Quaternion currentRotation, Vector3 axis, Vector3[] checkAxes)
+    {
+        Vector3 closestToAxis = Vector3.forward;
+        float highestDot = -1;
+        foreach (Vector3 checkAxis in checkAxes)
+            Check(ref highestDot, ref closestToAxis, currentRotation, axis, checkAxis);
+        return closestToAxis;
+    }
+
+    //finds the closest axis to the input rotations specified axis
+    private static void Check(ref float highestDot, ref Vector3 closest, Quaternion currentRotation, Vector3 axis, Vector3 checkDir)
+    {
+        float dot = Vector3.Dot(currentRotation * axis, checkDir);
+        if (dot > highestDot)
+        {
+            highestDot = dot;
+            closest = checkDir;
+        }
+    }
+
     /// <summary>
     /// Convert a quaternion which already has its axes aligned with world axes to a byte
     /// </summary>
@@ -114,8 +135,7 @@ public static partial class BlockUtility
         new Vector3Int(0, 0, -1)
     };
 
-    public static (Vector3[] vertices, Vector3[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(string blockName, Vector3Int coord, Quaternion rotation,
-        float texturePadding)
+    public static (Vector3[] vertices, Vector3[] uv, int[] triangles, Vector2[] uv2) GetBlockMesh(string blockName, Vector3Int coord, Quaternion rotation)
     {
         var block = Blocks.GetBlock(blockName);
         if (block == null)
@@ -347,9 +367,9 @@ public static partial class BlockUtility
 
     private static bool ContainsBlock(BlockObject blockObject, Vector3Int testPosition)
     {
-        if (blockObject.Blocks.TryGetValue(testPosition, out SyncBlock block))
+        if (blockObject.MeshBlocks.TryGetValue(testPosition, out MeshBlock block))
         {
-            return Blocks.GetBlock(block.name).blockGameObjectPrefab == null;
+            return !block.blockGameObject;
         }
 
         return false;
@@ -460,23 +480,4 @@ public static partial class BlockUtility
 
         return surroundingBlocks;
     }
-
-    // public static Vector3Int GetBlockCoord(Vector3 positionLocalToCubeArea)
-    // {
-    //     Vector3 offset = new Vector3(0.5f, 0.5f, 0.5f);
-    //     Vector3 localPosition = SnapPosition(positionLocalToCubeArea - offset) + offset;
-    //     return Vector3Int.RoundToInt(localPosition);
-    // }
-    //
-    // private static Vector3 SnapPosition(Vector3 currentPosition)
-    // {
-    //     currentPosition = new Vector3(
-    //         Mathf.Floor(currentPosition.x * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale),
-    //         Mathf.Floor(currentPosition.y * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale),
-    //         Mathf.Floor(currentPosition.z * (1f / BlockArea.cubeScale)) / (1f / BlockArea.cubeScale));
-    //     currentPosition.x += BlockArea.cubeScale / 2f;
-    //     currentPosition.y += BlockArea.cubeScale / 2f;
-    //     currentPosition.z += BlockArea.cubeScale / 2f;
-    //     return currentPosition;
-    // }
 }

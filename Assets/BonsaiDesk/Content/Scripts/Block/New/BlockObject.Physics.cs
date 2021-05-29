@@ -132,32 +132,20 @@ public partial class BlockObject
             }
         }
 
+        //if transparent cube is active and has a hitbox, disable it if the block is in the process of being snapped and not being touched
+        if (_transparentCubeCollider)
+        {
+            _transparentCubeCollider.enabled = !(isInCubeArea && !_touchingHand);
+        }
+
         if ((isInCubeArea && isNearHole) || (isNearHole && _touchingHand))
         {
             _physicsBoxesObject.gameObject.layer = _blockLayer;
-            // SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("block")); //this is for bearings, etc.
         }
-        // else if (isInCubeArea && !touchingHand &&
-        //          Blocks.blocks[myBlockArea.blocks[myBlockArea.OnlyBlock()].id].blockType == Block.BlockType.bearing)
-        // {
-        //     transform.GetChild(1).gameObject.layer = LayerMask.NameToLayer("onlyHands");
-        //     bool sphere = true;
-        //     foreach (var block in myBlockArea.blocks)
-        //         sphere = Blocks.blocks[block.Value.id].hasSphere;
-        //     if (sphere)
-        //         SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("onlyHands"));
-        // }
         else
         {
             _physicsBoxesObject.gameObject.layer = _blockAreaLayer;
-            // if (layer == -1)
-            //     layer = GetLayerRecursively(transform.GetChild(3).gameObject);
-            // if (layer == 0)
-            //     SetLayerRecursively(transform.GetChild(3).gameObject, LayerMask.NameToLayer("blockArea"));
-            // else
-            //     SetLayerRecursively(transform.GetChild(3).gameObject, layer);
         }
-
 
         _body.useGravity = !isInCubeArea;
 
@@ -235,7 +223,7 @@ public partial class BlockObject
                 ContactPoint contact = collision.GetContact(0);
                 Vector3 contactPointRelativeToBlockObject = transform.InverseTransformPoint(contact.point);
                 Vector3Int blockCoord = Vector3Int.RoundToInt(contactPointRelativeToBlockObject);
-                if (_meshBlocks.ContainsKey(blockCoord)) //first check if the contact point is inside a block. this is to handle the case of blockGameObjects
+                if (MeshBlocks.ContainsKey(blockCoord)) //first check if the contact point is inside a block. this is to handle the case of blockGameObjects
                 {
                     DamageBlock(blockCoord);
                 }
@@ -243,7 +231,7 @@ public partial class BlockObject
                 {
                     contactPointRelativeToBlockObject = transform.InverseTransformPoint(contact.point + contact.normal * 0.5f * CubeScale);
                     blockCoord = Vector3Int.RoundToInt(contactPointRelativeToBlockObject);
-                    if (_meshBlocks.ContainsKey(blockCoord))
+                    if (MeshBlocks.ContainsKey(blockCoord))
                     {
                         DamageBlock(blockCoord);
                     }
