@@ -7,7 +7,6 @@ using Mirror;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Random = UnityEngine.Random;
-using BlockDictOp = Mirror.SyncDictionary<UnityEngine.Vector3Int, SyncBlock>.Operation;
 
 public struct SyncBlock
 {
@@ -21,6 +20,24 @@ public struct SyncBlock
     }
 }
 
+public struct SyncJoint
+{
+    public bool connected;
+    public NetworkIdentity attachedTo;
+    public Vector3 axis;
+    public Vector3 anchor;
+    public Vector3 connectedAnchor;
+
+    public SyncJoint(NetworkIdentity attachedTo, Vector3 axis, Vector3 anchor, Vector3 connectedAnchor)
+    {
+        connected = true;
+        this.attachedTo = attachedTo;
+        this.axis = axis;
+        this.anchor = anchor;
+        this.connectedAnchor = connectedAnchor;
+    }
+}
+
 [RequireComponent(typeof(Rigidbody))]
 public partial class BlockObject : NetworkBehaviour
 {
@@ -29,12 +46,22 @@ public partial class BlockObject : NetworkBehaviour
     //contains all of the AutoAuthority of all BlockObjects in the scene
     private static HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
 
-    //all of the data required to reconstruct this block object
+    //---all of the data required to reconstruct this block object---
+    //
     public readonly SyncDictionary<Vector3Int, SyncBlock> Blocks = new SyncDictionary<Vector3Int, SyncBlock>();
 
+    //other blockObjects connected to this one. the coord is which bearing they are attached to. use their syncJoint for joint info
+    public readonly SyncDictionary<Vector3Int, NetworkIdentity> ConnectedToSelf = new SyncDictionary<Vector3Int, NetworkIdentity>();
+
+    [SyncVar(hook = nameof(OnSyncJointChange))]
+    public SyncJoint syncJoint;
+
+    //---
+
     //caches changes made to the sync dictionary so all block changes can be made at once with a single mesh update
-    public readonly Queue<(Vector3Int coord, SyncBlock syncBlock, BlockDictOp op)> BlockChanges =
-        new Queue<(Vector3Int coord, SyncBlock syncBlock, BlockDictOp op)>();
+    //also allows client side prediction by queueing up changes that you have only just sent the command for
+    private readonly Queue<(Vector3Int coord, SyncBlock syncBlock, SyncDictionary<Vector3Int, SyncBlock>.Operation op)> _blockChanges =
+        new Queue<(Vector3Int coord, SyncBlock syncBlock, SyncDictionary<Vector3Int, SyncBlock>.Operation op)>();
 
     //public inspector variables
     public Material blockObjectMaterial;
@@ -46,6 +73,9 @@ public partial class BlockObject : NetworkBehaviour
     //contains the information about the local state of the mesh. The structure of the mesh can be slightly
     //different depending on the order of block add/remove even though the final result looks the same
     public readonly Dictionary<Vector3Int, MeshBlock> MeshBlocks = new Dictionary<Vector3Int, MeshBlock>();
+
+    //physics joint based on data from syncJoint. is null is not connected to anything
+    public HingeJoint joint = null;
 
     //contains the keys for entries in _meshBlocks which have blockGameObjects. This saves having to loop through
     //the entire _meshBlocks to check for blockGameObject
@@ -175,6 +205,7 @@ public partial class BlockObject : NetworkBehaviour
         _meshFilter.mesh = _mesh;
 
         CreateInitialMesh();
+
         Blocks.Callback -= OnBlocksDictionaryChange;
         Blocks.Callback += OnBlocksDictionaryChange;
     }
@@ -263,33 +294,33 @@ public partial class BlockObject : NetworkBehaviour
         _transparentCube.SetActive(false);
     }
 
-    private void OnBlocksDictionaryChange(BlockDictOp op, Vector3Int key, SyncBlock value)
+    private void OnBlocksDictionaryChange(SyncDictionary<Vector3Int, SyncBlock>.Operation op, Vector3Int key, SyncBlock value)
     {
-        BlockChanges.Enqueue((key, value, op));
+        _blockChanges.Enqueue((key, value, op));
     }
 
-    //loops through any blocks in BlockChanges and adds/removes blocks from the mesh
+    //loops through any blocks in _blockChanges and adds/removes blocks from the mesh
     private void ProcessBlockChanges()
     {
-        if (BlockChanges.Count == 0)
+        if (_blockChanges.Count == 0)
         {
             return;
         }
 
-        while (BlockChanges.Count > 0)
+        while (_blockChanges.Count > 0)
         {
-            var (coord, syncBlock, op) = BlockChanges.Dequeue();
+            var (coord, syncBlock, op) = _blockChanges.Dequeue();
 
             switch (op)
             {
-                case BlockDictOp.OP_ADD:
+                case SyncDictionary<Vector3Int, SyncBlock>.Operation.OP_ADD:
                     if (!MeshBlocks.ContainsKey(coord))
                     {
                         AddBlockToMesh(syncBlock.name, coord, BlockUtility.ByteToQuaternion(syncBlock.rotation));
                     }
 
                     break;
-                case BlockDictOp.OP_REMOVE:
+                case SyncDictionary<Vector3Int, SyncBlock>.Operation.OP_REMOVE:
                     if (MeshBlocks.ContainsKey(coord))
                     {
                         RemoveBlockFromMesh(coord);
@@ -303,6 +334,14 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         UpdateMesh();
+    }
+
+    private void OnSyncJointChange(SyncJoint oldValue, SyncJoint newValue)
+    {
+        if (!newValue.connected)
+        {
+            return;
+        }
     }
 
     [Command(ignoreAuthority = true)]
@@ -351,7 +390,7 @@ public partial class BlockObject : NetworkBehaviour
             blockGameObjectMaterial = blockGameObject.GetComponentInChildren<MeshRenderer>().material;
         }
 
-        MeshBlocks.Add(coord, new MeshBlock(MeshBlocks.Count, blockGameObject, blockGameObjectMaterial));
+        MeshBlocks.Add(coord, new MeshBlock(blockName, rotation, MeshBlocks.Count, blockGameObject, blockGameObjectMaterial));
     }
 
     [Command(ignoreAuthority = true)]
@@ -604,7 +643,7 @@ public partial class BlockObject : NetworkBehaviour
             //client side prediction - remove block locally
             if (MeshBlocks.ContainsKey(coord))
             {
-                BlockChanges.Enqueue((coord, new SyncBlock(), BlockDictOp.OP_REMOVE));
+                _blockChanges.Enqueue((coord, new SyncBlock(), SyncDictionary<Vector3Int, SyncBlock>.Operation.OP_REMOVE));
             }
 
             return;

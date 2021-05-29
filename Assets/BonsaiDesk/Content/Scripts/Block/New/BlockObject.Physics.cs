@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Mirror;
 using mixpanel;
 using UnityEngine;
-using BlockDictOp = Mirror.SyncDictionary<UnityEngine.Vector3Int, SyncBlock>.Operation;
 
 public partial class BlockObject
 {
@@ -44,7 +43,10 @@ public partial class BlockObject
                     _touchingHand = true;
                 }
 
-                CalculateForces();
+                if (!joint)
+                {
+                    CalculateForces();
+                }
             }
             else
             {
@@ -57,7 +59,7 @@ public partial class BlockObject
 
     /// <summary>
     /// calculate forces to move this object towards another BlockObject. This function runs for BlockObjects
-    /// which have only 1 block
+    /// which have only 1 block and are not connected with a joint to another blockObject
     /// </summary>
     private void CalculateForces()
     {
@@ -66,7 +68,6 @@ public partial class BlockObject
         bool isNearHole = false;
         foreach (var nextOwnedObject in _blockObjectAuthorities)
         {
-            //TODO go on with calculation and interact if in area
             if (!nextOwnedObject.HasAuthority())
             {
                 continue;
@@ -89,18 +90,14 @@ public partial class BlockObject
 
                 if (isInCubeArea)
                 {
-                    // Vector3 bearingOffset = Vector3.zero;
-                    // if (blockObject._blocks.TryGetValue(blockCoord, out BlockArea.MeshBlock block))
-                    // {
-                    //     if (Blocks.blocks[block.id].blockType == Block.BlockType.bearing)
-                    //     {
-                    //         bearingOffset = blockArea.transform.rotation *
-                    //                         BlockArea.IntToQuat(block.forward, block.up) * Vector3.up * 0.1f *
-                    //                         BlockArea.cubeScale;
-                    //     }
-                    // }
+                    Vector3 bearingOffset = Vector3.zero;
+                    var attachingToBearing = blockObject.MeshBlocks.TryGetValue(blockCoord, out MeshBlock block) && block.name == "bearing";
+                    if (attachingToBearing)
+                    {
+                        bearingOffset = blockObject.transform.rotation * block.rotation * (0.1f * CubeScale * Vector3.up);
+                    }
 
-                    var position = blockObject.transform.TransformPoint(blockCoord);
+                    var position = blockObject.transform.TransformPoint(blockCoord) + bearingOffset;
                     var rotation = blockObject.GetTargetRotation(transform.rotation, blockCoord, global::Blocks.GetBlock(Blocks[coord].name).blockType);
 
                     if (BlockUtility.AboutEquals(blockPosition, position) && BlockUtility.AboutEquals(transform.rotation, rotation))
@@ -110,17 +107,55 @@ public partial class BlockObject
                             blockObject.potentialBlocksParent.GetChild(i).parent = null;
                         }
 
-                        _blockObjectAuthorities.Remove(_autoAuthority);
-                        gameObject.SetActive(false);
+                        if (attachingToBearing)
+                        {
+                            Debug.LogWarning("attaching to bearing");
+                            
+                            var anchor = Vector3.zero;
+                            var connectedAnchor = Vector3.zero;
+                            // var syncJoint = new SyncJoint(netIdentity, anchor, connectedAnchor);
 
-                        var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
-                        localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * BlockUtility.ByteToQuaternion(Blocks[coord].rotation);
-                        Mixpanel.Track("Add Block");
-                        blockObject.CmdAddBlock(Blocks[coord].name, blockCoord, localRotation, netIdentity);
+                            joint = gameObject.AddComponent<HingeJoint>();
 
-                        //client side prediction
-                        var syncBlock = new SyncBlock(Blocks[coord].name, BlockUtility.QuaternionToByte(localRotation));
-                        blockObject.BlockChanges.Enqueue((blockCoord, syncBlock, BlockDictOp.OP_ADD));
+                            joint.autoConfigureConnectedAnchor = false;
+
+                            var axisLocalToAttachedTo = blockObject.MeshBlocks[blockCoord].rotation * Vector3.up;
+                            var axisLocalToSelf = transform.InverseTransformDirection(blockObject.transform.rotation * axisLocalToAttachedTo);
+                            axisLocalToSelf = new Vector3(Mathf.Round(axisLocalToSelf.x), Mathf.Round(axisLocalToSelf.y), Mathf.Round(axisLocalToSelf.z));
+                            axisLocalToSelf = axisLocalToSelf.normalized;
+                            joint.axis = axisLocalToSelf;
+
+                            joint.anchor = coord;
+                            joint.connectedAnchor = blockCoord + 0.1f * axisLocalToAttachedTo;
+
+                            joint.enableCollision = true;
+                            joint.connectedBody = blockObject._body;
+
+                            // blockArea.coordConnectedToBearing = physicsCoord;
+
+                            // blocks[coord].connected = joint;
+
+                            Mixpanel.Track("Attach Block To Bearing");
+                            //some command here
+
+                            //client side prediction
+                            //some client side prediction here
+                        }
+                        else
+                        {
+                            _blockObjectAuthorities.Remove(_autoAuthority);
+                            gameObject.SetActive(false);
+
+                            var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
+                            localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * BlockUtility.ByteToQuaternion(Blocks[coord].rotation);
+
+                            Mixpanel.Track("Add Block");
+                            blockObject.CmdAddBlock(Blocks[coord].name, blockCoord, localRotation, netIdentity);
+
+                            //client side prediction
+                            var syncBlock = new SyncBlock(Blocks[coord].name, BlockUtility.QuaternionToByte(localRotation));
+                            blockObject._blockChanges.Enqueue((blockCoord, syncBlock, SyncDictionary<Vector3Int, SyncBlock>.Operation.OP_ADD));
+                        }
 
                         return;
                     }

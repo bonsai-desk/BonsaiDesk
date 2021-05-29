@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class MeshBlock
 {
+    public string name;
+    public Quaternion rotation;
     public int positionInList;
     public float health;
 
@@ -12,8 +14,10 @@ public class MeshBlock
     public Material material;
     // public Joint connected;
 
-    public MeshBlock(int positionInList, GameObject blockGameObject, Material material)
+    public MeshBlock(string name, Quaternion rotation, int positionInList, GameObject blockGameObject, Material material)
     {
+        this.name = name;
+        this.rotation = rotation;
         this.positionInList = positionInList;
         health = 1;
         framesSinceLastDamage = 100;
