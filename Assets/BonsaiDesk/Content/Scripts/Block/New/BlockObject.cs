@@ -66,11 +66,15 @@ public partial class BlockObject : NetworkBehaviour
 
     //contains the information about the local state of the mesh. The structure of the mesh can be slightly
     //different depending on the order of block add/remove even though the final result looks the same
-    private Dictionary<Vector3Int, MeshBlock> _meshBlocks = new Dictionary<Vector3Int, MeshBlock>();
+    private readonly Dictionary<Vector3Int, MeshBlock> _meshBlocks = new Dictionary<Vector3Int, MeshBlock>();
+
+    //contains the keys for entries in _meshBlocks which have blockGameObjects. This saves having to loop through
+    //the entire _meshBlocks to check for blockGameObject
+    private readonly HashSet<Vector3Int> _blockGameObjects = new HashSet<Vector3Int>();
 
     //contains the keys for entries in _meshBlocks which are damages. This saves having to loop through
     //the entire _meshBlocks to check for damaged blocks
-    private HashSet<Vector3Int> _damagedBlocks = new HashSet<Vector3Int>();
+    private readonly HashSet<Vector3Int> _damagedBlocks = new HashSet<Vector3Int>();
 
     public class WholeEffectMode
     {
@@ -103,10 +107,10 @@ public partial class BlockObject : NetworkBehaviour
     private List<Vector2> _uv2 = new List<Vector2>();
     private List<int> _triangles = new List<int>();
     private float _texturePadding = 0f;
-    
+
     //holds blockGameObjects
     private Transform _blockGameObjectsParent;
-    
+
     //is active if there is only one block and it has a blockGameObject
     private GameObject _transparentCube;
     public GameObject transparentCubePrefab;
@@ -241,7 +245,7 @@ public partial class BlockObject : NetworkBehaviour
         {
             _blockObjectAuthorities.Remove(_autoAuthority);
         }
-        
+
         Destroy(blockObjectMaterial); //auto authority will also destroy this material
     }
 
@@ -268,14 +272,13 @@ public partial class BlockObject : NetworkBehaviour
         _sphereObject = sphereObject.transform;
         sphereObject.transform.SetParent(transform, false);
         sphereObject.layer = LayerMask.NameToLayer("sphere");
-        
+
         _blockGameObjectsParent = new GameObject("BlockGameObjects").transform;
         _blockGameObjectsParent.SetParent(transform, false);
 
         _transparentCube = Instantiate(transparentCubePrefab, transform);
         _transparentCube.name = "TransparentCube";
         _transparentCube.SetActive(false);
-
     }
 
     private void OnBlocksDictionaryChange(BlockDictOp op, Vector3Int key, SyncBlock value)
@@ -352,7 +355,7 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         _triangles.AddRange(blockMesh.triangles);
-        
+
         GameObject blockGameObject = null;
         Material blockGameObjectMaterial = null;
         Block block = global::Blocks.GetBlock(blockName);
@@ -361,7 +364,7 @@ public partial class BlockObject : NetworkBehaviour
             blockGameObject = Instantiate(block.blockGameObjectPrefab, _blockGameObjectsParent);
             blockGameObject.transform.localPosition = coord;
             blockGameObject.transform.localRotation = rotation;
-            // blockObjects.Add(coord);
+            _blockGameObjects.Add(coord);
 
             blockGameObjectMaterial = blockGameObject.GetComponentInChildren<MeshRenderer>().material;
         }
@@ -493,6 +496,13 @@ public partial class BlockObject : NetworkBehaviour
         _vertices.RemoveRange(vLastStart, 6 * 4);
         _uv.RemoveRange(vLastStart, 6 * 4);
         _uv2.RemoveRange(vLastStart, 6 * 4);
+
+        if (_meshBlocks[coord].blockGameObject)
+        {
+            Destroy(_meshBlocks[coord].material);
+            Destroy(_meshBlocks[coord].blockGameObject);
+            _blockGameObjects.Remove(coord);
+        }
 
         //find the last block. its not a list, so you must loop through
         //this block is no longer the last block, but the positionInList has not been updated yet, so we can find it like this
@@ -626,10 +636,13 @@ public partial class BlockObject : NetworkBehaviour
 
     private void UpdateWholeEffects()
     {
-        blockObjectMaterial.SetFloat("_MaxHealth", 1);
-        blockObjectMaterial.SetFloat("_DuplicateProgress", 0);
-        blockObjectMaterial.SetFloat("_WholeDeleteProgress", 0);
-        blockObjectMaterial.SetFloat("_SaveProgress", 0);
+        blockObjectMaterial.SetFloat("_EffectProgress", 0);
+        blockObjectMaterial.SetColor("_EffectColor", Color.red);
+        foreach (var coord in _blockGameObjects)
+        {
+            _meshBlocks[coord].material.SetFloat("_EffectProgress", 1);
+            _meshBlocks[coord].material.SetColor("_EffectColor", Color.red);
+        }
 
         if (_activeWholeEffect == null)
         {
@@ -644,23 +657,29 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
+        var color = Color.red;
         switch (_activeWholeEffect.mode)
         {
             case BlockBreakHand.BreakMode.Whole:
-                blockObjectMaterial.SetFloat("_WholeDeleteProgress", Mathf.Clamp01(_activeWholeEffect.progress));
-                blockObjectMaterial.SetFloat("_MaxHealth", 1 - Mathf.Clamp01(_activeWholeEffect.progress));
+                color = Color.red;
                 break;
             case BlockBreakHand.BreakMode.Duplicate:
-                blockObjectMaterial.SetFloat("_DuplicateProgress", Mathf.Clamp01(_activeWholeEffect.progress));
-                blockObjectMaterial.SetFloat("_MaxHealth", 1 - Mathf.Clamp01(_activeWholeEffect.progress));
+                color = Color.blue;
                 break;
             case BlockBreakHand.BreakMode.Save:
-                blockObjectMaterial.SetFloat("_SaveProgress", Mathf.Clamp01(_activeWholeEffect.progress));
-                blockObjectMaterial.SetFloat("_MaxHealth", 1 - Mathf.Clamp01(_activeWholeEffect.progress));
+                color = Color.yellow;
                 break;
             default:
                 Debug.LogError("Unknown case: " + _activeWholeEffect.mode);
                 break;
+        }
+        
+        blockObjectMaterial.SetFloat("_EffectProgress", Mathf.Clamp01(_activeWholeEffect.progress));
+        blockObjectMaterial.SetColor("_EffectColor", color);
+        foreach (var coord in _blockGameObjects)
+        {
+            _meshBlocks[coord].material.SetFloat("_EffectProgress", 1 - Mathf.Clamp01(_activeWholeEffect.progress));
+            _meshBlocks[coord].material.SetColor("_EffectColor", color);
         }
     }
 
@@ -681,10 +700,17 @@ public partial class BlockObject : NetworkBehaviour
                     noLongerDamagedBlocks.Enqueue(block);
                 }
 
-                if (i < damagedBlocksForShader.Length)
+                if (meshBlock.material)
                 {
-                    damagedBlocksForShader[i] = new Vector4(block.x, block.y, block.z, meshBlock.health);
-                    i++;
+                    meshBlock.material.SetFloat("_Health", meshBlock.health);
+                }
+                else
+                {
+                    if (i < damagedBlocksForShader.Length)
+                    {
+                        damagedBlocksForShader[i] = new Vector4(block.x, block.y, block.z, meshBlock.health);
+                        i++;
+                    }
                 }
             }
         }

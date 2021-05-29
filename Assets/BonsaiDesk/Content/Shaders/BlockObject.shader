@@ -5,10 +5,8 @@
         _Color("Color", Color) = (1,1,1,1)
         _TextureArray("Texture Array", 2Darray) = "" {}
         _BreakTex("Break Texture", 2D) = "white" {}
-        _MaxHealth("MaxHealth", Range(0, 1)) = 1.0
-        _DuplicateProgress("Duplicate Progress", Range(0, 1)) = 0.0
-        _WholeDeleteProgress("Whole Delete Progress", Range(0, 1)) = 0.0
-        _SaveProgress("Save Progress", Range(0, 1)) = 0.0
+        _EffectProgress("Effect Progress", Range(0,1)) = 0.0
+        _EffectColor("Effect Color", Color) = (1, 1, 1, 1)
     }
     SubShader
     {
@@ -46,8 +44,8 @@
 
             sampler2D _BreakTex;
 
-            fixed4 _Color;
-            half _MaxHealth, _DuplicateProgress, _WholeDeleteProgress, _SaveProgress;
+            fixed4 _Color, _EffectColor;
+            half _EffectProgress;
 
             int numDamagedBlocks;
             float4 damagedBlocks[10];
@@ -69,13 +67,11 @@
             fixed4 frag(v2f i) : SV_Target
             {
                 fixed4 albedo = UNITY_SAMPLE_TEX2DARRAY(_TextureArray, i.uv_MainTex) * _Color *
-                    lerp(fixed4(1, 1, 1, 1), fixed4(0, 0, 1, 1), _DuplicateProgress) *
-                    lerp(fixed4(1, 1, 1, 1), fixed4(1, 0, 0, 1), _WholeDeleteProgress) *
-                    lerp(fixed4(1, 1, 1, 1), fixed4(1, 1, 0, 1), _SaveProgress);
+                    lerp(fixed4(1, 1, 1, 1), _EffectColor, _EffectProgress);
 
                 const float3 normal = normalize(i.normal);
                 const float3 worldNormal = normalize(i.worldNormal);
-                
+
                 const float3 checkBlockPos = i.vertexPos + float3(0.5, 0.5, 0.5) - (normal * 0.5);
                 const int xc = floor(checkBlockPos.x);
                 const int yc = floor(checkBlockPos.y);
@@ -97,7 +93,7 @@
                 }
 
                 fixed2 uv2 = i.uv_BreakTex;
-                health = clamp(health, 0, _MaxHealth);
+                health = clamp(health, 0, 1.0 - _EffectProgress);
                 health = 1 - health;
                 uv2.x += round(health * 10.0) / 11.0;
                 fixed4 b = tex2D(_BreakTex, uv2);
