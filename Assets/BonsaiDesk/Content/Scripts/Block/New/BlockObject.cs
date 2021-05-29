@@ -103,6 +103,13 @@ public partial class BlockObject : NetworkBehaviour
     private List<Vector2> _uv2 = new List<Vector2>();
     private List<int> _triangles = new List<int>();
     private float _texturePadding = 0f;
+    
+    //holds blockGameObjects
+    private Transform _blockGameObjectsParent;
+    
+    //is active if there is only one block and it has a blockGameObject
+    private GameObject _transparentCube;
+    public GameObject transparentCubePrefab;
 
     //physics
     private Rigidbody _body;
@@ -229,11 +236,13 @@ public partial class BlockObject : NetworkBehaviour
     private void OnDestroy()
     {
         CloseDialog();
-        
+
         if (_blockObjectAuthorities.Contains(_autoAuthority))
         {
             _blockObjectAuthorities.Remove(_autoAuthority);
         }
+        
+        Destroy(blockObjectMaterial); //auto authority will also destroy this material
     }
 
     private void SetupChildren()
@@ -250,7 +259,7 @@ public partial class BlockObject : NetworkBehaviour
         _physicsBoxesObject = physicsBoxes.transform;
         physicsBoxes.transform.SetParent(transform, false);
 
-        potentialBlocksParent = new GameObject("PotentialBlocksParent").transform;
+        potentialBlocksParent = new GameObject("PotentialBlocks").transform;
         const float inverseScale = 1f / CubeScale;
         potentialBlocksParent.localScale = new Vector3(inverseScale, inverseScale, inverseScale);
         potentialBlocksParent.SetParent(transform, false);
@@ -259,6 +268,14 @@ public partial class BlockObject : NetworkBehaviour
         _sphereObject = sphereObject.transform;
         sphereObject.transform.SetParent(transform, false);
         sphereObject.layer = LayerMask.NameToLayer("sphere");
+        
+        _blockGameObjectsParent = new GameObject("BlockGameObjects").transform;
+        _blockGameObjectsParent.SetParent(transform, false);
+
+        _transparentCube = Instantiate(transparentCubePrefab, transform);
+        _transparentCube.name = "TransparentCube";
+        _transparentCube.SetActive(false);
+
     }
 
     private void OnBlocksDictionaryChange(BlockDictOp op, Vector3Int key, SyncBlock value)
@@ -330,22 +347,26 @@ public partial class BlockObject : NetworkBehaviour
         _uv.AddRange(blockMesh.uv);
         _uv2.AddRange(blockMesh.uv2);
         for (int i = 0; i < blockMesh.triangles.Length; i++)
+        {
             blockMesh.triangles[i] += _vertices.Count - (6 * 4);
+        }
+
         _triangles.AddRange(blockMesh.triangles);
+        
+        GameObject blockGameObject = null;
+        Material blockGameObjectMaterial = null;
+        Block block = global::Blocks.GetBlock(blockName);
+        if (block.blockGameObjectPrefab)
+        {
+            blockGameObject = Instantiate(block.blockGameObjectPrefab, _blockGameObjectsParent);
+            blockGameObject.transform.localPosition = coord;
+            blockGameObject.transform.localRotation = rotation;
+            // blockObjects.Add(coord);
 
-        // GameObject blockObject = null;
-        // MeshRenderer meshRenderer = null;
-        // if (Blocks.blocks[id].blockObject != null)
-        // {
-        //     blockObject = Instantiate(Blocks.blocks[id].blockObject, transform.GetChild(3));
-        //     blockObject.transform.localPosition = coord;
-        //     blockObject.transform.localRotation = rotation;
-        //     blockObjects.Add(coord);
-        //
-        //     meshRenderer = blockObject.GetComponentInChildren<MeshRenderer>();
-        // }
+            blockGameObjectMaterial = blockGameObject.GetComponentInChildren<MeshRenderer>().material;
+        }
 
-        _meshBlocks.Add(coord, new MeshBlock(_meshBlocks.Count));
+        _meshBlocks.Add(coord, new MeshBlock(_meshBlocks.Count, blockGameObject, blockGameObjectMaterial));
     }
 
     [Command(ignoreAuthority = true)]
@@ -403,9 +424,9 @@ public partial class BlockObject : NetworkBehaviour
                 }
             }
 
-            //renmove largest block group from the list
+            //remove largest block group from the list
             var largestGroup = filledBlocksGroups[indexOfLargest];
-            filledBlocksGroups.RemoveAt(0);
+            filledBlocksGroups.RemoveAt(indexOfLargest);
 
             //every block that is not a part of the largest group will be removed and spawned as a new block
             //this way the largest group of blocks can be reused instead of regenerated
@@ -707,6 +728,16 @@ public partial class BlockObject : NetworkBehaviour
             }
         }
 
+        if (_meshBlocks.Count == 1 && GetOnlyBlock().blockGameObjectPrefab)
+        {
+            _transparentCube.transform.localPosition = GetOnlyBlockCoord();
+            _transparentCube.SetActive(true);
+        }
+        else
+        {
+            _transparentCube.SetActive(false);
+        }
+
         _body.mass = mass;
         _resetCoM = true;
 
@@ -737,6 +768,16 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         return Vector3Int.zero;
+    }
+
+    private Block GetOnlyBlock()
+    {
+        if (Blocks.Count != 1)
+        {
+            Debug.LogError("GetOnlyBlock is only valid when there is only 1 block");
+        }
+
+        return global::Blocks.GetBlock(Blocks[GetOnlyBlockCoord()].name);
     }
 
     public Quaternion GetTargetRotation(Quaternion blockRotation, Vector3Int coord, Block.BlockType blockType)

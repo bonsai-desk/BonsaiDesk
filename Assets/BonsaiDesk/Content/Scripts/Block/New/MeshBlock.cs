@@ -8,20 +8,19 @@ public class MeshBlock
     public float health;
 
     public int framesSinceLastDamage;
-    // public GameObject blockObject;
-    // public MeshRenderer meshRenderer;
+    public GameObject blockGameObject;
+    public Material material;
     // public Joint connected;
 
-    public MeshBlock(int positionInList)
+    public MeshBlock(int positionInList, GameObject blockGameObject, Material material)
     {
         this.positionInList = positionInList;
         health = 1;
         framesSinceLastDamage = 100;
 
-        // this.damagedThisFrame = false;
-        // this.framesSinceLastDamage = 0;
-        // this.blockObject = blockObject;
-        // this.meshRenderer = meshRenderer;
+        this.blockGameObject = blockGameObject;
+        this.material = material;
+
         // this.connected = connected;
     }
 }

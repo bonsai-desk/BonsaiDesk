@@ -66,8 +66,7 @@ public class NetworkBlockSpawn : NetworkBehaviour
             return;
         }
 
-        if (!string.IsNullOrEmpty(_spawnBlockName) &&
-            !Physics.CheckBox(transform.position, _halfExtends, transform.rotation, _defaultLayerMask))
+        if (!string.IsNullOrEmpty(_spawnBlockName) && !Physics.CheckBox(transform.position, _halfExtends, transform.rotation, _defaultLayerMask))
         {
             _readyToSpawnTime += Time.deltaTime;
 
@@ -142,7 +141,11 @@ public class NetworkBlockSpawn : NetworkBehaviour
                 var identity = hits[i].attachedRigidbody.GetComponent<NetworkIdentity>();
                 if (identity && identity == lastSpawned)
                 {
-                    lastSpawned.GetComponent<AutoAuthority>().CmdDestroy();
+                    if (lastSpawned.GetComponent<BlockObject>().Blocks.Count == 1)
+                    {
+                        lastSpawned.GetComponent<AutoAuthority>().CmdDestroy();
+                    }
+
                     lastSpawned = null;
                     return;
                 }

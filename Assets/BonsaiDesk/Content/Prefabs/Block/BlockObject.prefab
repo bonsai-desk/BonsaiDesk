@@ -58,6 +58,8 @@ MonoBehaviour:
     type: 3}
   breakWholeDialogPrefab: {fileID: 7346527677141888563, guid: d4f013d1521e9344491ccb7707d9d555,
     type: 3}
+  transparentCubePrefab: {fileID: 7474305919945807990, guid: ec0fcdac38c680c45b9f89ce54a45ed3,
+    type: 3}
   potentialBlocksParent: {fileID: 0}
   initialBlocksString: 
   debug: 0

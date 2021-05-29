@@ -146,7 +146,7 @@ public static partial class BlockUtility
             }
 
             int blockIndex;
-            
+
             if (face < 4)
                 blockIndex = sideBlockIndex;
             else if (face < 5)
@@ -163,17 +163,19 @@ public static partial class BlockUtility
             uv2[face * 4 + 1] = new Vector2(Block.BreakTextureWidth, 0);
             uv2[face * 4 + 2] = new Vector2(Block.BreakTextureWidth, 1);
             uv2[face * 4 + 3] = new Vector2(0, 1);
-
-            // if (Blocks.blocks[id].blockObject == null)
-            // {
-            int v0 = face * 4;
-            triangles[face * 6 + 0] = v0 + 0;
-            triangles[face * 6 + 1] = v0 + 3;
-            triangles[face * 6 + 2] = v0 + 2;
-            triangles[face * 6 + 3] = v0 + 0;
-            triangles[face * 6 + 4] = v0 + 2;
-            triangles[face * 6 + 5] = v0 + 1;
-            // }
+            
+            //if it has a prefab, for example a bearing, don't add triangles between the vertices since it will have its own gameObject
+            //the triangles will keep their default value of all 0s, so you will see no triangles
+            if(!block.blockGameObjectPrefab)
+            {
+                int v0 = face * 4;
+                triangles[face * 6 + 0] = v0 + 0;
+                triangles[face * 6 + 1] = v0 + 3;
+                triangles[face * 6 + 2] = v0 + 2;
+                triangles[face * 6 + 3] = v0 + 0;
+                triangles[face * 6 + 4] = v0 + 2;
+                triangles[face * 6 + 5] = v0 + 1;
+            }
         }
 
         // if (Blocks.blocks[id].blockObject != null)
@@ -321,10 +323,13 @@ public static partial class BlockUtility
             foreach (var nextBlock in blocks)
                 block = nextBlock;
 
-            var s = sphereObject.gameObject.AddComponent<SphereCollider>();
-            s.sharedMaterial = spherePhysicMaterial;
-            s.center = block.Key;
-            s.radius = 0.475f;
+            if (!sphereObject.gameObject.GetComponent<SphereCollider>())
+            {
+                var s = sphereObject.gameObject.AddComponent<SphereCollider>();
+                s.sharedMaterial = spherePhysicMaterial;
+                s.center = block.Key;
+                s.radius = 0.475f;
+            }
         }
         else
         {
@@ -372,6 +377,9 @@ public static partial class BlockUtility
              ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, -1)) && ContainsBlock(blockObject, testPosition + new Vector3Int(0, 0, 1)));
 
         bool inCubeAreaBearing = true;
+        //if I'm a bearing, and I am inside another bearing, set in cube area to false
+        //this prevents bearings from snapping onto other bearings
+        //maybe replace this, maybe in addition to this: ContainsBlock should return false if it is not a normal block
         // if (Blocks.blocks[id].blockType == Block.BlockType.bearing)
         // {
         //     if (blocks.TryGetValue(testPosition, out MeshBlock block))

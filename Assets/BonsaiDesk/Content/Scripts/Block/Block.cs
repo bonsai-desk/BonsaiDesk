@@ -8,8 +8,6 @@ public class Block
     public readonly int SideTextureIndex;
     public readonly int BottomTextureIndex;
 
-    public readonly bool AllowRotation;
-
     public enum BlockType
     {
         Normal,
@@ -17,6 +15,8 @@ public class Block
     }
 
     public readonly BlockType blockType;
+    public readonly bool AllowRotation;
+    public readonly GameObject blockGameObjectPrefab;
 
     public Block(string topTextureName, string sideTextureName, string bottomTextureName, BlockType blockType, bool allowRotation)
     {
@@ -25,6 +25,7 @@ public class Block
         BottomTextureIndex = BlockUtility.BlockTextureNameToTextureArrayIndex[bottomTextureName];
         this.blockType = blockType;
         AllowRotation = allowRotation;
+        blockGameObjectPrefab = null;
     }
 
     public Block(string textureName, bool allowRotation = true)
@@ -34,9 +35,10 @@ public class Block
         BottomTextureIndex = TopTextureIndex;
         blockType = BlockType.Normal;
         AllowRotation = allowRotation;
+        blockGameObjectPrefab = null;
     }
     
-    public Block(BlockType blockType)
+    public Block(BlockType blockType, string blockGameObjectPrefabName)
     {
         if (blockType != BlockType.SurfaceMounted)
         {
@@ -45,5 +47,10 @@ public class Block
         
         this.blockType = blockType;
         AllowRotation = true;
+        blockGameObjectPrefab = Resources.Load<GameObject>(blockGameObjectPrefabName);
+        if (!blockGameObjectPrefab)
+        {
+            Debug.LogError("Could not load resource: " + blockGameObjectPrefabName);
+        }
     }
 }
