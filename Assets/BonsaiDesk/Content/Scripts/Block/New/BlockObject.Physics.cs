@@ -231,15 +231,22 @@ public partial class BlockObject
         switch (handBreakMode)
         {
             case BlockBreakHand.BreakMode.Single:
-                ContactPoint contact = collision.GetContact(0);
-                Vector3 blockPosition = contact.point;
-                blockPosition += contact.normal * (CubeScale / 2f);
-                Vector3 positionLocalToCubeArea = transform.InverseTransformPoint(blockPosition);
-                Vector3Int blockCoord = Vector3Int.RoundToInt(positionLocalToCubeArea);
 
-                if (_meshBlocks.ContainsKey(blockCoord))
+                ContactPoint contact = collision.GetContact(0);
+                Vector3 contactPointRelativeToBlockObject = transform.InverseTransformPoint(contact.point);
+                Vector3Int blockCoord = Vector3Int.RoundToInt(contactPointRelativeToBlockObject);
+                if (_meshBlocks.ContainsKey(blockCoord)) //first check if the contact point is inside a block. this is to handle the case of blockGameObjects
                 {
                     DamageBlock(blockCoord);
+                }
+                else //if contact point is not inside a block, move half a block in the finger contact normal direction to reach the block you are touching
+                {
+                    contactPointRelativeToBlockObject = transform.InverseTransformPoint(contact.point + contact.normal * 0.5f * CubeScale);
+                    blockCoord = Vector3Int.RoundToInt(contactPointRelativeToBlockObject);
+                    if (_meshBlocks.ContainsKey(blockCoord))
+                    {
+                        DamageBlock(blockCoord);
+                    }
                 }
 
                 break;

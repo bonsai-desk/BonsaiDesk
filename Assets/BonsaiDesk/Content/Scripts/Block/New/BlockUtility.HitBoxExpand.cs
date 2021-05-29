@@ -20,7 +20,7 @@ public static partial class BlockUtility
             {
                 Vector3Int check = new Vector3Int(x, y, z);
                 toBeassymilated.Add(check);
-                if (!blocks.ContainsKey(check) || assymilated.Contains(check))
+                if (!blocks.ContainsKey(check) || assymilated.Contains(check) || Blocks.GetBlock(blocks[check].name).blockGameObjectPrefab)
                     expand = false;
             }
         }
@@ -50,7 +50,7 @@ public static partial class BlockUtility
             {
                 Vector3Int check = new Vector3Int(x, y, z);
                 toBeassymilated.Add(check);
-                if (!blocks.ContainsKey(check) || assymilated.Contains(check))
+                if (!blocks.ContainsKey(check) || assymilated.Contains(check) || Blocks.GetBlock(blocks[check].name).blockGameObjectPrefab)
                     expand = false;
             }
         }
@@ -81,7 +81,7 @@ public static partial class BlockUtility
             {
                 Vector3Int check = new Vector3Int(x, y, z);
                 toBeassymilated.Add(check);
-                if (!blocks.ContainsKey(check) || assymilated.Contains(check))
+                if (!blocks.ContainsKey(check) || assymilated.Contains(check) || Blocks.GetBlock(blocks[check].name).blockGameObjectPrefab)
                     expand = false;
             }
 
@@ -112,7 +112,7 @@ public static partial class BlockUtility
             {
                 Vector3Int check = new Vector3Int(x, y, z);
                 toBeassymilated.Add(check);
-                if (!blocks.ContainsKey(check) || assymilated.Contains(check))
+                if (!blocks.ContainsKey(check) || assymilated.Contains(check) || Blocks.GetBlock(blocks[check].name).blockGameObjectPrefab)
                     expand = false;
             }
 
@@ -144,7 +144,7 @@ public static partial class BlockUtility
                 // {
                 Vector3Int check = new Vector3Int(x, y, z);
                 toBeassymilated.Add(check);
-                if (!blocks.ContainsKey(check) || assymilated.Contains(check))
+                if (!blocks.ContainsKey(check) || assymilated.Contains(check) || Blocks.GetBlock(blocks[check].name).blockGameObjectPrefab)
                     expand = false;
                 // }
             }
@@ -174,7 +174,7 @@ public static partial class BlockUtility
                 // {
                 Vector3Int check = new Vector3Int(x, y, z);
                 toBeassymilated.Add(check);
-                if (!blocks.ContainsKey(check) || assymilated.Contains(check))
+                if (!blocks.ContainsKey(check) || assymilated.Contains(check) || Blocks.GetBlock(blocks[check].name).blockGameObjectPrefab)
                     expand = false;
                 // }
             }

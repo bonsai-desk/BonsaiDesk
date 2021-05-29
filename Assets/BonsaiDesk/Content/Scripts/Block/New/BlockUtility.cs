@@ -163,10 +163,10 @@ public static partial class BlockUtility
             uv2[face * 4 + 1] = new Vector2(Block.BreakTextureWidth, 0);
             uv2[face * 4 + 2] = new Vector2(Block.BreakTextureWidth, 1);
             uv2[face * 4 + 3] = new Vector2(0, 1);
-            
+
             //if it has a prefab, for example a bearing, don't add triangles between the vertices since it will have its own gameObject
             //the triangles will keep their default value of all 0s, so you will see no triangles
-            if(!block.blockGameObjectPrefab)
+            if (!block.blockGameObjectPrefab)
             {
                 int v0 = face * 4;
                 triangles[face * 6 + 0] = v0 + 0;
@@ -241,7 +241,7 @@ public static partial class BlockUtility
             return (null, 1f, false);
         }
 
-        HashSet<Vector3Int> assymilated = new HashSet<Vector3Int>();
+        HashSet<Vector3Int> assimilated = new HashSet<Vector3Int>();
         // if (blocks.Count == 1)
         //     assymilated = new HashSet<Vector3Int>();
         // else
@@ -249,36 +249,41 @@ public static partial class BlockUtility
         Dictionary<Vector3Int, Vector2Int[]> boxes = new Dictionary<Vector3Int, Vector2Int[]>();
         foreach (var block in blocks)
         {
-            if (!assymilated.Contains(block.Key))
+            if (!assimilated.Contains(block.Key))
             {
-                assymilated.Add(block.Key);
+                assimilated.Add(block.Key);
 
-                Vector2Int[] boxBounds = {new Vector2Int(), new Vector2Int(), new Vector2Int()};
-
-                bool canSpreadRight = true;
-                bool canSpreadLeft = true;
-                bool canSpreadUp = true;
-                bool canSpreadDown = true;
-                bool canSpreadForward = true;
-                bool canSpreadBackward = true;
-
-                while (canSpreadRight || canSpreadLeft || canSpreadUp || canSpreadDown || canSpreadForward || canSpreadBackward)
+                //if a block has a blockGameObjectPrefab, it should not get a hitbox, so move on
+                //note that it is assimilated anyway so it doesn't have to get checked again
+                if (!Blocks.GetBlock(block.Value.name).blockGameObjectPrefab)
                 {
-                    if (canSpreadRight)
-                        canSpreadRight = expandBoxBoundsRight(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadLeft)
-                        canSpreadLeft = expandBoxBoundsLeft(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadUp)
-                        canSpreadUp = expandBoxBoundsUp(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadDown)
-                        canSpreadDown = expandBoxBoundsDown(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadForward)
-                        canSpreadForward = expandBoxBoundsForward(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                    if (canSpreadBackward)
-                        canSpreadBackward = expandBoxBoundsBackward(block.Key, ref boxBounds, ref assymilated, ref blocks);
-                }
+                    Vector2Int[] boxBounds = {new Vector2Int(), new Vector2Int(), new Vector2Int()};
 
-                boxes.Add(block.Key, boxBounds);
+                    bool canSpreadRight = true;
+                    bool canSpreadLeft = true;
+                    bool canSpreadUp = true;
+                    bool canSpreadDown = true;
+                    bool canSpreadForward = true;
+                    bool canSpreadBackward = true;
+
+                    while (canSpreadRight || canSpreadLeft || canSpreadUp || canSpreadDown || canSpreadForward || canSpreadBackward)
+                    {
+                        if (canSpreadRight)
+                            canSpreadRight = expandBoxBoundsRight(block.Key, ref boxBounds, ref assimilated, ref blocks);
+                        if (canSpreadLeft)
+                            canSpreadLeft = expandBoxBoundsLeft(block.Key, ref boxBounds, ref assimilated, ref blocks);
+                        if (canSpreadUp)
+                            canSpreadUp = expandBoxBoundsUp(block.Key, ref boxBounds, ref assimilated, ref blocks);
+                        if (canSpreadDown)
+                            canSpreadDown = expandBoxBoundsDown(block.Key, ref boxBounds, ref assimilated, ref blocks);
+                        if (canSpreadForward)
+                            canSpreadForward = expandBoxBoundsForward(block.Key, ref boxBounds, ref assimilated, ref blocks);
+                        if (canSpreadBackward)
+                            canSpreadBackward = expandBoxBoundsBackward(block.Key, ref boxBounds, ref assimilated, ref blocks);
+                    }
+
+                    boxes.Add(block.Key, boxBounds);
+                }
             }
         }
 
@@ -342,7 +347,12 @@ public static partial class BlockUtility
 
     private static bool ContainsBlock(BlockObject blockObject, Vector3Int testPosition)
     {
-        return blockObject.Blocks.ContainsKey(testPosition);
+        if (blockObject.Blocks.TryGetValue(testPosition, out SyncBlock block))
+        {
+            return Blocks.GetBlock(block.name).blockGameObjectPrefab == null;
+        }
+
+        return false;
     }
 
     public static (bool isInCubeArea, bool isNearHole) InCubeArea(BlockObject blockObject, Vector3Int testPosition, string name)
@@ -378,16 +388,14 @@ public static partial class BlockUtility
 
         bool inCubeAreaBearing = true;
         //if I'm a bearing, and I am inside another bearing, set in cube area to false
-        //this prevents bearings from snapping onto other bearings
-        //maybe replace this, maybe in addition to this: ContainsBlock should return false if it is not a normal block
-        // if (Blocks.blocks[id].blockType == Block.BlockType.bearing)
-        // {
-        //     if (blocks.TryGetValue(testPosition, out MeshBlock block))
-        //     {
-        //         if (Blocks.blocks[block.id].blockType == Block.BlockType.bearing)
-        //             inCubeAreaBearing = false;
-        //     }
-        // }
+        //this prevents bearings from snapping onto into bearings
+        if (name == "bearing") //if I'm a bearing
+        {
+            if (blockObject.Blocks.TryGetValue(testPosition, out SyncBlock block) && block.name == "bearing") //if inside another bearing
+            {
+                inCubeAreaBearing = false;
+            }
+        }
 
         bool isInCubeArea = inCubeAreaBearing && (ContainsBlock(blockObject, testPosition + new Vector3Int(1, 0, 0)) ||
                                                   ContainsBlock(blockObject, testPosition + new Vector3Int(-1, 0, 0)) ||

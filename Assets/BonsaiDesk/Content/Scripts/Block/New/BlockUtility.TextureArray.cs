@@ -5,6 +5,22 @@ using UnityEngine;
 
 public static partial class BlockUtility
 {
+    //2DArray for block textures. value is calculated once then cached
+    private static Texture2DArray _blockTextureArray = null;
+
+    public static Texture2DArray BlockTextureArray
+    {
+        get
+        {
+            if (_blockTextureArray == null)
+            {
+                _blockTextureArray = GenerateBlockTextureArray();
+            }
+
+            return _blockTextureArray;
+        }
+    }
+
     private static Dictionary<string, int> _blockTextureNameToTextureArrayIndex = null;
 
     public static Dictionary<string, int> BlockTextureNameToTextureArrayIndex
@@ -13,14 +29,14 @@ public static partial class BlockUtility
         {
             if (_blockTextureNameToTextureArrayIndex == null)
             {
-                BlockObject.GenerateBlockTextureArray();
+                _blockTextureArray = GenerateBlockTextureArray();
             }
 
             return _blockTextureNameToTextureArrayIndex;
         }
     }
 
-    public static Texture2DArray GenerateBlockTextureArray()
+    private static Texture2DArray GenerateBlockTextureArray()
     {
         var objects = Resources.LoadAll("Blocks", typeof(Texture2D));
         if (objects.Length == 0)

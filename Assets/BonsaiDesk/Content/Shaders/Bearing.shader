@@ -3,6 +3,7 @@
 	Properties
 	{
 		_Color("Color", Color) = (1,1,1,1)
+	    _Tint("Color", Color) = (1,1,1,1)
 		_MainTex("Albedo (RGB)", 2D) = "white" {}
 		_Glossiness("Smoothness", Range(0,1)) = 0.5
 		_Metallic("Metallic", Range(0,1)) = 0.0
@@ -31,7 +32,7 @@
 
 			half _Glossiness;
 			half _Metallic;
-			fixed4 _Color, _EffectColor;
+			fixed4 _Color, _Tint, _EffectColor;
 			half _Health, _EffectProgress;
 
 			// Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
@@ -44,7 +45,7 @@
 			void surf(Input IN, inout SurfaceOutputStandard o)
 			{
 				// Albedo comes from a texture tinted by color
-				fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
+				fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color * _Tint;
 				o.Albedo = lerp(_EffectColor.rgb, c.rgb, min(_Health, _EffectProgress));
 				// Metallic and smoothness come from slider variables
 				o.Metallic = _Metallic;

@@ -29,27 +29,6 @@ public partial class BlockObject : NetworkBehaviour
     //contains all of the AutoAuthority of all BlockObjects in the scene
     private static HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
 
-    //2DArray for block textures. value is calculated once then cached
-    private static Texture2DArray _blockTextureArray = null;
-
-    public static Texture2DArray BlockTextureArray
-    {
-        get
-        {
-            if (_blockTextureArray == null)
-            {
-                GenerateBlockTextureArray();
-            }
-
-            return _blockTextureArray;
-        }
-    }
-
-    public static void GenerateBlockTextureArray()
-    {
-        _blockTextureArray = BlockUtility.GenerateBlockTextureArray();
-    }
-
     //all of the data required to reconstruct this block object
     public readonly SyncDictionary<Vector3Int, SyncBlock> Blocks = new SyncDictionary<Vector3Int, SyncBlock>();
 
@@ -173,7 +152,7 @@ public partial class BlockObject : NetworkBehaviour
 
         //make copy of material so material asset is not changed
         blockObjectMaterial = new Material(blockObjectMaterial);
-        blockObjectMaterial.SetTexture("_TextureArray", BlockTextureArray);
+        blockObjectMaterial.SetTexture("_TextureArray", BlockUtility.BlockTextureArray);
 
         PhysicsStart();
 
