@@ -43,7 +43,7 @@ public partial class BlockObject
                     _touchingHand = true;
                 }
 
-                if (!joint)
+                if (!_joint)
                 {
                     CalculateForces();
                 }
@@ -110,26 +110,31 @@ public partial class BlockObject
                         if (attachingToBearing)
                         {
                             Debug.LogWarning("attaching to bearing");
+
+                            transform.position = position;
+                            transform.rotation = rotation;
+                            _body.MovePosition(position);
+                            _body.MoveRotation(rotation);
                             
                             var anchor = Vector3.zero;
                             var connectedAnchor = Vector3.zero;
                             // var syncJoint = new SyncJoint(netIdentity, anchor, connectedAnchor);
 
-                            joint = gameObject.AddComponent<HingeJoint>();
+                            _joint = gameObject.AddComponent<HingeJoint>();
 
-                            joint.autoConfigureConnectedAnchor = false;
+                            _joint.autoConfigureConnectedAnchor = false;
 
                             var axisLocalToAttachedTo = blockObject.MeshBlocks[blockCoord].rotation * Vector3.up;
                             var axisLocalToSelf = transform.InverseTransformDirection(blockObject.transform.rotation * axisLocalToAttachedTo);
                             axisLocalToSelf = new Vector3(Mathf.Round(axisLocalToSelf.x), Mathf.Round(axisLocalToSelf.y), Mathf.Round(axisLocalToSelf.z));
                             axisLocalToSelf = axisLocalToSelf.normalized;
-                            joint.axis = axisLocalToSelf;
+                            _joint.axis = axisLocalToSelf;
 
-                            joint.anchor = coord;
-                            joint.connectedAnchor = blockCoord + 0.1f * axisLocalToAttachedTo;
+                            _joint.anchor = coord;
+                            _joint.connectedAnchor = blockCoord + 0.1f * axisLocalToAttachedTo;
 
-                            joint.enableCollision = true;
-                            joint.connectedBody = blockObject._body;
+                            _joint.enableCollision = true;
+                            _joint.connectedBody = blockObject._body;
 
                             // blockArea.coordConnectedToBearing = physicsCoord;
 
@@ -188,7 +193,7 @@ public partial class BlockObject
         {
             if (isInCubeArea)
             {
-                if (blockObject != null)
+                if (blockObject)
                 {
                     transform.parent = blockObject.potentialBlocksParent;
                 }

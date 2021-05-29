@@ -75,7 +75,7 @@ public partial class BlockObject : NetworkBehaviour
     public readonly Dictionary<Vector3Int, MeshBlock> MeshBlocks = new Dictionary<Vector3Int, MeshBlock>();
 
     //physics joint based on data from syncJoint. is null is not connected to anything
-    public HingeJoint joint = null;
+    private HingeJoint _joint = null;
 
     //contains the keys for entries in _meshBlocks which have blockGameObjects. This saves having to loop through
     //the entire _meshBlocks to check for blockGameObject
@@ -216,6 +216,12 @@ public partial class BlockObject : NetworkBehaviour
         UpdateDamagedBlocks();
         UpdateWholeEffects();
         UpdateDialogPosition();
+
+        if (potentialBlocksParent.childCount > 0)
+        {
+            _body.isKinematic = true;
+            _autoAuthority.SetKinematicLocalForOneFrame();
+        }
 
         if (debug && Input.GetKeyDown(KeyCode.S))
         {

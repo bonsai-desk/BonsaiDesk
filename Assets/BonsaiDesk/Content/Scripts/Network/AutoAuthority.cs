@@ -35,6 +35,8 @@ public class AutoAuthority : NetworkBehaviour
     private int _colorPropertyId;
     private int _colorId = 0;
 
+    private int _setKinematicLocalFrame = -1;
+
     private float _keepAwakeTime = -10f;
 
     private Color[] _colors = new[]
@@ -47,7 +49,7 @@ public class AutoAuthority : NetworkBehaviour
     public override void OnStartServer()
     {
         _serverLastOwnerChange = 0;
-        
+
         if (_ownerIdentityId == 0)
         {
             _ownerIdentityId = uint.MaxValue;
@@ -105,12 +107,20 @@ public class AutoAuthority : NetworkBehaviour
         }
 
         //code past this point if you have control over the object
-        _body.isKinematic = isKinematic;
+        if (Time.frameCount != _setKinematicLocalFrame)
+        {
+            _body.isKinematic = isKinematic;
+        }
 
         if (Time.time - _keepAwakeTime < 1f)
         {
             _body.WakeUp();
         }
+    }
+
+    public void SetKinematicLocalForOneFrame()
+    {
+        _setKinematicLocalFrame = Time.frameCount;
     }
 
     private void OnOwnerChange(uint oldValue, uint newValue)
