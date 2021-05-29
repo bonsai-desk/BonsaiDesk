@@ -657,7 +657,7 @@ public partial class BlockObject : NetworkBehaviour
                 Debug.LogError("Unknown case: " + _activeWholeEffect.mode);
                 break;
         }
-        
+
         blockObjectMaterial.SetFloat("_EffectProgress", Mathf.Clamp01(_activeWholeEffect.progress));
         blockObjectMaterial.SetColor("_EffectColor", color);
         foreach (var coord in _blockGameObjects)

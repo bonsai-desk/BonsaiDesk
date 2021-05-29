@@ -13,7 +13,8 @@ public class NetworkFollow : NetworkBehaviour
     {
         Normal,
         DisableRenderers,
-        DoNotRenderLayer
+        DoNotRenderLayer,
+        DoNotRenderHeadLayer
     };
 
     public Rigidbody body;
@@ -25,11 +26,14 @@ public class NetworkFollow : NetworkBehaviour
         inited = true;
 
         int layer = LayerMask.NameToLayer("doNotRender");
+        int layerHead = LayerMask.NameToLayer("doNotRenderHead");
 
         foreach (var rend in GetComponentsInChildren<MeshRenderer>(true))
         {
             if (renderBehaviour == RenderBehaviour.DoNotRenderLayer)
                 rend.gameObject.layer = layer;
+            if (renderBehaviour == RenderBehaviour.DoNotRenderHeadLayer)
+                rend.gameObject.layer = layerHead;
             if (renderBehaviour == RenderBehaviour.DisableRenderers)
                 rend.enabled = false;
         }
@@ -38,6 +42,8 @@ public class NetworkFollow : NetworkBehaviour
         {
             if (renderBehaviour == RenderBehaviour.DoNotRenderLayer)
                 rend.gameObject.layer = layer;
+            if (renderBehaviour == RenderBehaviour.DoNotRenderHeadLayer)
+                rend.gameObject.layer = layerHead;
             if (renderBehaviour == RenderBehaviour.DisableRenderers)
                 rend.enabled = false;
         }

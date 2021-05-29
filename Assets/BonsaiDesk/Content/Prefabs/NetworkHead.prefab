@@ -257,7 +257,7 @@ MonoBehaviour:
   syncInterval: 0.1
   targetName: CenterEyeAnchor
   body: {fileID: 3765429293320518224}
-  renderBehaviour: 2
+  renderBehaviour: 3
 --- !u!135 &9215190182876982407
 SphereCollider:
   m_ObjectHideFlags: 0
