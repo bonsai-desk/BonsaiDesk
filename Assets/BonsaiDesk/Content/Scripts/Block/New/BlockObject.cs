@@ -90,6 +90,7 @@ public partial class BlockObject : NetworkBehaviour
 
     //physics joint based on data from syncJoint. is null is not connected to anything
     private HingeJoint _joint = null;
+    public HingeJoint Joint => _joint;
 
     //contains the keys for entries in _meshBlocks which have blockGameObjects. This saves having to loop through
     //the entire _meshBlocks to check for blockGameObject

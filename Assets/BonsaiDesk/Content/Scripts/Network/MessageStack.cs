@@ -39,8 +39,6 @@ public class MessageStack : MonoBehaviour
         UpdateAllMessageTransforms();
     }
 
-    private void Start() { }
-
     private IEnumerator DemoMessages()
     {
         yield return new WaitForSeconds(5);
