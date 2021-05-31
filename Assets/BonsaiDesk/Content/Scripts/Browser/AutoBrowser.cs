@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using Mirror;
+using Smooth;
+using UnityEngine;
 using Vuplex.WebView;
 
 public class AutoBrowser : Browser
@@ -11,9 +13,10 @@ public class AutoBrowser : Browser
 
     private void Update()
     {
-        if (screenTransform.localPosition.sqrMagnitude > 1)
+        var screenAutoAuthority = screenTransform.GetComponent<AutoAuthority>();
+        if (screenTransform.localPosition.sqrMagnitude > 1 || PhysicsHandController.InvalidTransform(screenTransform))
         {
-            if (screenTransform.GetComponent<AutoAuthority>().HasAuthority())
+            if (screenAutoAuthority.HasAuthority())
             {
                 BonsaiLogWarning("AutoBrowser's screen freaking out so I'm resetting its physics");
                 var rigidBody = screenTransform.GetComponent<Rigidbody>();
@@ -23,20 +26,40 @@ public class AutoBrowser : Browser
                 rigidBody.MoveRotation(screenTransform.parent.transform.rotation);
             }
         }
-        
+
+        if (screenAutoAuthority.isServer)
+        {
+            if (screenTransform.localPosition.sqrMagnitude > 1 || PhysicsHandController.InvalidTransform(screenTransform))
+            {
+                BonsaiLogWarning("Server: AutoBrowser's screen freaking out so I'm resetting its physics");
+                var rigidBody = screenTransform.GetComponent<Rigidbody>();
+                rigidBody.velocity = Vector3.zero;
+                rigidBody.angularVelocity = Vector3.zero;
+                rigidBody.MovePosition(screenTransform.parent.transform.position);
+                rigidBody.MoveRotation(screenTransform.parent.transform.rotation);
+
+                screenAutoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
+                GetComponent<SmoothSyncMirror>().clearBuffer();
+                rigidBody.velocity = Vector3.zero;
+                rigidBody.angularVelocity = Vector3.zero;
+
+                screenAutoAuthority.GetComponent<SmoothSyncMirror>().teleportAnyObjectFromServer(screenTransform.parent.transform.position,
+                    screenTransform.parent.transform.rotation, screenTransform.localScale);
+            }
+        }
     }
 
     protected override void Start()
     {
         base.Start();
         BonsaiLog("Start");
-            
+
         _defaultLocalPosition = transform.localPosition;
         _belowTableLocalPosition = _defaultLocalPosition;
         //_belowTableLocalPosition.y = -Bounds.y;
-        
-        _belowTableLocalPosition.y = transform.InverseTransformPoint(0, deskHeight, 0).y -Bounds.y/2 - 0.001f;
-        
+
+        _belowTableLocalPosition.y = transform.InverseTransformPoint(0, deskHeight, 0).y - Bounds.y / 2 - 0.001f;
+
         ListenersReady += NavHome;
     }
 
@@ -76,48 +99,46 @@ public class AutoBrowser : Browser
 
     public void SetHeight(float t)
     {
-       var heightT = t;
-       transform.localPosition = Vector3.Lerp(_belowTableLocalPosition, _defaultLocalPosition, Mathf.Clamp01(heightT));
+        var heightT = t;
+        transform.localPosition = Vector3.Lerp(_belowTableLocalPosition, _defaultLocalPosition, Mathf.Clamp01(heightT));
 
-      //var height = boundsTransform.localScale.y;
-      //var halfHeight = height / 2f;
+        //var height = boundsTransform.localScale.y;
+        //var halfHeight = height / 2f;
 
-      //var scaleT = (transform.localPosition.y + halfHeight) / height;
-      //scaleT = Mathf.Clamp01(scaleT);
+        //var scaleT = (transform.localPosition.y + halfHeight) / height;
+        //scaleT = Mathf.Clamp01(scaleT);
 
-      //holePuncherTransform.localScale = new Vector3(1, 2*scaleT, 1);
-      //holePuncherTransform.localPosition = new Vector3(0, (1 - scaleT) / 2, 0);
+        //holePuncherTransform.localScale = new Vector3(1, 2*scaleT, 1);
+        //holePuncherTransform.localPosition = new Vector3(0, (1 - scaleT) / 2, 0);
 
-      //if (Mathf.Approximately(t, 0))
-      //{
-      //    //TODO is this laggy? also this runs even if you don't have authority over the screen
-      //    screenRigidBody.velocity = Vector3.zero;
-      //    screenRigidBody.angularVelocity = Vector3.zero;
-      //    transform.GetChild(0).localPosition = Vector3.zero;
-      //    transform.GetChild(0).localRotation = Quaternion.identity;
-      //}
+        //if (Mathf.Approximately(t, 0))
+        //{
+        //    //TODO is this laggy? also this runs even if you don't have authority over the screen
+        //    screenRigidBody.velocity = Vector3.zero;
+        //    screenRigidBody.angularVelocity = Vector3.zero;
+        //    transform.GetChild(0).localPosition = Vector3.zero;
+        //    transform.GetChild(0).localRotation = Quaternion.identity;
+        //}
     }
 
     protected override void SetupWebViewPrefab()
     {
-        
-            
         var material = new Material(Resources.Load<Material>("OnTopViewportClipped"));
         material.SetFloat("_ClipLevel", deskHeight);
         WebViewPrefab = WebViewPrefabCustom.Instantiate(1, 1, material);
-            
-        #if UNITY_ANDROID && !UNITY_EDITOR
+
+#if UNITY_ANDROID && !UNITY_EDITOR
         holePuncherMaterial = new Material(Resources.Load<Material>("OnTopUnderlayClipped"));
         holePuncherMaterial.SetFloat("_ClipLevel", deskHeight);
         WebViewPrefab = WebViewPrefabCustom.Instantiate(1, 1);
-        #endif
-        
+#endif
+
         Destroy(WebViewPrefab.Collider);
         WebViewPrefab.transform.SetParent(webViewParent, false);
 
         Resizer = WebViewPrefab.transform.Find("WebViewPrefabResizer");
         WebViewView = Resizer.transform.Find("WebViewPrefabView");
-        
+
 
         //WebViewPrefab.transform.localPosition = new Vector3(0, 0.5f, 0);
         //WebViewPrefab.transform.localEulerAngles = new Vector3(0, 180, 0);
@@ -132,7 +153,6 @@ public class AutoBrowser : Browser
             WebViewView.SetParent(boundsTransform, false);
             WebViewView.transform.localPosition = Vector3.zero;
             WebViewView.transform.localEulerAngles = Vector3.zero;
-            
         };
         base.SetupWebViewPrefab();
     }
