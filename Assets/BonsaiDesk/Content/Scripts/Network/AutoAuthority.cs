@@ -81,21 +81,26 @@ public class AutoAuthority : NetworkBehaviour
             if (distanceSquared > 20f * 20f || transform.position.y < -2f || transform.position.y > 5f || PhysicsHandController.InvalidTransform(transform))
             {
                 var blockObject = GetComponent<BlockObject>();
-                if (blockObject && (blockObject.Blocks.Count > 4 || blockObject.syncJoint.connected || blockObject.ConnectedToSelf.Count > 0))
-                {
-                    ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
-                    GetComponent<SmoothSyncMirror>().clearBuffer();
-                    _body.velocity = Vector3.zero;
-                    _body.angularVelocity = Vector3.zero;
 
-                    GetComponent<SmoothSyncMirror>().teleportAnyObjectFromServer(new Vector3(0, 2, 0), Quaternion.identity, transform.localScale);
-                }
-                else
+                //for now if it has a bearing, don't teleport back TODO: add this
+                if (!(blockObject.syncJoint.connected || blockObject.ConnectedToSelf.Count > 0))
                 {
-                    ServerStripOwnerAndDestroy();
-                }
+                    if (blockObject && (blockObject.Blocks.Count > 4 || blockObject.syncJoint.connected || blockObject.ConnectedToSelf.Count > 0))
+                    {
+                        ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
+                        GetComponent<SmoothSyncMirror>().clearBuffer();
+                        _body.velocity = Vector3.zero;
+                        _body.angularVelocity = Vector3.zero;
 
-                return;
+                        GetComponent<SmoothSyncMirror>().teleportAnyObjectFromServer(new Vector3(0, 2, 0), Quaternion.identity, transform.localScale);
+                    }
+                    else
+                    {
+                        ServerStripOwnerAndDestroy();
+                    }
+
+                    return;
+                }
             }
         }
 
@@ -267,7 +272,7 @@ public class AutoAuthority : NetworkBehaviour
         {
             return;
         }
-        
+
         //cannot switch owner if it is in use (held/pinch pulled/ect)
         if (_inUse)
             return;
@@ -305,7 +310,7 @@ public class AutoAuthority : NetworkBehaviour
         {
             return;
         }
-        
+
         //remove objects owner if it had one
         if (netIdentity.connectionToClient != null)
         {
