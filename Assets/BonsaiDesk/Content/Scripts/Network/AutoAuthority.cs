@@ -81,7 +81,7 @@ public class AutoAuthority : NetworkBehaviour
             if (distanceSquared > 20f * 20f || transform.position.y < -2f || transform.position.y > 5f || PhysicsHandController.InvalidTransform(transform))
             {
                 var blockObject = GetComponent<BlockObject>();
-                if (blockObject && blockObject.Blocks.Count > 4)
+                if (blockObject && (blockObject.Blocks.Count > 4 || blockObject.syncJoint.connected || blockObject.ConnectedToSelf.Count > 0))
                 {
                     ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
                     GetComponent<SmoothSyncMirror>().clearBuffer();

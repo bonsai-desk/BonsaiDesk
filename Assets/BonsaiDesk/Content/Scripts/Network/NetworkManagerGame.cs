@@ -572,8 +572,8 @@ public class NetworkManagerGame : NetworkManager
         networkVRPlayer.SetSpot(spot);
         NetworkServer.AddPlayerForConnection(conn, player);
 
-        leftHand.GetComponent<NetworkHand>().ownerIdentity = pid;
-        rightHand.GetComponent<NetworkHand>().ownerIdentity = pid;
+        leftHand.GetComponent<NetworkHand>().ownerIdentity = new NetworkIdentityReference(pid);
+        rightHand.GetComponent<NetworkHand>().ownerIdentity = new NetworkIdentityReference(pid);
     }
 
     public override void OnServerDisconnect(NetworkConnection conn)
