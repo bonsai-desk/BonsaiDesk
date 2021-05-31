@@ -75,7 +75,7 @@ public class NetworkBlockSpawn : NetworkBehaviour
                 _readyToSpawnTime = 0f;
                 if (NetworkClient.connection != null && NetworkClient.connection.identity)
                 {
-                    CmdSpawnObject(transform.position, transform.rotation, NetworkClient.connection.identity.netId);
+                    CmdSpawnObject(_spawnBlockName, transform.position, transform.rotation, NetworkClient.connection.identity.netId);
                 }
             }
         }
@@ -86,13 +86,18 @@ public class NetworkBlockSpawn : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdSpawnObject(Vector3 position, Quaternion rotation, uint ownerId)
+    private void CmdSpawnObject(string blockName, Vector3 position, Quaternion rotation, uint ownerId)
     {
+        if (string.IsNullOrEmpty(blockName))
+        {
+            return;
+        }
+        
         const float halfBlock = BlockObject.CubeScale / 2f;
         if (!Physics.CheckBox(position, new Vector3(halfBlock, halfBlock, halfBlock), rotation, _defaultLayerMask))
         {
             var spawnedObject = Instantiate(spawnObjectPrefab, position, rotation);
-            spawnedObject.GetComponent<BlockObject>().Blocks.Add(Vector3Int.zero, new SyncBlock(_spawnBlockName, 0));
+            spawnedObject.GetComponent<BlockObject>().Blocks.Add(Vector3Int.zero, new SyncBlock(blockName, 0));
             NetworkServer.Spawn(spawnedObject);
             spawnedObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time, false);
             foreach (var pair in NetworkServer.connections)

@@ -15,7 +15,7 @@ public class NetworkIdentityReference
     {
         get
         {
-            //No networkId, therefor is null.
+            //No networkId, therefore is null.
             if (NetworkId == 0)
                 return null;
             //If cache isn't set then try to set it now.

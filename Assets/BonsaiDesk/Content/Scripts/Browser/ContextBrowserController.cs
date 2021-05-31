@@ -95,7 +95,6 @@ public class ContextBrowserController : MonoBehaviour
                                 {
                                     NetworkBlockSpawn.InstanceLeft.SetSpawnBlockName(blockName);
                                 }
-                                Debug.LogError("Left set");
                                 break;
                             case Hand.Right:
                                 _rightBlockActive = blockName;
@@ -103,7 +102,6 @@ public class ContextBrowserController : MonoBehaviour
                                 {
                                     NetworkBlockSpawn.InstanceRight.SetSpawnBlockName(blockName);
                                 }
-                                Debug.LogError("Right set");
                                 break;
                         }
 
