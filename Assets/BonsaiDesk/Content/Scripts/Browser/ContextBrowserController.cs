@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using Newtonsoft.Json;
 using UnityEngine;
 using Vuplex.WebView;
@@ -37,6 +38,16 @@ public class ContextBrowserController : MonoBehaviour
         _browser = GetComponent<TableBrowser>();
         _browser.ListenersReady += SetupBrowser;
         _browser.BrowserReady += (sender, _) => { _browser.OnMessageEmitted(HandleJavascriptMessage); };
+        
+        StartCoroutine(SetInitialBlocks());
+    }
+
+    private IEnumerator SetInitialBlocks()
+    {
+        while (!NetworkBlockSpawn.InstanceLeft || !NetworkBlockSpawn.InstanceRight)
+        {
+            yield return null;
+        }
         
         NetworkBlockSpawn.InstanceLeft.SetSpawnBlockName(LeftBlockActive);
         NetworkBlockSpawn.InstanceRight.SetSpawnBlockName(RightBlockActive);
@@ -80,11 +91,19 @@ public class ContextBrowserController : MonoBehaviour
                         {
                             case Hand.Left:
                                 _leftBlockActive = blockName;
-                                NetworkBlockSpawn.InstanceLeft.SetSpawnBlockName(blockName);
+                                if (NetworkBlockSpawn.InstanceLeft)
+                                {
+                                    NetworkBlockSpawn.InstanceLeft.SetSpawnBlockName(blockName);
+                                }
+                                Debug.LogError("Left set");
                                 break;
                             case Hand.Right:
                                 _rightBlockActive = blockName;
-                                NetworkBlockSpawn.InstanceRight.SetSpawnBlockName(blockName);
+                                if (NetworkBlockSpawn.InstanceRight)
+                                {
+                                    NetworkBlockSpawn.InstanceRight.SetSpawnBlockName(blockName);
+                                }
+                                Debug.LogError("Right set");
                                 break;
                         }
 

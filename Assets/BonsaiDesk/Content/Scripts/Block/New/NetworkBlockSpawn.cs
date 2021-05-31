@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class NetworkBlockSpawn : NetworkBehaviour
 {
-    public static NetworkBlockSpawn InstanceLeft;
+    public static NetworkBlockSpawn InstanceLeft = null;
     public static NetworkBlockSpawn InstanceRight;
 
     public enum SpawnerLocation
