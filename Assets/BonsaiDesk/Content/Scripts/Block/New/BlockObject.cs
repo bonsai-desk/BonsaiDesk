@@ -23,15 +23,23 @@ public struct SyncBlock
 public struct SyncJoint
 {
     public bool connected;
+
     public NetworkIdentity attachedTo;
+
+    //the 2 blockObjects must be aligned before attaching the joint. This is the position of the single block relative to the attachedTo for use in alligning
+    public Vector3 positionLocalToAttachedTo;
+    public Quaternion rotationLocalToAttachedTo; //same as positionLocalToAttachedTo but for rotation
     public Vector3 axis;
     public Vector3 anchor;
     public Vector3 connectedAnchor;
 
-    public SyncJoint(NetworkIdentity attachedTo, Vector3 axis, Vector3 anchor, Vector3 connectedAnchor)
+    public SyncJoint(NetworkIdentity attachedTo, Vector3 positionLocalToAttachedTo, Quaternion rotationLocalToAttachedTo, Vector3 axis, Vector3 anchor,
+        Vector3 connectedAnchor)
     {
         connected = true;
         this.attachedTo = attachedTo;
+        this.positionLocalToAttachedTo = positionLocalToAttachedTo;
+        this.rotationLocalToAttachedTo = rotationLocalToAttachedTo;
         this.axis = axis;
         this.anchor = anchor;
         this.connectedAnchor = connectedAnchor;
@@ -47,7 +55,8 @@ public partial class BlockObject : NetworkBehaviour
     private static HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
 
     //---all of the data required to reconstruct this block object---
-    //
+
+    //contains information about blocks and their rotations
     public readonly SyncDictionary<Vector3Int, SyncBlock> Blocks = new SyncDictionary<Vector3Int, SyncBlock>();
 
     //other blockObjects connected to this one. the coord is which bearing they are attached to. use their syncJoint for joint info
@@ -56,12 +65,17 @@ public partial class BlockObject : NetworkBehaviour
     [SyncVar(hook = nameof(OnSyncJointChange))]
     public SyncJoint syncJoint;
 
-    //---
+    //---end all of the data required to reconstruct this block object---
 
     //caches changes made to the sync dictionary so all block changes can be made at once with a single mesh update
     //also allows client side prediction by queueing up changes that you have only just sent the command for
     private readonly Queue<(Vector3Int coord, SyncBlock syncBlock, SyncDictionary<Vector3Int, SyncBlock>.Operation op)> _blockChanges =
         new Queue<(Vector3Int coord, SyncBlock syncBlock, SyncDictionary<Vector3Int, SyncBlock>.Operation op)>();
+    
+    //caches changes made to the sync dictionary so joint changes can be made at once
+    //also allows client side prediction by queueing up changes that you have only just sent the command for
+    private readonly Queue<(Vector3Int coord, NetworkIdentity identity, SyncDictionary<Vector3Int, NetworkIdentity>.Operation op)> _connectedToSelfChanges =
+        new Queue<(Vector3Int coord, NetworkIdentity identity, SyncDictionary<Vector3Int, NetworkIdentity>.Operation op)>();
 
     //public inspector variables
     public Material blockObjectMaterial;
@@ -205,14 +219,19 @@ public partial class BlockObject : NetworkBehaviour
         _meshFilter.mesh = _mesh;
 
         CreateInitialMesh();
+        ConnectInitialJoints();
 
         Blocks.Callback -= OnBlocksDictionaryChange;
         Blocks.Callback += OnBlocksDictionaryChange;
+
+        ConnectedToSelf.Callback -= OnConnectedToSelfDictionaryChange;
+        ConnectedToSelf.Callback += OnConnectedToSelfDictionaryChange;
     }
 
     private void Update()
     {
         ProcessBlockChanges();
+        ProcessConnectedToSelfChanges();
         UpdateDamagedBlocks();
         UpdateWholeEffects();
         UpdateDialogPosition();
@@ -341,13 +360,115 @@ public partial class BlockObject : NetworkBehaviour
 
         UpdateMesh();
     }
-
-    private void OnSyncJointChange(SyncJoint oldValue, SyncJoint newValue)
+    
+    //loops through any identities in _connectedToSelfChanges and connects/disconnects joints
+    private void ProcessConnectedToSelfChanges()
     {
-        if (!newValue.connected)
+        if (_connectedToSelfChanges.Count == 0)
         {
             return;
         }
+
+        while (_connectedToSelfChanges.Count > 0)
+        {
+            var (coord, identity, op) = _connectedToSelfChanges.Dequeue();
+
+            switch (op)
+            {
+                case SyncDictionary<Vector3Int, NetworkIdentity>.Operation.OP_ADD:
+                    if (!identity || !identity.gameObject)
+                    {
+                        break;
+                    }
+
+                    var otherBlockObject = identity.GetComponent<BlockObject>();
+
+                    if (!otherBlockObject)
+                    {
+                        break;
+                    }
+
+                    otherBlockObject.ConnectJoint(otherBlockObject.syncJoint);
+
+                    break;
+                case SyncDictionary<Vector3Int, NetworkIdentity>.Operation.OP_REMOVE:
+                    
+                    //TODO: remove joint
+
+                    break;
+                default:
+                    Debug.LogError("Unknown dictionary operation.");
+                    break;
+            }
+        }
+    }
+
+    private void OnConnectedToSelfDictionaryChange(SyncDictionary<Vector3Int, NetworkIdentity>.Operation op, Vector3Int key, NetworkIdentity value)
+    {
+        _connectedToSelfChanges.Enqueue((key, value, op));
+    }
+
+    [Command(ignoreAuthority = true)]
+    private void CmdConnectJoint(SyncJoint jointInfo, Vector3Int attachedToBearingCoord)
+    {
+        syncJoint = jointInfo;
+        jointInfo.attachedTo.GetComponent<BlockObject>().ConnectedToSelf.Add(attachedToBearingCoord, netIdentity);
+    }
+
+    private void OnSyncJointChange(SyncJoint oldValue, SyncJoint newValue)
+    {
+        ConnectJoint(newValue);
+    }
+
+    private void ConnectJoint(SyncJoint jointInfo)
+    {
+        if (!jointInfo.connected)
+        {
+            return;
+        }
+
+        if (_joint) //joint already exists. hopefully because of client side prediction
+        {
+            return; //TODO: check that current join is equal to the new joint to confirm that it was client side prediction. Also do the same for blocks
+        }
+
+        //joints are doubly linked, so maybe one exists before the other? If that is the case, just return and it will be handled by the other blockObject
+        if (!jointInfo.attachedTo || !jointInfo.attachedTo.gameObject)
+        {
+            return;
+        }
+
+        var attachedToBody = jointInfo.attachedTo.GetComponent<Rigidbody>();
+
+        if (!attachedToBody)
+        {
+            return;
+        }
+
+        //perfectly allign block before attaching joint. This is because a joint is not fully defined
+        //by the axis, anchor, and connected anchor. The initial relative position of the two objects matters
+
+        //idk if this step is required, but it makes sure the transform and body are the same
+        attachedToBody.MovePosition(attachedToBody.transform.position);
+        attachedToBody.MoveRotation(attachedToBody.transform.rotation);
+
+        transform.position = jointInfo.attachedTo.transform.TransformPoint(jointInfo.positionLocalToAttachedTo);
+        transform.rotation = jointInfo.attachedTo.transform.rotation * jointInfo.rotationLocalToAttachedTo;
+        _body.MovePosition(transform.position);
+        _body.MoveRotation(transform.rotation);
+
+        //create hinge joint component
+        _joint = gameObject.AddComponent<HingeJoint>();
+
+        _joint.autoConfigureConnectedAnchor = false;
+
+        _joint.axis = jointInfo.axis;
+
+        _joint.anchor = jointInfo.anchor;
+        _joint.connectedAnchor = jointInfo.connectedAnchor;
+
+        _joint.enableCollision = true;
+        _joint.connectedBody = attachedToBody;
     }
 
     [Command(ignoreAuthority = true)]
@@ -810,12 +931,34 @@ public partial class BlockObject : NetworkBehaviour
 
     private void CreateInitialMesh()
     {
-        foreach (var block in Blocks)
+        foreach (var pair in Blocks)
         {
-            AddBlockToMesh(block.Value.name, block.Key, BlockUtility.ByteToQuaternion(block.Value.rotation));
+            AddBlockToMesh(pair.Value.name, pair.Key, BlockUtility.ByteToQuaternion(pair.Value.rotation));
         }
 
         UpdateMesh();
+    }
+
+    private void ConnectInitialJoints()
+    {
+        ConnectJoint(syncJoint);
+        foreach (var pair in ConnectedToSelf)
+        {
+            var otherIdentity = pair.Value;
+            if (!otherIdentity || !otherIdentity.gameObject)
+            {
+                continue;
+            }
+
+            var otherBlockObject = otherIdentity.GetComponent<BlockObject>();
+
+            if (!otherBlockObject)
+            {
+                continue;
+            }
+
+            otherBlockObject.ConnectJoint(otherBlockObject.syncJoint);
+        }
     }
 
     private Vector3Int GetOnlyBlockCoord()

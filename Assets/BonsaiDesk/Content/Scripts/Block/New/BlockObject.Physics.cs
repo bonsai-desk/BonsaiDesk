@@ -109,42 +109,30 @@ public partial class BlockObject
 
                         if (attachingToBearing)
                         {
-                            Debug.LogWarning("attaching to bearing");
-
-                            transform.position = position;
-                            transform.rotation = rotation;
-                            _body.MovePosition(position);
-                            _body.MoveRotation(rotation);
-                            
-                            var anchor = Vector3.zero;
-                            var connectedAnchor = Vector3.zero;
-                            // var syncJoint = new SyncJoint(netIdentity, anchor, connectedAnchor);
-
-                            _joint = gameObject.AddComponent<HingeJoint>();
-
-                            _joint.autoConfigureConnectedAnchor = false;
-
+                            //calculate parameters for the joint
                             var axisLocalToAttachedTo = blockObject.MeshBlocks[blockCoord].rotation * Vector3.up;
                             var axisLocalToSelf = transform.InverseTransformDirection(blockObject.transform.rotation * axisLocalToAttachedTo);
                             axisLocalToSelf = new Vector3(Mathf.Round(axisLocalToSelf.x), Mathf.Round(axisLocalToSelf.y), Mathf.Round(axisLocalToSelf.z));
                             axisLocalToSelf = axisLocalToSelf.normalized;
-                            _joint.axis = axisLocalToSelf;
 
-                            _joint.anchor = coord;
-                            _joint.connectedAnchor = blockCoord + 0.1f * axisLocalToAttachedTo;
+                            //construct the SyncJoint which contains all of the data required to create the joint
+                            NetworkIdentity attachedTo = blockObject.netIdentity;
+                            Vector3 positionLocalToAttachedTo = blockObject.transform.InverseTransformPoint(position);
+                            Quaternion rotationLocalToAttachedTo = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
+                            Vector3 axis = axisLocalToSelf;
+                            Vector3 anchor = coord;
+                            Vector3 connectedAnchor = blockCoord + 0.1f * axisLocalToAttachedTo;
+                            SyncJoint jointInfo = new SyncJoint(attachedTo, positionLocalToAttachedTo, rotationLocalToAttachedTo, axis, anchor,
+                                connectedAnchor);
 
-                            _joint.enableCollision = true;
-                            _joint.connectedBody = blockObject._body;
-
-                            // blockArea.coordConnectedToBearing = physicsCoord;
-
-                            // blocks[coord].connected = joint;
-
+                            //connect the joint
                             Mixpanel.Track("Attach Block To Bearing");
-                            //some command here
+                            CmdConnectJoint(jointInfo, blockCoord);
 
                             //client side prediction
-                            //some client side prediction here
+                            ConnectJoint(jointInfo);
+                            blockObject._connectedToSelfChanges.Enqueue((blockCoord, netIdentity,
+                                SyncDictionary<Vector3Int, NetworkIdentity>.Operation.OP_ADD));
                         }
                         else
                         {
