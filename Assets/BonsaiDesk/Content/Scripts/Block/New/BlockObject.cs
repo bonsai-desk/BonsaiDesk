@@ -8,10 +8,10 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using Random = UnityEngine.Random;
 
-public struct SyncBlock
+public readonly struct SyncBlock
 {
-    public string name;
-    public byte rotation;
+    public readonly string name;
+    public readonly byte rotation;
 
     public SyncBlock(string name, byte rotation)
     {
@@ -20,20 +20,20 @@ public struct SyncBlock
     }
 }
 
-public struct SyncJoint
+public readonly struct SyncJoint
 {
-    public bool connected;
+    public readonly bool connected;
 
-    public NetworkIdentity attachedTo;
+    public readonly NetworkIdentityReference attachedTo;
 
     //the 2 blockObjects must be aligned before attaching the joint. This is the position of the single block relative to the attachedTo for use in alligning
-    public Vector3 positionLocalToAttachedTo;
-    public Quaternion rotationLocalToAttachedTo; //same as positionLocalToAttachedTo but for rotation
-    public Vector3 axis;
-    public Vector3 anchor;
-    public Vector3 connectedAnchor;
+    public readonly Vector3 positionLocalToAttachedTo;
+    public readonly Quaternion rotationLocalToAttachedTo; //same as positionLocalToAttachedTo but for rotation
+    public readonly Vector3 axis;
+    public readonly Vector3 anchor;
+    public readonly Vector3 connectedAnchor;
 
-    public SyncJoint(NetworkIdentity attachedTo, Vector3 positionLocalToAttachedTo, Quaternion rotationLocalToAttachedTo, Vector3 axis, Vector3 anchor,
+    public SyncJoint(NetworkIdentityReference attachedTo, Vector3 positionLocalToAttachedTo, Quaternion rotationLocalToAttachedTo, Vector3 axis, Vector3 anchor,
         Vector3 connectedAnchor)
     {
         connected = true;
@@ -60,7 +60,7 @@ public partial class BlockObject : NetworkBehaviour
     public readonly SyncDictionary<Vector3Int, SyncBlock> Blocks = new SyncDictionary<Vector3Int, SyncBlock>();
 
     //other blockObjects connected to this one. the coord is which bearing they are attached to. use their syncJoint for joint info
-    public readonly SyncDictionary<Vector3Int, NetworkIdentity> ConnectedToSelf = new SyncDictionary<Vector3Int, NetworkIdentity>();
+    public readonly SyncDictionary<Vector3Int, NetworkIdentityReference> ConnectedToSelf = new SyncDictionary<Vector3Int, NetworkIdentityReference>();
 
     [SyncVar(hook = nameof(OnSyncJointChange))]
     public SyncJoint syncJoint;
@@ -74,8 +74,8 @@ public partial class BlockObject : NetworkBehaviour
     
     //caches changes made to the sync dictionary so joint changes can be made at once
     //also allows client side prediction by queueing up changes that you have only just sent the command for
-    private readonly Queue<(Vector3Int coord, NetworkIdentity identity, SyncDictionary<Vector3Int, NetworkIdentity>.Operation op)> _connectedToSelfChanges =
-        new Queue<(Vector3Int coord, NetworkIdentity identity, SyncDictionary<Vector3Int, NetworkIdentity>.Operation op)>();
+    private readonly Queue<(Vector3Int coord, NetworkIdentityReference identity, SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation op)> _connectedToSelfChanges =
+        new Queue<(Vector3Int coord, NetworkIdentityReference identity, SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation op)>();
 
     //public inspector variables
     public Material blockObjectMaterial;
@@ -376,13 +376,13 @@ public partial class BlockObject : NetworkBehaviour
 
             switch (op)
             {
-                case SyncDictionary<Vector3Int, NetworkIdentity>.Operation.OP_ADD:
-                    if (!identity || !identity.gameObject)
+                case SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation.OP_ADD:
+                    if (!identity.Value)
                     {
                         break;
                     }
 
-                    var otherBlockObject = identity.GetComponent<BlockObject>();
+                    var otherBlockObject = identity.Value.GetComponent<BlockObject>();
 
                     if (!otherBlockObject)
                     {
@@ -392,7 +392,7 @@ public partial class BlockObject : NetworkBehaviour
                     otherBlockObject.ConnectJoint(otherBlockObject.syncJoint);
 
                     break;
-                case SyncDictionary<Vector3Int, NetworkIdentity>.Operation.OP_REMOVE:
+                case SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation.OP_REMOVE:
                     
                     //TODO: remove joint
 
@@ -404,7 +404,7 @@ public partial class BlockObject : NetworkBehaviour
         }
     }
 
-    private void OnConnectedToSelfDictionaryChange(SyncDictionary<Vector3Int, NetworkIdentity>.Operation op, Vector3Int key, NetworkIdentity value)
+    private void OnConnectedToSelfDictionaryChange(SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation op, Vector3Int key, NetworkIdentityReference value)
     {
         _connectedToSelfChanges.Enqueue((key, value, op));
     }
@@ -413,7 +413,7 @@ public partial class BlockObject : NetworkBehaviour
     private void CmdConnectJoint(SyncJoint jointInfo, Vector3Int attachedToBearingCoord)
     {
         syncJoint = jointInfo;
-        jointInfo.attachedTo.GetComponent<BlockObject>().ConnectedToSelf.Add(attachedToBearingCoord, netIdentity);
+        jointInfo.attachedTo.Value.GetComponent<BlockObject>().ConnectedToSelf.Add(attachedToBearingCoord, new NetworkIdentityReference(netIdentity));
     }
 
     private void OnSyncJointChange(SyncJoint oldValue, SyncJoint newValue)
@@ -434,12 +434,12 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         //joints are doubly linked, so maybe one exists before the other? If that is the case, just return and it will be handled by the other blockObject
-        if (!jointInfo.attachedTo || !jointInfo.attachedTo.gameObject)
+        if (!jointInfo.attachedTo.Value)
         {
             return;
         }
 
-        var attachedToBody = jointInfo.attachedTo.GetComponent<Rigidbody>();
+        var attachedToBody = jointInfo.attachedTo.Value.GetComponent<Rigidbody>();
 
         if (!attachedToBody)
         {
@@ -453,8 +453,8 @@ public partial class BlockObject : NetworkBehaviour
         attachedToBody.MovePosition(attachedToBody.transform.position);
         attachedToBody.MoveRotation(attachedToBody.transform.rotation);
 
-        transform.position = jointInfo.attachedTo.transform.TransformPoint(jointInfo.positionLocalToAttachedTo);
-        transform.rotation = jointInfo.attachedTo.transform.rotation * jointInfo.rotationLocalToAttachedTo;
+        transform.position = jointInfo.attachedTo.Value.transform.TransformPoint(jointInfo.positionLocalToAttachedTo);
+        transform.rotation = jointInfo.attachedTo.Value.transform.rotation * jointInfo.rotationLocalToAttachedTo;
         _body.MovePosition(transform.position);
         _body.MoveRotation(transform.rotation);
 
@@ -946,12 +946,12 @@ public partial class BlockObject : NetworkBehaviour
         foreach (var pair in ConnectedToSelf)
         {
             var otherIdentity = pair.Value;
-            if (!otherIdentity || !otherIdentity.gameObject)
+            if (!otherIdentity.Value)
             {
                 continue;
             }
 
-            var otherBlockObject = otherIdentity.GetComponent<BlockObject>();
+            var otherBlockObject = otherIdentity.Value.GetComponent<BlockObject>();
 
             if (!otherBlockObject)
             {

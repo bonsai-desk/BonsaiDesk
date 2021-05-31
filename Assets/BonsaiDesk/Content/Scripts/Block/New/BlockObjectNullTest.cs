@@ -29,8 +29,8 @@ public class BlockObjectNullTest : NetworkBehaviour
         {
             if (blockObjects[i].syncJoint.connected)
             {
-                var badJoint = !blockObjects[i].syncJoint.attachedTo || !blockObjects[i].syncJoint.attachedTo.gameObject ||
-                               !blockObjects[i].syncJoint.attachedTo.GetComponent<BlockObject>() || !blockObjects[i].Joint;
+                var badJoint = !blockObjects[i].syncJoint.attachedTo.Value ||
+                               !blockObjects[i].syncJoint.attachedTo.Value.GetComponent<BlockObject>() || !blockObjects[i].Joint;
                 if (badJoint)
                 {
                     CmdMsg("Connected but bad joint.");
@@ -40,11 +40,10 @@ public class BlockObjectNullTest : NetworkBehaviour
 
             foreach (var pair in blockObjects[i].ConnectedToSelf)
             {
-                var badConnection = !pair.Value || !pair.Value.gameObject || !pair.Value.GetComponent<BlockObject>() ||
-                                    !pair.Value.GetComponent<BlockObject>().syncJoint.connected ||
-                                    !pair.Value.GetComponent<BlockObject>().syncJoint.attachedTo ||
-                                    !pair.Value.GetComponent<BlockObject>().syncJoint.attachedTo.gameObject ||
-                                    !pair.Value.GetComponent<BlockObject>().syncJoint.attachedTo.GetComponent<BlockObject>();
+                var badConnection = !pair.Value.Value ||
+                                    !pair.Value.Value.GetComponent<BlockObject>().syncJoint.connected ||
+                                    !pair.Value.Value.GetComponent<BlockObject>().syncJoint.attachedTo.Value ||
+                                    !pair.Value.Value.GetComponent<BlockObject>().syncJoint.attachedTo.Value.GetComponent<BlockObject>();
                 if (badConnection)
                 {
                     CmdMsg("Bad joint connection.");

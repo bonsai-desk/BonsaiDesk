@@ -122,7 +122,7 @@ public partial class BlockObject
                             Vector3 axis = axisLocalToSelf;
                             Vector3 anchor = coord;
                             Vector3 connectedAnchor = blockCoord + 0.1f * axisLocalToAttachedTo;
-                            SyncJoint jointInfo = new SyncJoint(attachedTo, positionLocalToAttachedTo, rotationLocalToAttachedTo, axis, anchor,
+                            SyncJoint jointInfo = new SyncJoint(new NetworkIdentityReference(attachedTo), positionLocalToAttachedTo, rotationLocalToAttachedTo, axis, anchor,
                                 connectedAnchor);
 
                             //connect the joint
@@ -131,8 +131,8 @@ public partial class BlockObject
 
                             //client side prediction
                             ConnectJoint(jointInfo);
-                            blockObject._connectedToSelfChanges.Enqueue((blockCoord, netIdentity,
-                                SyncDictionary<Vector3Int, NetworkIdentity>.Operation.OP_ADD));
+                            blockObject._connectedToSelfChanges.Enqueue((blockCoord, new NetworkIdentityReference(netIdentity),
+                                SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation.OP_ADD));
                         }
                         else
                         {
