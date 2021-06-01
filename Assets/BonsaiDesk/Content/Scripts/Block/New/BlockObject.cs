@@ -189,6 +189,7 @@ public partial class BlockObject : NetworkBehaviour
     private void Awake()
     {
         _body = GetComponent<Rigidbody>();
+        _autoAuthority = GetComponent<AutoAuthority>();
     }
 
     public override void OnStartServer()
@@ -232,14 +233,11 @@ public partial class BlockObject : NetworkBehaviour
 
         PhysicsStart();
 
-        _autoAuthority = GetComponent<AutoAuthority>();
-
         if (!_blockObjectAuthorities.Contains(_autoAuthority))
         {
             _blockObjectAuthorities.Add(_autoAuthority);
         }
 
-        _body = GetComponent<Rigidbody>();
         _body.maxAngularVelocity = float.MaxValue;
 
         transform.localScale = new Vector3(CubeScale, CubeScale, CubeScale);
