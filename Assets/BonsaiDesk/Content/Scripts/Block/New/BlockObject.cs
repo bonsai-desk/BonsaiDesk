@@ -23,19 +23,23 @@ public readonly struct SyncBlock : IEquatable<SyncBlock>
     {
         return name == other.name && rotation == other.rotation;
     }
+
     public override bool Equals(System.Object obj)
     {
         return obj is SyncBlock c && this == c;
     }
-    public override int GetHashCode() 
+
+    public override int GetHashCode()
     {
         return name.GetHashCode() ^ rotation.GetHashCode();
     }
-    public static bool operator ==(SyncBlock x, SyncBlock y) 
+
+    public static bool operator ==(SyncBlock x, SyncBlock y)
     {
         return x.name == y.name && x.rotation == y.rotation;
     }
-    public static bool operator !=(SyncBlock x, SyncBlock y) 
+
+    public static bool operator !=(SyncBlock x, SyncBlock y)
     {
         return !(x == y);
     }
@@ -92,11 +96,12 @@ public partial class BlockObject : NetworkBehaviour
     //also allows client side prediction by queueing up changes that you have only just sent the command for
     private readonly Queue<(Vector3Int coord, SyncBlock syncBlock, SyncDictionary<Vector3Int, SyncBlock>.Operation op)> _blockChanges =
         new Queue<(Vector3Int coord, SyncBlock syncBlock, SyncDictionary<Vector3Int, SyncBlock>.Operation op)>();
-    
+
     //caches changes made to the sync dictionary so joint changes can be made at once
     //also allows client side prediction by queueing up changes that you have only just sent the command for
-    private readonly Queue<(Vector3Int coord, NetworkIdentityReference identity, SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation op)> _connectedToSelfChanges =
-        new Queue<(Vector3Int coord, NetworkIdentityReference identity, SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation op)>();
+    private readonly Queue<(Vector3Int coord, NetworkIdentityReference identity, SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation op)>
+        _connectedToSelfChanges =
+            new Queue<(Vector3Int coord, NetworkIdentityReference identity, SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation op)>();
 
     //public inspector variables
     public Material blockObjectMaterial;
@@ -180,6 +185,11 @@ public partial class BlockObject : NetworkBehaviour
 
     //for testing purposes
     public bool debug = false;
+
+    private void Awake()
+    {
+        _body = GetComponent<Rigidbody>();
+    }
 
     public override void OnStartServer()
     {
@@ -382,7 +392,7 @@ public partial class BlockObject : NetworkBehaviour
 
         UpdateMesh();
     }
-    
+
     //loops through any identities in _connectedToSelfChanges and connects/disconnects joints
     private void ProcessConnectedToSelfChanges()
     {
@@ -414,7 +424,7 @@ public partial class BlockObject : NetworkBehaviour
 
                     break;
                 case SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation.OP_REMOVE:
-                    
+
                     //TODO: remove joint
 
                     break;
@@ -425,7 +435,8 @@ public partial class BlockObject : NetworkBehaviour
         }
     }
 
-    private void OnConnectedToSelfDictionaryChange(SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation op, Vector3Int key, NetworkIdentityReference value)
+    private void OnConnectedToSelfDictionaryChange(SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation op, Vector3Int key,
+        NetworkIdentityReference value)
     {
         _connectedToSelfChanges.Enqueue((key, value, op));
     }
@@ -476,6 +487,7 @@ public partial class BlockObject : NetworkBehaviour
 
         transform.position = jointInfo.attachedTo.Value.transform.TransformPoint(jointInfo.positionLocalToAttachedTo);
         transform.rotation = jointInfo.attachedTo.Value.transform.rotation * jointInfo.rotationLocalToAttachedTo;
+
         _body.MovePosition(transform.position);
         _body.MoveRotation(transform.rotation);
 
@@ -483,13 +495,12 @@ public partial class BlockObject : NetworkBehaviour
         _joint = gameObject.AddComponent<HingeJoint>();
 
         _joint.autoConfigureConnectedAnchor = false;
+        _joint.enableCollision = true;
 
         _joint.axis = jointInfo.axis;
-
         _joint.anchor = jointInfo.anchor;
         _joint.connectedAnchor = jointInfo.connectedAnchor;
 
-        _joint.enableCollision = true;
         _joint.connectedBody = attachedToBody;
     }
 
@@ -967,6 +978,7 @@ public partial class BlockObject : NetworkBehaviour
         foreach (var pair in ConnectedToSelf)
         {
             var otherIdentity = pair.Value;
+
             if (!otherIdentity.Value)
             {
                 continue;

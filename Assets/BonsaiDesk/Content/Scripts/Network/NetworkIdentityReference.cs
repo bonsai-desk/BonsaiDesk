@@ -20,7 +20,16 @@ public class NetworkIdentityReference
                 return null;
             //If cache isn't set then try to set it now.
             if (_networkIdentityCached == null)
-                _networkIdentityCached = NetworkIdentity.spawned[NetworkId];
+            {
+                if (NetworkIdentity.spawned.TryGetValue(NetworkId, out NetworkIdentity nid))
+                {
+                    _networkIdentityCached = nid;
+                }
+                else
+                {
+                    return null;
+                }
+            }
 
             return _networkIdentityCached;
         }
