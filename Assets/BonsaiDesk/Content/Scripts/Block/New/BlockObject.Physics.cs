@@ -246,7 +246,7 @@ public partial class BlockObject
             return;
         }
 
-        if (handBreakMode == BlockBreakHand.BreakMode.Whole && Blocks.Count == 1 && !syncJoint.connected && ConnectedToSelf.Count == 0)
+        if (handBreakMode == BlockBreakHand.BreakMode.Whole && Blocks.Count == 1 && !_syncJoint.connected && ConnectedToSelf.Count == 0)
         {
             handBreakMode = BlockBreakHand.BreakMode.Single;
         }

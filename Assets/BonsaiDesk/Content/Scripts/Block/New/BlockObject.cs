@@ -14,7 +14,7 @@ public partial class BlockObject : NetworkBehaviour
     public const float CubeScale = 0.05f;
 
     //contains all of the AutoAuthority of all BlockObjects in the scene
-    private static HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
+    private static readonly HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
 
     //---all of the data required to reconstruct this block object---
 
@@ -25,9 +25,11 @@ public partial class BlockObject : NetworkBehaviour
     public readonly SyncDictionary<Vector3Int, NetworkIdentityReference> ConnectedToSelf = new SyncDictionary<Vector3Int, NetworkIdentityReference>();
 
     [SyncVar(hook = nameof(OnSyncJointChange))]
-    public SyncJoint syncJoint;
+    private SyncJoint _syncJoint;
 
     //---end all of the data required to reconstruct this block object---
+
+    public SyncJoint SyncJoint => _syncJoint;
 
     //caches changes made to the sync dictionary so all block changes can be made at once with a single mesh update
     //also allows client side prediction by queueing up changes that you have only just sent the command for
@@ -346,7 +348,7 @@ public partial class BlockObject : NetworkBehaviour
                         break;
                     }
 
-                    otherBlockObject.ConnectJoint(otherBlockObject.syncJoint);
+                    otherBlockObject.ConnectJoint(otherBlockObject._syncJoint);
 
                     break;
                 case SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation.OP_REMOVE:
@@ -370,7 +372,7 @@ public partial class BlockObject : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdConnectJoint(SyncJoint jointInfo, Vector3Int attachedToBearingCoord)
     {
-        syncJoint = jointInfo;
+        _syncJoint = jointInfo;
         jointInfo.attachedTo.Value.GetComponent<BlockObject>().ConnectedToSelf.Add(attachedToBearingCoord, new NetworkIdentityReference(netIdentity));
     }
 
@@ -743,7 +745,7 @@ public partial class BlockObject : NetworkBehaviour
 
     private void UpdateWholeEffects()
     {
-        if (syncJoint.connected) //only the root blockObject is responsible for whole block effects
+        if (_syncJoint.connected) //only the root blockObject is responsible for whole block effects
         {
             return;
         }
@@ -913,7 +915,7 @@ public partial class BlockObject : NetworkBehaviour
 
     private void ConnectInitialJoints()
     {
-        ConnectJoint(syncJoint);
+        ConnectJoint(_syncJoint);
         foreach (var pair in ConnectedToSelf)
         {
             var otherIdentity = pair.Value;
@@ -930,7 +932,7 @@ public partial class BlockObject : NetworkBehaviour
                 continue;
             }
 
-            otherBlockObject.ConnectJoint(otherBlockObject.syncJoint);
+            otherBlockObject.ConnectJoint(otherBlockObject._syncJoint);
         }
     }
 

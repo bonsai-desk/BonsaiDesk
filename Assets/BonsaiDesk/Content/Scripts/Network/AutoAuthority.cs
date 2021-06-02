@@ -87,10 +87,10 @@ public class AutoAuthority : NetworkBehaviour
             if (distanceSquared > 20f * 20f || transform.position.y < -2f || transform.position.y > 5f || PhysicsHandController.InvalidTransform(transform))
             {
                 //for now if it has a bearing, don't teleport back TODO: add teleport for bearing objects
-                var isBlockObjectAndHasConnections = _blockObject && _blockObject.syncJoint.connected || _blockObject.ConnectedToSelf.Count > 0;
+                var isBlockObjectAndHasConnections = _blockObject && _blockObject.SyncJoint.connected || _blockObject.ConnectedToSelf.Count > 0;
                 if (!isBlockObjectAndHasConnections)
                 {
-                    if (_blockObject && (_blockObject.Blocks.Count > 4 || _blockObject.syncJoint.connected || _blockObject.ConnectedToSelf.Count > 0))
+                    if (_blockObject && (_blockObject.Blocks.Count > 4 || _blockObject.SyncJoint.connected || _blockObject.ConnectedToSelf.Count > 0))
                     {
                         ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
                         GetComponent<SmoothSyncMirror>().clearBuffer();
@@ -352,10 +352,46 @@ public class AutoAuthority : NetworkBehaviour
     [Server]
     public void ServerStripOwnerAndDestroy()
     {
+        if (_blockObject)
+        {
+            var rootObject = BlockUtility.GetRootBlockObject(_blockObject);
+            ServerDestroyFromBlockObjectRoot(rootObject);
+            return;
+        }
+        
         ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true);
         gameObject.SetActive(false);
         GetComponent<SmoothSyncMirror>().clearBuffer();
         NetworkServer.Destroy(gameObject);
+    }
+
+    [Server]
+    private void ServerDestroyFromBlockObjectRoot(BlockObject rootObject)
+    {
+        foreach (var pair in rootObject.ConnectedToSelf)
+        {
+            if (pair.Value != null && pair.Value.Value)
+            {
+                var blockObject = pair.Value.Value.GetComponent<BlockObject>();
+                if (blockObject)
+                {
+                    ServerDestroyFromBlockObjectRoot(blockObject);
+                }
+                else
+                {
+                    Debug.LogError("Could not find blockObject for destroying");
+                }
+            }
+            else
+            {
+                Debug.LogError("Could not find identity for destroying");
+            }
+        }
+
+        rootObject.AutoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true);
+        rootObject.gameObject.SetActive(false);
+        rootObject.GetComponent<SmoothSyncMirror>().clearBuffer();
+        NetworkServer.Destroy(rootObject.gameObject);
     }
 
     [Command]
@@ -374,15 +410,8 @@ public class AutoAuthority : NetworkBehaviour
         if (autoAuthority == null)
             return;
 
-        //TODO handle this unlikely case
-        // if (_lastInteractTime == autoAuthority._lastInteractTime)
-
-        if (_lastInteractTime < autoAuthority._lastInteractTime)
+        if (_lastInteractTime <= autoAuthority._lastInteractTime)
             return;
-
-        // print("---");
-        // print(_lastInteractTime + " " + autoAuthority._lastInteractTime + " " + _ownerIdentityId + " " + autoAuthority._ownerIdentityId);
-        // print(isClient && !autoAuthority.ClientHasAuthority());
 
         if (isClient && ClientHasAuthority() && !autoAuthority.ClientHasAuthority())
         {
@@ -392,19 +421,6 @@ public class AutoAuthority : NetworkBehaviour
         {
             autoAuthority.SetNewOwner(uint.MaxValue, _lastInteractTime);
         }
-
-        // if (!autoAuthority.HasAuthority())
-        // {
-        //     print("yeeeeee");
-        //     if (isClient && ClientHasAuthority())
-        //         autoAuthority.SetNewOwner(NetworkClient.connection.identity, _lastInteractTime);
-        //     else if (isServer && ServerHasAuthority())
-        //         autoAuthority.SetNewOwner(null, _lastInteractTime);
-        // }
-        // else
-        // {
-        //     print("nooooo");
-        // }
     }
 
     private void OnCollisionEnter(Collision collision)

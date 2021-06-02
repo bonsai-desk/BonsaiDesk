@@ -483,9 +483,9 @@ public static partial class BlockUtility
 
     public static BlockObject GetRootBlockObject(BlockObject blockObject)
     {
-        if (blockObject.syncJoint.attachedTo != null && blockObject.syncJoint.attachedTo.Value)
+        if (blockObject.SyncJoint.attachedTo != null && blockObject.SyncJoint.attachedTo.Value)
         {
-            return GetRootBlockObject(blockObject.syncJoint.attachedTo.Value.GetComponent<BlockObject>());
+            return GetRootBlockObject(blockObject.SyncJoint.attachedTo.Value.GetComponent<BlockObject>());
         }
 
         return blockObject;
