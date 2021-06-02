@@ -62,6 +62,7 @@ public class AutoBrowser : Browser
     public void SetHeight(float t)
     {
         var heightT = t;
+        screenCollider.enabled = !Mathf.Approximately(t, 0);
         transform.localPosition = Vector3.Lerp(_belowTableLocalPosition, _defaultLocalPosition, Mathf.Clamp01(heightT));
     }
 
