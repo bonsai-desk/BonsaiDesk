@@ -483,11 +483,25 @@ public static partial class BlockUtility
 
     public static BlockObject GetRootBlockObject(BlockObject blockObject)
     {
-        if (blockObject.SyncJoint.attachedTo != null && blockObject.SyncJoint.attachedTo.Value)
+        while (blockObject)
         {
-            return GetRootBlockObject(blockObject.SyncJoint.attachedTo.Value.GetComponent<BlockObject>());
+            if (blockObject.SyncJoint.attachedTo != null && blockObject.SyncJoint.attachedTo.Value)
+            {
+                blockObject = blockObject.SyncJoint.attachedTo.Value.GetComponent<BlockObject>();
+                continue;
+            }
+
+            return blockObject;
         }
 
         return blockObject;
+
+        //was this but jetbrains converts it to not recursive. its wack, but probably more efficient, so whatever
+        // if (blockObject.SyncJoint.attachedTo != null && blockObject.SyncJoint.attachedTo.Value)
+        // {
+        //     return GetRootBlockObject(blockObject.SyncJoint.attachedTo.Value.GetComponent<BlockObject>());
+        // }
+        //
+        // return blockObject;
     }
 }

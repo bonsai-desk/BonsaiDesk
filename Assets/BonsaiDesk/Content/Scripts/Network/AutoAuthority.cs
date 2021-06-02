@@ -16,11 +16,11 @@ public class AutoAuthority : NetworkBehaviour
     private float _serverLastOwnerChange;
     private const float OwnerChangeCooldown = 0.25f;
 
-    [SyncVar] private bool _inUse = false;
-    [SyncVar] public bool isKinematic = false;
+    [SyncVar] private bool _inUse;
+    [SyncVar] public bool isKinematic;
     public bool destroyIfBelow = true; //also if far from origin or high above
 
-    public bool InUse => _inUse;
+    public bool InUse => IsInUse();
 
     public bool allowPinchPull = true;
 
@@ -222,10 +222,32 @@ public class AutoAuthority : NetworkBehaviour
 
         _visualizePinchPullFrame = Time.frameCount;
     }
+    
+    private bool IsInUse()
+    {
+        if (_blockObject)
+        {
+            return BlockUtility.GetRootBlockObject(_blockObject).AutoAuthority._inUse;
+        }
+
+        return _inUse;
+    }
 
     [Server]
     public void SetInUse(bool inUse)
     {
+        if (_blockObject)
+        {
+            var rootObject = BlockUtility.GetRootBlockObject(_blockObject);
+            if (rootObject != _blockObject && _inUse) //if not at root, but inUse is set, reset it. only the root should be used 
+            {
+                _inUse = false;
+            }
+
+            rootObject.AutoAuthority._inUse = inUse;
+
+            return;
+        }
         _inUse = inUse;
     }
 
@@ -233,7 +255,9 @@ public class AutoAuthority : NetworkBehaviour
     public void CmdRemoveInUse(uint identityId)
     {
         if (_ownerIdentityId == identityId)
-            _inUse = false;
+        {
+            SetInUse(false);
+        }
     }
 
     public void Interact()
@@ -275,7 +299,7 @@ public class AutoAuthority : NetworkBehaviour
     private void SetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime)
     {
         //cannot switch owner if it is in use (held/pinch pulled/ect)
-        if (_inUse)
+        if (InUse)
             return;
 
         if (_lastSetNewOwnerFrame != Time.frameCount)
@@ -294,11 +318,13 @@ public class AutoAuthority : NetworkBehaviour
         }
 
         //cannot switch owner if it is in use (held/pinch pulled/ect)
-        if (_inUse)
+        if (InUse)
             return;
 
         if (inUse)
-            _inUse = true;
+        {
+            SetInUse(true);
+        }
 
         //if owner already has authority return
         if (_ownerIdentityId == newOwnerIdentityId)
@@ -346,7 +372,14 @@ public class AutoAuthority : NetworkBehaviour
         _lastInteractTime = fromLastInteractTime;
         _ownerIdentityId = newOwnerIdentityId;
         _serverLastOwnerChange = Time.time;
-        _inUse = inUse;
+        SetInUse(inUse);
+    }
+
+    [Command(ignoreAuthority = true)]
+    public void CmdDestroy()
+    {
+        gameObject.SetActive(false);
+        ServerStripOwnerAndDestroy();
     }
 
     [Server]
@@ -358,7 +391,7 @@ public class AutoAuthority : NetworkBehaviour
             ServerDestroyFromBlockObjectRoot(rootObject);
             return;
         }
-        
+
         ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true);
         gameObject.SetActive(false);
         GetComponent<SmoothSyncMirror>().clearBuffer();
@@ -394,13 +427,6 @@ public class AutoAuthority : NetworkBehaviour
         NetworkServer.Destroy(rootObject.gameObject);
     }
 
-    [Command]
-    public void CmdDestroy()
-    {
-        gameObject.SetActive(false);
-        ServerStripOwnerAndDestroy();
-    }
-
     private void HandleRecursiveAuthority(Collision collision)
     {
         if (!HasAuthority())
@@ -415,7 +441,10 @@ public class AutoAuthority : NetworkBehaviour
 
         if (isClient && ClientHasAuthority() && !autoAuthority.ClientHasAuthority())
         {
-            autoAuthority.SetNewOwner(NetworkClient.connection.identity.netId, _lastInteractTime);
+            if (NetworkClient.connection != null && NetworkClient.connection.identity)
+            {
+                autoAuthority.SetNewOwner(NetworkClient.connection.identity.netId, _lastInteractTime);
+            }
         }
         else if (isServer && ServerHasAuthority() && !autoAuthority.ServerHasAuthority())
         {
