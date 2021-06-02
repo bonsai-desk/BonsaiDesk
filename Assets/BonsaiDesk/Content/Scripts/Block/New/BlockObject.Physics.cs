@@ -32,6 +32,13 @@ public partial class BlockObject
 
     private void PhysicsFixedUpdate()
     {
+        if (Joint && !Joint.connectedBody)
+        {
+            Debug.LogError("Joint exists but is not connected to anything. Destroying joint.");
+            Destroy(_joint);
+            _joint = null;
+        }
+        
         if (_autoAuthority.HasAuthority())
         {
             if (Blocks.Count == 1)

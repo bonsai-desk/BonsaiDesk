@@ -63,24 +63,8 @@ public partial class BlockObject : NetworkBehaviour
     //the entire _meshBlocks to check for damaged blocks
     private readonly HashSet<Vector3Int> _damagedBlocks = new HashSet<Vector3Int>();
 
-    private class WholeEffectMode
-    {
-        public float progress;
-        public int framesSinceLastDamage;
-        public BlockBreakHand.BreakMode mode;
-        public bool activated;
-
-        public WholeEffectMode(BlockBreakHand.BreakMode mode)
-        {
-            progress = 0;
-            framesSinceLastDamage = 100;
-            this.mode = mode;
-            activated = false;
-        }
-    }
-
     //used to keep track of any full block effect such as duplicate or delete all
-    private WholeEffectMode _activeWholeEffect = null;
+    private WholeEffect _activeWholeEffect;
 
     //stores any active dialog. otherwise is null
     private GameObject _activeDialog;
@@ -644,7 +628,7 @@ public partial class BlockObject : NetworkBehaviour
     {
         if (_activeWholeEffect == null)
         {
-            _activeWholeEffect = new WholeEffectMode(mode);
+            _activeWholeEffect = new WholeEffect(mode);
         }
 
         if (_activeWholeEffect.mode != mode)
@@ -758,7 +742,7 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         ApplyWholeEffectMaterialProperties(Color.red, 0);
-        
+
 
         if (_activeWholeEffect == null)
         {
