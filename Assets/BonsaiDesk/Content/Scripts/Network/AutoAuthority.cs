@@ -26,11 +26,13 @@ public class AutoAuthority : NetworkBehaviour
 
     public MeshRenderer meshRenderer;
 
+    private BlockObject _blockObject; //reference to own blockObject if it exists 
+
     private Rigidbody _body;
     private int _lastInteractFrame;
     private int _lastSetNewOwnerFrame;
 
-    private bool _visualizePinchPull = false;
+    private int _visualizePinchPullFrame = -1;
     public Material cachedMaterial;
     private int _colorPropertyId;
     private int _colorId = 0;
@@ -60,6 +62,11 @@ public class AutoAuthority : NetworkBehaviour
             _ownerIdentityId = connectionToClient.identity.netId;
     }
 
+    private void Awake()
+    {
+        _blockObject = GetComponent<BlockObject>();
+    }
+
     private void Start()
     {
         _body = GetComponent<Rigidbody>();
@@ -73,19 +80,17 @@ public class AutoAuthority : NetworkBehaviour
     private void Update()
     {
         UpdateColor();
-        _visualizePinchPull = false;
 
         if (isServer && destroyIfBelow)
         {
             var distanceSquared = Vector3.SqrMagnitude(transform.position);
             if (distanceSquared > 20f * 20f || transform.position.y < -2f || transform.position.y > 5f || PhysicsHandController.InvalidTransform(transform))
             {
-                var blockObject = GetComponent<BlockObject>();
-
-                //for now if it has a bearing, don't teleport back TODO: add this
-                if (!(blockObject.syncJoint.connected || blockObject.ConnectedToSelf.Count > 0))
+                //for now if it has a bearing, don't teleport back TODO: add teleport for bearing objects
+                var isBlockObjectAndHasConnections = _blockObject && _blockObject.syncJoint.connected || _blockObject.ConnectedToSelf.Count > 0;
+                if (!isBlockObjectAndHasConnections)
                 {
-                    if (blockObject && (blockObject.Blocks.Count > 4 || blockObject.syncJoint.connected || blockObject.ConnectedToSelf.Count > 0))
+                    if (_blockObject && (_blockObject.Blocks.Count > 4 || _blockObject.syncJoint.connected || _blockObject.ConnectedToSelf.Count > 0))
                     {
                         ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
                         GetComponent<SmoothSyncMirror>().clearBuffer();
@@ -176,7 +181,13 @@ public class AutoAuthority : NetworkBehaviour
                                         (isServer && !isClient && ServerHasAuthority() || isClient && ClientHasAuthority());
 
         int newColorId = 0;
-        if (_visualizePinchPull)
+        var visualizePinchPullFrame = _visualizePinchPullFrame;
+        if (_blockObject)
+        {
+            visualizePinchPullFrame = BlockUtility.GetRootBlockObject(_blockObject).AutoAuthority._visualizePinchPullFrame;
+        }
+
+        if (Time.frameCount <= visualizePinchPullFrame + 1)
             newColorId = 1;
         else if (shouldVisualizeAuthority)
             newColorId = 2;
@@ -197,10 +208,19 @@ public class AutoAuthority : NetworkBehaviour
         isKinematic = newIsKinematic;
     }
 
-    public void VisualizePinchPull()
+    public void VisualizePinchPull(bool checkRoot = true)
     {
-        _visualizePinchPull = true;
-        UpdateColor();
+        if (checkRoot && _blockObject)
+        {
+            var rootObject = BlockUtility.GetRootBlockObject(_blockObject);
+            if (rootObject != _blockObject)
+            {
+                rootObject.AutoAuthority.VisualizePinchPull(false);
+                return;
+            }
+        }
+
+        _visualizePinchPullFrame = Time.frameCount;
     }
 
     [Server]

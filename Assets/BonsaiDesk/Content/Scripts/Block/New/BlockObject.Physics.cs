@@ -92,8 +92,8 @@ public partial class BlockObject
                 if (inArea.isNearHole)
                     isNearHole = true;
                 isInCubeArea = inArea.isInCubeArea;
-                isInCubeArea = isInCubeArea && ((transform.parent == null && _touchingHand && potentialBlocksParent.childCount == 0) ||
-                                                transform.parent == blockObject.potentialBlocksParent);
+                isInCubeArea = isInCubeArea && ((transform.parent == null && _touchingHand && _potentialBlocksParent.childCount == 0) ||
+                                                transform.parent == blockObject._potentialBlocksParent);
 
                 if (isInCubeArea)
                 {
@@ -109,9 +109,9 @@ public partial class BlockObject
 
                     if (BlockUtility.AboutEquals(blockPosition, position) && BlockUtility.AboutEquals(transform.rotation, rotation))
                     {
-                        for (var i = blockObject.potentialBlocksParent.childCount - 1; i >= 0; i--)
+                        for (var i = blockObject._potentialBlocksParent.childCount - 1; i >= 0; i--)
                         {
-                            blockObject.potentialBlocksParent.GetChild(i).parent = null;
+                            blockObject._potentialBlocksParent.GetChild(i).parent = null;
                         }
 
                         if (attachingToBearing)
@@ -190,7 +190,7 @@ public partial class BlockObject
             {
                 if (blockObject)
                 {
-                    transform.parent = blockObject.potentialBlocksParent;
+                    transform.parent = blockObject._potentialBlocksParent;
                 }
                 else
                 {

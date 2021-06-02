@@ -90,12 +90,13 @@ public partial class BlockObject : NetworkBehaviour
     private Rigidbody _body;
     private Transform _physicsBoxesObject;
     private Queue<BoxCollider> _boxCollidersInUse = new Queue<BoxCollider>();
-    private bool _resetCoM = false; //flag to reset CoM on the next physics update
+    private bool _resetCoM; //flag to reset CoM on the next physics update
     private AutoAuthority _autoAuthority;
+    public AutoAuthority AutoAuthority => _autoAuthority;
     private Transform _sphereObject;
 
     //this object is the parent of any BlockObject with 1 block trying to attach to another BlockObject
-    [HideInInspector] public Transform potentialBlocksParent;
+    private Transform _potentialBlocksParent;
 
     //used to make sure Init is only called once
     private bool _isInit = false;
@@ -103,6 +104,12 @@ public partial class BlockObject : NetworkBehaviour
     //if this string contains a valid block file string when OnStartServer is called, it will be used to construct the block object
     [TextArea]
     public string initialBlocksString;
+
+    //material property ids
+    private static readonly int TextureArray = Shader.PropertyToID("_TextureArray");
+    private static readonly int EffectProgress = Shader.PropertyToID("_EffectProgress");
+    private static readonly int EffectColor = Shader.PropertyToID("_EffectColor");
+    private static readonly int Health = Shader.PropertyToID("_Health");
 
     //for testing purposes
     public bool debug = false;
@@ -150,7 +157,7 @@ public partial class BlockObject : NetworkBehaviour
 
         //make copy of material so material asset is not changed
         blockObjectMaterial = new Material(blockObjectMaterial);
-        blockObjectMaterial.SetTexture("_TextureArray", BlockUtility.BlockTextureArray);
+        blockObjectMaterial.SetTexture(TextureArray, BlockUtility.BlockTextureArray);
 
         PhysicsStart();
 
@@ -187,7 +194,7 @@ public partial class BlockObject : NetworkBehaviour
         UpdateWholeEffects();
         UpdateDialogPosition();
 
-        if (potentialBlocksParent.childCount > 0)
+        if (_potentialBlocksParent.childCount > 0)
         {
             _body.isKinematic = true;
             _autoAuthority.SetKinematicLocalForOneFrame();
@@ -252,10 +259,10 @@ public partial class BlockObject : NetworkBehaviour
         _physicsBoxesObject = physicsBoxes.transform;
         physicsBoxes.transform.SetParent(transform, false);
 
-        potentialBlocksParent = new GameObject("PotentialBlocks").transform;
+        _potentialBlocksParent = new GameObject("PotentialBlocks").transform;
         const float inverseScale = 1f / CubeScale;
-        potentialBlocksParent.localScale = new Vector3(inverseScale, inverseScale, inverseScale);
-        potentialBlocksParent.SetParent(transform, false);
+        _potentialBlocksParent.localScale = new Vector3(inverseScale, inverseScale, inverseScale);
+        _potentialBlocksParent.SetParent(transform, false);
 
         var sphereObject = new GameObject("Sphere");
         _sphereObject = sphereObject.transform;
@@ -779,12 +786,12 @@ public partial class BlockObject : NetworkBehaviour
 
     private void ApplyWholeEffectMaterialProperties(Color color, float progress)
     {
-        blockObjectMaterial.SetFloat("_EffectProgress", Mathf.Clamp01(progress));
-        blockObjectMaterial.SetColor("_EffectColor", color);
+        blockObjectMaterial.SetFloat(EffectProgress, Mathf.Clamp01(progress));
+        blockObjectMaterial.SetColor(EffectColor, color);
         foreach (var coord in _blockGameObjects)
         {
-            MeshBlocks[coord].material.SetFloat("_EffectProgress", 1 - Mathf.Clamp01(progress));
-            MeshBlocks[coord].material.SetColor("_EffectColor", color);
+            MeshBlocks[coord].material.SetFloat(EffectProgress, 1 - Mathf.Clamp01(progress));
+            MeshBlocks[coord].material.SetColor(EffectColor, color);
         }
 
         foreach (var pair in ConnectedToSelf)
@@ -815,7 +822,7 @@ public partial class BlockObject : NetworkBehaviour
 
                 if (meshBlock.material)
                 {
-                    meshBlock.material.SetFloat("_Health", meshBlock.health);
+                    meshBlock.material.SetFloat(Health, meshBlock.health);
                 }
                 else
                 {
