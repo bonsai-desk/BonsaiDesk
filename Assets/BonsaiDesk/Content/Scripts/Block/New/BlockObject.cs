@@ -8,71 +8,6 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using Random = UnityEngine.Random;
 
-public readonly struct SyncBlock : IEquatable<SyncBlock>
-{
-    public readonly string name;
-    public readonly byte rotation;
-
-    public SyncBlock(string name, byte rotation)
-    {
-        this.name = name;
-        this.rotation = rotation;
-    }
-
-    public bool Equals(SyncBlock other)
-    {
-        return name == other.name && rotation == other.rotation;
-    }
-
-    public override bool Equals(System.Object obj)
-    {
-        return obj is SyncBlock c && this == c;
-    }
-
-    public override int GetHashCode()
-    {
-        return name.GetHashCode() ^ rotation.GetHashCode();
-    }
-
-    public static bool operator ==(SyncBlock x, SyncBlock y)
-    {
-        return x.name == y.name && x.rotation == y.rotation;
-    }
-
-    public static bool operator !=(SyncBlock x, SyncBlock y)
-    {
-        return !(x == y);
-    }
-}
-
-public readonly struct SyncJoint
-{
-    public readonly bool connected;
-
-    public readonly NetworkIdentityReference attachedTo;
-
-    //the 2 blockObjects must be aligned before attaching the joint. This is the position of the single block relative to the attachedTo for use in alligning
-    public readonly Vector3 positionLocalToAttachedTo;
-    public readonly Quaternion rotationLocalToAttachedTo; //same as positionLocalToAttachedTo but for rotation
-    public readonly Vector3Int attachedAtBlockCoord;
-    public readonly Vector3 axis;
-    public readonly Vector3 anchor;
-    public readonly Vector3 connectedAnchor;
-
-    public SyncJoint(NetworkIdentityReference attachedTo, Vector3 positionLocalToAttachedTo, Quaternion rotationLocalToAttachedTo,
-        Vector3Int attachedAtBlockCoord, Vector3 axis, Vector3 anchor, Vector3 connectedAnchor)
-    {
-        connected = true;
-        this.attachedTo = attachedTo;
-        this.positionLocalToAttachedTo = positionLocalToAttachedTo;
-        this.rotationLocalToAttachedTo = rotationLocalToAttachedTo;
-        this.attachedAtBlockCoord = attachedAtBlockCoord;
-        this.axis = axis;
-        this.anchor = anchor;
-        this.connectedAnchor = connectedAnchor;
-    }
-}
-
 [RequireComponent(typeof(Rigidbody))]
 public partial class BlockObject : NetworkBehaviour
 {
@@ -128,7 +63,7 @@ public partial class BlockObject : NetworkBehaviour
     //the entire _meshBlocks to check for damaged blocks
     private readonly HashSet<Vector3Int> _damagedBlocks = new HashSet<Vector3Int>();
 
-    public class WholeEffectMode
+    private class WholeEffectMode
     {
         public float progress;
         public int framesSinceLastDamage;
@@ -817,13 +752,13 @@ public partial class BlockObject : NetworkBehaviour
 
     private void UpdateWholeEffects()
     {
-        blockObjectMaterial.SetFloat("_EffectProgress", 0);
-        blockObjectMaterial.SetColor("_EffectColor", Color.red);
-        foreach (var coord in _blockGameObjects)
+        if (syncJoint.connected) //only the root blockObject is responsible for whole block effects
         {
-            MeshBlocks[coord].material.SetFloat("_EffectProgress", 1);
-            MeshBlocks[coord].material.SetColor("_EffectColor", Color.red);
+            return;
         }
+
+        ApplyWholeEffectMaterialProperties(Color.red, 0);
+        
 
         if (_activeWholeEffect == null)
         {
@@ -855,12 +790,25 @@ public partial class BlockObject : NetworkBehaviour
                 break;
         }
 
-        blockObjectMaterial.SetFloat("_EffectProgress", Mathf.Clamp01(_activeWholeEffect.progress));
+        ApplyWholeEffectMaterialProperties(color, _activeWholeEffect.progress);
+    }
+
+    private void ApplyWholeEffectMaterialProperties(Color color, float progress)
+    {
+        blockObjectMaterial.SetFloat("_EffectProgress", Mathf.Clamp01(progress));
         blockObjectMaterial.SetColor("_EffectColor", color);
         foreach (var coord in _blockGameObjects)
         {
-            MeshBlocks[coord].material.SetFloat("_EffectProgress", 1 - Mathf.Clamp01(_activeWholeEffect.progress));
+            MeshBlocks[coord].material.SetFloat("_EffectProgress", 1 - Mathf.Clamp01(progress));
             MeshBlocks[coord].material.SetColor("_EffectColor", color);
+        }
+
+        foreach (var pair in ConnectedToSelf)
+        {
+            if (pair.Value.Value)
+            {
+                pair.Value.Value.GetComponent<BlockObject>().ApplyWholeEffectMaterialProperties(color, progress);
+            }
         }
     }
 
@@ -1090,10 +1038,17 @@ public partial class BlockObject : NetworkBehaviour
 
     private void CloseDialog()
     {
+        var root = BlockUtility.GetRootBlockObject(this);
         if (_activeDialog)
         {
             Destroy(_activeDialog);
             _activeDialog = null;
+        }
+
+        if (root._activeDialog)
+        {
+            Destroy(root._activeDialog);
+            root._activeDialog = null;
         }
     }
 

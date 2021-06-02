@@ -122,8 +122,8 @@ public partial class BlockObject
                             Vector3 axis = axisLocalToSelf;
                             Vector3 anchor = coord;
                             Vector3 connectedAnchor = blockCoord + 0.1f * axisLocalToAttachedTo;
-                            SyncJoint jointInfo = new SyncJoint(new NetworkIdentityReference(attachedTo), positionLocalToAttachedTo, rotationLocalToAttachedTo, coord, axis, anchor,
-                                connectedAnchor);
+                            SyncJoint jointInfo = new SyncJoint(new NetworkIdentityReference(attachedTo), positionLocalToAttachedTo, rotationLocalToAttachedTo,
+                                coord, axis, anchor, connectedAnchor);
 
                             //connect the joint
                             Mixpanel.Track("Attach Block To Bearing");
@@ -239,7 +239,7 @@ public partial class BlockObject
             return;
         }
 
-        if (handBreakMode == BlockBreakHand.BreakMode.Whole && Blocks.Count == 1)
+        if (handBreakMode == BlockBreakHand.BreakMode.Whole && Blocks.Count == 1 && !syncJoint.connected && ConnectedToSelf.Count == 0)
         {
             handBreakMode = BlockBreakHand.BreakMode.Single;
         }
@@ -268,10 +268,9 @@ public partial class BlockObject
                 break;
             case BlockBreakHand.BreakMode.Whole:
             case BlockBreakHand.BreakMode.Duplicate:
-                IncrementWholeEffect(handBreakMode, collision.GetContact(0).point);
-                break;
             case BlockBreakHand.BreakMode.Save:
-                IncrementWholeEffect(handBreakMode, collision.GetContact(0).point);
+                //in the case of a whole effect, find the root object (through bearings connections) and increment that
+                BlockUtility.GetRootBlockObject(this).IncrementWholeEffect(handBreakMode, collision.GetContact(0).point);
                 break;
             default:
                 Debug.LogError("Unknown mode: " + handBreakMode);
@@ -279,7 +278,7 @@ public partial class BlockObject
         }
     }
 
-    private bool MaskIsValid(int layer)
+    private static bool MaskIsValid(int layer)
     {
         return PlayerHand.HandsMask == (PlayerHand.HandsMask | (1 << layer));
     }

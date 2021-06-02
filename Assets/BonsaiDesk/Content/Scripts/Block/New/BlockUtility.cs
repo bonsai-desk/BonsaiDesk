@@ -480,4 +480,14 @@ public static partial class BlockUtility
 
         return surroundingBlocks;
     }
+
+    public static BlockObject GetRootBlockObject(BlockObject blockObject)
+    {
+        if (blockObject.syncJoint.attachedTo != null && blockObject.syncJoint.attachedTo.Value)
+        {
+            return GetRootBlockObject(blockObject.syncJoint.attachedTo.Value.GetComponent<BlockObject>());
+        }
+
+        return blockObject;
+    }
 }
