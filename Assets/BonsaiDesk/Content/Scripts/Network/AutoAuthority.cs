@@ -397,7 +397,7 @@ public class AutoAuthority : NetworkBehaviour
         if (_blockObject)
         {
             var rootObject = BlockUtility.GetRootBlockObject(_blockObject);
-            ServerTryChangeOwnerConnectedToSelf(rootObject, this, newOwnerIdentityId, fromLastInteractTime);
+            ServerTryChangeOwnerConnectedToSelf(rootObject, rootObject.AutoAuthority, newOwnerIdentityId, fromLastInteractTime);
             return;
         }
 
