@@ -9,6 +9,7 @@ public class AutoBrowser : Browser
     public Vector3 _belowTableLocalPosition;
     public Vector3 _defaultLocalPosition;
     public Transform webViewParent;
+    public BoxCollider screenCollider;
 
     protected override void Start()
     {

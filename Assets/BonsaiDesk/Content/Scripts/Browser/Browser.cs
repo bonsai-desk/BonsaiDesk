@@ -178,7 +178,10 @@ public class Browser : MonoBehaviour
         hidden = choice;
         var renderEnabled = !choice;
 
-        stencilTransform.gameObject.SetActive(!choice);
+        if (stencilTransform)
+        {
+            stencilTransform.gameObject.SetActive(!choice);
+        }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
 		if (_overlay != null) {

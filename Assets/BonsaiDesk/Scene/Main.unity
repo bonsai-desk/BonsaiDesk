@@ -13867,6 +13867,7 @@ MonoBehaviour:
   _belowTableLocalPosition: {x: 0, y: 0, z: 0}
   _defaultLocalPosition: {x: 0, y: 0, z: 0}
   webViewParent: {fileID: 2069867538}
+  screenCollider: {fileID: 89527846}
 --- !u!1 &1388977227
 GameObject:
   m_ObjectHideFlags: 0
