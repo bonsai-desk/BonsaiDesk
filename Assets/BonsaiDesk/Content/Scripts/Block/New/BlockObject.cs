@@ -54,17 +54,19 @@ public readonly struct SyncJoint
     //the 2 blockObjects must be aligned before attaching the joint. This is the position of the single block relative to the attachedTo for use in alligning
     public readonly Vector3 positionLocalToAttachedTo;
     public readonly Quaternion rotationLocalToAttachedTo; //same as positionLocalToAttachedTo but for rotation
+    public readonly Vector3Int attachedAtBlockCoord;
     public readonly Vector3 axis;
     public readonly Vector3 anchor;
     public readonly Vector3 connectedAnchor;
 
-    public SyncJoint(NetworkIdentityReference attachedTo, Vector3 positionLocalToAttachedTo, Quaternion rotationLocalToAttachedTo, Vector3 axis, Vector3 anchor,
-        Vector3 connectedAnchor)
+    public SyncJoint(NetworkIdentityReference attachedTo, Vector3 positionLocalToAttachedTo, Quaternion rotationLocalToAttachedTo,
+        Vector3Int attachedAtBlockCoord, Vector3 axis, Vector3 anchor, Vector3 connectedAnchor)
     {
         connected = true;
         this.attachedTo = attachedTo;
         this.positionLocalToAttachedTo = positionLocalToAttachedTo;
         this.rotationLocalToAttachedTo = rotationLocalToAttachedTo;
+        this.attachedAtBlockCoord = attachedAtBlockCoord;
         this.axis = axis;
         this.anchor = anchor;
         this.connectedAnchor = connectedAnchor;

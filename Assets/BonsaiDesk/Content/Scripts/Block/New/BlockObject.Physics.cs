@@ -122,7 +122,7 @@ public partial class BlockObject
                             Vector3 axis = axisLocalToSelf;
                             Vector3 anchor = coord;
                             Vector3 connectedAnchor = blockCoord + 0.1f * axisLocalToAttachedTo;
-                            SyncJoint jointInfo = new SyncJoint(new NetworkIdentityReference(attachedTo), positionLocalToAttachedTo, rotationLocalToAttachedTo, axis, anchor,
+                            SyncJoint jointInfo = new SyncJoint(new NetworkIdentityReference(attachedTo), positionLocalToAttachedTo, rotationLocalToAttachedTo, coord, axis, anchor,
                                 connectedAnchor);
 
                             //connect the joint

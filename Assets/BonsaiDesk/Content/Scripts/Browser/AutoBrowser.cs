@@ -6,48 +6,9 @@ using Vuplex.WebView;
 public class AutoBrowser : Browser
 {
     public float deskHeight = 0.724f;
-    public Rigidbody screenRigidBody;
     public Vector3 _belowTableLocalPosition;
     public Vector3 _defaultLocalPosition;
     public Transform webViewParent;
-
-    private void Update()
-    {
-        var screenAutoAuthority = screenTransform.GetComponent<AutoAuthority>();
-        if (screenTransform.localPosition.sqrMagnitude > 1 || PhysicsHandController.InvalidTransform(screenTransform))
-        {
-            if (screenAutoAuthority.HasAuthority())
-            {
-                BonsaiLogWarning("AutoBrowser's screen freaking out so I'm resetting its physics");
-                var rigidBody = screenTransform.GetComponent<Rigidbody>();
-                rigidBody.velocity = Vector3.zero;
-                rigidBody.angularVelocity = Vector3.zero;
-                rigidBody.MovePosition(screenTransform.parent.transform.position);
-                rigidBody.MoveRotation(screenTransform.parent.transform.rotation);
-            }
-        }
-
-        if (screenAutoAuthority.isServer)
-        {
-            if (screenTransform.localPosition.sqrMagnitude > 1 || PhysicsHandController.InvalidTransform(screenTransform))
-            {
-                BonsaiLogWarning("Server: AutoBrowser's screen freaking out so I'm resetting its physics");
-                var rigidBody = screenTransform.GetComponent<Rigidbody>();
-                rigidBody.velocity = Vector3.zero;
-                rigidBody.angularVelocity = Vector3.zero;
-                rigidBody.MovePosition(screenTransform.parent.transform.position);
-                rigidBody.MoveRotation(screenTransform.parent.transform.rotation);
-
-                screenAutoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
-                GetComponent<SmoothSyncMirror>().clearBuffer();
-                rigidBody.velocity = Vector3.zero;
-                rigidBody.angularVelocity = Vector3.zero;
-
-                screenAutoAuthority.GetComponent<SmoothSyncMirror>().teleportAnyObjectFromServer(screenTransform.parent.transform.position,
-                    screenTransform.parent.transform.rotation, screenTransform.localScale);
-            }
-        }
-    }
 
     protected override void Start()
     {
@@ -101,24 +62,6 @@ public class AutoBrowser : Browser
     {
         var heightT = t;
         transform.localPosition = Vector3.Lerp(_belowTableLocalPosition, _defaultLocalPosition, Mathf.Clamp01(heightT));
-
-        //var height = boundsTransform.localScale.y;
-        //var halfHeight = height / 2f;
-
-        //var scaleT = (transform.localPosition.y + halfHeight) / height;
-        //scaleT = Mathf.Clamp01(scaleT);
-
-        //holePuncherTransform.localScale = new Vector3(1, 2*scaleT, 1);
-        //holePuncherTransform.localPosition = new Vector3(0, (1 - scaleT) / 2, 0);
-
-        //if (Mathf.Approximately(t, 0))
-        //{
-        //    //TODO is this laggy? also this runs even if you don't have authority over the screen
-        //    screenRigidBody.velocity = Vector3.zero;
-        //    screenRigidBody.angularVelocity = Vector3.zero;
-        //    transform.GetChild(0).localPosition = Vector3.zero;
-        //    transform.GetChild(0).localRotation = Quaternion.identity;
-        //}
     }
 
     protected override void SetupWebViewPrefab()
