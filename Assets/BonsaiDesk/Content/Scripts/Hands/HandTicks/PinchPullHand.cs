@@ -187,8 +187,11 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
     private void DetachObject()
     {
-        StopCoroutine(_checkAuthorityAfterDelayCoroutine);
-        _checkAuthorityAfterDelayCoroutine = null;
+        if (_checkAuthorityAfterDelayCoroutine != null)
+        {
+            StopCoroutine(_checkAuthorityAfterDelayCoroutine);
+            _checkAuthorityAfterDelayCoroutine = null;
+        }
         pinchPullJoint.connectedBody.GetComponent<AutoAuthority>().CmdRemoveInUse(NetworkClient.connection.identity.netId);
         pinchPullJoint.connectedBody = null;
         InputManager.Hands.GetHand(playerHand.skeletonType).NetworkHand.CmdStopPinchPull();

@@ -200,7 +200,6 @@ public partial class BlockObject : NetworkBehaviour
 
         if (_potentialBlocksParent.childCount > 0)
         {
-            _body.isKinematic = true;
             _autoAuthority.SetKinematicLocalForOneFrame();
         }
 

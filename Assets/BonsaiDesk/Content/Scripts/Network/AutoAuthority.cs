@@ -130,6 +130,7 @@ public class AutoAuthority : NetworkBehaviour
 
     public void SetKinematicLocalForOneFrame()
     {
+        _body.isKinematic = true;
         _setKinematicLocalFrame = Time.frameCount;
     }
 
