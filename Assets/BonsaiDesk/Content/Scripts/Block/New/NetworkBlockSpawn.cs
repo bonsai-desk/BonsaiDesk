@@ -27,8 +27,6 @@ public class NetworkBlockSpawn : NetworkBehaviour
 
     private string _spawnBlockName = "";
 
-    private int _defaultLayerMask;
-
     const float HalfBlock = BlockObject.CubeScale / 2f;
     private readonly Vector3 _halfExtends = new Vector3(HalfBlock, HalfBlock, HalfBlock);
 
@@ -44,21 +42,6 @@ public class NetworkBlockSpawn : NetworkBehaviour
         }
     }
 
-    private void Start()
-    {
-        int myLayer = LayerMask.NameToLayer("Default");
-        int layerMask = 0;
-        for (int i = 0; i < 32; i++)
-        {
-            if (!Physics.GetIgnoreLayerCollision(myLayer, i))
-            {
-                layerMask |= 1 << i;
-            }
-        }
-
-        _defaultLayerMask = layerMask;
-    }
-
     private void Update()
     {
         if (!(isClient && NetworkClient.connection != null && NetworkClient.connection.identity))
@@ -66,7 +49,7 @@ public class NetworkBlockSpawn : NetworkBehaviour
             return;
         }
 
-        if (!string.IsNullOrEmpty(_spawnBlockName) && !Physics.CheckBox(transform.position, _halfExtends, transform.rotation, _defaultLayerMask))
+        if (!string.IsNullOrEmpty(_spawnBlockName) && !Physics.CheckBox(transform.position, _halfExtends, transform.rotation, BlockUtility.DefaultLayerMask))
         {
             _readyToSpawnTime += Time.deltaTime;
 
@@ -94,7 +77,7 @@ public class NetworkBlockSpawn : NetworkBehaviour
         }
         
         const float halfBlock = BlockObject.CubeScale / 2f;
-        if (!Physics.CheckBox(position, new Vector3(halfBlock, halfBlock, halfBlock), rotation, _defaultLayerMask))
+        if (!Physics.CheckBox(position, new Vector3(halfBlock, halfBlock, halfBlock), rotation, BlockUtility.DefaultLayerMask))
         {
             var spawnedObject = Instantiate(spawnObjectPrefab, position, rotation);
             spawnedObject.GetComponent<BlockObject>().Blocks.Add(Vector3Int.zero, new SyncBlock(blockName, 0));

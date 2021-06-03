@@ -568,4 +568,26 @@ public static partial class BlockUtility
 
         return blockObjects;
     }
+
+    private static int _defaultLayerMask;
+    public static int DefaultLayerMask => GetDefaultLayerMask();
+    private static int GetDefaultLayerMask()
+    {
+        if (_defaultLayerMask == 0)
+        {
+            int myLayer = LayerMask.NameToLayer("Default");
+            int layerMask = 0;
+            for (int i = 0; i < 32; i++)
+            {
+                if (!Physics.GetIgnoreLayerCollision(myLayer, i))
+                {
+                    layerMask |= 1 << i;
+                }
+            }
+            
+            _defaultLayerMask = layerMask;
+        }
+
+        return _defaultLayerMask;
+    }
 }

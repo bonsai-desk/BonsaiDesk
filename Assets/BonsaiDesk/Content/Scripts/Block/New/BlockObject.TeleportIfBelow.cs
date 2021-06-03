@@ -57,8 +57,17 @@ public partial class BlockObject
         var boundsCenter = (upperBounds + lowerBounds) / 2f;
         var boundsSize = upperBounds - lowerBounds;
         boundsSize += padding;
+        var halfExtends = boundsSize / 2f;
 
-        TeleportToPosition(blockObjects, new Vector3(0, 1.5f, 0), boundsCenter);
+        const float tableSurfaceHeight = 0.726f;
+
+        var targetPosition = new Vector3(0, tableSurfaceHeight + boundsSize.y / 2f, 0);
+        while (Physics.CheckBox(targetPosition, halfExtends, Quaternion.identity, BlockUtility.DefaultLayerMask))
+        {
+            targetPosition.y += 0.025f;
+        }
+
+        TeleportToPosition(blockObjects, targetPosition, boundsCenter);
     }
 
     private static void TeleportToPosition(List<BlockObject> blockObjects, Vector3 position, Vector3 boundsCenter)
