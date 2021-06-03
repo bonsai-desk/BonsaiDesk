@@ -114,6 +114,8 @@ public partial class BlockObject
                             blockObject._potentialBlocksParent.GetChild(i).parent = null;
                         }
 
+                        blockObject.transform.parent = null;
+
                         if (attachingToBearing)
                         {
                             //calculate parameters for the joint

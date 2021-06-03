@@ -12,6 +12,8 @@ using Random = UnityEngine.Random;
 public partial class BlockObject : NetworkBehaviour
 {
     public const float CubeScale = 0.05f;
+    private const float MaxVelocity = 10f;
+    private const float MaxAngularVelocity = 50f;
 
     //contains all of the AutoAuthority of all BlockObjects in the scene
     private static readonly HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
@@ -168,7 +170,7 @@ public partial class BlockObject : NetworkBehaviour
             _blockObjectAuthorities.Add(_autoAuthority);
         }
 
-        _body.maxAngularVelocity = float.MaxValue;
+        _body.maxAngularVelocity = MaxAngularVelocity;
 
         transform.localScale = new Vector3(CubeScale, CubeScale, CubeScale);
 
@@ -218,6 +220,11 @@ public partial class BlockObject : NetworkBehaviour
         if (!(isClient && NetworkClient.connection != null && NetworkClient.connection.identity))
         {
             return;
+        }
+
+        if (_autoAuthority.HasAuthority())
+        {
+            _body.velocity = Vector3.ClampMagnitude(_body.velocity, MaxVelocity);
         }
 
         if (_resetCoM)
