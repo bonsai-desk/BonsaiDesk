@@ -198,6 +198,15 @@ public partial class BlockObject : NetworkBehaviour
         UpdateWholeEffects();
         UpdateDialogPosition();
 
+        for (int i = _potentialBlocksParent.childCount - 1; i >= 0; i--)
+        {
+            var childBlockObject = _potentialBlocksParent.GetChild(i).GetComponent<BlockObject>();
+            if (!childBlockObject || Time.time - childBlockObject._lastTouchingHandTime > 1f)
+            {
+                _potentialBlocksParent.GetChild(i).parent = null;
+            }
+        }
+
         if (_potentialBlocksParent.childCount > 0)
         {
             _autoAuthority.SetKinematicLocalForOneFrame();
