@@ -94,6 +94,7 @@ public partial class BlockObject : NetworkBehaviour
 
     //physics
     private Rigidbody _body;
+    public Rigidbody Body => _body;
     private Transform _physicsBoxesObject;
     private Queue<BoxCollider> _boxCollidersInUse = new Queue<BoxCollider>();
     private bool _resetCoM; //flag to reset CoM on the next physics update
@@ -884,7 +885,7 @@ public partial class BlockObject : NetworkBehaviour
         _mesh.RecalculateBounds();
 
         var (boxCollidersNotNeeded, mass, destroySphere) = BlockUtility.UpdateHitBox(Blocks, _boxCollidersInUse, _physicsBoxesObject, _sphereObject,
-            blockPhysicMaterial, spherePhysicMaterial);
+            blockPhysicMaterial, spherePhysicMaterial, this);
         while (boxCollidersNotNeeded.Count > 0)
         {
             Destroy(boxCollidersNotNeeded.Dequeue());

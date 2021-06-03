@@ -253,7 +253,7 @@ public static partial class BlockUtility
 
     public static (Queue<BoxCollider> boxCollidersNotNeeded, float mass, bool destroySphere) UpdateHitBox(SyncDictionary<Vector3Int, SyncBlock> blocks,
         Queue<BoxCollider> boxCollidersInUse, Transform boxesParent, Transform sphereObject, PhysicMaterial blockPhysicMaterial,
-        PhysicMaterial spherePhysicMaterial)
+        PhysicMaterial spherePhysicMaterial, BlockObject blockObject)
     {
         if (blocks.Count < 1)
         {
@@ -262,10 +262,6 @@ public static partial class BlockUtility
         }
 
         HashSet<Vector3Int> assimilated = new HashSet<Vector3Int>();
-        // if (blocks.Count == 1)
-        //     assymilated = new HashSet<Vector3Int>();
-        // else
-        //     assymilated = new HashSet<Vector3Int>(blockObjects);
         Dictionary<Vector3Int, Vector2Int[]> boxes = new Dictionary<Vector3Int, Vector2Int[]>();
         foreach (var block in blocks)
         {
@@ -360,8 +356,13 @@ public static partial class BlockUtility
         {
             destroySphere = true;
         }
-
-        float mass = 1f;
+        
+        var blockObjects = GetBlockObjectsFromRoot(GetRootBlockObject(blockObject));
+        float mass = 1f / blockObjects.Count;
+        for (int i = 0; i < blockObjects.Count; i++)
+        {
+            blockObjects[i].Body.mass = mass;
+        }
         return (boxCollidersNotNeeded, mass, destroySphere);
     }
 
