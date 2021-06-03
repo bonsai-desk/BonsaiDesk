@@ -122,7 +122,7 @@ public class AutoAuthority : NetworkBehaviour
 
     //Hello function. I am a client. Do I have authority over this object?
     [Client]
-    private bool ClientHasAuthority()
+    public bool ClientHasAuthority()
     {
         if (!isClient)
             Debug.LogError("ClientHasAuthority is only valid when called from a client.");
@@ -131,7 +131,7 @@ public class AutoAuthority : NetworkBehaviour
 
     //Hello function. I am a server. Do I have authority over this object?
     [Server]
-    private bool ServerHasAuthority()
+    public bool ServerHasAuthority()
     {
         if (!isServer)
             Debug.LogError("ServerHasAuthority is only valid when called from a server.");
