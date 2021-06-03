@@ -8,7 +8,8 @@ public partial class BlockObject
 {
     private Queue<float> _resetTimes = new Queue<float>();
 
-    [Server]
+    private float _clientOnlyLastCmdResetTime;
+
     private void CheckTeleport()
     {
         //if this is not the root object, return. The root object will loop through and check its children
@@ -19,6 +20,53 @@ public partial class BlockObject
 
         var blockObjects = BlockUtility.GetBlockObjectsFromRoot(this);
 
+        var tookAction = false;
+
+        if (isServer)
+        {
+            tookAction = ServerCheckIfInvalidTransform(blockObjects);
+        }
+
+        if (!tookAction && _autoAuthority.HasAuthority())
+        {
+            tookAction = CheckForInvalidJointConfiguration(blockObjects);
+        }
+
+        if (!tookAction && isServer)
+        {
+            ServerCheckIfBelowOrFar(blockObjects);
+        }
+    }
+
+    private bool CheckForInvalidJointConfiguration(List<BlockObject> blockObjects)
+    {
+        for (int i = 0; i < blockObjects.Count; i++)
+        {
+            if (InvalidJointConfiguration(blockObjects[i]))
+            {
+                if (isClient && !isServer)
+                {
+                    if (Time.time - _clientOnlyLastCmdResetTime > 1f)
+                    {
+                        CmdFixInvalidJoints();
+                        _clientOnlyLastCmdResetTime = Time.time;
+                    }
+                }
+                else if (isServer)
+                {
+                    CmdFixInvalidJoints();
+                }
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    [Server]
+    private bool ServerCheckIfInvalidTransform(List<BlockObject> blockObjects)
+    {
         for (int i = 0; i < blockObjects.Count; i++)
         {
             if (PhysicsHandController.InvalidTransform(blockObjects[i].transform))
@@ -30,47 +78,51 @@ public partial class BlockObject
                 }
                 else
                 {
-                    if (ResetToValidOrientation(this))
+                    if (ServerResetToValidOrientation(this))
                     {
-                        TeleportToDeskSurface(blockObjects);
+                        ServerTeleportToDeskSurface(blockObjects);
                     }
                 }
 
-                return;
-            }
-
-            if (InvalidJointConfiguration(blockObjects[i]))
-            {
-                if (ResetToValidOrientation(this))
-                {
-                    TeleportToDeskSurface(blockObjects);
-                }
-
-                return;
+                return true;
             }
         }
 
+        return false;
+    }
+
+    [Server]
+    private bool ServerCheckIfBelowOrFar(List<BlockObject> blockObjects)
+    {
         if (blockObjects.Count == 1 && blockObjects[0].Blocks.Count <= 4)
         {
-            if (blockObjects[0].transform.position.y < -1f)
+            if (blockObjects[0].transform.position.y < -1f || Vector3.SqrMagnitude(blockObjects[0].transform.position) > 25f * 25f ||
+                blockObjects[0].transform.position.y > 10f)
             {
                 _autoAuthority.ServerStripOwnerAndDestroy();
+                return true;
             }
 
-            return;
+            return false;
         }
 
         if (!BelowHeightOrFar(blockObjects))
         {
-            return;
+            return false;
         }
 
-        TeleportToDeskSurface(blockObjects);
+        ServerTeleportToDeskSurface(blockObjects);
+        return true;
     }
 
     [Server]
-    private void TeleportToDeskSurface(List<BlockObject> blockObjects)
+    private void ServerTeleportToDeskSurface(List<BlockObject> blockObjects = null)
     {
+        if (blockObjects == null)
+        {
+            blockObjects = BlockUtility.GetBlockObjectsFromRoot(this);
+        }
+
         var upperBounds = Vector3.zero;
         var lowerBounds = Vector3.zero;
         var first = true;
@@ -117,11 +169,11 @@ public partial class BlockObject
             targetPosition.y += 0.025f;
         }
 
-        TeleportToPosition(blockObjects, targetPosition, boundsCenter);
+        ServerTeleportToPosition(blockObjects, targetPosition, boundsCenter);
     }
 
     [Server]
-    private void TeleportToPosition(List<BlockObject> blockObjects, Vector3 position, Vector3 boundsCenter)
+    private void ServerTeleportToPosition(List<BlockObject> blockObjects, Vector3 position, Vector3 boundsCenter)
     {
         var offset = position - boundsCenter;
         for (int i = 0; i < blockObjects.Count; i++)
@@ -154,19 +206,19 @@ public partial class BlockObject
         {
             leftPinchPull.DetachObject();
         }
-        
+
         var rightPinchPull = InputManager.Hands.Right.PlayerHand.GetIHandTick<PinchPullHand>();
         if (rightPinchPull.ConnectedBlockObjectRoot() == this)
         {
             rightPinchPull.DetachObject();
         }
-        
+
         var rightLockObject = InputManager.Hands.Right.PlayerHand.GetIHandTick<LockObjectHand>();
         if (rightLockObject.ConnectedBlockObjectRoot() == this)
         {
             rightLockObject.DetachObject();
         }
-        
+
         var leftLockObject = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>();
         if (leftLockObject.ConnectedBlockObjectRoot() == this)
         {
@@ -174,7 +226,6 @@ public partial class BlockObject
         }
     }
 
-    [Server]
     private static bool BelowHeightOrFar(List<BlockObject> blockObjects)
     {
         const float diagonal = 1.41421f / 2f;
@@ -217,7 +268,6 @@ public partial class BlockObject
         return true;
     }
 
-    [Server]
     private static bool InvalidJointConfiguration(BlockObject blockObject)
     {
         if (!blockObject.SyncJoint.connected)
@@ -235,12 +285,21 @@ public partial class BlockObject
         var currentPosition = blockObject.transform.TransformPoint(blockObject.SyncJoint.attachedToMeAtCoord);
         var distanceSquared = Vector3.SqrMagnitude(targetPosition - currentPosition);
 
-        var invalid = distanceSquared > 0.01f * 0.01f;
+        var invalid = distanceSquared > 0.05f * 0.05f;
         return invalid;
     }
 
+    [Command(ignoreAuthority = true)]
+    private void CmdFixInvalidJoints()
+    {
+        if (ServerResetToValidOrientation(this))
+        {
+            ServerTeleportToDeskSurface();
+        }
+    }
+
     [Server]
-    private bool ResetToValidOrientation(BlockObject rootBlockObject)
+    private bool ServerResetToValidOrientation(BlockObject rootBlockObject)
     {
         _resetTimes.Enqueue(Time.time);
 

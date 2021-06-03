@@ -237,10 +237,7 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        if (isServer)
-        {
-            CheckTeleport();
-        }
+        CheckTeleport();
 
         if (!_autoAuthority.HasAuthority())
         {
