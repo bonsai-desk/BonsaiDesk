@@ -73,8 +73,8 @@ public class VideoCube : NetworkBehaviour
     {
         var inRange = InRange();
         var shouldShowThumbnail = inRange && !_body.isKinematic;
-        var clientAuthority = smoothSyncVars.AutoAuthority.isClient && smoothSyncVars.AutoAuthority.ClientHasAuthority();
-        var serverAuthority = smoothSyncVars.AutoAuthority.isServer && smoothSyncVars.AutoAuthority.ServerHasAuthority();
+        var clientAuthority = smoothSyncVars.AutoAuthority.isClient && smoothSyncVars.AutoAuthority.HasAuthority();
+        var serverAuthority = smoothSyncVars.AutoAuthority.isServer && smoothSyncVars.AutoAuthority.HasAuthority();
 
         if (inRange && smoothSyncVars.AutoAuthority.isClient && !clientAuthority)
         {

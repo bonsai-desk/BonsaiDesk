@@ -21,16 +21,18 @@ public partial class BlockObject : NetworkBehaviour
     //---all of the data required to reconstruct this block object---
 
     //contains information about blocks and their rotations
-    public readonly SyncDictionary<Vector3Int, SyncBlock> Blocks = new SyncDictionary<Vector3Int, SyncBlock>();
+    private readonly SyncDictionary<Vector3Int, SyncBlock> _blocks = new SyncDictionary<Vector3Int, SyncBlock>();
 
     //other blockObjects connected to this one. the coord is which bearing they are attached to. use their syncJoint for joint info
-    public readonly SyncDictionary<Vector3Int, NetworkIdentityReference> ConnectedToSelf = new SyncDictionary<Vector3Int, NetworkIdentityReference>();
+    private readonly SyncDictionary<Vector3Int, NetworkIdentityReference> _connectedToSelf = new SyncDictionary<Vector3Int, NetworkIdentityReference>();
 
     [SyncVar(hook = nameof(OnSyncJointChange))]
     private SyncJoint _syncJoint;
 
     //---end all of the data required to reconstruct this block object---
 
+    public SyncDictionary<Vector3Int, SyncBlock> Blocks => _blocks;
+    public SyncDictionary<Vector3Int, NetworkIdentityReference> ConnectedToSelf => _connectedToSelf;
     public SyncJoint SyncJoint => _syncJoint;
 
     //caches changes made to the sync dictionary so all block changes can be made at once with a single mesh update
@@ -225,24 +227,30 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        if (!(isClient && NetworkClient.connection != null && NetworkClient.connection.identity))
+        if (isServer)
+        {
+            TeleportIfBelow();
+        }
+
+        if (!_autoAuthority.HasAuthority())
         {
             return;
         }
 
-        if (_autoAuthority.HasAuthority())
-        {
-            _body.velocity = Vector3.ClampMagnitude(_body.velocity, MaxVelocity);
-        }
+        _body.velocity = Vector3.ClampMagnitude(_body.velocity, MaxVelocity);
 
         if (_resetCoM)
         {
             _resetCoM = false;
             _body.ResetInertiaTensor();
             _body.ResetCenterOfMass();
+            _body.WakeUp();
         }
 
-        PhysicsFixedUpdate();
+        if (isClient)
+        {
+            PhysicsFixedUpdate();
+        }
     }
 
     private void OnDestroy()

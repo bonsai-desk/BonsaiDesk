@@ -18,7 +18,6 @@ public class AutoAuthority : NetworkBehaviour
 
     [SyncVar] private bool _inUse;
     [SyncVar] public bool isKinematic;
-    public bool destroyIfBelow = true; //also if far from origin or high above
 
     public bool InUse => IsInUse();
 
@@ -81,33 +80,33 @@ public class AutoAuthority : NetworkBehaviour
     {
         UpdateColor();
 
-        if (isServer && destroyIfBelow)
-        {
-            var distanceSquared = Vector3.SqrMagnitude(transform.position);
-            if (distanceSquared > 20f * 20f || transform.position.y < -2f || transform.position.y > 5f || PhysicsHandController.InvalidTransform(transform))
-            {
-                //for now if it has a bearing, don't teleport back TODO: add teleport for bearing objects
-                var isBlockObjectAndHasConnections = _blockObject && _blockObject.SyncJoint.connected || _blockObject.ConnectedToSelf.Count > 0;
-                if (!isBlockObjectAndHasConnections)
-                {
-                    if (_blockObject && (_blockObject.Blocks.Count > 4 || _blockObject.SyncJoint.connected || _blockObject.ConnectedToSelf.Count > 0))
-                    {
-                        ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
-                        GetComponent<SmoothSyncMirror>().clearBuffer();
-                        _body.velocity = Vector3.zero;
-                        _body.angularVelocity = Vector3.zero;
-
-                        GetComponent<SmoothSyncMirror>().teleportAnyObjectFromServer(new Vector3(0, 2, 0), Quaternion.identity, transform.localScale);
-                    }
-                    else
-                    {
-                        ServerStripOwnerAndDestroy();
-                    }
-
-                    return;
-                }
-            }
-        }
+        // if (isServer)
+        // {
+        //     if (PhysicsHandController.InvalidTransform(transform) || Vector3.SqrMagnitude(transform.position) > 20f * 20f || transform.position.y < -2f ||
+        //         transform.position.y > 5f)
+        //     {
+        //         //for now if it has a bearing, don't teleport back TODO: add teleport for bearing objects
+        //         var isBlockObjectAndHasConnections = _blockObject && _blockObject.SyncJoint.connected || _blockObject.ConnectedToSelf.Count > 0;
+        //         if (!isBlockObjectAndHasConnections)
+        //         {
+        //             if (_blockObject && (_blockObject.Blocks.Count > 4 || _blockObject.SyncJoint.connected || _blockObject.ConnectedToSelf.Count > 0))
+        //             {
+        //                 ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
+        //                 GetComponent<SmoothSyncMirror>().clearBuffer();
+        //                 _body.velocity = Vector3.zero;
+        //                 _body.angularVelocity = Vector3.zero;
+        //
+        //                 GetComponent<SmoothSyncMirror>().teleportAnyObjectFromServer(new Vector3(0, 2, 0), Quaternion.identity, transform.localScale);
+        //             }
+        //             else
+        //             {
+        //                 ServerStripOwnerAndDestroy();
+        //             }
+        //
+        //             return;
+        //         }
+        //     }
+        // }
 
         //if you don't have control over the object
         if (!HasAuthority())
@@ -141,7 +140,7 @@ public class AutoAuthority : NetworkBehaviour
 
     //Hello function. I am a client. Do I have authority over this object?
     [Client]
-    public bool ClientHasAuthority()
+    private bool ClientHasAuthority()
     {
         if (!isClient)
             Debug.LogError("ClientHasAuthority is only valid when called from a client.");
@@ -150,7 +149,7 @@ public class AutoAuthority : NetworkBehaviour
 
     //Hello function. I am a server. Do I have authority over this object?
     [Server]
-    public bool ServerHasAuthority()
+    private bool ServerHasAuthority()
     {
         if (!isServer)
             Debug.LogError("ServerHasAuthority is only valid when called from a server.");

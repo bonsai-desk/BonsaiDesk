@@ -67,10 +67,10 @@ public class BlockObjectNullTest : NetworkBehaviour
 
     private bool AllConnectedCheckGood(BlockObject blockObject)
     {
-        var blockObjects = BreadthFirstSearch(blockObject);
+        var blockObjects = BlockUtility.BreadthFirstSearch(blockObject);
         foreach (var foundBlockObject in blockObjects)
         {
-            if (BreadthFirstSearch(foundBlockObject).Count != blockObjects.Count)
+            if (BlockUtility.BreadthFirstSearch(foundBlockObject).Count != blockObjects.Count)
             {
                 return false;
             }
@@ -78,41 +78,5 @@ public class BlockObjectNullTest : NetworkBehaviour
         return true;
     }
 
-    private HashSet<BlockObject> BreadthFirstSearch(BlockObject blockObject)
-    {
-        var visited = new HashSet<BlockObject>();
-        visited.Add(blockObject);
-
-        var queue = new Queue<BlockObject>();
-        queue.Enqueue(blockObject);
-
-        while (queue.Any())
-        {
-            var next = queue.Dequeue();
-            if (next.SyncJoint.attachedTo != null && next.SyncJoint.attachedTo.Value)
-            {
-                var nextAttachedToBlockObject = next.SyncJoint.attachedTo.Value.GetComponent<BlockObject>();
-                if (!visited.Contains(nextAttachedToBlockObject))
-                {
-                    visited.Add(nextAttachedToBlockObject);
-                    queue.Enqueue(nextAttachedToBlockObject);
-                }
-            }
-
-            foreach (var pair in next.ConnectedToSelf)
-            {
-                if (pair.Value != null && pair.Value.Value)
-                {
-                    var nextConnectedBlockObject = pair.Value.Value.GetComponent<BlockObject>();
-                    if (!visited.Contains(nextConnectedBlockObject))
-                    {
-                        visited.Add(nextConnectedBlockObject);
-                        queue.Enqueue(nextConnectedBlockObject);
-                    }
-                }
-            }
-        }
-
-        return visited;
-    }
+    
 }

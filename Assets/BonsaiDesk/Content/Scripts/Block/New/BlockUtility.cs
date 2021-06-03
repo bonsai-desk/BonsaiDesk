@@ -504,4 +504,68 @@ public static partial class BlockUtility
         //
         // return blockObject;
     }
+
+    public static HashSet<BlockObject> BreadthFirstSearch(BlockObject blockObject)
+    {
+        var visited = new HashSet<BlockObject>();
+        visited.Add(blockObject);
+
+        var queue = new Queue<BlockObject>();
+        queue.Enqueue(blockObject);
+
+        while (queue.Count > 0)
+        {
+            var next = queue.Dequeue();
+            if (next.SyncJoint.attachedTo != null && next.SyncJoint.attachedTo.Value)
+            {
+                var nextAttachedToBlockObject = next.SyncJoint.attachedTo.Value.GetComponent<BlockObject>();
+                if (!visited.Contains(nextAttachedToBlockObject))
+                {
+                    visited.Add(nextAttachedToBlockObject);
+                    queue.Enqueue(nextAttachedToBlockObject);
+                }
+            }
+
+            foreach (var pair in next.ConnectedToSelf)
+            {
+                if (pair.Value != null && pair.Value.Value)
+                {
+                    var nextConnectedBlockObject = pair.Value.Value.GetComponent<BlockObject>();
+                    if (!visited.Contains(nextConnectedBlockObject))
+                    {
+                        visited.Add(nextConnectedBlockObject);
+                        queue.Enqueue(nextConnectedBlockObject);
+                    }
+                }
+            }
+        }
+
+        return visited;
+    }
+
+    public static List<BlockObject> GetBlockObjectsFromRoot(BlockObject rootBlockObject)
+    {
+        var blockObjects = new List<BlockObject>();
+        var toCheck = new Queue<BlockObject>();
+        toCheck.Enqueue(rootBlockObject);
+
+        while (toCheck.Count > 0)
+        {
+            var nextBlockObject = toCheck.Dequeue();
+            blockObjects.Add(nextBlockObject);
+            foreach (var pair in nextBlockObject.ConnectedToSelf)
+            {
+                if (pair.Value != null && pair.Value.Value)
+                {
+                    var nextBlockObjectChild = pair.Value.Value.GetComponent<BlockObject>();
+                    if (nextBlockObjectChild)
+                    {
+                        toCheck.Enqueue(nextBlockObjectChild);
+                    }
+                }
+            }
+        }
+
+        return blockObjects;
+    }
 }
