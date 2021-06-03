@@ -16,7 +16,16 @@ public partial class BlockObject
 
         var blockObjects = BlockUtility.GetBlockObjectsFromRoot(this);
 
-        if (!BelowHeight(blockObjects))
+        for (int i = 0; i < blockObjects.Count; i++)
+        {
+            if (PhysicsHandController.InvalidTransform(blockObjects[i].transform))
+            {
+                Debug.LogError("BlockObject has invalid transform!");
+                return;
+            }
+        }
+
+        if (!BelowHeightOrFar(blockObjects))
         {
             return;
         }
@@ -86,9 +95,10 @@ public partial class BlockObject
         }
     }
 
-    private static bool BelowHeight(List<BlockObject> blockObjects)
+    private static bool BelowHeightOrFar(List<BlockObject> blockObjects)
     {
-        const float teleportBelowHeight = -1f;
+        const float diagonal = 1.41421f / 2f;
+        const float teleportBelowHeight = -diagonal * CubeScale;
 
         var highest = blockObjects[0];
         for (int i = 1; i < blockObjects.Count; i++)
@@ -96,6 +106,11 @@ public partial class BlockObject
             if (blockObjects[i]._body.worldCenterOfMass.y > highest._body.worldCenterOfMass.y)
             {
                 highest = blockObjects[i];
+            }
+
+            if (Vector3.SqrMagnitude(blockObjects[i].transform.position) > 25f * 25f || blockObjects[i].transform.position.y > 10f)
+            {
+                return true;
             }
         }
 

@@ -80,33 +80,15 @@ public class AutoAuthority : NetworkBehaviour
     {
         UpdateColor();
 
-        // if (isServer)
-        // {
-        //     if (PhysicsHandController.InvalidTransform(transform) || Vector3.SqrMagnitude(transform.position) > 20f * 20f || transform.position.y < -2f ||
-        //         transform.position.y > 5f)
-        //     {
-        //         //for now if it has a bearing, don't teleport back TODO: add teleport for bearing objects
-        //         var isBlockObjectAndHasConnections = _blockObject && _blockObject.SyncJoint.connected || _blockObject.ConnectedToSelf.Count > 0;
-        //         if (!isBlockObjectAndHasConnections)
-        //         {
-        //             if (_blockObject && (_blockObject.Blocks.Count > 4 || _blockObject.SyncJoint.connected || _blockObject.ConnectedToSelf.Count > 0))
-        //             {
-        //                 ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
-        //                 GetComponent<SmoothSyncMirror>().clearBuffer();
-        //                 _body.velocity = Vector3.zero;
-        //                 _body.angularVelocity = Vector3.zero;
-        //
-        //                 GetComponent<SmoothSyncMirror>().teleportAnyObjectFromServer(new Vector3(0, 2, 0), Quaternion.identity, transform.localScale);
-        //             }
-        //             else
-        //             {
-        //                 ServerStripOwnerAndDestroy();
-        //             }
-        //
-        //             return;
-        //         }
-        //     }
-        // }
+        if (isServer)
+        {
+            if (!_blockObject && (PhysicsHandController.InvalidTransform(transform) || Vector3.SqrMagnitude(transform.position) > 20f * 20f ||
+                                  transform.position.y < -1f || transform.position.y > 5f))
+            {
+                ServerStripOwnerAndDestroy();
+                return;
+            }
+        }
 
         //if you don't have control over the object
         if (!HasAuthority())

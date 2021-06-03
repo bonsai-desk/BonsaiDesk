@@ -361,7 +361,7 @@ public static partial class BlockUtility
             destroySphere = true;
         }
 
-        float mass = Mathf.Clamp((BlockObject.CubeMass * blocks.Count) - (BlockObject.CubeMass * blocks.Count), BlockObject.CubeMass, Mathf.Infinity);
+        float mass = 1f;
         return (boxCollidersNotNeeded, mass, destroySphere);
     }
 
