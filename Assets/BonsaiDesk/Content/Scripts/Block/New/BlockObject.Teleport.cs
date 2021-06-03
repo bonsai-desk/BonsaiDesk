@@ -6,6 +6,9 @@ using UnityEngine;
 
 public partial class BlockObject
 {
+    private Queue<float> _resetTimes = new Queue<float>();
+
+    [Server]
     private void CheckTeleport()
     {
         //if this is not the root object, return. The root object will loop through and check its children
@@ -21,12 +24,28 @@ public partial class BlockObject
             if (PhysicsHandController.InvalidTransform(blockObjects[i].transform))
             {
                 Debug.LogError("BlockObject has invalid transform!");
+                if (blockObjects.Count == 1 && blockObjects[0].Blocks.Count <= 4)
+                {
+                    _autoAuthority.CmdDestroy();
+                }
+                else
+                {
+                    if (ResetToValidOrientation(this))
+                    {
+                        TeleportToDeskSurface(blockObjects);
+                    }
+                }
+
                 return;
             }
 
             if (InvalidJointConfiguration(blockObjects[i]))
             {
-                Debug.LogError("Invalid configuration");
+                if (ResetToValidOrientation(this))
+                {
+                    TeleportToDeskSurface(blockObjects);
+                }
+
                 return;
             }
         }
@@ -46,6 +65,12 @@ public partial class BlockObject
             return;
         }
 
+        TeleportToDeskSurface(blockObjects);
+    }
+
+    [Server]
+    private void TeleportToDeskSurface(List<BlockObject> blockObjects)
+    {
         var upperBounds = Vector3.zero;
         var lowerBounds = Vector3.zero;
         var first = true;
@@ -95,7 +120,8 @@ public partial class BlockObject
         TeleportToPosition(blockObjects, targetPosition, boundsCenter);
     }
 
-    private static void TeleportToPosition(List<BlockObject> blockObjects, Vector3 position, Vector3 boundsCenter)
+    [Server]
+    private void TeleportToPosition(List<BlockObject> blockObjects, Vector3 position, Vector3 boundsCenter)
     {
         var offset = position - boundsCenter;
         for (int i = 0; i < blockObjects.Count; i++)
@@ -116,8 +142,39 @@ public partial class BlockObject
 
             smoothSync.teleportAnyObjectFromServer(newPosition, newRotation, newScale);
         }
+
+        RpcTeleportEvent();
     }
 
+    [ClientRpc]
+    private void RpcTeleportEvent()
+    {
+        var leftPinchPull = InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>();
+        if (leftPinchPull.ConnectedBlockObjectRoot() == this)
+        {
+            leftPinchPull.DetachObject();
+        }
+        
+        var rightPinchPull = InputManager.Hands.Right.PlayerHand.GetIHandTick<PinchPullHand>();
+        if (rightPinchPull.ConnectedBlockObjectRoot() == this)
+        {
+            rightPinchPull.DetachObject();
+        }
+        
+        var rightLockObject = InputManager.Hands.Right.PlayerHand.GetIHandTick<LockObjectHand>();
+        if (rightLockObject.ConnectedBlockObjectRoot() == this)
+        {
+            rightLockObject.DetachObject();
+        }
+        
+        var leftLockObject = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>();
+        if (leftLockObject.ConnectedBlockObjectRoot() == this)
+        {
+            leftLockObject.DetachObject();
+        }
+    }
+
+    [Server]
     private static bool BelowHeightOrFar(List<BlockObject> blockObjects)
     {
         const float diagonal = 1.41421f / 2f;
@@ -160,6 +217,7 @@ public partial class BlockObject
         return true;
     }
 
+    [Server]
     private static bool InvalidJointConfiguration(BlockObject blockObject)
     {
         if (!blockObject.SyncJoint.connected)
@@ -179,5 +237,53 @@ public partial class BlockObject
 
         var invalid = distanceSquared > 0.01f * 0.01f;
         return invalid;
+    }
+
+    [Server]
+    private bool ResetToValidOrientation(BlockObject rootBlockObject)
+    {
+        _resetTimes.Enqueue(Time.time);
+
+        while (Time.time - _resetTimes.Peek() > 2f)
+        {
+            _resetTimes.Dequeue();
+        }
+
+        if (_resetTimes.Count > 10)
+        {
+            _autoAuthority.CmdDestroy();
+            return false;
+        }
+
+        var toUpdate = new Queue<BlockObject>();
+        toUpdate.Enqueue(rootBlockObject);
+
+        while (toUpdate.Count > 0)
+        {
+            var next = toUpdate.Dequeue();
+
+            next._autoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
+            var smoothSync = next.GetComponent<SmoothSyncMirror>();
+            smoothSync.clearBuffer();
+
+            if (next.SyncJoint.attachedTo != null && next.SyncJoint.attachedTo.Value)
+            {
+                next.transform.position = next.SyncJoint.attachedTo.Value.transform.TransformPoint(next._validLocalPosition);
+                next.transform.rotation = next.SyncJoint.attachedTo.Value.transform.rotation * next._validLocalRotation;
+                next._body.MovePosition(next.transform.position);
+                next._body.MoveRotation(next.transform.rotation);
+            }
+
+            foreach (var pair in next.ConnectedToSelf)
+            {
+                if (pair.Value != null && pair.Value.Value)
+                {
+                    var childBlockObject = pair.Value.Value.GetComponent<BlockObject>();
+                    toUpdate.Enqueue(childBlockObject);
+                }
+            }
+        }
+
+        return true;
     }
 }

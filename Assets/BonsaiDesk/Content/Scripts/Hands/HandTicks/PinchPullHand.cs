@@ -135,6 +135,20 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         DrawPinchPullLocal(drawLocal);
     }
 
+    public BlockObject ConnectedBlockObjectRoot()
+    {
+        if (pinchPullJoint.connectedBody)
+        {
+            var connectedBlockObject = pinchPullJoint.connectedBody.GetComponent<BlockObject>();
+            if (connectedBlockObject)
+            {
+                return BlockUtility.GetRootBlockObject(connectedBlockObject);
+            }
+        }
+
+        return null;
+    }
+
     //as long as the object is not inUse, you can immediately attach to it. if someone else quickly touches it they may gain authority even though you
     //are attached. This function checks after a short delay after you attach to make sure you were able to successfully gain authority and set inUse
     //if you don't have authority after a short delay, detach
@@ -185,13 +199,14 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         _checkAuthorityAfterDelayCoroutine = StartCoroutine(CheckAuthorityAfterDelay());
     }
 
-    private void DetachObject()
+    public void DetachObject()
     {
         if (_checkAuthorityAfterDelayCoroutine != null)
         {
             StopCoroutine(_checkAuthorityAfterDelayCoroutine);
             _checkAuthorityAfterDelayCoroutine = null;
         }
+
         pinchPullJoint.connectedBody.GetComponent<AutoAuthority>().CmdRemoveInUse(NetworkClient.connection.identity.netId);
         pinchPullJoint.connectedBody = null;
         InputManager.Hands.GetHand(playerHand.skeletonType).NetworkHand.CmdStopPinchPull();

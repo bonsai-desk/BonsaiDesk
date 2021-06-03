@@ -57,6 +57,20 @@ public class LockObjectHand : MonoBehaviour, IHandTick
             }
         }
     }
+    
+    public BlockObject ConnectedBlockObjectRoot()
+    {
+        if (joint && joint.connectedBody)
+        {
+            var connectedBlockObject = joint.connectedBody.GetComponent<BlockObject>();
+            if (connectedBlockObject)
+            {
+                return BlockUtility.GetRootBlockObject(connectedBlockObject);
+            }
+        }
+
+        return null;
+    }
 
     //as long as the object is not inUse, you can immediately attach to it. if someone else quickly touches it they may gain authority even though you
     //are attached. This function checks after a short delay after you attach to make sure you were able to successfully gain authority and set inUse
@@ -110,7 +124,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
         return null;
     }
 
-    private void DetachObject()
+    public void DetachObject()
     {
         if (_checkAuthorityAfterDelayCoroutine != null)
         {

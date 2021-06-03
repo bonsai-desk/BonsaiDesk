@@ -71,8 +71,8 @@ Rigidbody:
   m_GameObject: {fileID: 1897995405423690374}
   serializedVersion: 2
   m_Mass: 1
-  m_Drag: 1
-  m_AngularDrag: 0.1
+  m_Drag: 0
+  m_AngularDrag: 0
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
@@ -166,7 +166,6 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.033333335
   isKinematic: 0
-  destroyIfBelow: 1
   allowPinchPull: 1
   meshRenderer: {fileID: 0}
   cachedMaterial: {fileID: 0}
