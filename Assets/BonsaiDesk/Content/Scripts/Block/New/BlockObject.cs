@@ -26,14 +26,22 @@ public partial class BlockObject : NetworkBehaviour
     //other blockObjects connected to this one. the coord is which bearing they are attached to. use their syncJoint for joint info
     private readonly SyncDictionary<Vector3Int, NetworkIdentityReference> _connectedToSelf = new SyncDictionary<Vector3Int, NetworkIdentityReference>();
 
+    //all info required to connect this block to its parent
     [SyncVar(hook = nameof(OnSyncJointChange))]
     private SyncJoint _syncJoint;
+
+    //used to reset the blockObject if it gets into an invalid configuration (bent joints)
+    [SyncVar] private Vector3 _validLocalPosition;
+    [SyncVar] private Quaternion _validLocalRotation;
 
     //---end all of the data required to reconstruct this block object---
 
     public SyncDictionary<Vector3Int, SyncBlock> Blocks => _blocks;
     public SyncDictionary<Vector3Int, NetworkIdentityReference> ConnectedToSelf => _connectedToSelf;
     public SyncJoint SyncJoint => _syncJoint;
+
+    //used to make sure ServerUpdateValidOrientationFromRoot is only called once if many blocks are added
+    private int _updateValidOrientationFromRootFrame;
 
     //caches changes made to the sync dictionary so all block changes can be made at once with a single mesh update
     //also allows client side prediction by queueing up changes that you have only just sent the command for
@@ -146,6 +154,7 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         Init();
+        BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
     }
 
     public override void OnStartClient()
@@ -230,7 +239,7 @@ public partial class BlockObject : NetworkBehaviour
 
         if (isServer)
         {
-            TeleportIfBelow();
+            CheckTeleport();
         }
 
         if (!_autoAuthority.HasAuthority())
@@ -306,6 +315,10 @@ public partial class BlockObject : NetworkBehaviour
     private void OnBlocksDictionaryChange(SyncDictionary<Vector3Int, SyncBlock>.Operation op, Vector3Int key, SyncBlock value)
     {
         _blockChanges.Enqueue((key, value, op));
+        if (_updateValidOrientationFromRootFrame != Time.frameCount)
+        {
+            BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
+        }
     }
 
     //loops through any blocks in _blockChanges and adds/removes blocks from the mesh
@@ -391,6 +404,7 @@ public partial class BlockObject : NetworkBehaviour
         NetworkIdentityReference value)
     {
         _connectedToSelfChanges.Enqueue((key, value, op));
+        BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
     }
 
     [Command(ignoreAuthority = true)]
@@ -403,6 +417,7 @@ public partial class BlockObject : NetworkBehaviour
     private void OnSyncJointChange(SyncJoint oldValue, SyncJoint newValue)
     {
         ConnectJoint(newValue);
+        BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
     }
 
     private void ConnectJoint(SyncJoint jointInfo)
@@ -1079,5 +1094,33 @@ public partial class BlockObject : NetworkBehaviour
     {
         CloseDialog();
         _autoAuthority.CmdDestroy();
+    }
+
+    [Server]
+    private void ServerUpdateValidOrientationFromRoot()
+    {
+        _updateValidOrientationFromRootFrame = Time.frameCount;
+
+        var toUpdate = new Queue<BlockObject>();
+        toUpdate.Enqueue(this);
+
+        while (toUpdate.Count > 0)
+        {
+            var next = toUpdate.Dequeue();
+            if (next.SyncJoint.attachedTo != null && next.SyncJoint.attachedTo.Value)
+            {
+                next._validLocalPosition = next.SyncJoint.attachedTo.Value.transform.InverseTransformPoint(next.transform.position);
+                next._validLocalRotation = Quaternion.Inverse(next.SyncJoint.attachedTo.Value.transform.rotation) * next.transform.rotation;
+            }
+
+            foreach (var pair in next.ConnectedToSelf)
+            {
+                if (pair.Value != null && pair.Value.Value)
+                {
+                    var childBlockObject = pair.Value.Value.GetComponent<BlockObject>();
+                    toUpdate.Enqueue(childBlockObject);
+                }
+            }
+        }
     }
 }

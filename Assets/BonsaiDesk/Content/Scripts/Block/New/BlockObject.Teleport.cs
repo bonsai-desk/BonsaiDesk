@@ -6,7 +6,7 @@ using UnityEngine;
 
 public partial class BlockObject
 {
-    private void TeleportIfBelow()
+    private void CheckTeleport()
     {
         //if this is not the root object, return. The root object will loop through and check its children
         if (BlockUtility.GetRootBlockObject(this) != this)
@@ -23,6 +23,22 @@ public partial class BlockObject
                 Debug.LogError("BlockObject has invalid transform!");
                 return;
             }
+
+            if (InvalidJointConfiguration(blockObjects[i]))
+            {
+                Debug.LogError("Invalid configuration");
+                return;
+            }
+        }
+
+        if (blockObjects.Count == 1 && blockObjects[0].Blocks.Count <= 4)
+        {
+            if (blockObjects[0].transform.position.y < -1f)
+            {
+                _autoAuthority.ServerStripOwnerAndDestroy();
+            }
+
+            return;
         }
 
         if (!BelowHeightOrFar(blockObjects))
@@ -90,8 +106,15 @@ public partial class BlockObject
             blockObjects[i]._body.velocity = Vector3.zero;
             blockObjects[i]._body.angularVelocity = Vector3.zero;
 
-            smoothSync.teleportAnyObjectFromServer(blockObjects[i].transform.position + offset, blockObjects[i].transform.rotation,
-                blockObjects[i].transform.localScale);
+            var newPosition = blockObjects[i].transform.position + offset;
+            var newRotation = blockObjects[i].transform.rotation;
+            var newScale = blockObjects[i].transform.localScale;
+
+            blockObjects[i].transform.position = newPosition;
+            blockObjects[i]._body.MovePosition(newPosition);
+            blockObjects[i]._body.MoveRotation(newRotation);
+
+            smoothSync.teleportAnyObjectFromServer(newPosition, newRotation, newScale);
         }
     }
 
@@ -135,5 +158,26 @@ public partial class BlockObject
         }
 
         return true;
+    }
+
+    private static bool InvalidJointConfiguration(BlockObject blockObject)
+    {
+        if (!blockObject.SyncJoint.connected)
+        {
+            return false;
+        }
+
+        if (blockObject.SyncJoint.attachedTo == null || !blockObject.SyncJoint.attachedTo.Value)
+        {
+            Debug.LogError("Joint connected but attachedTo is null.");
+            return true;
+        }
+
+        var targetPosition = blockObject.SyncJoint.attachedTo.Value.transform.TransformPoint(blockObject.SyncJoint.otherBearingCoord);
+        var currentPosition = blockObject.transform.TransformPoint(blockObject.SyncJoint.attachedToMeAtCoord);
+        var distanceSquared = Vector3.SqrMagnitude(targetPosition - currentPosition);
+
+        var invalid = distanceSquared > 0.01f * 0.01f;
+        return invalid;
     }
 }

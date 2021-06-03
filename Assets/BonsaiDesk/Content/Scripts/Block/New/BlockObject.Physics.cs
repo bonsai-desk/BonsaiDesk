@@ -147,7 +147,7 @@ public partial class BlockObject
                             Vector3 anchor = coord;
                             Vector3 connectedAnchor = blockCoord + 0.1f * axisLocalToAttachedTo;
                             SyncJoint jointInfo = new SyncJoint(new NetworkIdentityReference(attachedTo), positionLocalToAttachedTo, rotationLocalToAttachedTo,
-                                coord, axis, anchor, connectedAnchor);
+                                coord, blockCoord, axis, anchor, connectedAnchor);
 
                             //connect the joint
                             Mixpanel.Track("Attach Block To Bearing");
