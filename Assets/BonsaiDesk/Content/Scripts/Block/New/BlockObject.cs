@@ -297,6 +297,34 @@ public partial class BlockObject : NetworkBehaviour
 
     private void OnDestroy()
     {
+        //clean up any existing connections
+        //really, this shouldn't need to happen unless something goes wrong
+        if (isServer)
+        {
+            if (SyncJoint.connected)
+            {
+                ServerDisconnectJoint();
+            }
+
+            var toBeDisconnected = new Queue<BlockObject>();
+            foreach (var pair in ConnectedToSelf)
+            {
+                if (pair.Value != null && pair.Value.Value)
+                {
+                    var connectedBlockObject = pair.Value.Value.GetComponent<BlockObject>();
+                    if (connectedBlockObject.SyncJoint.connected)
+                    {
+                        toBeDisconnected.Enqueue(connectedBlockObject);
+                    }
+                }
+            }
+
+            while (toBeDisconnected.Count > 0)
+            {
+                toBeDisconnected.Dequeue().ServerDisconnectJoint();
+            }
+        }
+
         CloseDialog();
 
         if (_blockObjectAuthorities.Contains(_autoAuthority))
@@ -565,6 +593,7 @@ public partial class BlockObject : NetworkBehaviour
         if (_joint)
         {
             Destroy(_joint);
+            _joint = null;
         }
     }
 
@@ -667,9 +696,13 @@ public partial class BlockObject : NetworkBehaviour
             {
                 ServerDisconnectJoint();
             }
-            
+
             //check if removed block was where a bearing is which is attached to another blockObject
-            
+            if (ConnectedToSelf.TryGetValue(coord, out var netIdRef) && netIdRef != null && netIdRef.Value)
+            {
+                netIdRef.Value.GetComponent<BlockObject>().ServerDisconnectJoint();
+            }
+
             Blocks.Remove(coord);
         }
         else //if there are 2 or more groups of filled blocks, we must split this object into 2 or more objects
