@@ -298,11 +298,12 @@ public partial class BlockObject : NetworkBehaviour
     private void OnDestroy()
     {
         //clean up any existing connections
-        //really, this shouldn't need to happen unless something goes wrong
+        //this shouldn't need to happen unless something goes wrong
         if (isServer)
         {
             if (SyncJoint.connected)
             {
+                Debug.LogWarning("SyncJoint should have been cleaned up before destroy");
                 ServerDisconnectJoint();
             }
 
@@ -321,6 +322,7 @@ public partial class BlockObject : NetworkBehaviour
 
             while (toBeDisconnected.Count > 0)
             {
+                Debug.LogWarning("Connected blockObject should have been cleaned up before destroy");
                 toBeDisconnected.Dequeue().ServerDisconnectJoint();
             }
         }
@@ -659,12 +661,6 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        if (Blocks.Count <= 1)
-        {
-            _autoAuthority.ServerStripOwnerAndDestroy();
-            return;
-        }
-
         //flood fill blocks surrounding the block which will be removed so we can know if removing this block
         //should result in the block object splitting into 2 or more block objects
         var filledBlocksGroups = new List<Dictionary<Vector3Int, SyncBlock>>();
@@ -702,6 +698,12 @@ public partial class BlockObject : NetworkBehaviour
             {
                 netIdRef.Value.GetComponent<BlockObject>().ServerDisconnectJoint();
             }
+            
+            if (Blocks.Count <= 1)
+            {
+                _autoAuthority.ServerStripOwnerAndDestroy();
+                return;
+            }
 
             Blocks.Remove(coord);
         }
@@ -736,46 +738,114 @@ public partial class BlockObject : NetworkBehaviour
             //this will only happen for the server/host, so hopefully it does not glitch on the client
             ProcessBlockChanges();
 
-            //handle removing this blockObjects main joint
-            //the blockObject that this code is currently running on becomes the largestGroup. if this blockObject had a joint, and the joint is connected
-            //at a coord that is no longer a part of this blockObject, it should be removed
-            var cachedSyncJoint = SyncJoint; //cache the syncjoint so we can still access it if it is disconnected
-            if (cachedSyncJoint.connected && !largestGroup.ContainsKey(cachedSyncJoint.attachedToMeAtCoord))
+            var isSingleBearing = false;
+            if (largestGroup.Count == 1)
             {
-                ServerDisconnectJoint(); //also calls ProcessConnectedToSelfChanges
-            }
-
-            //handle removing this blockObjects ConnectedToSelf blockObjects joints
-            //disconnect any blockObjects that were connected to this blockObject but are not connected to the largestGroup (which this blockObject is becoming)
-            var connectedToDisconnect = new Queue<BlockObject>();
-            var cachedSyncJoints = new Dictionary<Vector3Int, (NetworkIdentityReference netIdRef, SyncJoint syncJoint)>();
-            foreach (var pair in ConnectedToSelf)
-            {
-                if (pair.Value != null && pair.Value.Value && !largestGroup.ContainsKey(pair.Key))
+                Vector3Int onlyBlockCoord = Vector3Int.zero;
+                SyncBlock onlyBlock = new SyncBlock();
+                foreach (var pair in largestGroup)
                 {
-                    var connectedBlockObject = pair.Value.Value.GetComponent<BlockObject>();
-                    if (connectedBlockObject)
+                    onlyBlockCoord = pair.Key;
+                    onlyBlock = largestGroup[pair.Key];
+                    break;
+                }
+
+                if (onlyBlock.name == "bearing")
+                {
+                    if (ConnectedToSelf.ContainsKey(onlyBlockCoord))
                     {
-                        connectedToDisconnect.Enqueue(connectedBlockObject);
+                        Debug.LogError("largest group: single bearing attached");
+                    }
+                    else
+                    {
+                        if (SyncJoint.connected)
+                        {
+                            Debug.LogError("largest group: A single bearing should not have a SyncJoint");
+                        }
+                        //largest group: single bearing NOT attached
+                        _autoAuthority.ServerStripOwnerAndDestroy();
+                    }
+
+                    isSingleBearing = true;
+                }
+            }
+            
+            var cachedSyncJoint = SyncJoint; //cache the syncjoint so we can still access it if it is disconnected
+            var cachedSyncJoints = new Dictionary<Vector3Int, (NetworkIdentityReference netIdRef, SyncJoint syncJoint)>();
+
+            if (!isSingleBearing)
+            {
+                //handle removing this blockObjects main joint
+                //the blockObject that this code is currently running on becomes the largestGroup. if this blockObject had a joint, and the joint is connected
+                //at a coord that is no longer a part of this blockObject, it should be removed
+                if (cachedSyncJoint.connected && !largestGroup.ContainsKey(cachedSyncJoint.attachedToMeAtCoord))
+                {
+                    ServerDisconnectJoint(); //also calls ProcessConnectedToSelfChanges
+                }
+
+                //handle removing this blockObjects ConnectedToSelf blockObjects joints
+                //disconnect any blockObjects that were connected to this blockObject but are not connected to the largestGroup (which this blockObject is becoming)
+                var connectedToDisconnect = new Queue<BlockObject>();
+                foreach (var pair in ConnectedToSelf)
+                {
+                    if (pair.Value != null && pair.Value.Value && !largestGroup.ContainsKey(pair.Key))
+                    {
+                        var connectedBlockObject = pair.Value.Value.GetComponent<BlockObject>();
+                        if (connectedBlockObject)
+                        {
+                            connectedToDisconnect.Enqueue(connectedBlockObject);
+                        }
                     }
                 }
-            }
 
-            while (connectedToDisconnect.Count > 0)
-            {
-                var connectedBlockObject = connectedToDisconnect.Dequeue();
-                if (connectedBlockObject.SyncJoint.connected)
+                while (connectedToDisconnect.Count > 0)
                 {
-                    cachedSyncJoints.Add(connectedBlockObject.SyncJoint.otherBearingCoord,
-                        (new NetworkIdentityReference(connectedBlockObject.netIdentity), connectedBlockObject.SyncJoint));
-                }
+                    var connectedBlockObject = connectedToDisconnect.Dequeue();
+                    if (connectedBlockObject.SyncJoint.connected)
+                    {
+                        cachedSyncJoints.Add(connectedBlockObject.SyncJoint.otherBearingCoord,
+                            (new NetworkIdentityReference(connectedBlockObject.netIdentity), connectedBlockObject.SyncJoint));
+                    }
 
-                connectedBlockObject.ServerDisconnectJoint();
+                    connectedBlockObject.ServerDisconnectJoint();
+                }
             }
 
             //generate the new block objects from the remaining blocks groups
             foreach (var filledBlocks in filledBlocksGroups)
             {
+                if (filledBlocks.Count == 1)
+                {
+                    Vector3Int onlyBlockCoord = Vector3Int.zero;
+                    SyncBlock onlyBlock = new SyncBlock();
+                    foreach (var pair in filledBlocks)
+                    {
+                        onlyBlockCoord = pair.Key;
+                        onlyBlock = filledBlocks[pair.Key];
+                        break;
+                    }
+
+                    if (onlyBlock.name == "bearing")
+                    {
+                        if (cachedSyncJoints.ContainsKey(onlyBlockCoord))
+                        {
+                            //single bearing attached to something else
+                            Debug.LogError("single bearing attached");
+                        }
+                        else
+                        {
+                            if (SyncJoint.connected)
+                            {
+                                Debug.LogError("A single bearing should not have a SyncJoint");
+                            }
+                            //single bearing NOT attached
+                            //just don't do anything and it won't be spawned
+                        }
+
+                        continue;
+                    }
+                }
+                
                 var newBlockObject = Instantiate(StaticPrefabs.instance.blockObjectPrefab, transform.position, transform.rotation);
 
                 //add all blocks before spawning. they will be turned into MeshBlocks in Init
