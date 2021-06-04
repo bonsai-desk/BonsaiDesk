@@ -626,7 +626,7 @@ public class NetworkManagerGame : NetworkManager
 
     private void TerminateWithError(Message msg)
     {
-        BonsaiLogError($"Error {msg.GetError().Message}");
+        BonsaiLogError($"Error {msg.GetError().Code} {msg.GetError().HttpCode} {msg.GetError().Message}");
         Application.Quit();
     }
 

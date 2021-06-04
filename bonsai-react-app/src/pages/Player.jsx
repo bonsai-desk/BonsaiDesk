@@ -24,28 +24,28 @@ import YtImg from '../static/yt-small.png';
 import {NormalButton} from '../components/Button';
 
 export const PlayerPage = observer(() => {
-    const {store} = useStore();
+    const {mediaInfo} = useStore();
     const [preMuteVolume, setPreMuteVolume] = useState(null);
 
-    const finished = (store.MediaInfo.Duration - store.MediaInfo.Scrub) < 0.25;
+    const finished = (mediaInfo.Duration - mediaInfo.Scrub) < 0.25;
 
-    let media = store.MediaInfo;
+    let media = mediaInfo;
     
     let mediaActive = media.Active;
 
     const playerLevel = media.Scrub / media.Duration;
 
-    const volumeApproxZero = store.MediaInfo.VolumeLevel < 0.001;
+    const volumeApproxZero = mediaInfo.VolumeLevel < 0.001;
 
     function handleClickMute() {
         if (!mediaActive) {
             return;
         }
         
-        if (store.MediaInfo.VolumeLevel < 0.0001) {
+        if (mediaInfo.VolumeLevel < 0.0001) {
             postSetVolume(preMuteVolume);
         } else {
-            setPreMuteVolume(store.MediaInfo.VolumeLevel);
+            setPreMuteVolume(mediaInfo.VolumeLevel);
             postSetVolume(0);
         }
     }
@@ -55,7 +55,7 @@ export const PlayerPage = observer(() => {
             return;
         }
         
-        let ts = level * store.MediaInfo.Duration;
+        let ts = level * mediaInfo.Duration;
         postSeekPlayer(ts);
     }
 
@@ -100,7 +100,7 @@ export const PlayerPage = observer(() => {
         if (finished) {
             return <KeySVG handleClick={handleRestart} imgSrc={ResetImg}/>;
         } else {
-            if (store.MediaInfo.Paused) {
+            if (mediaInfo.Paused) {
                 return <KeySVG handleClick={handlePlay} imgSrc={PlayImg}/>;
             } else {
                 return <KeySVG handleClick={handlePause} imgSrc={PauseImg}/>;

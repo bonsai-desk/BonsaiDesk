@@ -73,7 +73,7 @@ function NavItem(props) {
         buttonClass = '',
         buttonClassInactive = '',
         to = '',
-        unread = false
+        unread = false,
     } = props;
 
     let history = useHistory();
@@ -111,9 +111,9 @@ function NavItem(props) {
                 <InstantButton className={className} onClick={() => {
                     history.push(to);
                 }}>
-                    <div className={"w-full flex flex-wrap justify-between content-center"}>
+                    <div className={'w-full flex flex-wrap justify-between content-center'}>
                         <span className={textClass}>{props.children}</span>
-                        {unread ? <div className={"mt-2 w-3 h-3 bg-gray-200 rounded-full"}/> : ""}
+                        {unread ? <div className={'mt-2 w-3 h-3 bg-gray-200 rounded-full'}/> : ''}
                     </div>
                 </InstantButton>
         );
@@ -141,10 +141,10 @@ function NavTitle(props) {
 }
 
 let Menu = observer(() => {
+    console.log('menu');
+    let {store, mediaInfo} = useStore();
 
-    let {store, pushStore} = useStore();
-    
-    let debug = store.AppInfo.Build === "DEVELOPMENT";
+    let debug = store.AppInfo.Build === 'DEVELOPMENT';
 
     let match = useRouteMatch();
 
@@ -162,16 +162,16 @@ let Menu = observer(() => {
 
             if (roomCode && (!networkAddress || !roomOpen)) {
                 console.log('Remove room code');
-                pushStore({RoomCode: null});
+                store.RoomCode = null;
                 return;
             }
 
             // send ip/port out for a room code
             if (roomOpen && !roomCode && !loadingRoomCode && networkAddress) {
                 console.log('fetch room code');
-                pushStore({LoadingRoomCode: true});
+                store.LoadingRoomCode = true;
                 let url = apiBase(store) + '/rooms';
-                let data = `network_address=${networkAddress}&username=${userName}&version=${version}&public_room=${publicRoom}`
+                let data = `network_address=${networkAddress}&username=${userName}&version=${version}&public_room=${publicRoom}`;
                 axios(
                         {
                             method: 'post',
@@ -184,11 +184,12 @@ let Menu = observer(() => {
                     let secret = response.data.secret;
 
                     console.log(`Got room ${tag} ${secret}`);
-                    pushStore({RoomSecret: secret});
-                    pushStore({RoomCode: tag, LoadingRoomCode: false});
+                    store.RoomSecret = secret;
+                    store.RoomCode = tag;
+                    store.LoadingRoomCode = false;
                 }).catch(err => {
                     console.log(err);
-                    pushStore({LoadingRoomCode: false});
+                    store.LoadingRoomCode = false;
                 });
             }
         });
@@ -197,22 +198,22 @@ let Menu = observer(() => {
 
     useEffect(() => {
         return () => {
-            pushStore({RoomCode: null});
+            store.RoomCode = null;
         };
-    }, [pushStore]);
+    }, [store]);
 
     if (!store.AppInfo.MicrophonePermission) {
         return <NoMicPage/>;
     }
-    
-    let mediaButtonClass = ""
-    let mediaButtonClassSelected = ""
-    
-    if (store.MediaInfo.Active){
-        mediaButtonClass = 'py-4 px-8 hover:bg-gray-800 active:bg-gray-900 hover:text-white rounded cursor-pointer flex flex-wrap content-center'
-        mediaButtonClassSelected = 'py-4 px-8 bg-bonsai-green text-white rounded cursor-pointer flex flex-wrap content-center'
+
+    let mediaButtonClass = '';
+    let mediaButtonClassSelected = '';
+
+    if (mediaInfo.Active) {
+        mediaButtonClass = 'py-4 px-8 hover:bg-gray-800 active:bg-gray-900 hover:text-white rounded cursor-pointer flex flex-wrap content-center';
+        mediaButtonClassSelected = 'py-4 px-8 bg-bonsai-green text-white rounded cursor-pointer flex flex-wrap content-center';
     }
-    
+
     let homeActive = store.NetworkInfo.RoomOpen || store.NetworkInfo.Mode === NetworkManagerMode.ClientOnly;
 
     return (
@@ -239,16 +240,16 @@ let Menu = observer(() => {
                         <NavItem to={'/menu/player'}
                                  buttonClass={mediaButtonClass}
                                  buttonClassSelected={mediaButtonClassSelected}
-                                 unread={store.MediaInfo.Active}
+                                 unread={mediaInfo.Active}
                         >
-                                
+
                             Media
                         </NavItem>
                         <NavItem to={'/menu/room'}>Lights & Layout</NavItem>
                         <NavItem to={'/menu/settings'}>Settings</NavItem>
                         {debug ?
                                 <NavItem to={'/menu/debug'} component={DebugPage}>Debug</NavItem>
-                                : ""
+                                : ''
                         }
                     </NavList>
                     <div className={'w-full p-2'}>

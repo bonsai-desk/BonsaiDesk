@@ -10,7 +10,6 @@ import {InfoItemCustom} from '../components/InfoItem';
 import BlockImg from '../static/block-line.svg';
 import ThumbImg from '../static/thumb-up.svg';
 import MenuImg from '../static/menu.svg';
-import jwt from 'jsonwebtoken';
 
 const Tab = {
     Hot: 0,
@@ -38,6 +37,7 @@ let ThumbButton = observer((props) => {
             }).then(response => {
                 console.log(response);
             }).catch(err => {
+                console.log(err);
                 setLiked(false);
             });
         }
@@ -85,17 +85,19 @@ let BlockPost = observer(({build_name, user_name, created_at, likes, build_id, l
         <ThumbButton imgSrc={ThumbImg} likes={likes} buildId={build_id} liked={liked}/>
     </div>;
 
-    function postReport(callback) {
+    function postReport() {
         let url = store.ApiBase + '/blocks/report';
         axios({
             method: 'POST',
             url: url,
             data: `token=${store.BonsaiToken}&build_id=${build_id}`,
             headers: {'content-type': 'application/x-www-form-urlencoded'},
-        }).catch(err => console.log).then(response => {
+        }).then(response => {
             if (response.data.done === 0 || response.data.done === 1) {
                 setReported(true);
             }
+        }).catch(err => {
+            console.log(err);
         });
     }
 
@@ -134,9 +136,9 @@ const NewPage = observer(() => {
     let url = store.ApiBase + `/blocks/new?token=${store.BonsaiToken}`;
 
     useEffect(() => {
-        axios.get(url).catch(err => console.log).then(response => {
+        axios.get(url).then(response => {
             setData(response.data);
-        }).catch(err => console.log);
+        }).catch(console.log);
 
     }, [url]);
 
@@ -152,9 +154,9 @@ const HotPage = observer(() => {
     let url = store.ApiBase + `/blocks/hot?token=${store.BonsaiToken}`;
 
     useEffect(() => {
-        axios.get(url).catch(err => console.log).then(response => {
+        axios.get(url).then(response => {
             setData(response.data);
-        }).catch(err => console.log);
+        }).catch(console.log);
 
     }, [url]);
 
@@ -170,17 +172,15 @@ const ProfilePage = observer(() => {
     let url = store.ApiBase + `/blocks/hot?token=${store.BonsaiToken}`;
 
     useEffect(() => {
-        axios.get(url).catch(err => console.log).then(response => {
+        axios.get(url).then(response => {
             setData(response.data);
-        }).catch(err => console.log);
+        }).catch(console.log);
 
     }, [url]);
 
-    let info = jwt.decode(store.BonsaiToken);
-
     return <React.Fragment>
         <div>
-            {info.display_name}
+            {store.SocialInfo.UserName}
         </div>
         {data.map(x => <BlockPost {...x}/>)}
     </React.Fragment>;
@@ -217,10 +217,12 @@ export const BlocksPage = observer(() => {
         case Tab.New:
             Inner = NewPage;
             break;
+        default:
+            Inner = <div>Page Not Found</div>;
     }
 
     let navBar = <div className={'flex flex-wrap w-full space-x-20 justify-center'}>
-        <InstantButton className={hotButtonClass} onClick={handleClickHot}>Hot</InstantButton>
+        <InstantButton className={hotButtonClass} onClick={handleClickHot}>Top</InstantButton>
         <InstantButton className={newButtonClass} onClick={handleClickNew}>New</InstantButton>
         <InstantButton className={profileButtonClass} onClick={handleClickProfile}>Profile</InstantButton>
     </div>;

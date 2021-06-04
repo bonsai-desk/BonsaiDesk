@@ -3,8 +3,7 @@ import {useHistory} from 'react-router-dom';
 import {BackButton} from './Button';
 
 export function MenuContentTabbed(props) {
-    let {name, back, navBar} = props;
-    let history = useHistory();
+    let {back, navBar} = props;
 
     return (
             <div className={'text-white h-full'}>
