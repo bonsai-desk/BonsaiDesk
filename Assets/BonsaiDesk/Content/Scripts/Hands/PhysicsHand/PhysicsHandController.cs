@@ -139,9 +139,14 @@ public class PhysicsHandController : MonoBehaviour
 
     public static bool InvalidTransform(Transform t)
     {
-        return float.IsNaN(t.position.x) || float.IsNaN(t.position.y) || float.IsNaN(t.position.z) || float.IsInfinity(t.position.x) ||
-               float.IsInfinity(t.position.y) || float.IsInfinity(t.position.z) || float.IsNaN(t.rotation.x) || float.IsNaN(t.rotation.y) ||
-               float.IsNaN(t.rotation.z) || float.IsNaN(t.rotation.w);
+        var invalid = float.IsNaN(t.position.x) || float.IsNaN(t.position.y) || float.IsNaN(t.position.z) || float.IsInfinity(t.position.x) ||
+                      float.IsInfinity(t.position.y) || float.IsInfinity(t.position.z) || float.IsNaN(t.rotation.x) || float.IsNaN(t.rotation.y) ||
+                      float.IsNaN(t.rotation.z) || float.IsNaN(t.rotation.w);
+        if (invalid)
+        {
+            print("Detected invalid transform for: " + t.name);
+        }
+        return invalid;
     }
 
     public void SetKinematic()

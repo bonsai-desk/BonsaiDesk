@@ -126,6 +126,9 @@ public partial class BlockObject : NetworkBehaviour
     private static readonly int EffectColor = Shader.PropertyToID("_EffectColor");
     private static readonly int Health = Shader.PropertyToID("_Health");
 
+    //used so we can just check for problems every few seconds, not every frame
+    private float _nextCheckBlockObjectForProblemsTime;
+
     //for testing purposes
     public bool debug = false;
 
@@ -173,6 +176,8 @@ public partial class BlockObject : NetworkBehaviour
 
         gameObject.name = "Block Object - " + Random.Range(0, int.MaxValue);
 
+        _nextCheckBlockObjectForProblemsTime = Time.time + 2f + Random.value * 2f;
+
         //make copy of material so material asset is not changed
         blockObjectMaterial = new Material(blockObjectMaterial);
         blockObjectMaterial.SetTexture(TextureArray, BlockUtility.BlockTextureArray);
@@ -211,58 +216,8 @@ public partial class BlockObject : NetworkBehaviour
         UpdateDamagedBlocks();
         UpdateWholeEffects();
         UpdateDialogPosition();
-
-        for (int i = _potentialBlocksParent.childCount - 1; i >= 0; i--)
-        {
-            var childBlockObject = _potentialBlocksParent.GetChild(i).GetComponent<BlockObject>();
-            if (!childBlockObject || Time.time - childBlockObject._lastTouchingHandTime > 1f)
-            {
-                _potentialBlocksParent.GetChild(i).parent = null;
-            }
-        }
-
-        if (_potentialBlocksParent.childCount > 0)
-        {
-            _autoAuthority.SetKinematicLocalForOneFrame();
-        }
-
-        if (debug)
-        {
-            if (Input.GetKeyDown(KeyCode.S))
-            {
-                Save();
-            }
-
-            if (Input.GetKeyDown(KeyCode.C))
-            {
-                Debug.LogWarning("--- for: " + gameObject.name);
-                if (SyncJoint.connected)
-                {
-                    Debug.LogWarning("my joint: " + SyncJoint.attachedTo.Value.name);
-                }
-                else
-                {
-                    Debug.LogWarning("no joint");
-                }
-
-                Debug.LogWarning($"{ConnectedToSelf.Count} connections");
-                foreach (var pair in ConnectedToSelf)
-                {
-                    if (pair.Value == null)
-                    {
-                        Debug.LogError("net null");
-                    }
-                    else if (!pair.Value.Value)
-                    {
-                        Debug.LogError("net value null, but net id = " + pair.Value.NetworkId);
-                    }
-                    else
-                    {
-                        Debug.LogWarning("my connection: " + pair.Value.Value.GetComponent<BlockObject>().SyncJoint.attachedTo.Value.name);
-                    }
-                }
-            }
-        }
+        CheckPotentialBlocksParent();
+        CheckForProblems();
     }
 
     private void FixedUpdate()
@@ -546,9 +501,12 @@ public partial class BlockObject : NetworkBehaviour
             if (jointInfo != SyncJoint)
             {
                 Debug.LogError("Joint already exists, but does not equal jointInfo. Did client side prediction cause it to get un-synced?");
+                DisconnectJoint();
             }
-
-            return;
+            else
+            {
+                return;
+            }
         }
 
         //joints are doubly linked, so maybe one exists before the other? If that is the case, just return and it will be handled by the other blockObject
@@ -884,6 +842,7 @@ public partial class BlockObject : NetworkBehaviour
                         {
                             netIdRef.Value.GetComponent<BlockObject>().ServerDisconnectJoint();
                         }
+
                         autoAuthority.ServerStripOwnerAndDestroy();
                     }
                     else
@@ -1465,6 +1424,48 @@ public partial class BlockObject : NetworkBehaviour
         {
             Destroy(root._activeDialog);
             root._activeDialog = null;
+        }
+    }
+
+    private void CheckPotentialBlocksParent()
+    {
+        for (int i = _potentialBlocksParent.childCount - 1; i >= 0; i--)
+        {
+            var childBlockObject = _potentialBlocksParent.GetChild(i).GetComponent<BlockObject>();
+            if (!childBlockObject || Time.time - childBlockObject._lastTouchingHandTime > 1f)
+            {
+                _potentialBlocksParent.GetChild(i).parent = null;
+            }
+        }
+
+        if (_potentialBlocksParent.childCount > 0)
+        {
+            _autoAuthority.SetKinematicLocalForOneFrame();
+        }
+    }
+
+    private void CheckForProblems()
+    {
+        //TODO: this will check for things that should be connected but are not, and it will connect them. it does not check if something is connected but should not be
+        if (Time.time > _nextCheckBlockObjectForProblemsTime)
+        {
+            _nextCheckBlockObjectForProblemsTime = Time.time + 2f + Random.value * 2f;
+            var problem = BlockObjectNullTest.CheckBlockObjectForProblems(this);
+            if (problem.syncConnectionProblem)
+            {
+                //TODO: can anything be done if this problem is detected?
+                Debug.LogError("Found sync connection problem with blockObject: " + gameObject.name);
+            }
+
+            if (problem.hingeJointProblem)
+            {
+                Debug.LogError("Found hinge joint problem with blockObject: " + gameObject.name + ". Attempting to correct.");
+                var blockObjects = BlockUtility.GetBlockObjectsFromRoot(BlockUtility.GetRootBlockObject(this));
+                for (int i = 0; i < blockObjects.Count; i++)
+                {
+                    blockObjects[i].ConnectInitialJoints(); //this will not edit any existing joints which are correct
+                }
+            }
         }
     }
 

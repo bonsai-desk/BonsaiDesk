@@ -277,7 +277,8 @@ public partial class BlockObject
 
         if (blockObject.SyncJoint.attachedTo == null || !blockObject.SyncJoint.attachedTo.Value)
         {
-            Debug.LogError("Joint connected but attachedTo is null.");
+            var msg = blockObject.SyncJoint.attachedTo == null ? "null" : "nedId - " + blockObject.SyncJoint.attachedTo.NetworkId;
+            Debug.LogError($"Joint connected but attachedTo is null: {msg}");
             return true;
         }
 
@@ -316,7 +317,7 @@ public partial class BlockObject
 
         var toUpdate = new Queue<BlockObject>();
         toUpdate.Enqueue(rootBlockObject);
-        
+
         while (toUpdate.Count > 0)
         {
             var next = toUpdate.Dequeue();

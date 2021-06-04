@@ -52,6 +52,21 @@ public partial class BlockObject
             Debug.LogError("Joint exists but is not connected to anything. Destroying joint.");
             Destroy(_joint);
             _joint = null;
+
+            if (SyncJoint.connected)
+            {
+                print("Attempting to reconnect joint");
+                if (SyncJoint.attachedTo == null)
+                {
+                    Debug.LogError("SyncJoint connected, but attachedTo is null");
+                }
+                else if (SyncJoint.attachedTo.Value)
+                {
+                    Debug.LogError("SyncJoint connected, but attachedTo.Value is null");
+                }
+
+                ConnectJoint(SyncJoint);
+            }
         }
 
         if (_autoAuthority.HasAuthority())
