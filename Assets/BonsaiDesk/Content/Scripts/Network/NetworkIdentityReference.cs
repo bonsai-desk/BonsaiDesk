@@ -1,4 +1,5 @@
 ﻿using Mirror;
+using UnityEngine;
 
 [System.Serializable]
 public class NetworkIdentityReference
@@ -56,6 +57,11 @@ public class NetworkIdentityReference
         if (networkIdentity == null)
             return;
 
+        if (networkIdentity.netId == 0)
+        {
+            Debug.LogError("Creating NetworkIdentityReference with NetworkId 0");
+        }
+
         NetworkId = networkIdentity.netId;
         _networkIdentityCached = networkIdentity;
     }
@@ -66,6 +72,11 @@ public class NetworkIdentityReference
     /// <param name="networkId"></param>
     public NetworkIdentityReference(uint networkId)
     {
+        if (networkId == 0)
+        {
+            Debug.LogError("Creating NetworkIdentityReference with NetworkId 0");
+        }
+        
         NetworkId = networkId;
     }
 }

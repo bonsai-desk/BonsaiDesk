@@ -171,6 +171,8 @@ public partial class BlockObject : NetworkBehaviour
 
         _isInit = true;
 
+        gameObject.name = "Block Object - " + Random.Range(0, int.MaxValue);
+
         //make copy of material so material asset is not changed
         blockObjectMaterial = new Material(blockObjectMaterial);
         blockObjectMaterial.SetTexture(TextureArray, BlockUtility.BlockTextureArray);
@@ -224,9 +226,42 @@ public partial class BlockObject : NetworkBehaviour
             _autoAuthority.SetKinematicLocalForOneFrame();
         }
 
-        if (debug && Input.GetKeyDown(KeyCode.S))
+        if (debug)
         {
-            Save();
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                Save();
+            }
+
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                Debug.LogWarning("--- for: " + gameObject.name);
+                if (SyncJoint.connected)
+                {
+                    Debug.LogWarning("my joint: " + SyncJoint.attachedTo.Value.name);
+                }
+                else
+                {
+                    Debug.LogWarning("no joint");
+                }
+
+                Debug.LogWarning($"{ConnectedToSelf.Count} connections");
+                foreach (var pair in ConnectedToSelf)
+                {
+                    if (pair.Value == null)
+                    {
+                        Debug.LogError("net null");
+                    }
+                    else if (!pair.Value.Value)
+                    {
+                        Debug.LogError("net value null, but net id = " + pair.Value.NetworkId);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("my connection: " + pair.Value.Value.GetComponent<BlockObject>().SyncJoint.attachedTo.Value.name);
+                    }
+                }
+            }
         }
     }
 
@@ -374,24 +409,35 @@ public partial class BlockObject : NetworkBehaviour
             switch (op)
             {
                 case SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation.OP_ADD:
-                    if (!identity.Value)
+                    if (identity == null || !identity.Value)
                     {
                         break;
                     }
 
-                    var otherBlockObject = identity.Value.GetComponent<BlockObject>();
+                    var otherBlockObjectAdd = identity.Value.GetComponent<BlockObject>();
 
-                    if (!otherBlockObject)
+                    if (!otherBlockObjectAdd)
                     {
                         break;
                     }
 
-                    otherBlockObject.ConnectJoint(otherBlockObject._syncJoint);
+                    otherBlockObjectAdd.ConnectJoint(otherBlockObjectAdd._syncJoint);
 
                     break;
                 case SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation.OP_REMOVE:
+                    if (identity == null || !identity.Value)
+                    {
+                        break;
+                    }
 
-                    //TODO: remove joint
+                    var otherBlockObjectRemove = identity.Value.GetComponent<BlockObject>();
+
+                    if (!otherBlockObjectRemove)
+                    {
+                        break;
+                    }
+
+                    otherBlockObjectRemove.DisconnectJoint();
 
                     break;
                 default:
@@ -416,6 +462,12 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         _syncJoint = jointInfo;
+
+        if (jointInfo.attachedTo == null || !jointInfo.attachedTo.Value)
+        {
+            Debug.LogError("jointInfo attachedTo is null");
+            return;
+        }
 
         var attachedToBlockObject = jointInfo.attachedTo.Value.GetComponent<BlockObject>();
 
@@ -640,8 +692,10 @@ public partial class BlockObject : NetworkBehaviour
 
             //the blockObject that this code is currently running on becomes the largestGroup. if this blockObject had a joint, and the joint is connected
             //at a coord that is no longer a part of this blockObject, it should be removed
-            if (SyncJoint.connected && !largestGroup.ContainsKey(SyncJoint.attachedToMeAtCoord))
+            var cachedSyncJoint = SyncJoint; //cache the syncjoint so we can still access it if it is disconnected
+            if (cachedSyncJoint.connected && !largestGroup.ContainsKey(cachedSyncJoint.attachedToMeAtCoord))
             {
+                ServerDisconnectJoint();
             }
 
             //generate the new block objects from the remaining blocks groups
@@ -656,14 +710,63 @@ public partial class BlockObject : NetworkBehaviour
                 }
 
                 NetworkServer.Spawn(newBlockObject);
+
+                if (cachedSyncJoint.connected && filledBlocks.ContainsKey(cachedSyncJoint.attachedToMeAtCoord))
+                {
+                    if (cachedSyncJoint.attachedTo != null && cachedSyncJoint.attachedTo.Value)
+                    {
+                        newBlockObjectScript._syncJoint = cachedSyncJoint;
+                        cachedSyncJoint.attachedTo.Value.GetComponent<BlockObject>().ConnectedToSelf.Add(cachedSyncJoint.otherBearingCoord,
+                            new NetworkIdentityReference(newBlockObjectScript.netIdentity)); //must be done after spawn so netIdentity has a non-zero netId
+                    }
+                }
+
                 newBlockObject.GetComponent<AutoAuthority>().ServerForceNewOwner(identityId, NetworkTime.time, false);
             }
         }
-        
+
         if (_updateValidOrientationFromRootFrame != Time.frameCount)
         {
             BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
         }
+    }
+
+    [Server]
+    private void ServerDisconnectJoint()
+    {
+        if (!_syncJoint.connected)
+        {
+            Debug.LogError("Joint was not connected");
+            return;
+        }
+
+        var oldSyncJoint = _syncJoint;
+        _syncJoint = new SyncJoint();
+        DisconnectJoint();
+
+        if (oldSyncJoint.attachedTo == null || !oldSyncJoint.attachedTo.Value)
+        {
+            Debug.LogError("oldSyncJoint attachedTo is null");
+            return;
+        }
+
+        var attachedToBlockObject = oldSyncJoint.attachedTo.Value.GetComponent<BlockObject>();
+
+        if (!attachedToBlockObject)
+        {
+            Debug.LogError("attachedTo blockObject does not exist in ServerDisconnectJoint");
+            return;
+        }
+
+        if (!attachedToBlockObject.ConnectedToSelf.ContainsKey(oldSyncJoint.otherBearingCoord))
+        {
+            Debug.LogError("ConnectedToSelf does not contain key.");
+            return;
+        }
+
+        attachedToBlockObject.ConnectedToSelf.Remove(oldSyncJoint.otherBearingCoord);
+        attachedToBlockObject.ProcessConnectedToSelfChanges();
+        BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
     }
 
     private void RemoveBlockFromMesh(Vector3Int coord)
@@ -1174,7 +1277,7 @@ public partial class BlockObject : NetworkBehaviour
     private void Save()
     {
         CloseDialog();
-        print(BlockUtility.SerializeBlocks(Blocks));
+        Debug.LogWarning(BlockUtility.SerializeBlocks(Blocks));
     }
 
     private void Delete()

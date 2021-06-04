@@ -30,7 +30,7 @@ public class BlockObjectNullTest : NetworkBehaviour
         {
             if (!AllConnectedCheckGood(blockObjects[i]))
             {
-                CmdMsg("Failed BFS.");
+                CmdMsg("Failed BFS: " + blockObjects[i].name);
                 allGood = false;
             }
             
@@ -40,7 +40,7 @@ public class BlockObjectNullTest : NetworkBehaviour
                                !blockObjects[i].SyncJoint.attachedTo.Value.GetComponent<BlockObject>() || !blockObjects[i].Joint;
                 if (badJoint)
                 {
-                    CmdMsg("Connected but bad joint.");
+                    CmdMsg("Connected but bad joint: " + blockObjects[i].name);
                     allGood = false;
                 }
             }
@@ -53,7 +53,7 @@ public class BlockObjectNullTest : NetworkBehaviour
                                     !pair.Value.Value.GetComponent<BlockObject>().SyncJoint.attachedTo.Value.GetComponent<BlockObject>();
                 if (badConnection)
                 {
-                    CmdMsg("Bad joint connection.");
+                    CmdMsg("Bad joint connection: " + blockObjects[i].name);
                     allGood = false;
                 }
             }
