@@ -151,7 +151,7 @@ public partial class BlockObject
 
                             //connect the joint
                             Mixpanel.Track("Attach Block To Bearing");
-                            CmdConnectJoint(jointInfo, blockCoord);
+                            CmdConnectJoint(jointInfo);
 
                             //client side prediction
                             ConnectJoint(jointInfo);

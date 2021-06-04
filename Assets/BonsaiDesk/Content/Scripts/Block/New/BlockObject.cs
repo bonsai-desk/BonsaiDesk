@@ -454,7 +454,7 @@ public partial class BlockObject : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdConnectJoint(SyncJoint jointInfo, Vector3Int attachedToBearingCoord)
+    private void CmdConnectJoint(SyncJoint jointInfo)
     {
         if (_syncJoint.connected)
         {
@@ -477,18 +477,23 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        if (attachedToBlockObject.ConnectedToSelf.ContainsKey(attachedToBearingCoord))
+        if (attachedToBlockObject.ConnectedToSelf.ContainsKey(jointInfo.otherBearingCoord))
         {
             Debug.LogError("ConnectedToSelf already contains key.");
             return;
         }
 
-        attachedToBlockObject.ConnectedToSelf.Add(attachedToBearingCoord, new NetworkIdentityReference(netIdentity));
+        attachedToBlockObject.ConnectedToSelf.Add(jointInfo.otherBearingCoord, new NetworkIdentityReference(netIdentity));
         BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
     }
 
     private void OnSyncJointChange(SyncJoint oldValue, SyncJoint newValue)
     {
+        if (oldValue.connected && newValue.connected && oldValue != newValue)
+        {
+            DisconnectJoint();
+        }
+
         if (newValue.connected)
         {
             ConnectJoint(newValue);
@@ -657,6 +662,14 @@ public partial class BlockObject : NetworkBehaviour
         //if there is only one group of filled blocks, just remove the block
         if (filledBlocksGroups.Count <= 1)
         {
+            //check if removed block was where own joint is attached
+            if (SyncJoint.connected && SyncJoint.attachedToMeAtCoord == coord)
+            {
+                ServerDisconnectJoint();
+            }
+            
+            //check if removed block was where a bearing is which is attached to another blockObject
+            
             Blocks.Remove(coord);
         }
         else //if there are 2 or more groups of filled blocks, we must split this object into 2 or more objects
@@ -690,12 +703,41 @@ public partial class BlockObject : NetworkBehaviour
             //this will only happen for the server/host, so hopefully it does not glitch on the client
             ProcessBlockChanges();
 
+            //handle removing this blockObjects main joint
             //the blockObject that this code is currently running on becomes the largestGroup. if this blockObject had a joint, and the joint is connected
             //at a coord that is no longer a part of this blockObject, it should be removed
             var cachedSyncJoint = SyncJoint; //cache the syncjoint so we can still access it if it is disconnected
             if (cachedSyncJoint.connected && !largestGroup.ContainsKey(cachedSyncJoint.attachedToMeAtCoord))
             {
                 ServerDisconnectJoint(); //also calls ProcessConnectedToSelfChanges
+            }
+
+            //handle removing this blockObjects ConnectedToSelf blockObjects joints
+            //disconnect any blockObjects that were connected to this blockObject but are not connected to the largestGroup (which this blockObject is becoming)
+            var connectedToDisconnect = new Queue<BlockObject>();
+            var cachedSyncJoints = new Dictionary<Vector3Int, (NetworkIdentityReference netIdRef, SyncJoint syncJoint)>();
+            foreach (var pair in ConnectedToSelf)
+            {
+                if (pair.Value != null && pair.Value.Value && !largestGroup.ContainsKey(pair.Key))
+                {
+                    var connectedBlockObject = pair.Value.Value.GetComponent<BlockObject>();
+                    if (connectedBlockObject)
+                    {
+                        connectedToDisconnect.Enqueue(connectedBlockObject);
+                    }
+                }
+            }
+
+            while (connectedToDisconnect.Count > 0)
+            {
+                var connectedBlockObject = connectedToDisconnect.Dequeue();
+                if (connectedBlockObject.SyncJoint.connected)
+                {
+                    cachedSyncJoints.Add(connectedBlockObject.SyncJoint.otherBearingCoord,
+                        (new NetworkIdentityReference(connectedBlockObject.netIdentity), connectedBlockObject.SyncJoint));
+                }
+
+                connectedBlockObject.ServerDisconnectJoint();
             }
 
             //generate the new block objects from the remaining blocks groups
@@ -713,14 +755,33 @@ public partial class BlockObject : NetworkBehaviour
                 //spawn it before joints are added so it has a valid NetworkIdentity/netId
                 NetworkServer.Spawn(newBlockObject);
 
-                //add joints/joint references in both directions (doubly linked references)
+                //handle transferring this blockObjects main syncJoint
                 if (cachedSyncJoint.connected && filledBlocks.ContainsKey(cachedSyncJoint.attachedToMeAtCoord))
                 {
                     if (cachedSyncJoint.attachedTo != null && cachedSyncJoint.attachedTo.Value)
                     {
+                        //add joints/joint references in both directions (doubly linked references)
                         newBlockObjectScript._syncJoint = cachedSyncJoint;
                         cachedSyncJoint.attachedTo.Value.GetComponent<BlockObject>().ConnectedToSelf.Add(cachedSyncJoint.otherBearingCoord,
                             new NetworkIdentityReference(newBlockObjectScript.netIdentity)); //must be done after spawn so netIdentity has a non-zero netId
+                    }
+                }
+
+                //handle transferring this blockObject's ConnectedToSelf joints
+                foreach (var pair in cachedSyncJoints)
+                {
+                    if (pair.Value.syncJoint.connected && filledBlocks.ContainsKey(pair.Key))
+                    {
+                        //in this case it is checking that it currently points to "this" blockObject. even though it will now point to newBlockObjectScript,
+                        //this check still makes sure that the original connection was actually valid
+                        if (pair.Value.syncJoint.attachedTo != null && pair.Value.syncJoint.attachedTo.Value)
+                        {
+                            //add joints/joint references in both directions (doubly linked references)
+                            //create copy of SyncJoint with nedIdRef now pointing to the new blockObject, not this
+                            pair.Value.netIdRef.Value.GetComponent<BlockObject>()._syncJoint = new SyncJoint(pair.Value.syncJoint,
+                                new NetworkIdentityReference(newBlockObjectScript.netIdentity));
+                            newBlockObjectScript.ConnectedToSelf.Add(pair.Value.syncJoint.otherBearingCoord, pair.Value.netIdRef);
+                        }
                     }
                 }
 
