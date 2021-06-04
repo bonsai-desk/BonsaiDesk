@@ -3,6 +3,7 @@ import {action, makeAutoObservable} from 'mobx';
 import {observer} from 'mobx-react-lite';
 import axios from 'axios';
 import {apiBase} from './utilities';
+import jwt from "jsonwebtoken";
 
 export const StoreContext = React.createContext();
 export const useStore = () => useContext(StoreContext);
@@ -19,8 +20,8 @@ export const HandMode = {
     Single: 1,
     Whole: 2,
     Duplicate: 3,
-    Save: 4
-}
+    Save: 4,
+};
 
 class Store {
     SocialInfo = {
@@ -40,14 +41,14 @@ class Store {
         Mode: NetworkManagerMode.Offline,
         PublicRoom: false,
         Full: false,
-        Connecting: false
+        Connecting: false,
     };
     ContextInfo = {
         LeftHandMode: HandMode.None,
         RightHandMode: HandMode.None,
-        LeftBlockActive: "",
-        RightBlockActive: "",
-    }
+        LeftBlockActive: '',
+        RightBlockActive: '',
+    };
     MediaInfo = {
         Active: false,
         Name: 'None',
@@ -55,7 +56,7 @@ class Store {
         Scrub: 0,
         Duration: 1,
         VolumeLevel: 0,
-        VolumeMax: 1
+        VolumeMax: 1,
     };
     ExperimentalInfo = {
         BlockBreakEnabled: false,
@@ -66,9 +67,47 @@ class Store {
     _refresh_room_code_handler = null;
     RoomSecret = '';
     _roomCode = null;
+    BonsaiToken = "";
+    BonsaiTokenInfo = {
+        userId: -1,
+        orgScopedId: ""
+    }
+
+    _authInfo = {
+        UserId: null,
+        Nonce: '',
+        Build: '',
+    };
 
     constructor() {
         makeAutoObservable(this);
+    }
+    
+    set AuthInfo(authInfo) {
+        this._authInfo = authInfo;
+
+        let auth_params = [
+            `user_id=${this._authInfo.UserId}`,
+            `nonce=${this._authInfo.Nonce}`,
+            `build=${this._authInfo.Build}`,
+        ].join('&');
+
+        let url = apiBase(this) + `/blocks/login?` + auth_params;
+
+        console.log("POST: " + url)
+        
+        axios.post(url).then(response => {
+            console.log(response)
+            this.BonsaiToken = response.data.token;
+            const decoded = jwt.decode(this.BonsaiToken);
+            this.BonsaiTokenInfo = {
+                userId: decoded.user_id,
+                orgScopedId: decoded.org_scoped_id
+            }
+        }).catch(error => {
+            console.log(error)
+        })
+
     }
 
     get FullVersion() {
@@ -132,6 +171,14 @@ class Store {
             console.log(err);
             this.RoomCode = null;
         });
+    }
+    
+    get ApiBase () {
+        let API_BASE = 'https://api.desk.link:1776/v1';
+        if (this.AppInfo.Build === 'DEVELOPMENT') {
+            API_BASE = 'https://api.desk.link:8080/v1';
+        }
+        return API_BASE;
     }
 }
 

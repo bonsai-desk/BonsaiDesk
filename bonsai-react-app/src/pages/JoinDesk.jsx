@@ -2,7 +2,6 @@ import {observer} from 'mobx-react-lite';
 import {useStore} from '../DataProvider';
 import React, {useEffect, useState} from 'react';
 import {useHistory} from 'react-router-dom';
-import {apiBase} from '../utilities';
 import axios from 'axios';
 import {postJoinRoom} from '../api';
 import {MenuContentFixed} from '../components/MenuContent';
@@ -31,8 +30,8 @@ export let JoinDeskPage = observer(() => {
     let [message, setMessage] = useState('');
 
     let history = useHistory();
-
-    let url = apiBase(store) + `/rooms/${code}`;
+    
+    let url = store.ApiBase + `/rooms/${code}`;
 
     useEffect(() => {
 

@@ -63,7 +63,7 @@ function Button(props) {
         shouldPostUp = true,
     } = props;
     return (
-            <div onPointerEnter={shouldPostHover ? postHover : null}
+            <div className={className} onPointerEnter={shouldPostHover ? postHover : null}
                  onPointerDown={() => {
                      handleClick();
                      if (shouldPostDown) {
@@ -72,9 +72,7 @@ function Button(props) {
                  }}
                  onPointerUp={shouldPostUp ? postMouseUp : null}
             >
-                <div className={className}>
                     {props.children}
-                </div>
             </div>
     );
 }

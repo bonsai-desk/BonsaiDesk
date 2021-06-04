@@ -14,10 +14,10 @@ const BlockButton = observer(({hand, blockId}) => {
     let activeBlock = '';
     let active = false;
     if (hand === 'left') {
-        active = store.ContextInfo.LeftBlockActive == blockId;
+        active = store.ContextInfo.LeftBlockActive === blockId;
     }
     if (hand === 'right') {
-        active = store.ContextInfo.RightBlockActive == blockId;
+        active = store.ContextInfo.RightBlockActive === blockId;
     }
 
     let onClick = () => {

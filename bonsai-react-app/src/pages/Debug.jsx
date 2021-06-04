@@ -7,6 +7,7 @@ import {InstantButton} from '../components/Button';
 import {grayButtonClass} from '../cssClasses';
 import React from 'react';
 import {Layout, postSetLayout} from '../api';
+import axios from 'axios';
 
 export const DebugPage = observer(() => {
     let {store} = useStore();
@@ -30,22 +31,22 @@ export const DebugPage = observer(() => {
     let toggleRoomOpen = action(store => {
         store.NetworkInfo.RoomOpen = !store.NetworkInfo.RoomOpen;
     });
-    
+
     let toggleRoomPublic = action(store => {
         store.NetworkInfo.PublicRoom = !store.NetworkInfo.PublicRoom;
-    })
+    });
 
     let toggleRoomFull = action(store => {
         store.NetworkInfo.Full = !store.NetworkInfo.Full;
-    })
-    
+    });
+
     let setLayoutAcross = () => {
-        postSetLayout(Layout.Across)
-    }
-    
+        postSetLayout(Layout.Across);
+    };
+
     let setLayoutSideBySide = () => {
-        postSetLayout(Layout.SideBySide)
-    }
+        postSetLayout(Layout.SideBySide);
+    };
 
     let addFakeVideoPlayerPaused = () => {
         store.MediaInfo = {
@@ -78,6 +79,18 @@ export const DebugPage = observer(() => {
             Duration: 1,
             VolumeLevel: 0,
         };
+    };
+
+    let postAuthTest = () => {
+        axios({
+            method: 'POST',
+            url: store.ApiBase + '/auth_test',
+            data: `token=${store.BonsaiToken}`,
+            headers: {'content-type': 'application/x-www-form-urlencoded'},
+        }).catch(err => console.log).then(response => {
+            console.log(response);
+        });
+
     };
 
     let containerClass = 'flex flex-wrap';
@@ -159,17 +172,21 @@ export const DebugPage = observer(() => {
                         <div>Player</div>
                         <div className={containerClass}>
                             <InstantButton onClick={rmFakeVideoPlayer}
-                                    className={grayButtonClass}>none</InstantButton>
+                                           className={grayButtonClass}>none</InstantButton>
                             <InstantButton onClick={addFakeVideoPlayerPlaying}
-                                    className={grayButtonClass}>playing</InstantButton>
+                                           className={grayButtonClass}>playing</InstantButton>
                             <InstantButton onClick={addFakeVideoPlayerPaused}
-                                    className={grayButtonClass}>paused</InstantButton>
+                                           className={grayButtonClass}>paused</InstantButton>
                         </div>
-                        
+
                         <div>Layout</div>
                         <div className={containerClass}>
                             <InstantButton onClick={setLayoutAcross} className={grayButtonClass}>across</InstantButton>
-                            <InstantButton onClick={setLayoutSideBySide} className={grayButtonClass}>side</InstantButton>
+                            <InstantButton onClick={setLayoutSideBySide}
+                                           className={grayButtonClass}>side</InstantButton>
+                        </div>
+                        <div className={containerClass}>
+                            <InstantButton onClick={postAuthTest} className={grayButtonClass}>auth test</InstantButton>
                         </div>
 
                     </div>

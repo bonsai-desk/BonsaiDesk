@@ -17,6 +17,7 @@ import {HomePage} from './Home';
 import {PlayerPage} from './Player';
 import PublicRoomsPage from './PublicRooms';
 import {YourRoom} from './YourRoom';
+import {BlocksPage} from './Blocks';
 
 function NoMicPage() {
 
@@ -234,6 +235,7 @@ let Menu = observer(() => {
                     <NavList>
                         <NavItem to={'/menu/home'} unread={homeActive}>Home</NavItem>
                         <NavItem to={'/menu/public-rooms'}>Public Rooms</NavItem>
+                        <NavItem to={'/menu/blocks'}>Blocks</NavItem>
                         <NavItem to={'/menu/player'}
                                  buttonClass={mediaButtonClass}
                                  buttonClassSelected={mediaButtonClassSelected}
@@ -260,6 +262,7 @@ let Menu = observer(() => {
                         <Route path={`${match.path}/room`} component={YourRoom}/>
                         <Route path={`${match.path}/settings`} component={SettingsPage}/>
                         <Route path={`${match.path}/debug`} component={DebugPage}/>
+                        <Route path={`${match.path}/blocks`} component={BlocksPage}/>
                         <Route path={`${match.path}/player`} component={PlayerPage}/>
                         <Route path={`${match.path}/public-rooms`} component={PublicRoomsPage}/>
                         <Route path={`${match.path}`}>Page not found</Route>

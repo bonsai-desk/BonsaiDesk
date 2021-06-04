@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Mirror;
@@ -319,6 +320,20 @@ public class TableBrowserMenu : MonoBehaviour
         browser.PostMessage(message);
     }
 
+    public void PostAuthInfo(AuthInfo authInfo)
+    {
+        StartCoroutine(PostEventually(() => { Post(authInfo, "AuthInfo"); }));
+    }
+
+    private IEnumerator PostEventually(Action a)
+    {
+        while (!canPost)
+        {
+            yield return new WaitForSeconds(0.1f);
+        }
+        a();
+    }
+
     private void PostSocialInfo()
     {
         var socialInfo = new SocialInfo
@@ -469,6 +484,13 @@ public class TableBrowserMenu : MonoBehaviour
         public string network_address;
         public int pinged;
         public int port;
+    }
+
+    public struct AuthInfo
+    {
+        public ulong UserId;
+        public string Nonce;
+        public string Build; // mobile or desktop
     }
 
     public struct UserInfo
