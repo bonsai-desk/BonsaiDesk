@@ -312,10 +312,6 @@ public partial class BlockObject : NetworkBehaviour
     private void OnBlocksDictionaryChange(SyncDictionary<Vector3Int, SyncBlock>.Operation op, Vector3Int key, SyncBlock value)
     {
         _blockChanges.Enqueue((key, value, op));
-        if (_updateValidOrientationFromRootFrame != Time.frameCount)
-        {
-            BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
-        }
     }
 
     //loops through any blocks in _blockChanges and adds/removes blocks from the mesh
@@ -333,7 +329,15 @@ public partial class BlockObject : NetworkBehaviour
             switch (op)
             {
                 case SyncDictionary<Vector3Int, SyncBlock>.Operation.OP_ADD:
-                    if (!MeshBlocks.ContainsKey(coord))
+                    if (MeshBlocks.TryGetValue(coord, out MeshBlock meshBlock))
+                    {
+                        if (meshBlock.name != syncBlock.name || meshBlock.rotation != BlockUtility.ByteToQuaternion(syncBlock.rotation))
+                        {
+                            Debug.LogError(
+                                "MeshBlock already exists, but does not equal syncBlock name or rotation. Did client side prediction cause it to get un-synced?");
+                        }
+                    }
+                    else
                     {
                         AddBlockToMesh(syncBlock.name, coord, BlockUtility.ByteToQuaternion(syncBlock.rotation));
                     }
@@ -401,7 +405,6 @@ public partial class BlockObject : NetworkBehaviour
         NetworkIdentityReference value)
     {
         _connectedToSelfChanges.Enqueue((key, value, op));
-        BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
     }
 
     [Command(ignoreAuthority = true)]
@@ -424,17 +427,24 @@ public partial class BlockObject : NetworkBehaviour
 
         if (attachedToBlockObject.ConnectedToSelf.ContainsKey(attachedToBearingCoord))
         {
-            Debug.LogError("ConnectedToSelf already contains keys.");
+            Debug.LogError("ConnectedToSelf already contains key.");
             return;
         }
 
         attachedToBlockObject.ConnectedToSelf.Add(attachedToBearingCoord, new NetworkIdentityReference(netIdentity));
+        BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
     }
 
     private void OnSyncJointChange(SyncJoint oldValue, SyncJoint newValue)
     {
-        ConnectJoint(newValue);
-        BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
+        if (newValue.connected)
+        {
+            ConnectJoint(newValue);
+        }
+        else
+        {
+            DisconnectJoint();
+        }
     }
 
     private void ConnectJoint(SyncJoint jointInfo)
@@ -446,7 +456,12 @@ public partial class BlockObject : NetworkBehaviour
 
         if (_joint) //joint already exists. hopefully because of client side prediction
         {
-            return; //TODO: check that current join is equal to the new joint to confirm that it was client side prediction. Also do the same for blocks
+            if (jointInfo != SyncJoint)
+            {
+                Debug.LogError("Joint already exists, but does not equal jointInfo. Did client side prediction cause it to get un-synced?");
+            }
+
+            return;
         }
 
         //joints are doubly linked, so maybe one exists before the other? If that is the case, just return and it will be handled by the other blockObject
@@ -488,6 +503,14 @@ public partial class BlockObject : NetworkBehaviour
         _joint.connectedBody = attachedToBody;
     }
 
+    private void DisconnectJoint()
+    {
+        if (_joint)
+        {
+            Destroy(_joint);
+        }
+    }
+
     [Command(ignoreAuthority = true)]
     private void CmdAddBlock(string blockName, Vector3Int coord, Quaternion rotation, NetworkIdentity blockToDestroy)
     {
@@ -500,6 +523,10 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         Blocks.Add(coord, new SyncBlock(blockName, BlockUtility.QuaternionToByte(rotation)));
+        if (_updateValidOrientationFromRootFrame != Time.frameCount)
+        {
+            BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
+        }
     }
 
     private void AddBlockToMesh(string blockName, Vector3Int coord, Quaternion rotation)
@@ -611,6 +638,12 @@ public partial class BlockObject : NetworkBehaviour
             //this will only happen for the server/host, so hopefully it does not glitch on the client
             ProcessBlockChanges();
 
+            //the blockObject that this code is currently running on becomes the largestGroup. if this blockObject had a joint, and the joint is connected
+            //at a coord that is no longer a part of this blockObject, it should be removed
+            if (SyncJoint.connected && !largestGroup.ContainsKey(SyncJoint.attachedToMeAtCoord))
+            {
+            }
+
             //generate the new block objects from the remaining blocks groups
             foreach (var filledBlocks in filledBlocksGroups)
             {
@@ -625,6 +658,11 @@ public partial class BlockObject : NetworkBehaviour
                 NetworkServer.Spawn(newBlockObject);
                 newBlockObject.GetComponent<AutoAuthority>().ServerForceNewOwner(identityId, NetworkTime.time, false);
             }
+        }
+        
+        if (_updateValidOrientationFromRootFrame != Time.frameCount)
+        {
+            BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
         }
     }
 
@@ -1038,7 +1076,7 @@ public partial class BlockObject : NetworkBehaviour
 
         return Vector3Int.zero;
     }
-    
+
     private Block GetOnlyMeshBlock()
     {
         if (MeshBlocks.Count != 1)

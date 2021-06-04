@@ -141,7 +141,7 @@ public class AutoAuthority : NetworkBehaviour
     //Hello function. I don't know if I'm a client or a server, but whatever I am, do I have authority over this object?
     public bool HasAuthority()
     {
-        return isServer && ServerHasAuthority() || isClient && ClientHasAuthority();
+        return isServer && NetworkServer.active && ServerHasAuthority() || isClient && NetworkClient.active && ClientHasAuthority();
     }
 
     public void KeepAwake()
