@@ -71,7 +71,7 @@ public partial class BlockObject
         {
             if (PhysicsHandController.InvalidTransform(blockObjects[i].transform))
             {
-                Debug.LogError("BlockObject has invalid transform!");
+                Debug.LogWarning("BlockObject has invalid transform!");
                 if (blockObjects.Count == 1 && blockObjects[0].Blocks.Count <= 4)
                 {
                     _autoAuthority.CmdDestroy();
@@ -316,7 +316,7 @@ public partial class BlockObject
 
         var toUpdate = new Queue<BlockObject>();
         toUpdate.Enqueue(rootBlockObject);
-
+        
         while (toUpdate.Count > 0)
         {
             var next = toUpdate.Dequeue();
@@ -324,6 +324,14 @@ public partial class BlockObject
             next._autoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
             var smoothSync = next.GetComponent<SmoothSyncMirror>();
             smoothSync.clearBuffer();
+
+            if (next == rootBlockObject && PhysicsHandController.InvalidTransform(next.transform))
+            {
+                next.transform.position = new Vector3(0, 5, 0);
+                next.transform.rotation = Quaternion.identity;
+                next._body.MovePosition(next.transform.position);
+                next._body.MoveRotation(next.transform.rotation);
+            }
 
             if (next.SyncJoint.attachedTo != null && next.SyncJoint.attachedTo.Value)
             {
