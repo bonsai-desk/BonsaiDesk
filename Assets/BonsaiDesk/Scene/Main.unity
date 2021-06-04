@@ -8796,7 +8796,7 @@ PrefabInstance:
     - target: {fileID: 5812892786009036239, guid: 096a07e3ff3d2724498e75c2b4f5960c,
         type: 3}
       propertyPath: action.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: Test
+      value: TestAll
       objectReference: {fileID: 0}
     - target: {fileID: 5812892786009036239, guid: 096a07e3ff3d2724498e75c2b4f5960c,
         type: 3}
