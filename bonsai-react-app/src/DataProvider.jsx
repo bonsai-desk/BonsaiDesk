@@ -189,9 +189,9 @@ class Store {
 }
 
 const store = new Store();
-const mediaInfo = new MediaInfo();
-
 Object.seal(store);
+
+const mediaInfo = new MediaInfo();
 Object.seal(mediaInfo);
 
 let pushStoreList = action((kvList) => {

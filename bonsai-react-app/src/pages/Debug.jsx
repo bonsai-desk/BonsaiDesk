@@ -81,9 +81,9 @@ export const DebugPage = observer(() => {
             url: store.ApiBase + '/auth_test',
             data: `token=${store.BonsaiToken}`,
             headers: {'content-type': 'application/x-www-form-urlencoded'},
-        }).catch(err => console.log).then(response => {
+        }).then(response => {
             console.log(response);
-        });
+        }).catch(console.log);
 
     };
 

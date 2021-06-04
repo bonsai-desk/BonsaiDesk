@@ -10,12 +10,8 @@ import {InfoItemCustom} from '../components/InfoItem';
 import BlockImg from '../static/block-line.svg';
 import ThumbImg from '../static/thumb-up.svg';
 import MenuImg from '../static/menu.svg';
-
-const Tab = {
-    Hot: 0,
-    New: 1,
-    Profile: 2,
-};
+import jwt from 'jsonwebtoken';
+import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
 
 let ThumbButton = observer((props) => {
     let {store} = useStore();
@@ -143,6 +139,7 @@ const NewPage = observer(() => {
     }, [url]);
 
     return <React.Fragment>
+        <Spacer/>
         {data.map(x => <BlockPost {...x}/>)}
     </React.Fragment>;
 });
@@ -161,13 +158,46 @@ const HotPage = observer(() => {
     }, [url]);
 
     return <React.Fragment>
+        <Spacer/>
         {data.map(x => <BlockPost {...x}/>)}
     </React.Fragment>;
 });
 
+function Spacer() {
+    return <div className={'mt-2 rounded h-4 bg-gray-700'}/>;
+}
+
+function Header(props) {
+    return <div className={'mt-2 rounded px-4 h-16 bg-gray-700 text-3xl flex flex-wrap content-center justify-between'}>
+        {props.children}
+    </div>;
+
+}
+
+function UserInfo({display_name, likes}) {
+
+    likes = likes ? 'You have ' + likes + ' Likes' : '';
+    return <Header>
+        <div>{display_name}</div>
+        <div>{likes}</div>
+    </Header>;
+}
+
 const ProfilePage = observer(() => {
     let [data, setData] = useState([]);
+    let [userData, setUserData] = useState({});
     let {store} = useStore();
+
+    let decoded = jwt.decode(store.BonsaiToken);
+    let profile_url = store.ApiBase + `/blocks/users/${decoded.user_id}/info`;
+
+    useEffect(() => {
+        axios.get(profile_url).then(response => {
+            console.log(response.data);
+            setUserData(response.data);
+        }).catch(console.log);
+
+    }, [profile_url]);
 
     let url = store.ApiBase + `/blocks/hot?token=${store.BonsaiToken}`;
 
@@ -175,56 +205,50 @@ const ProfilePage = observer(() => {
         axios.get(url).then(response => {
             setData(response.data);
         }).catch(console.log);
-
     }, [url]);
 
+    console.log(decoded);
+
     return <React.Fragment>
-        <div>
-            {store.SocialInfo.UserName}
-        </div>
+        <UserInfo {...userData}/>
         {data.map(x => <BlockPost {...x}/>)}
     </React.Fragment>;
 });
 
 export const BlocksPage = observer(() => {
-    let [activeTab, setActiveTab] = useState(Tab.Hot);
+    let match = useRouteMatch();
+    let history = useHistory();
 
-    function handleClickHot() {
-        setActiveTab(Tab.Hot);
+    let path = window.location.pathname.split('/');
+    let loc = path[path.length - 1];
+
+    let hotButtonClass = loc === 'hot' ? lightGrayButtonClass : grayButtonClass;
+    let newButtonClass = loc === 'new' ? lightGrayButtonClass : grayButtonClass;
+    let profileButtonClass = loc === 'profile' ? lightGrayButtonClass : grayButtonClass;
+
+    function goHot() {
+        history.push(match.path + '/hot');
     }
 
-    function handleClickNew() {
-        setActiveTab(Tab.New);
+    function goNew() {
+        history.push(match.path + '/new');
     }
 
-    function handleClickProfile() {
-        setActiveTab(Tab.Profile);
-    }
-
-    let hotButtonClass = activeTab === Tab.Hot ? lightGrayButtonClass : grayButtonClass;
-    let newButtonClass = activeTab === Tab.New ? lightGrayButtonClass : grayButtonClass;
-    let profileButtonClass = activeTab === Tab.Profile ? lightGrayButtonClass : grayButtonClass;
-
-    let Inner;
-
-    switch (activeTab) {
-        case Tab.Profile:
-            Inner = ProfilePage;
-            break;
-        case Tab.Hot:
-            Inner = HotPage;
-            break;
-        case Tab.New:
-            Inner = NewPage;
-            break;
-        default:
-            Inner = <div>Page Not Found</div>;
+    function goProfile() {
+        history.push(match.path + '/profile');
     }
 
     let navBar = <div className={'flex flex-wrap w-full space-x-20 justify-center'}>
-        <InstantButton className={hotButtonClass} onClick={handleClickHot}>Top</InstantButton>
-        <InstantButton className={newButtonClass} onClick={handleClickNew}>New</InstantButton>
-        <InstantButton className={profileButtonClass} onClick={handleClickProfile}>Profile</InstantButton>
+        <InstantButton className={hotButtonClass} onClick={goHot}>Top</InstantButton>
+        <InstantButton className={newButtonClass} onClick={goNew}>New</InstantButton>
+        <InstantButton className={profileButtonClass} onClick={goProfile}>Published</InstantButton>
     </div>;
-    return <MenuContentTabbed name={'Blocks'} navBar={navBar}><Inner/></MenuContentTabbed>;
+
+    return <MenuContentTabbed name={'Blocks'} navBar={navBar}>
+        <Switch>
+            <Route path={`${match.path}/hot`} component={HotPage}/>
+            <Route path={`${match.path}/new`} component={NewPage}/>
+            <Route path={`${match.path}/profile`} component={ProfilePage}/>
+        </Switch>
+    </MenuContentTabbed>;
 });
