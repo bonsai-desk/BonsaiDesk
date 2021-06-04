@@ -695,7 +695,7 @@ public partial class BlockObject : NetworkBehaviour
             var cachedSyncJoint = SyncJoint; //cache the syncjoint so we can still access it if it is disconnected
             if (cachedSyncJoint.connected && !largestGroup.ContainsKey(cachedSyncJoint.attachedToMeAtCoord))
             {
-                ServerDisconnectJoint();
+                ServerDisconnectJoint(); //also calls ProcessConnectedToSelfChanges
             }
 
             //generate the new block objects from the remaining blocks groups
@@ -703,14 +703,17 @@ public partial class BlockObject : NetworkBehaviour
             {
                 var newBlockObject = Instantiate(StaticPrefabs.instance.blockObjectPrefab, transform.position, transform.rotation);
 
+                //add all blocks before spawning. they will be turned into MeshBlocks in Init
                 var newBlockObjectScript = newBlockObject.GetComponent<BlockObject>();
                 foreach (var pair in filledBlocks)
                 {
                     newBlockObjectScript.Blocks.Add(pair.Key, pair.Value);
                 }
 
+                //spawn it before joints are added so it has a valid NetworkIdentity/netId
                 NetworkServer.Spawn(newBlockObject);
 
+                //add joints/joint references in both directions (doubly linked references)
                 if (cachedSyncJoint.connected && filledBlocks.ContainsKey(cachedSyncJoint.attachedToMeAtCoord))
                 {
                     if (cachedSyncJoint.attachedTo != null && cachedSyncJoint.attachedTo.Value)
@@ -721,6 +724,12 @@ public partial class BlockObject : NetworkBehaviour
                     }
                 }
 
+                //since the joints are set after spawning, OnStartServer has already been called, so call ConnectInitialJoints
+                //I don't think this is required since after spawning SyncVar hooks will run, but it doesn't hurt since ConnectJoint will do nothing
+                //if the joint is already connected
+                newBlockObjectScript.ConnectInitialJoints();
+
+                //give authority of the newly created blockObject to whoever called this CmdRemoveBlock function
                 newBlockObject.GetComponent<AutoAuthority>().ServerForceNewOwner(identityId, NetworkTime.time, false);
             }
         }
