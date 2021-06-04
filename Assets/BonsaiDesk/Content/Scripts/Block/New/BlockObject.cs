@@ -407,8 +407,28 @@ public partial class BlockObject : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdConnectJoint(SyncJoint jointInfo, Vector3Int attachedToBearingCoord)
     {
+        if (_syncJoint.connected)
+        {
+            Debug.LogError("SyncJoint was already connected. (not returning, but weird stuff might happen)");
+        }
+
         _syncJoint = jointInfo;
-        jointInfo.attachedTo.Value.GetComponent<BlockObject>().ConnectedToSelf.Add(attachedToBearingCoord, new NetworkIdentityReference(netIdentity));
+
+        var attachedToBlockObject = jointInfo.attachedTo.Value.GetComponent<BlockObject>();
+
+        if (!attachedToBlockObject)
+        {
+            Debug.LogError("attachedTo blockObject does not exist in CmdConnectJoint");
+            return;
+        }
+
+        if (attachedToBlockObject.ConnectedToSelf.ContainsKey(attachedToBearingCoord))
+        {
+            Debug.LogError("ConnectedToSelf already contains keys.");
+            return;
+        }
+
+        attachedToBlockObject.ConnectedToSelf.Add(attachedToBearingCoord, new NetworkIdentityReference(netIdentity));
     }
 
     private void OnSyncJointChange(SyncJoint oldValue, SyncJoint newValue)
@@ -896,7 +916,14 @@ public partial class BlockObject : NetworkBehaviour
         _mesh.RecalculateTangents();
         _mesh.RecalculateBounds();
 
-        var (boxCollidersNotNeeded, mass, destroySphere) = BlockUtility.UpdateHitBox(Blocks, _boxCollidersInUse, _physicsBoxesObject, _sphereObject,
+        if (MeshBlocks.Count == 0) //probably just waiting to get deleted by server
+        {
+            gameObject.SetActive(false);
+            CloseDialog();
+            return;
+        }
+
+        var (boxCollidersNotNeeded, mass, destroySphere) = BlockUtility.UpdateHitBox(MeshBlocks, _boxCollidersInUse, _physicsBoxesObject, _sphereObject,
             blockPhysicMaterial, spherePhysicMaterial, this);
         while (boxCollidersNotNeeded.Count > 0)
         {
@@ -912,9 +939,9 @@ public partial class BlockObject : NetworkBehaviour
             }
         }
 
-        if (MeshBlocks.Count == 1 && GetOnlyBlock().blockGameObjectPrefab)
+        if (MeshBlocks.Count == 1 && GetOnlyMeshBlock().blockGameObjectPrefab)
         {
-            _transparentCube.transform.localPosition = GetOnlyBlockCoord();
+            _transparentCube.transform.localPosition = GetOnlyMeshBlockCoord();
             _transparentCube.SetActive(true);
             if (!_transparentCubeCollider)
             {
@@ -995,6 +1022,31 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         return global::Blocks.GetBlock(Blocks[GetOnlyBlockCoord()].name);
+    }
+
+    private Vector3Int GetOnlyMeshBlockCoord()
+    {
+        if (MeshBlocks.Count != 1)
+        {
+            Debug.LogError("GetOnlyMeshBlockCoord is only valid when there is only 1 mesh block");
+        }
+
+        foreach (var block in MeshBlocks)
+        {
+            return block.Key;
+        }
+
+        return Vector3Int.zero;
+    }
+    
+    private Block GetOnlyMeshBlock()
+    {
+        if (MeshBlocks.Count != 1)
+        {
+            Debug.LogError("GetOnlyMeshBlock is only valid when there is only 1 mesh block");
+        }
+
+        return global::Blocks.GetBlock(MeshBlocks[GetOnlyMeshBlockCoord()].name);
     }
 
     private Quaternion GetTargetRotation(Quaternion blockRotation, Vector3Int coord, Block.BlockType blockType)

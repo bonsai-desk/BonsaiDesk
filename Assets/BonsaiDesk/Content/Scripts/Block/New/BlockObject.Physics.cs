@@ -56,7 +56,7 @@ public partial class BlockObject
 
         if (_autoAuthority.HasAuthority())
         {
-            if (Blocks.Count == 1)
+            if (MeshBlocks.Count == 1)
             {
                 var leftHandLockedJoint = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>().joint;
                 var rightHandLockedJoint = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>().joint;
@@ -99,11 +99,11 @@ public partial class BlockObject
             if (nextBlockObject != null && nextBlockObject != this)
             {
                 blockObject = nextBlockObject;
-                Vector3Int coord = GetOnlyBlockCoord();
+                Vector3Int coord = GetOnlyMeshBlockCoord();
                 Vector3 blockPosition = transform.TransformPoint(coord);
                 Vector3 positionLocalToCubeArea = blockObject.transform.InverseTransformPoint(blockPosition);
                 Vector3Int blockCoord = Vector3Int.RoundToInt(positionLocalToCubeArea);
-                var inArea = BlockUtility.InCubeArea(blockObject, blockCoord, Blocks[coord].name);
+                var inArea = BlockUtility.InCubeArea(blockObject, blockCoord, MeshBlocks[coord].name);
                 if (inArea.isNearHole)
                     isNearHole = true;
                 isInCubeArea = inArea.isInCubeArea;
@@ -120,7 +120,7 @@ public partial class BlockObject
                     }
 
                     var position = blockObject.transform.TransformPoint(blockCoord) + bearingOffset;
-                    var rotation = blockObject.GetTargetRotation(transform.rotation, blockCoord, global::Blocks.GetBlock(Blocks[coord].name).blockType);
+                    var rotation = blockObject.GetTargetRotation(transform.rotation, blockCoord, global::Blocks.GetBlock(MeshBlocks[coord].name).blockType);
 
                     if (BlockUtility.AboutEquals(blockPosition, position) && BlockUtility.AboutEquals(transform.rotation, rotation))
                     {
@@ -164,13 +164,13 @@ public partial class BlockObject
                             gameObject.SetActive(false);
 
                             var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
-                            localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * BlockUtility.ByteToQuaternion(Blocks[coord].rotation);
+                            localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * MeshBlocks[coord].rotation;
 
                             Mixpanel.Track("Add Block");
-                            blockObject.CmdAddBlock(Blocks[coord].name, blockCoord, localRotation, netIdentity);
+                            blockObject.CmdAddBlock(MeshBlocks[coord].name, blockCoord, localRotation, netIdentity);
 
                             //client side prediction
-                            var syncBlock = new SyncBlock(Blocks[coord].name, BlockUtility.QuaternionToByte(localRotation));
+                            var syncBlock = new SyncBlock(MeshBlocks[coord].name, BlockUtility.QuaternionToByte(localRotation));
                             blockObject._blockChanges.Enqueue((blockCoord, syncBlock, SyncDictionary<Vector3Int, SyncBlock>.Operation.OP_ADD));
                         }
 
