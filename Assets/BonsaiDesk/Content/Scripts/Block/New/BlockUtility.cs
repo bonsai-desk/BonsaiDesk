@@ -251,23 +251,19 @@ public static partial class BlockUtility
         new Vector3(-0.5f, -0.5f, -0.5f)
     };
 
-    public static (Queue<BoxCollider> boxCollidersNotNeeded, float mass, bool destroySphere) UpdateHitBox(SyncDictionary<Vector3Int, SyncBlock> blocks,
+    public static (Queue<BoxCollider> boxCollidersNotNeeded, float mass, bool destroySphere) UpdateHitBox(Dictionary<Vector3Int, MeshBlock> meshBlocks,
         Queue<BoxCollider> boxCollidersInUse, Transform boxesParent, Transform sphereObject, PhysicMaterial blockPhysicMaterial,
-        PhysicMaterial spherePhysicMaterial)
+        PhysicMaterial spherePhysicMaterial, BlockObject blockObject)
     {
-        if (blocks.Count < 1)
+        if (meshBlocks.Count < 1)
         {
             Debug.LogError("Cannot update hitbox with no blocks.");
             return (null, 1f, false);
         }
 
         HashSet<Vector3Int> assimilated = new HashSet<Vector3Int>();
-        // if (blocks.Count == 1)
-        //     assymilated = new HashSet<Vector3Int>();
-        // else
-        //     assymilated = new HashSet<Vector3Int>(blockObjects);
         Dictionary<Vector3Int, Vector2Int[]> boxes = new Dictionary<Vector3Int, Vector2Int[]>();
-        foreach (var block in blocks)
+        foreach (var block in meshBlocks)
         {
             if (!assimilated.Contains(block.Key))
             {
@@ -289,17 +285,17 @@ public static partial class BlockUtility
                     while (canSpreadRight || canSpreadLeft || canSpreadUp || canSpreadDown || canSpreadForward || canSpreadBackward)
                     {
                         if (canSpreadRight)
-                            canSpreadRight = expandBoxBoundsRight(block.Key, ref boxBounds, ref assimilated, ref blocks);
+                            canSpreadRight = expandBoxBoundsRight(block.Key, ref boxBounds, ref assimilated, ref meshBlocks);
                         if (canSpreadLeft)
-                            canSpreadLeft = expandBoxBoundsLeft(block.Key, ref boxBounds, ref assimilated, ref blocks);
+                            canSpreadLeft = expandBoxBoundsLeft(block.Key, ref boxBounds, ref assimilated, ref meshBlocks);
                         if (canSpreadUp)
-                            canSpreadUp = expandBoxBoundsUp(block.Key, ref boxBounds, ref assimilated, ref blocks);
+                            canSpreadUp = expandBoxBoundsUp(block.Key, ref boxBounds, ref assimilated, ref meshBlocks);
                         if (canSpreadDown)
-                            canSpreadDown = expandBoxBoundsDown(block.Key, ref boxBounds, ref assimilated, ref blocks);
+                            canSpreadDown = expandBoxBoundsDown(block.Key, ref boxBounds, ref assimilated, ref meshBlocks);
                         if (canSpreadForward)
-                            canSpreadForward = expandBoxBoundsForward(block.Key, ref boxBounds, ref assimilated, ref blocks);
+                            canSpreadForward = expandBoxBoundsForward(block.Key, ref boxBounds, ref assimilated, ref meshBlocks);
                         if (canSpreadBackward)
-                            canSpreadBackward = expandBoxBoundsBackward(block.Key, ref boxBounds, ref assimilated, ref blocks);
+                            canSpreadBackward = expandBoxBoundsBackward(block.Key, ref boxBounds, ref assimilated, ref meshBlocks);
                     }
 
                     boxes.Add(block.Key, boxBounds);
@@ -342,10 +338,10 @@ public static partial class BlockUtility
         }
 
         bool destroySphere = false;
-        if (blocks.Count == 1)
+        if (meshBlocks.Count == 1)
         {
-            KeyValuePair<Vector3Int, SyncBlock> block;
-            foreach (var nextBlock in blocks)
+            KeyValuePair<Vector3Int, MeshBlock> block;
+            foreach (var nextBlock in meshBlocks)
                 block = nextBlock;
 
             if (!sphereObject.gameObject.GetComponent<SphereCollider>())
@@ -360,8 +356,13 @@ public static partial class BlockUtility
         {
             destroySphere = true;
         }
-
-        float mass = Mathf.Clamp((BlockObject.CubeMass * blocks.Count) - (BlockObject.CubeMass * blocks.Count), BlockObject.CubeMass, Mathf.Infinity);
+        
+        var blockObjects = GetBlockObjectsFromRoot(GetRootBlockObject(blockObject));
+        float mass = 1f / blockObjects.Count;
+        for (int i = 0; i < blockObjects.Count; i++)
+        {
+            blockObjects[i].Body.mass = mass;
+        }
         return (boxCollidersNotNeeded, mass, destroySphere);
     }
 
@@ -483,11 +484,111 @@ public static partial class BlockUtility
 
     public static BlockObject GetRootBlockObject(BlockObject blockObject)
     {
-        if (blockObject.SyncJoint.attachedTo != null && blockObject.SyncJoint.attachedTo.Value)
+        while (blockObject)
         {
-            return GetRootBlockObject(blockObject.SyncJoint.attachedTo.Value.GetComponent<BlockObject>());
+            if (blockObject.SyncJoint.attachedTo != null && blockObject.SyncJoint.attachedTo.Value)
+            {
+                blockObject = blockObject.SyncJoint.attachedTo.Value.GetComponent<BlockObject>();
+                continue;
+            }
+
+            return blockObject;
         }
 
         return blockObject;
+
+        //was this but jetbrains converts it to not recursive. its wack, but probably more efficient, so whatever
+        // if (blockObject.SyncJoint.attachedTo != null && blockObject.SyncJoint.attachedTo.Value)
+        // {
+        //     return GetRootBlockObject(blockObject.SyncJoint.attachedTo.Value.GetComponent<BlockObject>());
+        // }
+        //
+        // return blockObject;
+    }
+
+    public static HashSet<BlockObject> BreadthFirstSearch(BlockObject blockObject)
+    {
+        var visited = new HashSet<BlockObject>();
+        visited.Add(blockObject);
+
+        var queue = new Queue<BlockObject>();
+        queue.Enqueue(blockObject);
+
+        while (queue.Count > 0)
+        {
+            var next = queue.Dequeue();
+            if (next.SyncJoint.attachedTo != null && next.SyncJoint.attachedTo.Value)
+            {
+                var nextAttachedToBlockObject = next.SyncJoint.attachedTo.Value.GetComponent<BlockObject>();
+                if (!visited.Contains(nextAttachedToBlockObject))
+                {
+                    visited.Add(nextAttachedToBlockObject);
+                    queue.Enqueue(nextAttachedToBlockObject);
+                }
+            }
+
+            foreach (var pair in next.ConnectedToSelf)
+            {
+                if (pair.Value != null && pair.Value.Value)
+                {
+                    var nextConnectedBlockObject = pair.Value.Value.GetComponent<BlockObject>();
+                    if (!visited.Contains(nextConnectedBlockObject))
+                    {
+                        visited.Add(nextConnectedBlockObject);
+                        queue.Enqueue(nextConnectedBlockObject);
+                    }
+                }
+            }
+        }
+
+        return visited;
+    }
+
+    public static List<BlockObject> GetBlockObjectsFromRoot(BlockObject rootBlockObject)
+    {
+        var blockObjects = new List<BlockObject>();
+        var toCheck = new Queue<BlockObject>();
+        toCheck.Enqueue(rootBlockObject);
+
+        while (toCheck.Count > 0)
+        {
+            var nextBlockObject = toCheck.Dequeue();
+            blockObjects.Add(nextBlockObject);
+            foreach (var pair in nextBlockObject.ConnectedToSelf)
+            {
+                if (pair.Value != null && pair.Value.Value)
+                {
+                    var nextBlockObjectChild = pair.Value.Value.GetComponent<BlockObject>();
+                    if (nextBlockObjectChild)
+                    {
+                        toCheck.Enqueue(nextBlockObjectChild);
+                    }
+                }
+            }
+        }
+
+        return blockObjects;
+    }
+
+    private static int _defaultLayerMask;
+    public static int DefaultLayerMask => GetDefaultLayerMask();
+    private static int GetDefaultLayerMask()
+    {
+        if (_defaultLayerMask == 0)
+        {
+            int myLayer = LayerMask.NameToLayer("Default");
+            int layerMask = 0;
+            for (int i = 0; i < 32; i++)
+            {
+                if (!Physics.GetIgnoreLayerCollision(myLayer, i))
+                {
+                    layerMask |= 1 << i;
+                }
+            }
+            
+            _defaultLayerMask = layerMask;
+        }
+
+        return _defaultLayerMask;
     }
 }

@@ -17,8 +17,23 @@ public partial class BlockObject
     private const float RotationTorque = LbsTorque * LbsToKg * 9.81f;
 
     //private variables
-    private bool _touchingHand = false;
-    private bool _lastInCubeArea = false;
+    private bool _touchingHand;
+    private float _lastTouchingHandTime;
+
+    private bool TouchingHand
+    {
+        get => _touchingHand;
+        set
+        {
+            _touchingHand = value;
+            if (_touchingHand)
+            {
+                _lastTouchingHandTime = Time.time;
+            }
+        }
+    }
+
+    private bool _lastInCubeArea;
 
     //layers
     private int _blockLayer;
@@ -38,16 +53,16 @@ public partial class BlockObject
             Destroy(_joint);
             _joint = null;
         }
-        
+
         if (_autoAuthority.HasAuthority())
         {
-            if (Blocks.Count == 1)
+            if (MeshBlocks.Count == 1)
             {
                 var leftHandLockedJoint = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>().joint;
                 var rightHandLockedJoint = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>().joint;
                 if (leftHandLockedJoint && leftHandLockedJoint.connectedBody == _body || rightHandLockedJoint && rightHandLockedJoint.connectedBody == _body)
                 {
-                    _touchingHand = true;
+                    TouchingHand = true;
                 }
 
                 if (!_joint)
@@ -61,7 +76,7 @@ public partial class BlockObject
             }
         }
 
-        _touchingHand = false;
+        TouchingHand = false;
     }
 
     /// <summary>
@@ -84,15 +99,15 @@ public partial class BlockObject
             if (nextBlockObject != null && nextBlockObject != this)
             {
                 blockObject = nextBlockObject;
-                Vector3Int coord = GetOnlyBlockCoord();
+                Vector3Int coord = GetOnlyMeshBlockCoord();
                 Vector3 blockPosition = transform.TransformPoint(coord);
                 Vector3 positionLocalToCubeArea = blockObject.transform.InverseTransformPoint(blockPosition);
                 Vector3Int blockCoord = Vector3Int.RoundToInt(positionLocalToCubeArea);
-                var inArea = BlockUtility.InCubeArea(blockObject, blockCoord, Blocks[coord].name);
+                var inArea = BlockUtility.InCubeArea(blockObject, blockCoord, MeshBlocks[coord].name);
                 if (inArea.isNearHole)
                     isNearHole = true;
                 isInCubeArea = inArea.isInCubeArea;
-                isInCubeArea = isInCubeArea && ((transform.parent == null && _touchingHand && _potentialBlocksParent.childCount == 0) ||
+                isInCubeArea = isInCubeArea && ((transform.parent == null && TouchingHand && _potentialBlocksParent.childCount == 0) ||
                                                 transform.parent == blockObject._potentialBlocksParent);
 
                 if (isInCubeArea)
@@ -105,7 +120,7 @@ public partial class BlockObject
                     }
 
                     var position = blockObject.transform.TransformPoint(blockCoord) + bearingOffset;
-                    var rotation = blockObject.GetTargetRotation(transform.rotation, blockCoord, global::Blocks.GetBlock(Blocks[coord].name).blockType);
+                    var rotation = blockObject.GetTargetRotation(transform.rotation, blockCoord, global::Blocks.GetBlock(MeshBlocks[coord].name).blockType);
 
                     if (BlockUtility.AboutEquals(blockPosition, position) && BlockUtility.AboutEquals(transform.rotation, rotation))
                     {
@@ -113,6 +128,8 @@ public partial class BlockObject
                         {
                             blockObject._potentialBlocksParent.GetChild(i).parent = null;
                         }
+
+                        blockObject.transform.parent = null;
 
                         if (attachingToBearing)
                         {
@@ -130,7 +147,7 @@ public partial class BlockObject
                             Vector3 anchor = coord;
                             Vector3 connectedAnchor = blockCoord + 0.1f * axisLocalToAttachedTo;
                             SyncJoint jointInfo = new SyncJoint(new NetworkIdentityReference(attachedTo), positionLocalToAttachedTo, rotationLocalToAttachedTo,
-                                coord, axis, anchor, connectedAnchor);
+                                coord, blockCoord, axis, anchor, connectedAnchor);
 
                             //connect the joint
                             Mixpanel.Track("Attach Block To Bearing");
@@ -147,13 +164,13 @@ public partial class BlockObject
                             gameObject.SetActive(false);
 
                             var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
-                            localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * BlockUtility.ByteToQuaternion(Blocks[coord].rotation);
+                            localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * MeshBlocks[coord].rotation;
 
                             Mixpanel.Track("Add Block");
-                            blockObject.CmdAddBlock(Blocks[coord].name, blockCoord, localRotation, netIdentity);
+                            blockObject.CmdAddBlock(MeshBlocks[coord].name, blockCoord, localRotation, netIdentity);
 
                             //client side prediction
-                            var syncBlock = new SyncBlock(Blocks[coord].name, BlockUtility.QuaternionToByte(localRotation));
+                            var syncBlock = new SyncBlock(MeshBlocks[coord].name, BlockUtility.QuaternionToByte(localRotation));
                             blockObject._blockChanges.Enqueue((blockCoord, syncBlock, SyncDictionary<Vector3Int, SyncBlock>.Operation.OP_ADD));
                         }
 
@@ -170,10 +187,10 @@ public partial class BlockObject
         //if transparent cube is active and has a hitbox, disable it if the block is in the process of being snapped and not being touched
         if (_transparentCubeCollider)
         {
-            _transparentCubeCollider.enabled = !(isInCubeArea && !_touchingHand);
+            _transparentCubeCollider.enabled = !(isInCubeArea && !TouchingHand);
         }
 
-        if ((isInCubeArea && isNearHole) || (isNearHole && _touchingHand))
+        if ((isInCubeArea && isNearHole) || (isNearHole && TouchingHand))
         {
             _physicsBoxesObject.gameObject.layer = _blockLayer;
         }
@@ -221,7 +238,7 @@ public partial class BlockObject
     {
         if (MaskIsValid(collision.gameObject.layer))
         {
-            _touchingHand = true;
+            TouchingHand = true;
         }
     }
 

@@ -10,8 +10,8 @@ public class NetworkVRPlayer : NetworkBehaviour
 
     public GameObject headObject;
 
-    [SyncVar] public NetworkIdentity _leftHandId;
-    [SyncVar] public NetworkIdentity _rightHandId;
+    [SyncVar] public NetworkIdentityReference leftHandId = new NetworkIdentityReference();
+    [SyncVar] public NetworkIdentityReference rightHandId = new NetworkIdentityReference();
 
     [SyncVar(hook = nameof(SpotChange))] public int spotId;
 
@@ -106,27 +106,30 @@ public class NetworkVRPlayer : NetworkBehaviour
         //spot - 1 for same reason in SetSpot
         var textures = SpotManager.Instance.GetColorInfo(spot - 1);
         GetComponentInChildren<MeshRenderer>().material.mainTexture = textures.headTexture;
-        _leftHandId.GetComponent<NetworkHand>().ChangeHandTexture(textures.handTexture);
-        _rightHandId.GetComponent<NetworkHand>().ChangeHandTexture(textures.handTexture);
+        if (leftHandId.Value && rightHandId.Value)
+        {
+            leftHandId.Value.GetComponent<NetworkHand>().ChangeHandTexture(textures.handTexture);
+            rightHandId.Value.GetComponent<NetworkHand>().ChangeHandTexture(textures.handTexture);
+        }
     }
 
     [Server]
-    public void SetHandIdentities(NetworkIdentity lid, NetworkIdentity rid)
+    public void SetHandIdentities(NetworkIdentityReference lid, NetworkIdentityReference rid)
     {
-        _leftHandId = lid;
-        _rightHandId = rid;
+        leftHandId = lid;
+        rightHandId = rid;
     }
 
     public NetworkHand GetOtherHand(OVRSkeleton.SkeletonType skeletonType)
     {
-        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft && rightHandId.Value)
         {
-            return _rightHandId.GetComponent<NetworkHand>();
+            return rightHandId.Value.GetComponent<NetworkHand>();
         }
 
-        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
+        if (skeletonType == OVRSkeleton.SkeletonType.HandRight && leftHandId.Value)
         {
-            return _leftHandId.GetComponent<NetworkHand>();
+            return leftHandId.Value.GetComponent<NetworkHand>();
         }
 
         return null;

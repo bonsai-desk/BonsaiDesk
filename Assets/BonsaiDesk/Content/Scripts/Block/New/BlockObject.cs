@@ -12,6 +12,8 @@ using Random = UnityEngine.Random;
 public partial class BlockObject : NetworkBehaviour
 {
     public const float CubeScale = 0.05f;
+    private const float MaxVelocity = 10f;
+    private const float MaxAngularVelocity = 50f;
 
     //contains all of the AutoAuthority of all BlockObjects in the scene
     private static readonly HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
@@ -19,17 +21,27 @@ public partial class BlockObject : NetworkBehaviour
     //---all of the data required to reconstruct this block object---
 
     //contains information about blocks and their rotations
-    public readonly SyncDictionary<Vector3Int, SyncBlock> Blocks = new SyncDictionary<Vector3Int, SyncBlock>();
+    private readonly SyncDictionary<Vector3Int, SyncBlock> _blocks = new SyncDictionary<Vector3Int, SyncBlock>();
 
     //other blockObjects connected to this one. the coord is which bearing they are attached to. use their syncJoint for joint info
-    public readonly SyncDictionary<Vector3Int, NetworkIdentityReference> ConnectedToSelf = new SyncDictionary<Vector3Int, NetworkIdentityReference>();
+    private readonly SyncDictionary<Vector3Int, NetworkIdentityReference> _connectedToSelf = new SyncDictionary<Vector3Int, NetworkIdentityReference>();
 
+    //all info required to connect this block to its parent
     [SyncVar(hook = nameof(OnSyncJointChange))]
     private SyncJoint _syncJoint;
 
+    //used to reset the blockObject if it gets into an invalid configuration (bent joints)
+    [SyncVar] private Vector3 _validLocalPosition;
+    [SyncVar] private Quaternion _validLocalRotation;
+
     //---end all of the data required to reconstruct this block object---
 
+    public SyncDictionary<Vector3Int, SyncBlock> Blocks => _blocks;
+    public SyncDictionary<Vector3Int, NetworkIdentityReference> ConnectedToSelf => _connectedToSelf;
     public SyncJoint SyncJoint => _syncJoint;
+
+    //used to make sure ServerUpdateValidOrientationFromRoot is only called once if many blocks are added
+    private int _updateValidOrientationFromRootFrame;
 
     //caches changes made to the sync dictionary so all block changes can be made at once with a single mesh update
     //also allows client side prediction by queueing up changes that you have only just sent the command for
@@ -90,6 +102,7 @@ public partial class BlockObject : NetworkBehaviour
 
     //physics
     private Rigidbody _body;
+    public Rigidbody Body => _body;
     private Transform _physicsBoxesObject;
     private Queue<BoxCollider> _boxCollidersInUse = new Queue<BoxCollider>();
     private bool _resetCoM; //flag to reset CoM on the next physics update
@@ -141,6 +154,7 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         Init();
+        BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
     }
 
     public override void OnStartClient()
@@ -157,6 +171,8 @@ public partial class BlockObject : NetworkBehaviour
 
         _isInit = true;
 
+        gameObject.name = "Block Object - " + Random.Range(0, int.MaxValue);
+
         //make copy of material so material asset is not changed
         blockObjectMaterial = new Material(blockObjectMaterial);
         blockObjectMaterial.SetTexture(TextureArray, BlockUtility.BlockTextureArray);
@@ -168,7 +184,7 @@ public partial class BlockObject : NetworkBehaviour
             _blockObjectAuthorities.Add(_autoAuthority);
         }
 
-        _body.maxAngularVelocity = float.MaxValue;
+        _body.maxAngularVelocity = MaxAngularVelocity;
 
         transform.localScale = new Vector3(CubeScale, CubeScale, CubeScale);
 
@@ -196,15 +212,56 @@ public partial class BlockObject : NetworkBehaviour
         UpdateWholeEffects();
         UpdateDialogPosition();
 
+        for (int i = _potentialBlocksParent.childCount - 1; i >= 0; i--)
+        {
+            var childBlockObject = _potentialBlocksParent.GetChild(i).GetComponent<BlockObject>();
+            if (!childBlockObject || Time.time - childBlockObject._lastTouchingHandTime > 1f)
+            {
+                _potentialBlocksParent.GetChild(i).parent = null;
+            }
+        }
+
         if (_potentialBlocksParent.childCount > 0)
         {
-            _body.isKinematic = true;
             _autoAuthority.SetKinematicLocalForOneFrame();
         }
 
-        if (debug && Input.GetKeyDown(KeyCode.S))
+        if (debug)
         {
-            Save();
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                Save();
+            }
+
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                Debug.LogWarning("--- for: " + gameObject.name);
+                if (SyncJoint.connected)
+                {
+                    Debug.LogWarning("my joint: " + SyncJoint.attachedTo.Value.name);
+                }
+                else
+                {
+                    Debug.LogWarning("no joint");
+                }
+
+                Debug.LogWarning($"{ConnectedToSelf.Count} connections");
+                foreach (var pair in ConnectedToSelf)
+                {
+                    if (pair.Value == null)
+                    {
+                        Debug.LogError("net null");
+                    }
+                    else if (!pair.Value.Value)
+                    {
+                        Debug.LogError("net value null, but net id = " + pair.Value.NetworkId);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("my connection: " + pair.Value.Value.GetComponent<BlockObject>().SyncJoint.attachedTo.Value.name);
+                    }
+                }
+            }
         }
     }
 
@@ -215,19 +272,27 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        if (!(isClient && NetworkClient.connection != null && NetworkClient.connection.identity))
+        CheckTeleport();
+
+        if (!_autoAuthority.HasAuthority())
         {
             return;
         }
+
+        _body.velocity = Vector3.ClampMagnitude(_body.velocity, MaxVelocity);
 
         if (_resetCoM)
         {
             _resetCoM = false;
             _body.ResetInertiaTensor();
             _body.ResetCenterOfMass();
+            _body.WakeUp();
         }
 
-        PhysicsFixedUpdate();
+        if (isClient)
+        {
+            PhysicsFixedUpdate();
+        }
     }
 
     private void OnDestroy()
@@ -299,7 +364,15 @@ public partial class BlockObject : NetworkBehaviour
             switch (op)
             {
                 case SyncDictionary<Vector3Int, SyncBlock>.Operation.OP_ADD:
-                    if (!MeshBlocks.ContainsKey(coord))
+                    if (MeshBlocks.TryGetValue(coord, out MeshBlock meshBlock))
+                    {
+                        if (meshBlock.name != syncBlock.name || meshBlock.rotation != BlockUtility.ByteToQuaternion(syncBlock.rotation))
+                        {
+                            Debug.LogError(
+                                "MeshBlock already exists, but does not equal syncBlock name or rotation. Did client side prediction cause it to get un-synced?");
+                        }
+                    }
+                    else
                     {
                         AddBlockToMesh(syncBlock.name, coord, BlockUtility.ByteToQuaternion(syncBlock.rotation));
                     }
@@ -336,24 +409,35 @@ public partial class BlockObject : NetworkBehaviour
             switch (op)
             {
                 case SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation.OP_ADD:
-                    if (!identity.Value)
+                    if (identity == null || !identity.Value)
                     {
                         break;
                     }
 
-                    var otherBlockObject = identity.Value.GetComponent<BlockObject>();
+                    var otherBlockObjectAdd = identity.Value.GetComponent<BlockObject>();
 
-                    if (!otherBlockObject)
+                    if (!otherBlockObjectAdd)
                     {
                         break;
                     }
 
-                    otherBlockObject.ConnectJoint(otherBlockObject._syncJoint);
+                    otherBlockObjectAdd.ConnectJoint(otherBlockObjectAdd._syncJoint);
 
                     break;
                 case SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation.OP_REMOVE:
+                    if (identity == null || !identity.Value)
+                    {
+                        break;
+                    }
 
-                    //TODO: remove joint
+                    var otherBlockObjectRemove = identity.Value.GetComponent<BlockObject>();
+
+                    if (!otherBlockObjectRemove)
+                    {
+                        break;
+                    }
+
+                    otherBlockObjectRemove.DisconnectJoint();
 
                     break;
                 default:
@@ -372,13 +456,47 @@ public partial class BlockObject : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdConnectJoint(SyncJoint jointInfo, Vector3Int attachedToBearingCoord)
     {
+        if (_syncJoint.connected)
+        {
+            Debug.LogError("SyncJoint was already connected. (not returning, but weird stuff might happen)");
+        }
+
         _syncJoint = jointInfo;
-        jointInfo.attachedTo.Value.GetComponent<BlockObject>().ConnectedToSelf.Add(attachedToBearingCoord, new NetworkIdentityReference(netIdentity));
+
+        if (jointInfo.attachedTo == null || !jointInfo.attachedTo.Value)
+        {
+            Debug.LogError("jointInfo attachedTo is null");
+            return;
+        }
+
+        var attachedToBlockObject = jointInfo.attachedTo.Value.GetComponent<BlockObject>();
+
+        if (!attachedToBlockObject)
+        {
+            Debug.LogError("attachedTo blockObject does not exist in CmdConnectJoint");
+            return;
+        }
+
+        if (attachedToBlockObject.ConnectedToSelf.ContainsKey(attachedToBearingCoord))
+        {
+            Debug.LogError("ConnectedToSelf already contains key.");
+            return;
+        }
+
+        attachedToBlockObject.ConnectedToSelf.Add(attachedToBearingCoord, new NetworkIdentityReference(netIdentity));
+        BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
     }
 
     private void OnSyncJointChange(SyncJoint oldValue, SyncJoint newValue)
     {
-        ConnectJoint(newValue);
+        if (newValue.connected)
+        {
+            ConnectJoint(newValue);
+        }
+        else
+        {
+            DisconnectJoint();
+        }
     }
 
     private void ConnectJoint(SyncJoint jointInfo)
@@ -390,7 +508,12 @@ public partial class BlockObject : NetworkBehaviour
 
         if (_joint) //joint already exists. hopefully because of client side prediction
         {
-            return; //TODO: check that current join is equal to the new joint to confirm that it was client side prediction. Also do the same for blocks
+            if (jointInfo != SyncJoint)
+            {
+                Debug.LogError("Joint already exists, but does not equal jointInfo. Did client side prediction cause it to get un-synced?");
+            }
+
+            return;
         }
 
         //joints are doubly linked, so maybe one exists before the other? If that is the case, just return and it will be handled by the other blockObject
@@ -432,6 +555,14 @@ public partial class BlockObject : NetworkBehaviour
         _joint.connectedBody = attachedToBody;
     }
 
+    private void DisconnectJoint()
+    {
+        if (_joint)
+        {
+            Destroy(_joint);
+        }
+    }
+
     [Command(ignoreAuthority = true)]
     private void CmdAddBlock(string blockName, Vector3Int coord, Quaternion rotation, NetworkIdentity blockToDestroy)
     {
@@ -444,6 +575,10 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         Blocks.Add(coord, new SyncBlock(blockName, BlockUtility.QuaternionToByte(rotation)));
+        if (_updateValidOrientationFromRootFrame != Time.frameCount)
+        {
+            BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
+        }
     }
 
     private void AddBlockToMesh(string blockName, Vector3Int coord, Quaternion rotation)
@@ -555,6 +690,14 @@ public partial class BlockObject : NetworkBehaviour
             //this will only happen for the server/host, so hopefully it does not glitch on the client
             ProcessBlockChanges();
 
+            //the blockObject that this code is currently running on becomes the largestGroup. if this blockObject had a joint, and the joint is connected
+            //at a coord that is no longer a part of this blockObject, it should be removed
+            var cachedSyncJoint = SyncJoint; //cache the syncjoint so we can still access it if it is disconnected
+            if (cachedSyncJoint.connected && !largestGroup.ContainsKey(cachedSyncJoint.attachedToMeAtCoord))
+            {
+                ServerDisconnectJoint();
+            }
+
             //generate the new block objects from the remaining blocks groups
             foreach (var filledBlocks in filledBlocksGroups)
             {
@@ -567,9 +710,63 @@ public partial class BlockObject : NetworkBehaviour
                 }
 
                 NetworkServer.Spawn(newBlockObject);
+
+                if (cachedSyncJoint.connected && filledBlocks.ContainsKey(cachedSyncJoint.attachedToMeAtCoord))
+                {
+                    if (cachedSyncJoint.attachedTo != null && cachedSyncJoint.attachedTo.Value)
+                    {
+                        newBlockObjectScript._syncJoint = cachedSyncJoint;
+                        cachedSyncJoint.attachedTo.Value.GetComponent<BlockObject>().ConnectedToSelf.Add(cachedSyncJoint.otherBearingCoord,
+                            new NetworkIdentityReference(newBlockObjectScript.netIdentity)); //must be done after spawn so netIdentity has a non-zero netId
+                    }
+                }
+
                 newBlockObject.GetComponent<AutoAuthority>().ServerForceNewOwner(identityId, NetworkTime.time, false);
             }
         }
+
+        if (_updateValidOrientationFromRootFrame != Time.frameCount)
+        {
+            BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
+        }
+    }
+
+    [Server]
+    private void ServerDisconnectJoint()
+    {
+        if (!_syncJoint.connected)
+        {
+            Debug.LogError("Joint was not connected");
+            return;
+        }
+
+        var oldSyncJoint = _syncJoint;
+        _syncJoint = new SyncJoint();
+        DisconnectJoint();
+
+        if (oldSyncJoint.attachedTo == null || !oldSyncJoint.attachedTo.Value)
+        {
+            Debug.LogError("oldSyncJoint attachedTo is null");
+            return;
+        }
+
+        var attachedToBlockObject = oldSyncJoint.attachedTo.Value.GetComponent<BlockObject>();
+
+        if (!attachedToBlockObject)
+        {
+            Debug.LogError("attachedTo blockObject does not exist in ServerDisconnectJoint");
+            return;
+        }
+
+        if (!attachedToBlockObject.ConnectedToSelf.ContainsKey(oldSyncJoint.otherBearingCoord))
+        {
+            Debug.LogError("ConnectedToSelf does not contain key.");
+            return;
+        }
+
+        attachedToBlockObject.ConnectedToSelf.Remove(oldSyncJoint.otherBearingCoord);
+        attachedToBlockObject.ProcessConnectedToSelfChanges();
+        BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
     }
 
     private void RemoveBlockFromMesh(Vector3Int coord)
@@ -860,8 +1057,15 @@ public partial class BlockObject : NetworkBehaviour
         _mesh.RecalculateTangents();
         _mesh.RecalculateBounds();
 
-        var (boxCollidersNotNeeded, mass, destroySphere) = BlockUtility.UpdateHitBox(Blocks, _boxCollidersInUse, _physicsBoxesObject, _sphereObject,
-            blockPhysicMaterial, spherePhysicMaterial);
+        if (MeshBlocks.Count == 0) //probably just waiting to get deleted by server
+        {
+            gameObject.SetActive(false);
+            CloseDialog();
+            return;
+        }
+
+        var (boxCollidersNotNeeded, mass, destroySphere) = BlockUtility.UpdateHitBox(MeshBlocks, _boxCollidersInUse, _physicsBoxesObject, _sphereObject,
+            blockPhysicMaterial, spherePhysicMaterial, this);
         while (boxCollidersNotNeeded.Count > 0)
         {
             Destroy(boxCollidersNotNeeded.Dequeue());
@@ -876,9 +1080,9 @@ public partial class BlockObject : NetworkBehaviour
             }
         }
 
-        if (MeshBlocks.Count == 1 && GetOnlyBlock().blockGameObjectPrefab)
+        if (MeshBlocks.Count == 1 && GetOnlyMeshBlock().blockGameObjectPrefab)
         {
-            _transparentCube.transform.localPosition = GetOnlyBlockCoord();
+            _transparentCube.transform.localPosition = GetOnlyMeshBlockCoord();
             _transparentCube.SetActive(true);
             if (!_transparentCubeCollider)
             {
@@ -959,6 +1163,31 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         return global::Blocks.GetBlock(Blocks[GetOnlyBlockCoord()].name);
+    }
+
+    private Vector3Int GetOnlyMeshBlockCoord()
+    {
+        if (MeshBlocks.Count != 1)
+        {
+            Debug.LogError("GetOnlyMeshBlockCoord is only valid when there is only 1 mesh block");
+        }
+
+        foreach (var block in MeshBlocks)
+        {
+            return block.Key;
+        }
+
+        return Vector3Int.zero;
+    }
+
+    private Block GetOnlyMeshBlock()
+    {
+        if (MeshBlocks.Count != 1)
+        {
+            Debug.LogError("GetOnlyMeshBlock is only valid when there is only 1 mesh block");
+        }
+
+        return global::Blocks.GetBlock(MeshBlocks[GetOnlyMeshBlockCoord()].name);
     }
 
     private Quaternion GetTargetRotation(Quaternion blockRotation, Vector3Int coord, Block.BlockType blockType)
@@ -1048,12 +1277,40 @@ public partial class BlockObject : NetworkBehaviour
     private void Save()
     {
         CloseDialog();
-        print(BlockUtility.SerializeBlocks(Blocks));
+        Debug.LogWarning(BlockUtility.SerializeBlocks(Blocks));
     }
 
     private void Delete()
     {
         CloseDialog();
         _autoAuthority.CmdDestroy();
+    }
+
+    [Server]
+    private void ServerUpdateValidOrientationFromRoot()
+    {
+        _updateValidOrientationFromRootFrame = Time.frameCount;
+
+        var toUpdate = new Queue<BlockObject>();
+        toUpdate.Enqueue(this);
+
+        while (toUpdate.Count > 0)
+        {
+            var next = toUpdate.Dequeue();
+            if (next.SyncJoint.attachedTo != null && next.SyncJoint.attachedTo.Value)
+            {
+                next._validLocalPosition = next.SyncJoint.attachedTo.Value.transform.InverseTransformPoint(next.transform.position);
+                next._validLocalRotation = Quaternion.Inverse(next.SyncJoint.attachedTo.Value.transform.rotation) * next.transform.rotation;
+            }
+
+            foreach (var pair in next.ConnectedToSelf)
+            {
+                if (pair.Value != null && pair.Value.Value)
+                {
+                    var childBlockObject = pair.Value.Value.GetComponent<BlockObject>();
+                    toUpdate.Enqueue(childBlockObject);
+                }
+            }
+        }
     }
 }

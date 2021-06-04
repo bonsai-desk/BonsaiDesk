@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using Mirror;
 
 public class PinchPullHand : MonoBehaviour, IHandTick
@@ -21,6 +22,8 @@ public class PinchPullHand : MonoBehaviour, IHandTick
     private const float PinchPullGestureStartDistance = 0.15f;
 
     public bool pinchPullEnabled = false;
+
+    private Coroutine _checkAuthorityAfterDelayCoroutine;
 
     private bool _init = false;
 
@@ -52,7 +55,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         if (pinchPullJoint.connectedBody)
         {
             var autoAuthority = pinchPullJoint.connectedBody.GetComponent<AutoAuthority>();
-            if (!autoAuthority.ClientHasAuthority() && autoAuthority.InUse)
+            if (!autoAuthority.HasAuthority() && autoAuthority.InUse)
             {
                 DetachObject();
                 return;
@@ -132,6 +135,37 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         DrawPinchPullLocal(drawLocal);
     }
 
+    public BlockObject ConnectedBlockObjectRoot()
+    {
+        if (pinchPullJoint.connectedBody)
+        {
+            var connectedBlockObject = pinchPullJoint.connectedBody.GetComponent<BlockObject>();
+            if (connectedBlockObject)
+            {
+                return BlockUtility.GetRootBlockObject(connectedBlockObject);
+            }
+        }
+
+        return null;
+    }
+
+    //as long as the object is not inUse, you can immediately attach to it. if someone else quickly touches it they may gain authority even though you
+    //are attached. This function checks after a short delay after you attach to make sure you were able to successfully gain authority and set inUse
+    //if you don't have authority after a short delay, detach
+    private IEnumerator CheckAuthorityAfterDelay()
+    {
+        yield return new WaitForSeconds(1f);
+
+        if (pinchPullJoint.connectedBody)
+        {
+            var autoAuthority = pinchPullJoint.connectedBody.GetComponent<AutoAuthority>();
+            if (!autoAuthority.HasAuthority())
+            {
+                DetachObject();
+            }
+        }
+    }
+
     private void AttachObject(AutoAuthority attachToObject, Vector3 hitPoint)
     {
         _localHitPoint = attachToObject.transform.InverseTransformPoint(hitPoint);
@@ -156,10 +190,23 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         {
             attachToObject.CmdSetKinematic(false);
         }
+
+        if (_checkAuthorityAfterDelayCoroutine != null)
+        {
+            StopCoroutine(_checkAuthorityAfterDelayCoroutine);
+        }
+
+        _checkAuthorityAfterDelayCoroutine = StartCoroutine(CheckAuthorityAfterDelay());
     }
 
-    private void DetachObject()
+    public void DetachObject()
     {
+        if (_checkAuthorityAfterDelayCoroutine != null)
+        {
+            StopCoroutine(_checkAuthorityAfterDelayCoroutine);
+            _checkAuthorityAfterDelayCoroutine = null;
+        }
+
         pinchPullJoint.connectedBody.GetComponent<AutoAuthority>().CmdRemoveInUse(NetworkClient.connection.identity.netId);
         pinchPullJoint.connectedBody = null;
         InputManager.Hands.GetHand(playerHand.skeletonType).NetworkHand.CmdStopPinchPull();

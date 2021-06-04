@@ -558,7 +558,6 @@ public class NetworkManagerGame : NetworkManager
 
         //setup player and spawn hands
         var networkVRPlayer = player.GetComponent<NetworkVRPlayer>();
-        var pid = player.GetComponent<NetworkIdentity>();
 
         var leftHand = Instantiate(networkHandLeftPrefab, startPos.position, startPos.rotation);
         var lid = leftHand.GetComponent<NetworkIdentity>();
@@ -568,10 +567,11 @@ public class NetworkManagerGame : NetworkManager
 
         NetworkServer.Spawn(leftHand, conn);
         NetworkServer.Spawn(rightHand, conn);
-        networkVRPlayer.SetHandIdentities(lid, rid);
+        networkVRPlayer.SetHandIdentities(new NetworkIdentityReference(lid), new NetworkIdentityReference(rid));
         networkVRPlayer.SetSpot(spot);
+        
         NetworkServer.AddPlayerForConnection(conn, player);
-
+        var pid = player.GetComponent<NetworkIdentity>();
         leftHand.GetComponent<NetworkHand>().ownerIdentity = new NetworkIdentityReference(pid);
         rightHand.GetComponent<NetworkHand>().ownerIdentity = new NetworkIdentityReference(pid);
     }

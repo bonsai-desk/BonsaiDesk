@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Mirror;
 using UnityEngine;
 
@@ -27,13 +28,19 @@ public class BlockObjectNullTest : NetworkBehaviour
 
         for (int i = 0; i < blockObjects.Length; i++)
         {
+            if (!AllConnectedCheckGood(blockObjects[i]))
+            {
+                CmdMsg("Failed BFS: " + blockObjects[i].name);
+                allGood = false;
+            }
+            
             if (blockObjects[i].SyncJoint.connected)
             {
                 var badJoint = !blockObjects[i].SyncJoint.attachedTo.Value ||
                                !blockObjects[i].SyncJoint.attachedTo.Value.GetComponent<BlockObject>() || !blockObjects[i].Joint;
                 if (badJoint)
                 {
-                    CmdMsg("Connected but bad joint.");
+                    CmdMsg("Connected but bad joint: " + blockObjects[i].name);
                     allGood = false;
                 }
             }
@@ -46,7 +53,7 @@ public class BlockObjectNullTest : NetworkBehaviour
                                     !pair.Value.Value.GetComponent<BlockObject>().SyncJoint.attachedTo.Value.GetComponent<BlockObject>();
                 if (badConnection)
                 {
-                    CmdMsg("Bad joint connection.");
+                    CmdMsg("Bad joint connection: " + blockObjects[i].name);
                     allGood = false;
                 }
             }
@@ -57,4 +64,19 @@ public class BlockObjectNullTest : NetworkBehaviour
             CmdMsg("All good");
         }
     }
+
+    private bool AllConnectedCheckGood(BlockObject blockObject)
+    {
+        var blockObjects = BlockUtility.BreadthFirstSearch(blockObject);
+        foreach (var foundBlockObject in blockObjects)
+        {
+            if (BlockUtility.BreadthFirstSearch(foundBlockObject).Count != blockObjects.Count)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    
 }
