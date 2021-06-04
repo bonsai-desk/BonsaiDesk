@@ -698,10 +698,22 @@ public partial class BlockObject : NetworkBehaviour
             {
                 netIdRef.Value.GetComponent<BlockObject>().ServerDisconnectJoint();
             }
-            
+
             if (Blocks.Count <= 1)
             {
                 _autoAuthority.ServerStripOwnerAndDestroy();
+                return;
+            }
+
+            if (filledBlocksGroups.Count != 1)
+            {
+                Debug.LogError("filledBlocksGroups should have exactly 1 element here");
+                _autoAuthority.ServerStripOwnerAndDestroy();
+                return;
+            }
+
+            if (ServerHandleSingleBearingAfterRemove(filledBlocksGroups[0], true, ConnectedToSelf, SyncJoint, _autoAuthority, null))
+            {
                 return;
             }
 
@@ -738,42 +750,10 @@ public partial class BlockObject : NetworkBehaviour
             //this will only happen for the server/host, so hopefully it does not glitch on the client
             ProcessBlockChanges();
 
-            var isSingleBearing = false;
-            if (largestGroup.Count == 1)
-            {
-                Vector3Int onlyBlockCoord = Vector3Int.zero;
-                SyncBlock onlyBlock = new SyncBlock();
-                foreach (var pair in largestGroup)
-                {
-                    onlyBlockCoord = pair.Key;
-                    onlyBlock = largestGroup[pair.Key];
-                    break;
-                }
-
-                if (onlyBlock.name == "bearing")
-                {
-                    if (ConnectedToSelf.ContainsKey(onlyBlockCoord))
-                    {
-                        Debug.LogError("largest group: single bearing attached");
-                    }
-                    else
-                    {
-                        if (SyncJoint.connected)
-                        {
-                            Debug.LogError("largest group: A single bearing should not have a SyncJoint");
-                        }
-                        //largest group: single bearing NOT attached
-                        _autoAuthority.ServerStripOwnerAndDestroy();
-                    }
-
-                    isSingleBearing = true;
-                }
-            }
-            
             var cachedSyncJoint = SyncJoint; //cache the syncjoint so we can still access it if it is disconnected
             var cachedSyncJoints = new Dictionary<Vector3Int, (NetworkIdentityReference netIdRef, SyncJoint syncJoint)>();
 
-            if (!isSingleBearing)
+            if (!ServerHandleSingleBearingAfterRemove(largestGroup, true, ConnectedToSelf, SyncJoint, _autoAuthority, null))
             {
                 //handle removing this blockObjects main joint
                 //the blockObject that this code is currently running on becomes the largestGroup. if this blockObject had a joint, and the joint is connected
@@ -814,38 +794,11 @@ public partial class BlockObject : NetworkBehaviour
             //generate the new block objects from the remaining blocks groups
             foreach (var filledBlocks in filledBlocksGroups)
             {
-                if (filledBlocks.Count == 1)
+                if (ServerHandleSingleBearingAfterRemove(filledBlocks, false, null, new SyncJoint(), null, cachedSyncJoints))
                 {
-                    Vector3Int onlyBlockCoord = Vector3Int.zero;
-                    SyncBlock onlyBlock = new SyncBlock();
-                    foreach (var pair in filledBlocks)
-                    {
-                        onlyBlockCoord = pair.Key;
-                        onlyBlock = filledBlocks[pair.Key];
-                        break;
-                    }
-
-                    if (onlyBlock.name == "bearing")
-                    {
-                        if (cachedSyncJoints.ContainsKey(onlyBlockCoord))
-                        {
-                            //single bearing attached to something else
-                            Debug.LogError("single bearing attached");
-                        }
-                        else
-                        {
-                            if (SyncJoint.connected)
-                            {
-                                Debug.LogError("A single bearing should not have a SyncJoint");
-                            }
-                            //single bearing NOT attached
-                            //just don't do anything and it won't be spawned
-                        }
-
-                        continue;
-                    }
+                    continue;
                 }
-                
+
                 var newBlockObject = Instantiate(StaticPrefabs.instance.blockObjectPrefab, transform.position, transform.rotation);
 
                 //add all blocks before spawning. they will be turned into MeshBlocks in Init
@@ -902,6 +855,74 @@ public partial class BlockObject : NetworkBehaviour
         {
             BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
         }
+    }
+
+    [Server]
+    private static bool ServerHandleSingleBearingAfterRemove(Dictionary<Vector3Int, SyncBlock> blockGroup, bool isLargestGroup,
+        SyncDictionary<Vector3Int, NetworkIdentityReference> connectedToSelf, SyncJoint syncJoint, AutoAuthority autoAuthority,
+        Dictionary<Vector3Int, (NetworkIdentityReference netIdRef, SyncJoint syncJoint)> cachedSyncJoints)
+    {
+        if (blockGroup.Count == 1)
+        {
+            Vector3Int onlyBlockCoord = Vector3Int.zero;
+            SyncBlock onlyBlock = new SyncBlock();
+            foreach (var pair in blockGroup)
+            {
+                onlyBlockCoord = pair.Key;
+                onlyBlock = blockGroup[pair.Key];
+                break;
+            }
+
+            if (onlyBlock.name == "bearing")
+            {
+                if (isLargestGroup)
+                {
+                    if (connectedToSelf.TryGetValue(onlyBlockCoord, out var netIdRef))
+                    {
+                        //isLargestGroup: single bearing attached
+                        if (netIdRef != null && netIdRef.Value)
+                        {
+                            netIdRef.Value.GetComponent<BlockObject>().ServerDisconnectJoint();
+                        }
+                        autoAuthority.ServerStripOwnerAndDestroy();
+                    }
+                    else
+                    {
+                        if (syncJoint.connected)
+                        {
+                            Debug.LogError("isLargestGroup: A single bearing should not have a SyncJoint");
+                        }
+
+                        //largest group: single bearing NOT attached
+                        autoAuthority.ServerStripOwnerAndDestroy();
+                    }
+                }
+                else
+                {
+                    if (cachedSyncJoints.TryGetValue(onlyBlockCoord, out var cache))
+                    {
+                        //single bearing attached
+                        if (cache.netIdRef != null && cache.netIdRef.Value)
+                        {
+                            cache.netIdRef.Value.GetComponent<BlockObject>().ServerDisconnectJoint();
+                        }
+                    }
+                    else
+                    {
+                        if (syncJoint.connected)
+                        {
+                            Debug.LogError("A single bearing should not have a SyncJoint");
+                        }
+
+                        //if not largest group, then it hasn't been created in the first place, so you don't need to destroy it
+                    }
+                }
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     [Server]

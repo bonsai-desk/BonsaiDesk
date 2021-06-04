@@ -285,7 +285,7 @@ public partial class BlockObject
         var currentPosition = blockObject.transform.TransformPoint(blockObject.SyncJoint.attachedToMeAtCoord);
         var distanceSquared = Vector3.SqrMagnitude(targetPosition - currentPosition);
 
-        var invalid = distanceSquared > 0.05f * 0.05f;
+        var invalid = distanceSquared > 0.045f * 0.045f;
         return invalid;
     }
 
@@ -308,7 +308,7 @@ public partial class BlockObject
             _resetTimes.Dequeue();
         }
 
-        if (_resetTimes.Count > 10)
+        if (_resetTimes.Count > 3)
         {
             _autoAuthority.CmdDestroy();
             return false;
