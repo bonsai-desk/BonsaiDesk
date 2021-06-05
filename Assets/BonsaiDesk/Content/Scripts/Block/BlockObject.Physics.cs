@@ -80,7 +80,7 @@ public partial class BlockObject
                     TouchingHand = true;
                 }
 
-                if (!_joint && ActiveLocal)
+                if (!_joint && !SyncJoint.connected && ActiveLocal)
                 {
                     CalculateForces();
                 }
