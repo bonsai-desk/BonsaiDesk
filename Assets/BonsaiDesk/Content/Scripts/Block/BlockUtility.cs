@@ -356,13 +356,14 @@ public static partial class BlockUtility
         {
             destroySphere = true;
         }
-        
+
         var blockObjects = GetBlockObjectsFromRoot(GetRootBlockObject(blockObject));
         float mass = 1f / blockObjects.Count;
         for (int i = 0; i < blockObjects.Count; i++)
         {
             blockObjects[i].Body.mass = mass;
         }
+
         return (boxCollidersNotNeeded, mass, destroySphere);
     }
 
@@ -572,6 +573,7 @@ public static partial class BlockUtility
 
     private static int _defaultLayerMask;
     public static int DefaultLayerMask => GetDefaultLayerMask();
+
     private static int GetDefaultLayerMask()
     {
         if (_defaultLayerMask == 0)
@@ -585,10 +587,51 @@ public static partial class BlockUtility
                     layerMask |= 1 << i;
                 }
             }
-            
+
             _defaultLayerMask = layerMask;
         }
 
         return _defaultLayerMask;
+    }
+
+    public static (List<Dictionary<Vector3Int, SyncBlock>> filledBlocksGroups, int indexOfLargest) GetFilledBlocksGroups(Vector3Int coord,
+        SyncDictionary<Vector3Int, SyncBlock> blocks)
+    {
+        var filledBlocksGroups = new List<Dictionary<Vector3Int, SyncBlock>>();
+
+        var surroundingBlocks = BlockUtility.GetSurroundingBlocks(coord, blocks);
+        foreach (var block in surroundingBlocks)
+        {
+            bool blockAlreadyFilled = false;
+            for (int i = 0; i < filledBlocksGroups.Count; i++)
+            {
+                if (filledBlocksGroups[i].ContainsKey(block))
+                {
+                    blockAlreadyFilled = true;
+                    break;
+                }
+            }
+
+            if (!blockAlreadyFilled)
+            {
+                filledBlocksGroups.Add(BlockUtility.FloodFill(block, coord, blocks));
+            }
+        }
+
+        //find the largest block group
+        int indexOfLargest = -1;
+        if (filledBlocksGroups.Count != 0)
+        {
+            indexOfLargest = 0;
+            for (int i = 1; i < filledBlocksGroups.Count; i++)
+            {
+                if (filledBlocksGroups[i].Count > filledBlocksGroups[indexOfLargest].Count)
+                {
+                    indexOfLargest = i;
+                }
+            }
+        }
+
+        return (filledBlocksGroups, indexOfLargest);
     }
 }

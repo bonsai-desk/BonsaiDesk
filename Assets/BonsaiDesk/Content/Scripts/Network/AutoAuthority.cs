@@ -439,12 +439,20 @@ public class AutoAuthority : NetworkBehaviour
     }
 
     [Server]
-    public void ServerStripOwnerAndDestroy()
+    public void ServerStripOwnerAndDestroy(bool ignoreConnections = false)
     {
-        if (_blockObject)
+        if (ignoreConnections && BlockUtility.GetRootBlockObject(_blockObject) != _blockObject)
+        {
+            // the only reason you would ignore connections is if there are connections, but this will print an error if there are connections.
+            // it is setup more as a failsafe, so if you ignore connections and there are connections, it will mostly work, but you will get some errors.
+            // ideally, you would not ever need the ignoreConnections flag
+            Debug.LogError("Ignoring connections, but this object does not equal root.");
+        }
+        
+        if (!ignoreConnections && _blockObject)
         {
             var rootObject = BlockUtility.GetRootBlockObject(_blockObject);
-            ServerDestroyFromBlockObjectRoot(rootObject);
+            BlockObject.ServerDestroyFromBlockObjectRoot(rootObject);
             return;
         }
 
@@ -454,34 +462,7 @@ public class AutoAuthority : NetworkBehaviour
         NetworkServer.Destroy(gameObject);
     }
 
-    [Server]
-    private void ServerDestroyFromBlockObjectRoot(BlockObject rootObject)
-    {
-        foreach (var pair in rootObject.ConnectedToSelf)
-        {
-            if (pair.Value != null && pair.Value.Value)
-            {
-                var blockObject = pair.Value.Value.GetComponent<BlockObject>();
-                if (blockObject)
-                {
-                    ServerDestroyFromBlockObjectRoot(blockObject);
-                }
-                else
-                {
-                    Debug.LogError("Could not find blockObject for destroying");
-                }
-            }
-            else
-            {
-                Debug.LogError("Could not find identity for destroying");
-            }
-        }
-
-        rootObject.AutoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true);
-        rootObject.gameObject.SetActive(false);
-        rootObject.GetComponent<SmoothSyncMirror>().clearBuffer();
-        NetworkServer.Destroy(rootObject.gameObject);
-    }
+    
 
     private void HandleRecursiveAuthority(Collision collision)
     {

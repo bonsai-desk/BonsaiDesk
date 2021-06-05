@@ -194,13 +194,18 @@ public class NetworkHand : NetworkBehaviour
                 SetFingerRotations( /*hand*/);
 
             //maxvalue if attached to nothing, so don't draw
+            //no need to retry if ownerIdentity.Value is null since this is in update, so it will keep trying in the next frames
             if (_pinchPullAttachedToId != uint.MaxValue && NetworkIdentity.spawned.TryGetValue(_pinchPullAttachedToId, out NetworkIdentity value) && ownerIdentity.Value)
             {
-                var from = ownerIdentity.Value.GetComponent<NetworkVRPlayer>().GetOtherHand(_skeletonType).GetComponent<OVRHandTransformMapper>().CustomBones[20]
-                    .position;
-                var to = GetComponent<OVRHandTransformMapper>().CustomBones[20].position;
-                var end = value.transform.TransformPoint(_pinchPullLocalHitPoint);
-                RenderPinchPullLine(from, to, end);
+                var otherHand = ownerIdentity.Value.GetComponent<NetworkVRPlayer>().GetOtherHand(_skeletonType);
+                if (otherHand)
+                {
+                    var from = otherHand.GetComponent<OVRHandTransformMapper>().CustomBones[20]
+                        .position;
+                    var to = GetComponent<OVRHandTransformMapper>().CustomBones[20].position;
+                    var end = value.transform.TransformPoint(_pinchPullLocalHitPoint);
+                    RenderPinchPullLine(from, to, end);
+                }
             }
             else
             {

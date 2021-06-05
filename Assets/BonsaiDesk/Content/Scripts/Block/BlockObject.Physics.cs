@@ -49,9 +49,25 @@ public partial class BlockObject
     {
         if (Joint && !Joint.connectedBody)
         {
-            Debug.LogError("Joint exists but is not connected to anything. Destroying joint.");
+            //this is not an error because it will probably correct itself
+            print("Joint exists but is not connected to anything. Destroying joint.");
             Destroy(_joint);
             _joint = null;
+
+            if (SyncJoint.connected)
+            {
+                print("Attempting to reconnect joint");
+                if (SyncJoint.attachedTo == null)
+                {
+                    Debug.LogError("SyncJoint connected, but attachedTo is null");
+                }
+                else if (SyncJoint.attachedTo.Value)
+                {
+                    Debug.LogError("SyncJoint connected, but attachedTo.Value is null");
+                }
+
+                ConnectJoint(SyncJoint);
+            }
         }
 
         if (_autoAuthority.HasAuthority())
@@ -65,9 +81,13 @@ public partial class BlockObject
                     TouchingHand = true;
                 }
 
-                if (!_joint)
+                if (!_joint && !SyncJoint.connected && ActiveLocal)
                 {
                     CalculateForces();
+                }
+                else
+                {
+                    _body.useGravity = true;
                 }
             }
             else
@@ -96,7 +116,7 @@ public partial class BlockObject
             }
 
             var nextBlockObject = nextOwnedObject.GetComponent<BlockObject>();
-            if (nextBlockObject != null && nextBlockObject != this)
+            if (nextBlockObject != null && nextBlockObject != this && nextBlockObject.ActiveLocal)
             {
                 blockObject = nextBlockObject;
                 Vector3Int coord = GetOnlyMeshBlockCoord();
@@ -151,7 +171,7 @@ public partial class BlockObject
 
                             //connect the joint
                             Mixpanel.Track("Attach Block To Bearing");
-                            CmdConnectJoint(jointInfo, blockCoord);
+                            CmdConnectJoint(jointInfo);
 
                             //client side prediction
                             ConnectJoint(jointInfo);
@@ -161,7 +181,7 @@ public partial class BlockObject
                         else
                         {
                             _blockObjectAuthorities.Remove(_autoAuthority);
-                            gameObject.SetActive(false);
+                            ActiveLocal = false; //just waiting for the server to delete this object
 
                             var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
                             localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * MeshBlocks[coord].rotation;

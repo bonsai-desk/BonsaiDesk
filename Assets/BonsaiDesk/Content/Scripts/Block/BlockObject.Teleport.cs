@@ -71,7 +71,7 @@ public partial class BlockObject
         {
             if (PhysicsHandController.InvalidTransform(blockObjects[i].transform))
             {
-                Debug.LogError("BlockObject has invalid transform!");
+                Debug.LogWarning("BlockObject has invalid transform!");
                 if (blockObjects.Count == 1 && blockObjects[0].Blocks.Count <= 4)
                 {
                     _autoAuthority.CmdDestroy();
@@ -277,15 +277,29 @@ public partial class BlockObject
 
         if (blockObject.SyncJoint.attachedTo == null || !blockObject.SyncJoint.attachedTo.Value)
         {
-            Debug.LogError("Joint connected but attachedTo is null.");
-            return true;
+            if (blockObject.SyncJoint.attachedTo == null)
+            {
+                Debug.LogError("Joint connected but attachedTo is null");
+                return true;
+            }
+            else
+            {
+                print("Joint connected but attachedTo.Value is null." +
+                      $"It does, however, have a netId, so it will probably fix itself automatically: netId - {blockObject.SyncJoint.attachedTo.NetworkId}");
+                return false;
+            }
+        }
+
+        if (!blockObject.ActiveLocal || !blockObject.SyncJoint.attachedTo.Value.GetComponent<BlockObject>().ActiveLocal)
+        {
+            return false;
         }
 
         var targetPosition = blockObject.SyncJoint.attachedTo.Value.transform.TransformPoint(blockObject.SyncJoint.otherBearingCoord);
         var currentPosition = blockObject.transform.TransformPoint(blockObject.SyncJoint.attachedToMeAtCoord);
         var distanceSquared = Vector3.SqrMagnitude(targetPosition - currentPosition);
 
-        var invalid = distanceSquared > 0.05f * 0.05f;
+        var invalid = distanceSquared > 0.045f * 0.045f;
         return invalid;
     }
 
@@ -308,7 +322,7 @@ public partial class BlockObject
             _resetTimes.Dequeue();
         }
 
-        if (_resetTimes.Count > 10)
+        if (_resetTimes.Count > 3)
         {
             _autoAuthority.CmdDestroy();
             return false;
@@ -324,6 +338,14 @@ public partial class BlockObject
             next._autoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
             var smoothSync = next.GetComponent<SmoothSyncMirror>();
             smoothSync.clearBuffer();
+
+            if (next == rootBlockObject && PhysicsHandController.InvalidTransform(next.transform))
+            {
+                next.transform.position = new Vector3(0, 5, 0);
+                next.transform.rotation = Quaternion.identity;
+                next._body.MovePosition(next.transform.position);
+                next._body.MoveRotation(next.transform.rotation);
+            }
 
             if (next.SyncJoint.attachedTo != null && next.SyncJoint.attachedTo.Value)
             {

@@ -30,6 +30,19 @@ public readonly struct SyncJoint : IEquatable<SyncJoint>
         this.connectedAnchor = connectedAnchor;
     }
 
+    public SyncJoint(SyncJoint oldJoint, NetworkIdentityReference newNetIdRef)
+    {
+        connected = true;
+        attachedTo = newNetIdRef;
+        positionLocalToAttachedTo = oldJoint.positionLocalToAttachedTo;
+        rotationLocalToAttachedTo = oldJoint.rotationLocalToAttachedTo;
+        attachedToMeAtCoord = oldJoint.attachedToMeAtCoord;
+        otherBearingCoord = oldJoint.otherBearingCoord;
+        axis = oldJoint.axis;
+        anchor = oldJoint.anchor;
+        connectedAnchor = oldJoint.connectedAnchor;
+    }
+
     public bool Equals(SyncJoint other)
     {
         var attachedToSame = true;

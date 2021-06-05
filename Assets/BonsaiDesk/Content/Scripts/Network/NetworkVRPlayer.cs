@@ -17,6 +17,8 @@ public class NetworkVRPlayer : NetworkBehaviour
 
     private MoveToDesk _moveToDesk;
 
+    private Coroutine _tryingToSetTexturesCoroutine;
+
     public override void OnStartClient()
     {
         headObject.SetActive(false);
@@ -106,11 +108,33 @@ public class NetworkVRPlayer : NetworkBehaviour
         //spot - 1 for same reason in SetSpot
         var textures = SpotManager.Instance.GetColorInfo(spot - 1);
         GetComponentInChildren<MeshRenderer>().material.mainTexture = textures.headTexture;
-        if (leftHandId.Value && rightHandId.Value)
+        if (_tryingToSetTexturesCoroutine != null)
         {
-            leftHandId.Value.GetComponent<NetworkHand>().ChangeHandTexture(textures.handTexture);
-            rightHandId.Value.GetComponent<NetworkHand>().ChangeHandTexture(textures.handTexture);
+            StopCoroutine(_tryingToSetTexturesCoroutine);
         }
+
+        _tryingToSetTexturesCoroutine = StartCoroutine(KeepTryingToSetTextures(textures));
+    }
+
+    private IEnumerator KeepTryingToSetTextures(SpotManager.ColorInfo textures)
+    {
+        int attempts = 250;
+        while (!leftHandId.Value || !rightHandId.Value)
+        {
+            attempts--;
+            if (attempts < 0)
+            {
+                Debug.LogError("KeepTryingToSetTextures: out of attempts");
+                yield break;
+            }
+
+            yield return null;
+        }
+
+        leftHandId.Value.GetComponent<NetworkHand>().ChangeHandTexture(textures.handTexture);
+        rightHandId.Value.GetComponent<NetworkHand>().ChangeHandTexture(textures.handTexture);
+
+        _tryingToSetTexturesCoroutine = null;
     }
 
     [Server]

@@ -19,6 +19,7 @@ using UnityEditor;
 public class NetworkManagerGame : NetworkManager
 {
     public bool connecting;
+
     public delegate void LoggedInHandler(User user);
 
     public delegate void ServerAddPlayerHandler(NetworkConnection conn, bool isLanOnly);
@@ -93,9 +94,9 @@ public class NetworkManagerGame : NetworkManager
         OpenRoom += HandleOpenRoom;
         CloseRoom += HandleCloseRoom;
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
         EditorApplication.pauseStateChanged += HandleEditorPauseChange;
-    #endif
+#endif
 
         if (Application.isEditor && !serverOnlyIfEditor)
         {
@@ -134,7 +135,7 @@ public class NetworkManagerGame : NetworkManager
         connecting = false;
         InfoChange?.Invoke(this, new EventArgs());
     }
-    
+
     public override void LateUpdate()
     {
         if (_shouldDisconnect)
@@ -203,7 +204,9 @@ public class NetworkManagerGame : NetworkManager
             switch (mode)
             {
                 case NetworkManagerMode.ClientOnly:
+#if !UNITY_EDITOR
                     HandleLeaveRoom();
+#endif
                     break;
                 case NetworkManagerMode.ServerOnly:
                 case NetworkManagerMode.Host:
@@ -321,6 +324,7 @@ public class NetworkManagerGame : NetworkManager
             connecting = false;
             BonsaiLogError($"Did not get into offline state before joining room ({mode})");
         }
+
         InfoChange?.Invoke(this, new EventArgs());
     }
 
@@ -467,7 +471,6 @@ public class NetworkManagerGame : NetworkManager
                 PlayerInfos[conn].OculusId = userInfo.OculusId;
                 PlayerInfos[conn].ID = userInfo.ID;
                 PlayerInfos[conn].Ok = true;
-
             }
             else
             {
@@ -504,7 +507,6 @@ public class NetworkManagerGame : NetworkManager
         BonsaiLogWarning($"Kicking connection ({conn.connectionId}) for not reporting after joining");
         conn.Disconnect();
         PlayerInfos.Remove(conn);
-
     }
 
 
@@ -569,7 +571,7 @@ public class NetworkManagerGame : NetworkManager
         NetworkServer.Spawn(rightHand, conn);
         networkVRPlayer.SetHandIdentities(new NetworkIdentityReference(lid), new NetworkIdentityReference(rid));
         networkVRPlayer.SetSpot(spot);
-        
+
         NetworkServer.AddPlayerForConnection(conn, player);
         var pid = player.GetComponent<NetworkIdentity>();
         leftHand.GetComponent<NetworkHand>().ownerIdentity = new NetworkIdentityReference(pid);
@@ -587,22 +589,22 @@ public class NetworkManagerGame : NetworkManager
                 if (autoAuthority.InUse)
                 {
                     autoAuthority.SetInUse(false);
-                } 
+                }
 
                 autoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
                 //identity.RemoveClientAuthority();
             }
-            else if (!identity.gameObject.CompareTag("NetworkHand") && !identity.gameObject.CompareTag("NetworkHead")) 
+            else if (!identity.gameObject.CompareTag("NetworkHand") && !identity.gameObject.CompareTag("NetworkHead"))
             {
                 identity.RemoveClientAuthority();
             }
         }
-        
+
         if (!conn.isAuthenticated)
         {
             return;
         }
-        
+
         ServerDisconnect?.Invoke(this, conn);
 
         PlayerInfos.Remove(conn);
@@ -641,7 +643,7 @@ public class NetworkManagerGame : NetworkManager
         User = msg.Data;
         oculusTransport.LoggedIn(User);
         LoggedIn?.Invoke(User);
-        
+
         var oculusId = User.OculusID;
         Mixpanel.Reset();
         Mixpanel.Identify(oculusId);
@@ -738,7 +740,9 @@ public class NetworkManagerGame : NetworkManager
         public bool Ok;
     }
 
-    private struct ShouldDisconnectMessage : NetworkMessage { }
+    private struct ShouldDisconnectMessage : NetworkMessage
+    {
+    }
 
     private struct UserInfoMessage : NetworkMessage
     {
