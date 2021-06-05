@@ -1480,6 +1480,9 @@ public partial class BlockObject : NetworkBehaviour
 
     private void CheckForProblems()
     {
+        //these client side-prediction fixes can be tested by just commenting out the command but still running the client side prediction and see how it recovers
+        //also try commenting out different combinations of commands. one at a time, all, etc.
+        
         // TODO: this will check for things that should be connected but are not, and it will connect them.
         //       it does not check if something is connected but should not be. for that case, you would need a timer on when the joint was connected
         //       so a client side prediction joint would not be removed too quickly
@@ -1488,6 +1491,10 @@ public partial class BlockObject : NetworkBehaviour
         
         // TODO: in addition to these checks, each time a client side prediction happens, it should start a coroutine to check if the server agrees
         //       after ~1 second
+        
+        // TODO: check client side prediction for disabled gameObject. blockObject can disable itself if remove block is called with a single block
+        
+        //are there any other client side predictions should should be checked that I forgot?
 
         if (Time.time > _nextCheckBlockObjectForProblemsTime)
         {

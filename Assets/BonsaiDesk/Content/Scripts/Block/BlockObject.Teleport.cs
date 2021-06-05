@@ -282,6 +282,11 @@ public partial class BlockObject
             return true;
         }
 
+        if (!blockObject.gameObject.activeInHierarchy || !blockObject.SyncJoint.attachedTo.Value.gameObject.activeInHierarchy)
+        {
+            return false;
+        }
+
         var targetPosition = blockObject.SyncJoint.attachedTo.Value.transform.TransformPoint(blockObject.SyncJoint.otherBearingCoord);
         var currentPosition = blockObject.transform.TransformPoint(blockObject.SyncJoint.attachedToMeAtCoord);
         var distanceSquared = Vector3.SqrMagnitude(targetPosition - currentPosition);
