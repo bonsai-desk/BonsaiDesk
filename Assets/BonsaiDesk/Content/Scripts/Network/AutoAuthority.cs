@@ -439,9 +439,17 @@ public class AutoAuthority : NetworkBehaviour
     }
 
     [Server]
-    public void ServerStripOwnerAndDestroy()
+    public void ServerStripOwnerAndDestroy(bool ignoreConnections = false)
     {
-        if (_blockObject)
+        if (ignoreConnections && BlockUtility.GetRootBlockObject(_blockObject) != _blockObject)
+        {
+            // the only reason you would ignore connections is if there are connections, but this will print an error if there are connections.
+            // it is setup more as a failsafe, so if you ignore connections and there are connections, it will mostly work, but you will get some errors.
+            // ideally, you would not ever need the ignoreConnections flag
+            Debug.LogError("Ignoring connections, but this object does not equal root.");
+        }
+        
+        if (!ignoreConnections && _blockObject)
         {
             var rootObject = BlockUtility.GetRootBlockObject(_blockObject);
             ServerDestroyFromBlockObjectRoot(rootObject);

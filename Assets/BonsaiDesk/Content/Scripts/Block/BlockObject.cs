@@ -262,38 +262,38 @@ public partial class BlockObject : NetworkBehaviour
         }
     }
 
-    private void OnDestroy()
+    public override void OnStopServer()
     {
         //clean up any existing connections
         //this shouldn't need to happen unless something goes wrong
-        if (isServer)
+        if (SyncJoint.connected)
         {
-            if (SyncJoint.connected)
-            {
-                Debug.LogWarning("SyncJoint should have been cleaned up before destroy");
-                ServerDisconnectJoint();
-            }
+            Debug.LogError("SyncJoint should have been cleaned up before destroy");
+            ServerDisconnectJoint();
+        }
 
-            var toBeDisconnected = new Queue<BlockObject>();
-            foreach (var pair in ConnectedToSelf)
+        var toBeDisconnected = new Queue<BlockObject>();
+        foreach (var pair in ConnectedToSelf)
+        {
+            if (pair.Value != null && pair.Value.Value)
             {
-                if (pair.Value != null && pair.Value.Value)
+                var connectedBlockObject = pair.Value.Value.GetComponent<BlockObject>();
+                if (connectedBlockObject.SyncJoint.connected)
                 {
-                    var connectedBlockObject = pair.Value.Value.GetComponent<BlockObject>();
-                    if (connectedBlockObject.SyncJoint.connected)
-                    {
-                        toBeDisconnected.Enqueue(connectedBlockObject);
-                    }
+                    toBeDisconnected.Enqueue(connectedBlockObject);
                 }
-            }
-
-            while (toBeDisconnected.Count > 0)
-            {
-                Debug.LogWarning("Connected blockObject should have been cleaned up before destroy");
-                toBeDisconnected.Dequeue().ServerDisconnectJoint();
             }
         }
 
+        while (toBeDisconnected.Count > 0)
+        {
+            Debug.LogError("Connected blockObject should have been cleaned up before destroy");
+            toBeDisconnected.Dequeue().ServerDisconnectJoint();
+        }
+    }
+
+    private void OnDestroy()
+    {
         CloseDialog();
 
         if (_blockObjectAuthorities.Contains(_autoAuthority))
@@ -586,7 +586,7 @@ public partial class BlockObject : NetworkBehaviour
             Debug.LogError("Command: Attempted to add block which already exists");
             return;
         }
-
+        
         Blocks.Add(coord, new SyncBlock(blockName, BlockUtility.QuaternionToByte(rotation)));
         if (_updateValidOrientationFromRootFrame != Time.frameCount)
         {
@@ -698,46 +698,47 @@ public partial class BlockObject : NetworkBehaviour
             //this will only happen for the server/host, so hopefully it does not glitch on the client
             ProcessBlockChanges();
 
-            var cachedSyncJoint = SyncJoint; //cache the syncjoint so we can still access it if it is disconnected
+            //cache the joints so we can still access it if it is disconnected
+            var cachedSyncJoint = SyncJoint;
             var cachedSyncJoints = new Dictionary<Vector3Int, (NetworkIdentityReference netIdRef, SyncJoint syncJoint)>();
-
-            if (!ServerHandleSingleBearingAfterRemove(largestGroup, true, ConnectedToSelf, SyncJoint, _autoAuthority, null))
+            
+            //handle removing this blockObjects main joint
+            //the blockObject that this code is currently running on becomes the largestGroup. if this blockObject had a joint, and the joint is connected
+            //at a coord that is no longer a part of this blockObject, it should be removed
+            if (cachedSyncJoint.connected && !largestGroup.ContainsKey(cachedSyncJoint.attachedToMeAtCoord))
             {
-                //handle removing this blockObjects main joint
-                //the blockObject that this code is currently running on becomes the largestGroup. if this blockObject had a joint, and the joint is connected
-                //at a coord that is no longer a part of this blockObject, it should be removed
-                if (cachedSyncJoint.connected && !largestGroup.ContainsKey(cachedSyncJoint.attachedToMeAtCoord))
-                {
-                    ServerDisconnectJoint(); //also calls ProcessConnectedToSelfChanges
-                }
+                ServerDisconnectJoint(); //also calls ProcessConnectedToSelfChanges
+            }
 
-                //handle removing this blockObjects ConnectedToSelf blockObjects joints
-                //disconnect any blockObjects that were connected to this blockObject but are not connected to the largestGroup (which this blockObject is becoming)
-                var connectedToDisconnect = new Queue<BlockObject>();
-                foreach (var pair in ConnectedToSelf)
+            //handle removing this blockObjects ConnectedToSelf blockObjects joints
+            //disconnect any blockObjects that were connected to this blockObject but are not connected to the largestGroup (which this blockObject is becoming)
+            var connectedToDisconnect = new Queue<BlockObject>();
+            foreach (var pair in ConnectedToSelf)
+            {
+                if (pair.Value != null && pair.Value.Value && !largestGroup.ContainsKey(pair.Key))
                 {
-                    if (pair.Value != null && pair.Value.Value && !largestGroup.ContainsKey(pair.Key))
+                    var connectedBlockObject = pair.Value.Value.GetComponent<BlockObject>();
+                    if (connectedBlockObject)
                     {
-                        var connectedBlockObject = pair.Value.Value.GetComponent<BlockObject>();
-                        if (connectedBlockObject)
-                        {
-                            connectedToDisconnect.Enqueue(connectedBlockObject);
-                        }
+                        connectedToDisconnect.Enqueue(connectedBlockObject);
                     }
-                }
-
-                while (connectedToDisconnect.Count > 0)
-                {
-                    var connectedBlockObject = connectedToDisconnect.Dequeue();
-                    if (connectedBlockObject.SyncJoint.connected)
-                    {
-                        cachedSyncJoints.Add(connectedBlockObject.SyncJoint.otherBearingCoord,
-                            (new NetworkIdentityReference(connectedBlockObject.netIdentity), connectedBlockObject.SyncJoint));
-                    }
-
-                    connectedBlockObject.ServerDisconnectJoint();
                 }
             }
+
+            while (connectedToDisconnect.Count > 0)
+            {
+                var connectedBlockObject = connectedToDisconnect.Dequeue();
+                if (connectedBlockObject.SyncJoint.connected)
+                {
+                    cachedSyncJoints.Add(connectedBlockObject.SyncJoint.otherBearingCoord,
+                        (new NetworkIdentityReference(connectedBlockObject.netIdentity), connectedBlockObject.SyncJoint));
+                }
+
+                connectedBlockObject.ServerDisconnectJoint();
+            }
+
+            //if the largest group is a single bearing, this function will handle it
+            ServerHandleSingleBearingAfterRemove(largestGroup, true, ConnectedToSelf, SyncJoint, _autoAuthority, null);
 
             //generate the new block objects from the remaining blocks groups
             foreach (var filledBlocks in filledBlocksGroups)
@@ -835,7 +836,7 @@ public partial class BlockObject : NetworkBehaviour
                             netIdRef.Value.GetComponent<BlockObject>().ServerDisconnectJoint();
                         }
 
-                        autoAuthority.ServerStripOwnerAndDestroy();
+                        autoAuthority.ServerStripOwnerAndDestroy(true);
                     }
                     else
                     {
@@ -845,7 +846,7 @@ public partial class BlockObject : NetworkBehaviour
                         }
 
                         //largest group: single bearing NOT attached
-                        autoAuthority.ServerStripOwnerAndDestroy();
+                        autoAuthority.ServerStripOwnerAndDestroy(true);
                     }
                 }
                 else
@@ -855,7 +856,11 @@ public partial class BlockObject : NetworkBehaviour
                         //single bearing attached
                         if (cache.netIdRef != null && cache.netIdRef.Value)
                         {
-                            cache.netIdRef.Value.GetComponent<BlockObject>().ServerDisconnectJoint();
+                            var attachedToBlockObject = cache.netIdRef.Value.GetComponent<BlockObject>();
+                            if (attachedToBlockObject && attachedToBlockObject.SyncJoint.connected)
+                            {
+                                attachedToBlockObject.ServerDisconnectJoint();
+                            }
                         }
                     }
                     else
@@ -1482,18 +1487,18 @@ public partial class BlockObject : NetworkBehaviour
     {
         //these client side-prediction fixes can be tested by just commenting out the command but still running the client side prediction and see how it recovers
         //also try commenting out different combinations of commands. one at a time, all, etc.
-        
+
         // TODO: this will check for things that should be connected but are not, and it will connect them.
         //       it does not check if something is connected but should not be. for that case, you would need a timer on when the joint was connected
         //       so a client side prediction joint would not be removed too quickly
-        
+
         // TODO: check that Blocks matches _meshBlocks. same as joints, it would need a timer to client side prediction is not overridden
-        
+
         // TODO: in addition to these checks, each time a client side prediction happens, it should start a coroutine to check if the server agrees
         //       after ~1 second
-        
+
         // TODO: check client side prediction for disabled gameObject. blockObject can disable itself if remove block is called with a single block
-        
+
         //are there any other client side predictions should should be checked that I forgot?
 
         if (Time.time > _nextCheckBlockObjectForProblemsTime)
