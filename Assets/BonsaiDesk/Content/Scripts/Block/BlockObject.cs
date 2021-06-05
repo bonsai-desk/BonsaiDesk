@@ -52,14 +52,8 @@ public partial class BlockObject : NetworkBehaviour
 
     public bool ActiveLocal
     {
-        get
-        {
-            return _activeLocal;
-        }
-        set
-        {
-            SetActiveLocal(value);
-        }
+        get { return _activeLocal; }
+        set { SetActiveLocal(value); }
     }
 
     //used to make sure ServerUpdateValidOrientationFromRoot is only called once if many blocks are added

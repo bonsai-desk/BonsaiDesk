@@ -280,17 +280,17 @@ public partial class BlockObject
             if (blockObject.SyncJoint.attachedTo == null)
             {
                 Debug.LogError("Joint connected but attachedTo is null");
+                return true;
             }
             else
             {
                 print("Joint connected but attachedTo.Value is null." +
                       $"It does, however, have a netId, so it will probably fix itself automatically: netId - {blockObject.SyncJoint.attachedTo.NetworkId}");
+                return false;
             }
-
-            return true;
         }
 
-        if (!blockObject.gameObject.activeInHierarchy || !blockObject.SyncJoint.attachedTo.Value.gameObject.activeInHierarchy)
+        if (!blockObject.ActiveLocal || !blockObject.SyncJoint.attachedTo.Value.GetComponent<BlockObject>().ActiveLocal)
         {
             return false;
         }
