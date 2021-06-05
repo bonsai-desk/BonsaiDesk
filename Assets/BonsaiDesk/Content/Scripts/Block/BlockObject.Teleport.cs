@@ -277,8 +277,16 @@ public partial class BlockObject
 
         if (blockObject.SyncJoint.attachedTo == null || !blockObject.SyncJoint.attachedTo.Value)
         {
-            var msg = blockObject.SyncJoint.attachedTo == null ? "null" : "nedId - " + blockObject.SyncJoint.attachedTo.NetworkId;
-            Debug.LogError($"Joint connected but attachedTo is null: {msg}");
+            if (blockObject.SyncJoint.attachedTo == null)
+            {
+                Debug.LogError("Joint connected but attachedTo is null");
+            }
+            else
+            {
+                print("Joint connected but attachedTo.Value is null." +
+                      $"It does, however, have a netId, so it will probably fix itself automatically: netId - {blockObject.SyncJoint.attachedTo.NetworkId}");
+            }
+
             return true;
         }
 

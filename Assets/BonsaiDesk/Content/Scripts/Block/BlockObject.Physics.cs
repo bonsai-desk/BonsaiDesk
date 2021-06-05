@@ -49,7 +49,8 @@ public partial class BlockObject
     {
         if (Joint && !Joint.connectedBody)
         {
-            Debug.LogError("Joint exists but is not connected to anything. Destroying joint.");
+            //this is not an error because it will probably correct itself
+            print("Joint exists but is not connected to anything. Destroying joint.");
             Destroy(_joint);
             _joint = null;
 
