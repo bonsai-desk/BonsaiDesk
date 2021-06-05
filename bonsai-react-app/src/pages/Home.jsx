@@ -148,7 +148,7 @@ export const HostHomePage = observer(() => {
                 <React.Fragment>
                     <div className={'text-xl'}>People in Your Room</div>
                     <div className={'flex space-x-2'}>
-                        {store.PlayerInfos.map(info => <ConnectedClient info={info}/>)}
+                        {store.PlayerInfos.map(info => <ConnectedClient key={info.Name} info={info}/>)}
                     </div>
                 </React.Fragment>
                 :
@@ -217,7 +217,7 @@ export const HomePage = observer(() => {
     }
     
     if (store.NetworkInfo.Connecting) {
-        Inner = LoadingHomePage;
+        return <LoadingHomePage/>
     }
 
     return <Switch>

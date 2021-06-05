@@ -1,8 +1,8 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {observer} from 'mobx-react-lite';
 import {MenuContentTabbed} from '../components/MenuContent';
 import {InstantButton} from '../components/Button';
-import {grayButtonClass, hamburgerButton, lightGrayButtonClass, redButtonClass} from '../cssClasses';
+import {grayButtonClass, grayButtonClassInert, lightGrayButtonClass, redButtonClass} from '../cssClasses';
 import {useStore} from '../DataProvider';
 import axios from 'axios';
 import moment from 'moment';
@@ -10,8 +10,20 @@ import {InfoItemCustom} from '../components/InfoItem';
 import BlockImg from '../static/block-line.svg';
 import ThumbImg from '../static/thumb-up.svg';
 import MenuImg from '../static/menu.svg';
+import DownloadImg from '../static/download.svg';
 import jwt from 'jsonwebtoken';
 import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
+
+let hamburgerButton = 'relative h-20 w-20 rounded-full cursor-pointer flex flex-wrap content-center font-bold bg-gray-800  active:bg-gray-700  hover:bg-gray-600';
+
+let SpawnButton = observer(() => {
+
+    return <InstantButton onClick={() => {
+    }} className={hamburgerButton}>
+        <img src={DownloadImg} alt={'Menu'} className={'absolute left-5 bottom-5 w-10'}/>
+    </InstantButton>;
+
+});
 
 let ThumbButton = observer((props) => {
     let {store} = useStore();
@@ -30,8 +42,8 @@ let ThumbButton = observer((props) => {
                 url: url,
                 data: `token=${token}&build_id=${buildId}`,
                 headers: {'content-type': 'application/x-www-form-urlencoded'},
-            }).then(response => {
-                console.log(response);
+            }).then(_ => {
+                //console.log(response);
             }).catch(err => {
                 console.log(err);
                 setLiked(false);
@@ -49,7 +61,7 @@ let ThumbButton = observer((props) => {
     var _likes = likes;
 
     if (liked) {
-        buttonClass = 'z-0 bg-gray-700 active:bg-gray-700 hover:bg-gray-600 rounded-full cursor-pointer w-20 h-20 flex flex-wrap content-center';
+        buttonClass = 'z-0 bg-bonsai-green rounded-full cursor-pointer w-20 h-20 flex flex-wrap content-center';
         if (!props.liked) {
             _likes = likes + 1;
         }
@@ -70,16 +82,38 @@ let ThumbButton = observer((props) => {
     );
 });
 
-let BlockPost = observer(({build_name, user_name, created_at, likes, build_id, liked}) => {
+let BlockPost = observer(({
+                              build_name, user_name, created_at, likes, build_id, liked, user_id,
+                          }) => {
     let {store} = useStore();
-    let [expanded, setExpanded] = useState(false);
     let [reported, setReported] = useState(false);
+    let [modal, setModal] = useState(false);
+    let [deleteModal, setDeleteModal] = useState(false);
+    const DeleteState = {
+        None: 0, Failed: 1, Success: 2,
+    };
+    let [deleteState, setDeleteState] = useState(DeleteState.None);
+    const ReportState = {
+        None: 0, Failed: 1, Success: 2,
+    };
+    let [reportState, setReportState] = useState(ReportState.None);
+    let [reportModal, setReportModal] = useState(false);
+    let decoded = jwt.decode(store.BonsaiToken);
+    const myPost = decoded.user_id === user_id;
     const ago = moment(created_at).fromNow();
     const title = build_name;
-    const slug = `By ${user_name} ${ago}`;
-    const LeftItems = <div className={'flex space mr-4'}>
+    const slug = `${myPost ? 'You' : user_name} ${ago}`;
+    const LeftItems = <div className={'flex space mr-4 space-x-4'}>
         <ThumbButton imgSrc={ThumbImg} likes={likes} buildId={build_id} liked={liked}/>
+        <SpawnButton/>
+        <InstantButton onClick={handleClickBurger} className={hamburgerButton}>
+            <img src={MenuImg} alt={'Menu'} className={'absolute left-5 bottom-5 w-10'}/>
+        </InstantButton>
     </div>;
+
+    if (deleteState === DeleteState.Success && !deleteModal) {
+        return '';
+    }
 
     function postReport() {
         let url = store.ApiBase + '/blocks/report';
@@ -90,38 +124,189 @@ let BlockPost = observer(({build_name, user_name, created_at, likes, build_id, l
             headers: {'content-type': 'application/x-www-form-urlencoded'},
         }).then(response => {
             if (response.data.done === 0 || response.data.done === 1) {
+                setReportState(ReportState.Success);
                 setReported(true);
             }
         }).catch(err => {
+            setReportState(ReportState.Failed);
             console.log(err);
         });
     }
 
-    let reportInner = reported ? 'Reported' : 'Report';
+    function spawnDeleteModal() {
+        setDeleteModal(true);
+    }
 
-    function Drawer() {
-        return <div
-                className={'w-full h-28 bg-gray-700 rounded-b-2xl flex flex-wrap content-center overflow-hidden px-4 justify-center'}>
-            <div>
-                <InstantButton onClick={postReport} className={redButtonClass}>{reportInner}</InstantButton>
+    function spawnReportModal() {
+        setReportModal(true);
+    }
+
+    function clickOut() {
+        setModal(false);
+    }
+
+    function SpawnReportButton() {
+        if (reported) {
+            return <InstantButton onClick={() => {
+            }} className={redButtonClass}>Reported!</InstantButton>;
+        }
+        return <InstantButton onClick={spawnReportModal} className={redButtonClass}>Report</InstantButton>;
+
+    }
+
+    function BuildModal() {
+        return <Modal clickOut={clickOut}>
+            <div className={'flex space-x-2'}>
+                {!myPost ?
+
+                        <SpawnReportButton/>
+                        : ''
+                }
+                {myPost ?
+                        <InstantButton onClick={spawnDeleteModal} className={redButtonClass}>Delete</InstantButton>
+                        : ''
+                }
             </div>
-        </div>;
+        </Modal>;
+    }
+
+    function postDelete() {
+        if (deleteState !== DeleteState.None) {
+            return;
+        }
+        let url = store.ApiBase + `/blocks/builds/${build_id}`;
+        axios({
+            method: 'DELETE',
+            url: url,
+            data: `token=${store.BonsaiToken}`,
+            headers: {'content-type': 'application/x-www-form-urlencoded'},
+        }).then(response => {
+            if (response.status === 200) {
+                setDeleteState(DeleteState.Success);
+                setModal(false);
+            } else {
+                setDeleteState(DeleteState.Failed);
+            }
+        }).catch(console.log);
+    }
+
+    function MiniDeleteModal() {
+        function clickOut() {
+            setDeleteModal(false);
+        }
+
+        let title = 'Delete Post?';
+        let info = 'Are you sure you want to delete your post? You can\'t undo this.';
+        let leftButton = 'Cancel';
+        let rightButton = 'Delete';
+
+        switch (deleteState) {
+            case DeleteState.Success:
+                title = 'Delete Confirmed!';
+                info = `You just deleted ${build_name}.`;
+                leftButton = 'Close';
+                break;
+            case DeleteState.Failed:
+                title = 'Delete Failed!';
+                info = `Something went wrong.`;
+                leftButton = 'Close';
+                break;
+            default:
+                break;
+        }
+
+        let deleteButtonClass = redButtonClass;
+        if (deleteState !== DeleteState.None) {
+            deleteButtonClass = grayButtonClassInert;
+        }
+
+        return <MiniModal clickOut={clickOut}>
+            <div className={'space-y-2 w-4/4'}>
+                <div className={'divide-y'}>
+                    <div className={'text-xl px-6 py-6'}>{title}</div>
+                    <div className={'px-6 py-8'}>{info}</div>
+                </div>
+                <div className={'py-4 px-4 w-full flex flex-wrap space-x-4 justify-end px-2 bg-gray-900'}>
+                    <InstantButton onClick={clickOut} className={grayButtonClass}>{leftButton}</InstantButton>
+                    <InstantButton onClick={postDelete} className={deleteButtonClass}>{rightButton}</InstantButton>
+                </div>
+            </div>
+        </MiniModal>;
+    }
+
+    function MiniReportModal() {
+        function clickOut() {
+            setReportModal(false);
+        }
+
+        let title = 'Report Post?';
+        let info = 'Is there something offensive about this? Let us know.';
+        let leftButton = 'Cancel';
+        let rightButton = 'Report';
+
+        switch (reportState) {
+            case ReportState.Success:
+                title = 'Post Reported!';
+                info = 'We will look into it.';
+                leftButton = 'Close';
+                break;
+            case ReportState.Failed:
+                title = 'Failed to Report';
+                info = 'Something went wrong.';
+                leftButton = 'Close';
+                break;
+            default:
+                break;
+        }
+
+        function CancelButton() {
+            return <InstantButton onClick={clickOut} className={grayButtonClass}>{leftButton}</InstantButton>;
+        }
+
+        function ReportButton() {
+            function onClick() {
+                if (reportState === ReportState.None) {
+                    postReport();
+                }
+            }
+
+            let className = redButtonClass;
+            if (reportState !== ReportState.None) {
+                className = grayButtonClassInert;
+            }
+            return <InstantButton onClick={onClick} className={className}>{rightButton}</InstantButton>;
+        }
+
+        return <MiniModal clickOut={clickOut}>
+            <div className={'space-y-2'}>
+                <div className={'divide-y'}>
+                    <div className={'text-xl px-6 py-6'}>{title}</div>
+                    <div className={'px-6 py-8'}>{info}</div>
+                </div>
+                <div className={'py-4 px-4 w-full flex flex-wrap space-x-4 justify-end px-2 bg-gray-900'}>
+                    <CancelButton/>
+                    <ReportButton/>
+                </div>
+            </div>
+        </MiniModal>;
     }
 
     function handleClickBurger() {
-        setExpanded(!expanded);
+        setModal(true);
     }
 
-    return <React.Fragment><InfoItemCustom key={user_name + created_at} title={title} slug={slug} imgSrc={BlockImg}
-                                           leftItems={LeftItems}>
+    return <React.Fragment><InfoItemCustom title={title} slug={slug} imgSrc={BlockImg}
+                                           leftItems={''}>
+        {deleteModal ? <MiniDeleteModal/> : ''}
+        {reportModal ? <MiniReportModal/> : ''}
+
+        {modal ?
+                <BuildModal/> : ''
+        }
         <div className={'flex flex-wrap content-center space-x-4'}>
-            <InstantButton className={grayButtonClass}>Spawn</InstantButton>
-            <InstantButton onClick={handleClickBurger} className={hamburgerButton}>
-                <img src={MenuImg} alt={'Menu'} className={'w-8'}/>
-            </InstantButton>
+            {LeftItems}
         </div>
     </InfoItemCustom>
-        {expanded ? <Drawer/> : ''}
     </React.Fragment>;
 });
 
@@ -140,7 +325,7 @@ const NewPage = observer(() => {
 
     return <React.Fragment>
         <Spacer/>
-        {data.map(x => <BlockPost {...x}/>)}
+        {data.map(x => <BlockPost key={x.build_name + x.created_at} {...x}/>)}
     </React.Fragment>;
 });
 
@@ -159,8 +344,52 @@ const HotPage = observer(() => {
 
     return <React.Fragment>
         <Spacer/>
-        {data.map(x => <BlockPost {...x}/>)}
+        {data.map(x => <BlockPost key={x.build_name + x.created_at} {...x}/>)}
     </React.Fragment>;
+});
+
+function Modal({children, clickOut}) {
+    const parentEl = useRef(null);
+
+    function onPointerDown(e) {
+        if (parentEl.current === e.target) {
+            clickOut();
+        }
+    }
+
+    return <div ref={parentEl} onPointerDown={onPointerDown}
+                className={'bg-opacity-90 z-20 absolute top-0 left-0 w-screen h-screen bg-gray-400 flex flex-wrap content-center justify-center'}>
+        <div className={'z-30 h-3/4 w-3/4 rounded-3xl bg-gray-800 overflow-hidden'}>
+            {children}
+        </div>
+    </div>;
+}
+
+function MiniModal({children, clickOut}) {
+    const parentEl = useRef(null);
+
+    function onPointerDown(e) {
+        if (parentEl.current === e.target) {
+            clickOut();
+        }
+    }
+
+    return <div ref={parentEl} onPointerDown={onPointerDown}
+                className={'bg-opacity-90 z-40 absolute top-0 left-0 w-screen h-screen bg-gray-400 flex flex-wrap content-center justify-center'}>
+        <div className={'z-50 rounded-xl bg-gray-800 overflow-hidden w-7/12'}>
+            {children}
+        </div>
+    </div>;
+}
+
+const DraftsPage = observer(() => {
+    let data = [];
+
+    return <React.Fragment>
+        <Spacer/>
+        {data.map(x => <BlockPost key={x.build_name + x.created_at} {...x}/>)}
+    </React.Fragment>;
+
 });
 
 function Spacer() {
@@ -193,13 +422,12 @@ const ProfilePage = observer(() => {
 
     useEffect(() => {
         axios.get(profile_url).then(response => {
-            console.log(response.data);
             setUserData(response.data);
         }).catch(console.log);
 
     }, [profile_url]);
 
-    let url = store.ApiBase + `/blocks/hot?token=${store.BonsaiToken}`;
+    let url = store.ApiBase + `/blocks/users/${decoded.user_id}`;
 
     useEffect(() => {
         axios.get(url).then(response => {
@@ -207,11 +435,9 @@ const ProfilePage = observer(() => {
         }).catch(console.log);
     }, [url]);
 
-    console.log(decoded);
-
     return <React.Fragment>
         <UserInfo {...userData}/>
-        {data.map(x => <BlockPost {...x}/>)}
+        {data.map(x => <BlockPost key={x.build_name + x.created_at} {...x}/>)}
     </React.Fragment>;
 });
 
@@ -225,6 +451,7 @@ export const BlocksPage = observer(() => {
     let hotButtonClass = loc === 'hot' ? lightGrayButtonClass : grayButtonClass;
     let newButtonClass = loc === 'new' ? lightGrayButtonClass : grayButtonClass;
     let profileButtonClass = loc === 'profile' ? lightGrayButtonClass : grayButtonClass;
+    let draftsButtonClass = loc === 'drafts' ? lightGrayButtonClass : grayButtonClass;
 
     function goHot() {
         history.push(match.path + '/hot');
@@ -238,10 +465,15 @@ export const BlocksPage = observer(() => {
         history.push(match.path + '/profile');
     }
 
-    let navBar = <div className={'flex flex-wrap w-full space-x-20 justify-center'}>
+    function goDrafts() {
+        history.push(match.path + '/drafts');
+    }
+
+    let navBar = <div className={'flex flex-wrap w-full space-x-14 justify-center'}>
         <InstantButton className={hotButtonClass} onClick={goHot}>Top</InstantButton>
         <InstantButton className={newButtonClass} onClick={goNew}>New</InstantButton>
         <InstantButton className={profileButtonClass} onClick={goProfile}>Published</InstantButton>
+        <InstantButton className={draftsButtonClass} onClick={goDrafts}>Saved</InstantButton>
     </div>;
 
     return <MenuContentTabbed name={'Blocks'} navBar={navBar}>
@@ -249,6 +481,7 @@ export const BlocksPage = observer(() => {
             <Route path={`${match.path}/hot`} component={HotPage}/>
             <Route path={`${match.path}/new`} component={NewPage}/>
             <Route path={`${match.path}/profile`} component={ProfilePage}/>
+            <Route path={`${match.path}/drafts`} component={DraftsPage}/>
         </Switch>
     </MenuContentTabbed>;
 });

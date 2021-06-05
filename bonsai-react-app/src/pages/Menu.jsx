@@ -2,7 +2,7 @@ import React, {useEffect} from 'react';
 import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
 import axios from 'axios';
 import {observer} from 'mobx-react-lite';
-import {autorun} from 'mobx';
+import {action, autorun} from 'mobx';
 
 import DotsImg from '../static/dots-vertical.svg';
 import {NetworkManagerMode, useStore} from '../DataProvider';
@@ -74,6 +74,7 @@ function NavItem(props) {
         buttonClassInactive = '',
         to = '',
         unread = false,
+        matchAll = '',
     } = props;
 
     let history = useHistory();
@@ -88,7 +89,21 @@ function NavItem(props) {
             buttonClassInactive :
             'py-4 px-8 bg-gray-800 rounded cursor-pointer flex flex-wrap content-center';
 
-    let selected = window.location.pathname === to;
+    let matchAllPath = matchAll.split('/');
+    let actualPath = window.location.pathname.split('/');
+    let selected = false;
+
+    if (matchAll) {
+        let matched = false;
+        for (let i = 0; i < matchAllPath.length; i++) {
+            matched = (matchAllPath[i] === actualPath[i]);
+        }
+        if (matched) {
+            selected = true;
+        }
+    } else {
+        selected = window.location.pathname === to;
+    }
 
     let textClass = selected ? 'text-white' : 'text-gray-300';
 
@@ -102,7 +117,7 @@ function NavItem(props) {
 
     let className = selected ? buttonClassSelected : buttonClass;
 
-    if (to) {
+    if (to && !matchAll) {
         className = window.location.pathname === to ? buttonClassSelected : buttonClass;
     }
 
@@ -141,7 +156,6 @@ function NavTitle(props) {
 }
 
 let Menu = observer(() => {
-    console.log('menu');
     let {store, mediaInfo} = useStore();
 
     let debug = store.AppInfo.Build === 'DEVELOPMENT';
@@ -160,16 +174,22 @@ let Menu = observer(() => {
             const version = `${store.AppInfo.Version}b${store.AppInfo.BuildId}`;
             const publicRoom = store.NetworkInfo.PublicRoom ? 1 : 0;
 
+            let setLoadingRoomCode = action((value) => {
+                store.LoadingRoomCode = value;
+            });
+
+            let setRoomSecret = action((value) => {
+                store.RoomSecret = value;
+            });
+
             if (roomCode && (!networkAddress || !roomOpen)) {
-                console.log('Remove room code');
                 store.RoomCode = null;
                 return;
             }
 
             // send ip/port out for a room code
             if (roomOpen && !roomCode && !loadingRoomCode && networkAddress) {
-                console.log('fetch room code');
-                store.LoadingRoomCode = true;
+                setLoadingRoomCode(true);
                 let url = apiBase(store) + '/rooms';
                 let data = `network_address=${networkAddress}&username=${userName}&version=${version}&public_room=${publicRoom}`;
                 axios(
@@ -183,13 +203,12 @@ let Menu = observer(() => {
                     let tag = response.data.tag;
                     let secret = response.data.secret;
 
-                    console.log(`Got room ${tag} ${secret}`);
-                    store.RoomSecret = secret;
+                    setRoomSecret(secret);
                     store.RoomCode = tag;
-                    store.LoadingRoomCode = false;
+                    setLoadingRoomCode(false);
                 }).catch(err => {
                     console.log(err);
-                    store.LoadingRoomCode = false;
+                    setLoadingRoomCode(false);
                 });
             }
         });
@@ -234,9 +253,9 @@ let Menu = observer(() => {
 
                     <div className={'h-16'}/>
                     <NavList>
-                        <NavItem to={'/menu/home'} unread={homeActive}>Home</NavItem>
+                        <NavItem to={'/menu/home'} matchAll={'/menu/home'} unread={homeActive}>Home</NavItem>
                         <NavItem to={'/menu/public-rooms'}>Public Rooms</NavItem>
-                        <NavItem to={'/menu/blocks/hot'}>Blocks</NavItem>
+                        <NavItem to={'/menu/blocks/hot'} matchAll={'/menu/blocks'}>Builds</NavItem>
                         <NavItem to={'/menu/player'}
                                  buttonClass={mediaButtonClass}
                                  buttonClassSelected={mediaButtonClassSelected}
@@ -246,7 +265,7 @@ let Menu = observer(() => {
                             Media
                         </NavItem>
                         <NavItem to={'/menu/room'}>Lights & Layout</NavItem>
-                        <NavItem to={'/menu/settings'}>Settings</NavItem>
+                        <NavItem to={'/menu/settings'} matchAll={'/menu/settings'}>Settings</NavItem>
                         {debug ?
                                 <NavItem to={'/menu/debug'} component={DebugPage}>Debug</NavItem>
                                 : ''

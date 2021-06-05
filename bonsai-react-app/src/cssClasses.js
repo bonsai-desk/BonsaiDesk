@@ -7,4 +7,3 @@ export const grayButtonClass       = 'py-4 px-8 rounded cursor-pointer flex flex
 export const lightGrayButtonClass  = 'py-4 px-8 rounded cursor-pointer flex flex-wrap content-center font-bold bg-gray-700  active:bg-gray-700  hover:bg-gray-600';
 export const grayButtonClassInert  = 'py-4 px-8 rounded flex flex-wrap content-center font-bold bg-gray-800 ';
 
-export const hamburgerButton = 'py-4 px-4 rounded-full cursor-pointer flex flex-wrap content-center font-bold bg-gray-800  active:bg-gray-700  hover:bg-gray-600';

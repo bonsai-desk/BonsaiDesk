@@ -100,10 +100,7 @@ class Store {
 
         let url = apiBase(this) + `/blocks/login?` + auth_params;
 
-        console.log('POST: ' + url);
-
         axios.post(url).then(response => {
-            console.log(response);
             this.BonsaiToken = response.data.token;
             const decoded = jwt.decode(this.BonsaiToken);
             this.BonsaiTokenInfo = {
@@ -175,7 +172,6 @@ class Store {
 
     refreshRoomCode() {
         let url = apiBase(this) + `/rooms/${store.RoomCode}/refresh`;
-        console.log(url);
         axios({
             method: 'post',
             url: url,
@@ -208,7 +204,6 @@ let pushStoreSingle = action(obj => {
         let v1 = JSON.stringify(store[obj.Key]);
         let v2 = JSON.stringify(obj.Val);
         if (v1 !== v2) {
-            console.log('Updated ' + obj.Key);
             store[obj.Key] = obj.Val;
         }
     }

@@ -72,7 +72,6 @@ export let JoinDeskPage = observer(() => {
                     navHome();
                 }
             }).catch(err => {
-                console.log("Join room error")
                 console.log(err);
                 setMessage(`Could not find ${code} try again`);
                 setCode('');

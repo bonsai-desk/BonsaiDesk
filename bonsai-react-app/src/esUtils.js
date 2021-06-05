@@ -23,13 +23,12 @@ export let handleCloseRoom = (store) => {
     let secret = store.RoomSecret;
     return () => {
         if (store.RoomCode) {
-            console.log('secret ', secret);
             axios({
                 method: 'delete',
                 url: apiBase(store) + '/rooms/' + store.RoomCode + `?secret=${secret}`,
             }).then(r => {
                 if (r.status === 200) {
-                    console.log(`deleted room ${store.RoomCode}`);
+                    //console.log(`deleted room ${store.RoomCode}`);
                 }
             }).catch(console.log);
         }

@@ -194,7 +194,7 @@ let PublicRoomsPage = observer(() => {
             <RoomAction clickCloseRoom={clickCloseRoom}/>
             <SubHeader>Join a Room</SubHeader>
             {rooms.map(room => {
-                return <RoomInfo {...room}/>;
+                return <RoomInfo key={room.id} {...room}/>;
             })}
         </MenuContent>;
     } else {
