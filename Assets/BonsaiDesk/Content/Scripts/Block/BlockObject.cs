@@ -558,6 +558,13 @@ public partial class BlockObject : NetworkBehaviour
         //idk if this step is required, but it makes sure the transform and body are the same
         attachedToBody.MovePosition(attachedToBody.transform.position);
         attachedToBody.MoveRotation(attachedToBody.transform.rotation);
+        _body.MovePosition(transform.position);
+        _body.MoveRotation(transform.rotation);
+
+        //save previous orientation. position/rotation will be changed to connect the joint, then it can go back to what it was
+        //hopefully the previous orientation is valid so the joint does not try to move it too far
+        var previousPosition = transform.position;
+        var previousRotation = transform.rotation;
 
         transform.position = jointInfo.attachedTo.Value.transform.TransformPoint(jointInfo.positionLocalToAttachedTo);
         transform.rotation = jointInfo.attachedTo.Value.transform.rotation * jointInfo.rotationLocalToAttachedTo;
@@ -576,6 +583,11 @@ public partial class BlockObject : NetworkBehaviour
         _joint.connectedAnchor = jointInfo.connectedAnchor;
 
         _joint.connectedBody = attachedToBody;
+
+        transform.position = previousPosition;
+        transform.rotation = previousRotation;
+        _body.MovePosition(transform.position);
+        _body.MoveRotation(transform.rotation);
     }
 
     private void DisconnectJoint()
