@@ -1554,7 +1554,27 @@ public partial class BlockObject : NetworkBehaviour
     private void Save()
     {
         CloseDialog();
-        Debug.LogWarning(BlockUtility.SerializeBlocks(Blocks));
+
+        var dataString = BlockUtility.SerializeBlocksFromRoot(BlockUtility.GetRootBlockObject(this));
+
+        if (!string.IsNullOrEmpty(dataString))
+        {
+            Debug.LogWarning(dataString);
+            
+            var data = BlockUtility.DeserializeBlocks(dataString);
+            if (data != null)
+            {
+                //do something with the dataString
+            }
+            else
+            {
+                Debug.LogError("Could not parse the newly serialized blockObject");
+            }
+        }
+        else
+        {
+            Debug.LogError("Could not serialize blockObject");
+        }
     }
 
     private void Delete()

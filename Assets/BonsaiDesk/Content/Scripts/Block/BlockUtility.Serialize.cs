@@ -6,26 +6,78 @@ using UnityEngine;
 
 public static partial class BlockUtility
 {
-    public static string SerializeBlocks(SyncDictionary<Vector3Int, SyncBlock> blocks)
+    public static string SerializeBlocksFromRoot(BlockObject rootBlockObject)
     {
         const string blockVersion = "0";
         var data = "Block version v" + blockVersion;
         data += "\nFile created by: app version " + NetworkManagerGame.Singleton.FullVersion;
-        foreach (var pair in blocks)
+        data += "\nSerialized on date (UTC): " + DateTime.UtcNow;
+
+        var blockObjects = GetBlockObjectsFromRoot(rootBlockObject);
+        var blockObjectToIndex = new Dictionary<BlockObject, int>();
+        for (int i = 0; i < blockObjects.Count; i++)
         {
-            data += $"\n{pair.Key.x} {pair.Key.y} {pair.Key.z} {pair.Value.name} {pair.Value.rotation}";
+            blockObjectToIndex.Add(blockObjects[i], i);
+        }
+
+        var processedRoot = false;
+        for (int i = 0; i < blockObjects.Count; i++)
+        {
+            var result = SerializeBlockObject(blockObjects[i], blockObjectToIndex);
+            if (!result.isAttached)
+            {
+                if (processedRoot)
+                {
+                    return "";
+                }
+                processedRoot = true;
+            }
+            data += result.data;
         }
 
         return data;
     }
-    
+
+    private static (string data, bool isAttached) SerializeBlockObject(BlockObject blockObject, Dictionary<BlockObject, int> blockObjectToIndex)
+    {
+        var data = "\n\nId: " + blockObjectToIndex[blockObject];
+        var isAttached = false;
+
+        var attachedToString = "none";
+        if (blockObject.SyncJoint.connected && blockObject.SyncJoint.attachedTo != null && blockObject.SyncJoint.attachedTo.Value)
+        {
+            isAttached = true;
+            var attachedToBlockObject = blockObject.SyncJoint.attachedTo.Value.GetComponent<BlockObject>();
+            var attachedToId = blockObjectToIndex[attachedToBlockObject];
+            attachedToString = attachedToId.ToString();
+        }
+
+        data += "\nAttached to: " + attachedToString;
+
+        if (attachedToString != "none")
+        {
+            var localPosition = blockObject.SyncJoint.attachedTo.Value.transform.InverseTransformPoint(blockObject.transform.position);
+            var localRotation = Quaternion.Inverse(blockObject.SyncJoint.attachedTo.Value.transform.rotation) * blockObject.transform.rotation;
+
+            data += "\nLocal position: " + localPosition.ToString("F5");
+            data += "\nLocal rotation: " + localRotation.ToString("F5");
+        }
+
+        foreach (var pair in blockObject.Blocks)
+        {
+            data += $"\n{pair.Key.x} {pair.Key.y} {pair.Key.z} {pair.Value.name} {pair.Value.rotation}";
+        }
+
+        return (data, isAttached);
+    }
+
     public static Queue<KeyValuePair<Vector3Int, SyncBlock>> DeserializeBlocks(string data)
     {
         if (string.IsNullOrEmpty(data))
         {
             return null;
         }
-        
+
         var allLines = data.Split(new[] {"\r\n", "\r", "\n"}, StringSplitOptions.None);
         var lines = new List<string>();
         for (int i = 0; i < allLines.Length; i++)
@@ -35,7 +87,7 @@ public static partial class BlockUtility
                 lines.Add(allLines[i]);
             }
         }
-        
+
         if (lines.Count <= 0)
         {
             Debug.LogError("Block data missing block version");
@@ -56,13 +108,13 @@ public static partial class BlockUtility
             Debug.LogError("Could not parse block version Integer: " + blockVersionNumber);
             return null;
         }
-        
+
         if (lines.Count <= 1)
         {
             Debug.LogError("Block data missing created by line");
             return null;
         }
-        
+
         var fileCreatedBy = lines[1];
         var validCreatedBy = "File created by: ";
         if (string.Compare(fileCreatedBy, 0, validCreatedBy, 0, validCreatedBy.Length) != 0)
@@ -70,12 +122,22 @@ public static partial class BlockUtility
             Debug.LogError("Could not parse created by line");
             return null;
         }
-        
+
         var createdBy = fileCreatedBy.Substring(validCreatedBy.Length);
 
-        if (lines.Count <= 2)
+        var fileSerializedOn = lines[2];
+        var validSerializedOn = "Serialized on date (UTC): ";
+        if (string.Compare(fileSerializedOn, 0, validSerializedOn, 0, validSerializedOn.Length) != 0)
         {
-            Debug.LogError($"Block file with version v{blockVersionNumberInt} created by {createdBy} has no data");
+            Debug.LogError("Could not parse serialized on line");
+            return null;
+        }
+
+        var serializedOn = fileCreatedBy.Substring(validSerializedOn.Length);
+
+        if (lines.Count <= 3)
+        {
+            Debug.LogError($"Block file with version v{blockVersionNumberInt} created by {createdBy} on {serializedOn} has no data");
             return null;
         }
 
@@ -84,7 +146,7 @@ public static partial class BlockUtility
             case 0:
                 return DeserializeBlocksVersion0(lines);
             default:
-                Debug.LogError("Unknown block version number: "+ blockVersionNumberInt);
+                Debug.LogError("Unknown block version number: " + blockVersionNumberInt);
                 break;
         }
 
@@ -96,7 +158,7 @@ public static partial class BlockUtility
         var blocks = new Queue<KeyValuePair<Vector3Int, SyncBlock>>();
         try
         {
-            for (int i = 2; i < lines.Count; i++)
+            for (int i = 3; i < lines.Count; i++)
             {
                 var line = lines[i].Split(' ');
                 if (line.Length != 5)
