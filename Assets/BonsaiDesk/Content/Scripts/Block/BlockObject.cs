@@ -1099,7 +1099,7 @@ public partial class BlockObject : NetworkBehaviour
             //no need to do client side prediction if you are a host/server
             //I don't bother to check for this in other client side prediction code bits because it wouldn't save any performance in most cases
             //here, however, GetFilledBlocksGroups is not simple, and it will be called again by the server
-            if (isClient)
+            if (isClient && !isServer)
             {
                 //client side prediction - determine which blocks will be removed and when the first split structure blockObject is spawned, apply the prediction
                 var (filledBlocksGroups, indexOfLargest) = BlockUtility.GetFilledBlocksGroups(coord, Blocks);
