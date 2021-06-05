@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Mirror;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Random = UnityEngine.Random;
@@ -36,9 +37,15 @@ public partial class BlockObject : NetworkBehaviour
 
     //---end all of the data required to reconstruct this block object---
 
+    //if this is is not null, it will find the object it was spawned by and tell it to apply its client side prediction stored in _toBeRemovedClientSidePrediction
+    //the purpose is to prevent a split block structure from spawning in the current block structure before the blocks are removed
+    [SyncVar] private NetworkIdentityReference _spawnedForBrokenStructure = new NetworkIdentityReference();
+
     public SyncDictionary<Vector3Int, SyncBlock> Blocks => _blocks;
     public SyncDictionary<Vector3Int, NetworkIdentityReference> ConnectedToSelf => _connectedToSelf;
     public SyncJoint SyncJoint => _syncJoint;
+
+    private Queue<Vector3Int> _toBeRemovedClientSidePrediction = new Queue<Vector3Int>();
 
     //used to make sure ServerUpdateValidOrientationFromRoot is only called once if many blocks are added
     private int _updateValidOrientationFromRootFrame;
@@ -175,6 +182,11 @@ public partial class BlockObject : NetworkBehaviour
         _isInit = true;
 
         gameObject.name = "Block Object - " + Random.Range(0, int.MaxValue);
+
+        if (_spawnedForBrokenStructure != null && _spawnedForBrokenStructure.Value)
+        {
+            _spawnedForBrokenStructure.Value.GetComponent<BlockObject>().ApplyToBeRemovedClientSidePrediction();
+        }
 
         _nextCheckBlockObjectForProblemsTime = Time.time + 2f + Random.value * 2f;
 
@@ -332,6 +344,13 @@ public partial class BlockObject : NetworkBehaviour
     private void OnBlocksDictionaryChange(SyncDictionary<Vector3Int, SyncBlock>.Operation op, Vector3Int key, SyncBlock value)
     {
         _blockChanges.Enqueue((key, value, op));
+
+#if UNITY_EDITOR
+        if (debug)
+        {
+            EditorApplication.isPaused = true;
+        }
+#endif
     }
 
     //loops through any blocks in _blockChanges and adds/removes blocks from the mesh
@@ -621,26 +640,7 @@ public partial class BlockObject : NetworkBehaviour
 
         //flood fill blocks surrounding the block which will be removed so we can know if removing this block
         //should result in the block object splitting into 2 or more block objects
-        var filledBlocksGroups = new List<Dictionary<Vector3Int, SyncBlock>>();
-
-        var surroundingBlocks = BlockUtility.GetSurroundingBlocks(coord, Blocks);
-        foreach (var block in surroundingBlocks)
-        {
-            bool blockAlreadyFilled = false;
-            for (int i = 0; i < filledBlocksGroups.Count; i++)
-            {
-                if (filledBlocksGroups[i].ContainsKey(block))
-                {
-                    blockAlreadyFilled = true;
-                    break;
-                }
-            }
-
-            if (!blockAlreadyFilled)
-            {
-                filledBlocksGroups.Add(BlockUtility.FloodFill(block, coord, Blocks));
-            }
-        }
+        var (filledBlocksGroups, indexOfLargest) = BlockUtility.GetFilledBlocksGroups(coord, Blocks);
 
         //if there is only one group of filled blocks, just remove the block
         if (filledBlocksGroups.Count <= 1)
@@ -679,16 +679,6 @@ public partial class BlockObject : NetworkBehaviour
         }
         else //if there are 2 or more groups of filled blocks, we must split this object into 2 or more objects
         {
-            //find the largest block group
-            int indexOfLargest = 0;
-            for (int i = 1; i < filledBlocksGroups.Count; i++)
-            {
-                if (filledBlocksGroups[i].Count > filledBlocksGroups[indexOfLargest].Count)
-                {
-                    indexOfLargest = i;
-                }
-            }
-
             //remove largest block group from the list
             var largestGroup = filledBlocksGroups[indexOfLargest];
             filledBlocksGroups.RemoveAt(indexOfLargest);
@@ -765,6 +755,8 @@ public partial class BlockObject : NetworkBehaviour
                 {
                     newBlockObjectScript.Blocks.Add(pair.Key, pair.Value);
                 }
+
+                newBlockObjectScript._spawnedForBrokenStructure = new NetworkIdentityReference(netIdentity);
 
                 //spawn it before joints are added so it has a valid NetworkIdentity/netId
                 NetworkServer.Spawn(newBlockObject);
@@ -1076,13 +1068,36 @@ public partial class BlockObject : NetworkBehaviour
                 nId = NetworkClient.connection.identity.netId;
             }
 
-            CmdRemoveBlock(coord, nId);
-
             //client side prediction - remove block locally
             if (MeshBlocks.ContainsKey(coord))
             {
                 _blockChanges.Enqueue((coord, new SyncBlock(), SyncDictionary<Vector3Int, SyncBlock>.Operation.OP_REMOVE));
             }
+
+            //no need to do client side prediction if you are a host/server
+            //I don't bother to check for this in other client side prediction code bits because it wouldn't save any performance in most cases
+            //here, however, GetFilledBlocksGroups is not simple, and it will be called again by the server
+            if (isClient && !isServer)
+            {
+                //client side prediction - determine which blocks will be removed and when the first split structure blockObject is spawned, apply the prediction
+                var (filledBlocksGroups, indexOfLargest) = BlockUtility.GetFilledBlocksGroups(coord, Blocks);
+                if (indexOfLargest >= 0)
+                {
+                    var largestGroup = filledBlocksGroups[indexOfLargest];
+                    for (int i = 0; i < filledBlocksGroups.Count; i++)
+                    {
+                        if (i != indexOfLargest)
+                        {
+                            foreach (var pair in filledBlocksGroups[i])
+                            {
+                                _toBeRemovedClientSidePrediction.Enqueue(pair.Key);
+                            }
+                        }
+                    }
+                }
+            }
+
+            CmdRemoveBlock(coord, nId);
 
             return;
         }
@@ -1091,6 +1106,25 @@ public partial class BlockObject : NetworkBehaviour
         {
             _damagedBlocks.Add(coord);
         }
+    }
+
+    private void ApplyToBeRemovedClientSidePrediction()
+    {
+        if (_toBeRemovedClientSidePrediction.Count == 0)
+        {
+            return;
+        }
+
+        while (_toBeRemovedClientSidePrediction.Count > 0)
+        {
+            var coord = _toBeRemovedClientSidePrediction.Dequeue();
+            if (MeshBlocks.ContainsKey(coord))
+            {
+                _blockChanges.Enqueue((coord, new SyncBlock(), SyncDictionary<Vector3Int, SyncBlock>.Operation.OP_REMOVE));
+            }
+        }
+
+        ProcessBlockChanges();
     }
 
     private void UpdateWholeEffects()
@@ -1446,14 +1480,23 @@ public partial class BlockObject : NetworkBehaviour
 
     private void CheckForProblems()
     {
-        //TODO: this will check for things that should be connected but are not, and it will connect them. it does not check if something is connected but should not be
+        // TODO: this will check for things that should be connected but are not, and it will connect them.
+        //       it does not check if something is connected but should not be. for that case, you would need a timer on when the joint was connected
+        //       so a client side prediction joint would not be removed too quickly
+        
+        // TODO: check that Blocks matches _meshBlocks. same as joints, it would need a timer to client side prediction is not overridden
+        
+        // TODO: in addition to these checks, each time a client side prediction happens, it should start a coroutine to check if the server agrees
+        //       after ~1 second
+
         if (Time.time > _nextCheckBlockObjectForProblemsTime)
         {
             _nextCheckBlockObjectForProblemsTime = Time.time + 2f + Random.value * 2f;
             var problem = BlockObjectNullTest.CheckBlockObjectForProblems(this);
             if (problem.syncConnectionProblem)
             {
-                //TODO: can anything be done if this problem is detected?
+                //TODO: can anything be done if this problem is detected? Does it matter if this happens on a client vs on the server?
+                //      maybe if this happens on the server, it should just delete it. if it happens on a client but not the server, what do we do?
                 Debug.LogError("Found sync connection problem with blockObject: " + gameObject.name);
             }
 
