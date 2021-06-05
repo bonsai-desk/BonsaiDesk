@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Mirror;
+using Smooth;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -46,6 +47,20 @@ public partial class BlockObject : NetworkBehaviour
     public SyncJoint SyncJoint => _syncJoint;
 
     private Queue<Vector3Int> _toBeRemovedClientSidePrediction = new Queue<Vector3Int>();
+
+    private bool _activeLocal = true;
+
+    public bool ActiveLocal
+    {
+        get
+        {
+            return _activeLocal;
+        }
+        set
+        {
+            SetActiveLocal(value);
+        }
+    }
 
     //used to make sure ServerUpdateValidOrientationFromRoot is only called once if many blocks are added
     private int _updateValidOrientationFromRootFrame;
@@ -92,6 +107,7 @@ public partial class BlockObject : NetworkBehaviour
     private Vector3 _dialogLocalPositionRoot;
 
     //mesh stuff
+    private Transform _meshObject;
     private MeshFilter _meshFilter;
     private Mesh _mesh;
     private List<Vector3> _vertices = new List<Vector3>();
@@ -312,6 +328,7 @@ public partial class BlockObject : NetworkBehaviour
     private void SetupChildren()
     {
         var meshObject = new GameObject("Mesh");
+        _meshObject = meshObject.transform;
         meshObject.transform.SetParent(transform, false);
         var meshRenderer = meshObject.AddComponent<MeshRenderer>();
         meshRenderer.sharedMaterial = blockObjectMaterial;
@@ -586,7 +603,7 @@ public partial class BlockObject : NetworkBehaviour
             Debug.LogError("Command: Attempted to add block which already exists");
             return;
         }
-        
+
         Blocks.Add(coord, new SyncBlock(blockName, BlockUtility.QuaternionToByte(rotation)));
         if (_updateValidOrientationFromRootFrame != Time.frameCount)
         {
@@ -701,7 +718,7 @@ public partial class BlockObject : NetworkBehaviour
             //cache the joints so we can still access it if it is disconnected
             var cachedSyncJoint = SyncJoint;
             var cachedSyncJoints = new Dictionary<Vector3Int, (NetworkIdentityReference netIdRef, SyncJoint syncJoint)>();
-            
+
             //handle removing this blockObjects main joint
             //the blockObject that this code is currently running on becomes the largestGroup. if this blockObject had a joint, and the joint is connected
             //at a coord that is no longer a part of this blockObject, it should be removed
@@ -882,7 +899,7 @@ public partial class BlockObject : NetworkBehaviour
     }
 
     [Server]
-    private void ServerDisconnectJoint()
+    public void ServerDisconnectJoint()
     {
         if (!_syncJoint.connected)
         {
@@ -1082,15 +1099,31 @@ public partial class BlockObject : NetworkBehaviour
             //no need to do client side prediction if you are a host/server
             //I don't bother to check for this in other client side prediction code bits because it wouldn't save any performance in most cases
             //here, however, GetFilledBlocksGroups is not simple, and it will be called again by the server
-            if (isClient && !isServer)
+            if (isClient)
             {
                 //client side prediction - determine which blocks will be removed and when the first split structure blockObject is spawned, apply the prediction
                 var (filledBlocksGroups, indexOfLargest) = BlockUtility.GetFilledBlocksGroups(coord, Blocks);
                 if (indexOfLargest >= 0)
                 {
-                    var largestGroup = filledBlocksGroups[indexOfLargest];
                     for (int i = 0; i < filledBlocksGroups.Count; i++)
                     {
+                        if (filledBlocksGroups[i].Count == 1)
+                        {
+                            Vector3Int onlyBlockCoord = Vector3Int.zero;
+                            SyncBlock onlyBlock = new SyncBlock();
+                            foreach (var pair in filledBlocksGroups[i])
+                            {
+                                onlyBlockCoord = pair.Key;
+                                onlyBlock = filledBlocksGroups[i][pair.Key];
+                                break;
+                            }
+
+                            if (onlyBlock.name == "bearing")
+                            {
+                                _blockChanges.Enqueue((onlyBlockCoord, new SyncBlock(), SyncDictionary<Vector3Int, SyncBlock>.Operation.OP_REMOVE));
+                            }
+                        }
+
                         if (i != indexOfLargest)
                         {
                             foreach (var pair in filledBlocksGroups[i])
@@ -1251,7 +1284,7 @@ public partial class BlockObject : NetworkBehaviour
 
         if (MeshBlocks.Count == 0) //probably just waiting to get deleted by server
         {
-            gameObject.SetActive(false);
+            ActiveLocal = false;
             CloseDialog();
             return;
         }
@@ -1562,5 +1595,59 @@ public partial class BlockObject : NetworkBehaviour
                 }
             }
         }
+    }
+
+    [Server]
+    public static void ServerDestroyFromBlockObjectRoot(BlockObject rootObject)
+    {
+        ServerDisconnectAllJointsFromRoot(rootObject);
+
+        var blockObjects = BlockUtility.GetBlockObjectsFromRoot(rootObject);
+
+        for (int i = 0; i < blockObjects.Count; i++)
+        {
+            blockObjects[i].AutoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true);
+            blockObjects[i].gameObject.SetActive(false);
+            blockObjects[i].GetComponent<SmoothSyncMirror>().clearBuffer();
+            NetworkServer.Destroy(blockObjects[i].gameObject);
+        }
+    }
+
+    [Server]
+    private static void ServerDisconnectAllJointsFromRoot(BlockObject rootObject)
+    {
+        foreach (var pair in rootObject.ConnectedToSelf.ToList())
+        {
+            if (pair.Value != null && pair.Value.Value)
+            {
+                var blockObject = pair.Value.Value.GetComponent<BlockObject>();
+                if (blockObject)
+                {
+                    ServerDisconnectAllJointsFromRoot(blockObject);
+                }
+                else
+                {
+                    Debug.LogError("Could not find blockObject for disconnect");
+                }
+            }
+            else
+            {
+                Debug.LogError("Could not find identity for disconnect");
+            }
+        }
+
+        if (rootObject.SyncJoint.connected)
+        {
+            rootObject.ServerDisconnectJoint();
+        }
+    }
+
+    private void SetActiveLocal(bool isActive)
+    {
+        _activeLocal = isActive;
+        _meshObject.gameObject.SetActive(_activeLocal);
+        _physicsBoxesObject.gameObject.SetActive(_activeLocal);
+        _sphereObject.gameObject.SetActive(_activeLocal);
+        _blockGameObjectsParent.gameObject.SetActive(_activeLocal);
     }
 }

@@ -80,9 +80,13 @@ public partial class BlockObject
                     TouchingHand = true;
                 }
 
-                if (!_joint)
+                if (!_joint && ActiveLocal)
                 {
                     CalculateForces();
+                }
+                else
+                {
+                    _body.useGravity = true;
                 }
             }
             else
@@ -111,7 +115,7 @@ public partial class BlockObject
             }
 
             var nextBlockObject = nextOwnedObject.GetComponent<BlockObject>();
-            if (nextBlockObject != null && nextBlockObject != this)
+            if (nextBlockObject != null && nextBlockObject != this && nextBlockObject.ActiveLocal)
             {
                 blockObject = nextBlockObject;
                 Vector3Int coord = GetOnlyMeshBlockCoord();
@@ -176,7 +180,7 @@ public partial class BlockObject
                         else
                         {
                             _blockObjectAuthorities.Remove(_autoAuthority);
-                            gameObject.SetActive(false);
+                            ActiveLocal = false; //just waiting for the server to delete this object
 
                             var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
                             localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * MeshBlocks[coord].rotation;

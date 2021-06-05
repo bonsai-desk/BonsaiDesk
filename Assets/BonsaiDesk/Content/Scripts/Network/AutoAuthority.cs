@@ -452,7 +452,7 @@ public class AutoAuthority : NetworkBehaviour
         if (!ignoreConnections && _blockObject)
         {
             var rootObject = BlockUtility.GetRootBlockObject(_blockObject);
-            ServerDestroyFromBlockObjectRoot(rootObject);
+            BlockObject.ServerDestroyFromBlockObjectRoot(rootObject);
             return;
         }
 
@@ -462,34 +462,7 @@ public class AutoAuthority : NetworkBehaviour
         NetworkServer.Destroy(gameObject);
     }
 
-    [Server]
-    private void ServerDestroyFromBlockObjectRoot(BlockObject rootObject)
-    {
-        foreach (var pair in rootObject.ConnectedToSelf)
-        {
-            if (pair.Value != null && pair.Value.Value)
-            {
-                var blockObject = pair.Value.Value.GetComponent<BlockObject>();
-                if (blockObject)
-                {
-                    ServerDestroyFromBlockObjectRoot(blockObject);
-                }
-                else
-                {
-                    Debug.LogError("Could not find blockObject for destroying");
-                }
-            }
-            else
-            {
-                Debug.LogError("Could not find identity for destroying");
-            }
-        }
-
-        rootObject.AutoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true);
-        rootObject.gameObject.SetActive(false);
-        rootObject.GetComponent<SmoothSyncMirror>().clearBuffer();
-        NetworkServer.Destroy(rootObject.gameObject);
-    }
+    
 
     private void HandleRecursiveAuthority(Collision collision)
     {
