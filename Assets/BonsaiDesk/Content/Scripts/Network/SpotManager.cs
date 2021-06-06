@@ -85,8 +85,6 @@ public class SpotManager : NetworkBehaviour
     {
         autoBrowser.transform.parent.position = autoBrowserPositions.GetChild((int) newLayout).position;
         autoBrowser.transform.parent.rotation = autoBrowserPositions.GetChild((int) newLayout).rotation;
-        autoBrowser.screenRigidBody.MovePosition(autoBrowser.transform.parent.position);
-        autoBrowser.screenRigidBody.MoveRotation(autoBrowser.transform.parent.rotation);
         if (NetworkVRPlayer.localPlayer != null)
         {
             NetworkVRPlayer.localPlayer.LayoutChange(newLayout);

@@ -16,24 +16,27 @@ public class AutoAuthority : NetworkBehaviour
     private float _serverLastOwnerChange;
     private const float OwnerChangeCooldown = 0.25f;
 
-    [SyncVar] private bool _inUse = false;
-    [SyncVar] public bool isKinematic = false;
-    public bool destroyIfBelow = true; //also if far from origin or high above
+    [SyncVar] private bool _inUse;
+    [SyncVar] public bool isKinematic;
 
-    public bool InUse => _inUse;
+    public bool InUse => IsInUse();
 
     public bool allowPinchPull = true;
 
     public MeshRenderer meshRenderer;
 
+    private BlockObject _blockObject; //reference to own blockObject if it exists 
+
     private Rigidbody _body;
     private int _lastInteractFrame;
     private int _lastSetNewOwnerFrame;
 
-    private bool _visualizePinchPull = false;
+    private int _visualizePinchPullFrame = -1;
     public Material cachedMaterial;
     private int _colorPropertyId;
     private int _colorId = 0;
+
+    private int _setKinematicLocalFrame = -1;
 
     private float _keepAwakeTime = -10f;
 
@@ -46,16 +49,21 @@ public class AutoAuthority : NetworkBehaviour
 
     public override void OnStartServer()
     {
-        _serverLastOwnerChange = 0;
-        
+        ServerSetLastOwnerChange(0);
+
         if (_ownerIdentityId == 0)
         {
             _ownerIdentityId = uint.MaxValue;
         }
 
-        _lastInteractTime = NetworkTime.time;
+        ServerSetLastInteractTime(NetworkTime.time);
         if (connectionToClient != null)
             _ownerIdentityId = connectionToClient.identity.netId;
+    }
+
+    private void Awake()
+    {
+        _blockObject = GetComponent<BlockObject>();
     }
 
     private void Start()
@@ -71,28 +79,13 @@ public class AutoAuthority : NetworkBehaviour
     private void Update()
     {
         UpdateColor();
-        _visualizePinchPull = false;
 
-        if (isServer && destroyIfBelow)
+        if (isServer)
         {
-            var distanceSquared = Vector3.SqrMagnitude(transform.position);
-            if (distanceSquared > 20f * 20f || transform.position.y < -2f || transform.position.y > 5f || PhysicsHandController.InvalidTransform(transform))
+            if (!_blockObject && (PhysicsHandController.InvalidTransform(transform) || Vector3.SqrMagnitude(transform.position) > 20f * 20f ||
+                                  transform.position.y < -1f || transform.position.y > 5f))
             {
-                var blockObject = GetComponent<BlockObject>();
-                if (blockObject && blockObject.Blocks.Count > 4)
-                {
-                    ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
-                    GetComponent<SmoothSyncMirror>().clearBuffer();
-                    _body.velocity = Vector3.zero;
-                    _body.angularVelocity = Vector3.zero;
-
-                    GetComponent<SmoothSyncMirror>().teleportAnyObjectFromServer(new Vector3(0, 2, 0), Quaternion.identity, transform.localScale);
-                }
-                else
-                {
-                    ServerStripOwnerAndDestroy();
-                }
-
+                ServerStripOwnerAndDestroy();
                 return;
             }
         }
@@ -105,12 +98,21 @@ public class AutoAuthority : NetworkBehaviour
         }
 
         //code past this point if you have control over the object
-        _body.isKinematic = isKinematic;
+        if (Time.frameCount != _setKinematicLocalFrame)
+        {
+            _body.isKinematic = isKinematic;
+        }
 
         if (Time.time - _keepAwakeTime < 1f)
         {
             _body.WakeUp();
         }
+    }
+
+    public void SetKinematicLocalForOneFrame()
+    {
+        _body.isKinematic = true;
+        _setKinematicLocalFrame = Time.frameCount;
     }
 
     private void OnOwnerChange(uint oldValue, uint newValue)
@@ -139,7 +141,7 @@ public class AutoAuthority : NetworkBehaviour
     //Hello function. I don't know if I'm a client or a server, but whatever I am, do I have authority over this object?
     public bool HasAuthority()
     {
-        return isServer && ServerHasAuthority() || isClient && ClientHasAuthority();
+        return isServer && NetworkServer.active && ServerHasAuthority() || isClient && NetworkClient.active && ClientHasAuthority();
     }
 
     public void KeepAwake()
@@ -161,7 +163,13 @@ public class AutoAuthority : NetworkBehaviour
                                         (isServer && !isClient && ServerHasAuthority() || isClient && ClientHasAuthority());
 
         int newColorId = 0;
-        if (_visualizePinchPull)
+        var visualizePinchPullFrame = _visualizePinchPullFrame;
+        if (_blockObject)
+        {
+            visualizePinchPullFrame = BlockUtility.GetRootBlockObject(_blockObject).AutoAuthority._visualizePinchPullFrame;
+        }
+
+        if (Time.frameCount <= visualizePinchPullFrame + 1)
             newColorId = 1;
         else if (shouldVisualizeAuthority)
             newColorId = 2;
@@ -182,15 +190,47 @@ public class AutoAuthority : NetworkBehaviour
         isKinematic = newIsKinematic;
     }
 
-    public void VisualizePinchPull()
+    public void VisualizePinchPull(bool checkRoot = true)
     {
-        _visualizePinchPull = true;
-        UpdateColor();
+        if (checkRoot && _blockObject)
+        {
+            var rootObject = BlockUtility.GetRootBlockObject(_blockObject);
+            if (rootObject != _blockObject)
+            {
+                rootObject.AutoAuthority.VisualizePinchPull(false);
+                return;
+            }
+        }
+
+        _visualizePinchPullFrame = Time.frameCount;
+    }
+
+    private bool IsInUse()
+    {
+        if (_blockObject)
+        {
+            return BlockUtility.GetRootBlockObject(_blockObject).AutoAuthority._inUse;
+        }
+
+        return _inUse;
     }
 
     [Server]
     public void SetInUse(bool inUse)
     {
+        if (_blockObject)
+        {
+            var rootObject = BlockUtility.GetRootBlockObject(_blockObject);
+            if (rootObject != _blockObject && _inUse) //if not at root, but inUse is set, reset it. only the root should be used 
+            {
+                _inUse = false;
+            }
+
+            rootObject.AutoAuthority._inUse = inUse;
+
+            return;
+        }
+
         _inUse = inUse;
     }
 
@@ -198,7 +238,9 @@ public class AutoAuthority : NetworkBehaviour
     public void CmdRemoveInUse(uint identityId)
     {
         if (_ownerIdentityId == identityId)
-            _inUse = false;
+        {
+            SetInUse(false);
+        }
     }
 
     public void Interact()
@@ -234,13 +276,13 @@ public class AutoAuthority : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdUpdateInteractTime()
     {
-        _lastInteractTime = NetworkTime.time;
+        ServerSetLastInteractTime(NetworkTime.time);
     }
 
     private void SetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime)
     {
         //cannot switch owner if it is in use (held/pinch pulled/ect)
-        if (_inUse)
+        if (InUse)
             return;
 
         if (_lastSetNewOwnerFrame != Time.frameCount)
@@ -250,21 +292,122 @@ public class AutoAuthority : NetworkBehaviour
         }
     }
 
+    [Server]
+    private float GetServerLastOwnerChange()
+    {
+        if (_blockObject)
+        {
+            return BlockUtility.GetRootBlockObject(_blockObject).AutoAuthority._serverLastOwnerChange;
+        }
+
+        return _serverLastOwnerChange;
+    }
+
+    [Server]
+    private void ServerSetLastOwnerChange(float value)
+    {
+        if (_blockObject)
+        {
+            BlockUtility.GetRootBlockObject(_blockObject).AutoAuthority._serverLastOwnerChange = value;
+            return;
+        }
+
+        _serverLastOwnerChange = value;
+    }
+
+    private double GetLastInteractTime()
+    {
+        if (_blockObject)
+        {
+            return BlockUtility.GetRootBlockObject(_blockObject).AutoAuthority._lastInteractTime;
+        }
+
+        return _lastInteractTime;
+    }
+
+    [Server]
+    private void ServerSetLastInteractTime(double value)
+    {
+        if (_blockObject)
+        {
+            BlockUtility.GetRootBlockObject(_blockObject).AutoAuthority._lastInteractTime = value;
+            return;
+        }
+
+        _lastInteractTime = value;
+    }
+
     [Command(ignoreAuthority = true)]
     public void CmdSetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime, bool inUse)
     {
-        if (Time.time - _serverLastOwnerChange < OwnerChangeCooldown)
+        if (Time.time - GetServerLastOwnerChange() < OwnerChangeCooldown)
         {
             return;
         }
-        
+
         //cannot switch owner if it is in use (held/pinch pulled/ect)
-        if (_inUse)
+        if (InUse)
+        {
             return;
+        }
 
         if (inUse)
-            _inUse = true;
+        {
+            SetInUse(true);
+        }
 
+        ServerTryChangeOwnerAllConnected(newOwnerIdentityId, fromLastInteractTime);
+    }
+
+    //very similar to CmdSetNewOwner, but ignores inUse flag. This functions still checks that the owner is different from the current owner
+    [Server]
+    public void ServerForceNewOwner(uint newOwnerIdentityId, double fromLastInteractTime, bool inUse)
+    {
+        if (Time.time - GetServerLastOwnerChange() < OwnerChangeCooldown)
+        {
+            return;
+        }
+
+        SetInUse(inUse);
+
+        ServerTryChangeOwnerAllConnected(newOwnerIdentityId, fromLastInteractTime);
+    }
+
+    [Server]
+    private void ServerTryChangeOwnerAllConnected(uint newOwnerIdentityId, double fromLastInteractTime)
+    {
+        if (_blockObject)
+        {
+            var rootObject = BlockUtility.GetRootBlockObject(_blockObject);
+            ServerTryChangeOwnerConnectedToSelf(rootObject, rootObject.AutoAuthority, newOwnerIdentityId, fromLastInteractTime);
+            return;
+        }
+
+        ServerTryChangeOwner(newOwnerIdentityId, fromLastInteractTime);
+    }
+
+    [Server]
+    private void ServerTryChangeOwnerConnectedToSelf(BlockObject currentBlockObject, AutoAuthority currentAutoAuthority, uint newOwnerIdentityId,
+        double fromLastInteractTime)
+    {
+        currentAutoAuthority.ServerTryChangeOwner(newOwnerIdentityId, fromLastInteractTime);
+        foreach (var pair in currentBlockObject.ConnectedToSelf)
+        {
+            if (pair.Value != null && pair.Value.Value)
+            {
+                var currentChildAutoAuthority = pair.Value.Value.GetComponent<AutoAuthority>();
+                if (currentChildAutoAuthority && currentChildAutoAuthority._blockObject)
+                {
+                    currentChildAutoAuthority.ServerTryChangeOwnerConnectedToSelf(currentChildAutoAuthority._blockObject, currentChildAutoAuthority,
+                        newOwnerIdentityId, fromLastInteractTime);
+                }
+            }
+        }
+    }
+
+    [Server]
+    private void ServerTryChangeOwner(uint newOwnerIdentityId, double fromLastInteractTime)
+    {
         //if owner already has authority return
         if (_ownerIdentityId == newOwnerIdentityId)
         {
@@ -283,52 +426,43 @@ public class AutoAuthority : NetworkBehaviour
             netIdentity.AssignClientAuthority(NetworkIdentity.spawned[newOwnerIdentityId].connectionToClient);
         }
 
-        _lastInteractTime = fromLastInteractTime;
+        ServerSetLastInteractTime(fromLastInteractTime);
         _ownerIdentityId = newOwnerIdentityId;
-        _serverLastOwnerChange = Time.time;
+        ServerSetLastOwnerChange(Time.time);
+    }
+
+    [Command(ignoreAuthority = true)]
+    public void CmdDestroy()
+    {
+        gameObject.SetActive(false);
+        ServerStripOwnerAndDestroy();
     }
 
     [Server]
-    public void ServerForceNewOwner(uint newOwnerIdentityId, double fromLastInteractTime, bool inUse)
+    public void ServerStripOwnerAndDestroy(bool ignoreConnections = false)
     {
-        if (Time.time - _serverLastOwnerChange < OwnerChangeCooldown)
+        if (ignoreConnections && BlockUtility.GetRootBlockObject(_blockObject) != _blockObject)
         {
-            return;
+            // the only reason you would ignore connections is if there are connections, but this will print an error if there are connections.
+            // it is setup more as a failsafe, so if you ignore connections and there are connections, it will mostly work, but you will get some errors.
+            // ideally, you would not ever need the ignoreConnections flag
+            Debug.LogError("Ignoring connections, but this object does not equal root.");
         }
         
-        //remove objects owner if it had one
-        if (netIdentity.connectionToClient != null)
+        if (!ignoreConnections && _blockObject)
         {
-            netIdentity.RemoveClientAuthority();
+            var rootObject = BlockUtility.GetRootBlockObject(_blockObject);
+            BlockObject.ServerDestroyFromBlockObjectRoot(rootObject);
+            return;
         }
 
-        //if the new owner is not the server, give them authority
-        if (newOwnerIdentityId != uint.MaxValue)
-        {
-            netIdentity.AssignClientAuthority(NetworkIdentity.spawned[newOwnerIdentityId].connectionToClient);
-        }
-
-        _lastInteractTime = fromLastInteractTime;
-        _ownerIdentityId = newOwnerIdentityId;
-        _serverLastOwnerChange = Time.time;
-        _inUse = inUse;
-    }
-
-    [Server]
-    public void ServerStripOwnerAndDestroy()
-    {
         ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true);
         gameObject.SetActive(false);
         GetComponent<SmoothSyncMirror>().clearBuffer();
         NetworkServer.Destroy(gameObject);
     }
 
-    [Command]
-    public void CmdDestroy()
-    {
-        gameObject.SetActive(false);
-        ServerStripOwnerAndDestroy();
-    }
+    
 
     private void HandleRecursiveAuthority(Collision collision)
     {
@@ -339,37 +473,22 @@ public class AutoAuthority : NetworkBehaviour
         if (autoAuthority == null)
             return;
 
-        //TODO handle this unlikely case
-        // if (_lastInteractTime == autoAuthority._lastInteractTime)
+        var lastInteractTime = GetLastInteractTime();
 
-        if (_lastInteractTime < autoAuthority._lastInteractTime)
+        if (lastInteractTime <= autoAuthority.GetLastInteractTime())
             return;
-
-        // print("---");
-        // print(_lastInteractTime + " " + autoAuthority._lastInteractTime + " " + _ownerIdentityId + " " + autoAuthority._ownerIdentityId);
-        // print(isClient && !autoAuthority.ClientHasAuthority());
 
         if (isClient && ClientHasAuthority() && !autoAuthority.ClientHasAuthority())
         {
-            autoAuthority.SetNewOwner(NetworkClient.connection.identity.netId, _lastInteractTime);
+            if (NetworkClient.connection != null && NetworkClient.connection.identity)
+            {
+                autoAuthority.SetNewOwner(NetworkClient.connection.identity.netId, lastInteractTime);
+            }
         }
         else if (isServer && ServerHasAuthority() && !autoAuthority.ServerHasAuthority())
         {
-            autoAuthority.SetNewOwner(uint.MaxValue, _lastInteractTime);
+            autoAuthority.SetNewOwner(uint.MaxValue, lastInteractTime);
         }
-
-        // if (!autoAuthority.HasAuthority())
-        // {
-        //     print("yeeeeee");
-        //     if (isClient && ClientHasAuthority())
-        //         autoAuthority.SetNewOwner(NetworkClient.connection.identity, _lastInteractTime);
-        //     else if (isServer && ServerHasAuthority())
-        //         autoAuthority.SetNewOwner(null, _lastInteractTime);
-        // }
-        // else
-        // {
-        //     print("nooooo");
-        // }
     }
 
     private void OnCollisionEnter(Collision collision)

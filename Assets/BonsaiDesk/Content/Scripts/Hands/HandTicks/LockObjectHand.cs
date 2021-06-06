@@ -12,6 +12,8 @@ public class LockObjectHand : MonoBehaviour, IHandTick
 
     public TableBrowserParent tableBrowserParent;
 
+    private Coroutine _checkAuthorityAfterDelayCoroutine;
+
     public void Tick()
     {
         //TODO add drag if picking up larger object/blockArea with more than 4 blocks
@@ -26,7 +28,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
         if (joint && joint.connectedBody)
         {
             var autoAuthority = joint.connectedBody.GetComponent<AutoAuthority>();
-            if (!autoAuthority.ClientHasAuthority() && autoAuthority.InUse)
+            if (!autoAuthority.HasAuthority() && autoAuthority.InUse)
             {
                 Destroy(joint);
                 return;
@@ -52,6 +54,37 @@ public class LockObjectHand : MonoBehaviour, IHandTick
             if (hitAutoAuthority && !hitAutoAuthority.isKinematic && !hitAutoAuthority.InUse)
             {
                 ConnectObject(hitAutoAuthority);
+            }
+        }
+    }
+    
+    public BlockObject ConnectedBlockObjectRoot()
+    {
+        if (joint && joint.connectedBody)
+        {
+            var connectedBlockObject = joint.connectedBody.GetComponent<BlockObject>();
+            if (connectedBlockObject)
+            {
+                return BlockUtility.GetRootBlockObject(connectedBlockObject);
+            }
+        }
+
+        return null;
+    }
+
+    //as long as the object is not inUse, you can immediately attach to it. if someone else quickly touches it they may gain authority even though you
+    //are attached. This function checks after a short delay after you attach to make sure you were able to successfully gain authority and set inUse
+    //if you don't have authority after a short delay, detach
+    private IEnumerator CheckAuthorityAfterDelay()
+    {
+        yield return new WaitForSeconds(1f);
+
+        if (joint && joint.connectedBody)
+        {
+            var autoAuthority = joint.connectedBody.GetComponent<AutoAuthority>();
+            if (!autoAuthority.HasAuthority())
+            {
+                DetachObject();
             }
         }
     }
@@ -91,8 +124,14 @@ public class LockObjectHand : MonoBehaviour, IHandTick
         return null;
     }
 
-    private void DetachObject()
+    public void DetachObject()
     {
+        if (_checkAuthorityAfterDelayCoroutine != null)
+        {
+            StopCoroutine(_checkAuthorityAfterDelayCoroutine);
+            _checkAuthorityAfterDelayCoroutine = null;
+        }
+
         if (!joint)
             return;
 
@@ -134,5 +173,12 @@ public class LockObjectHand : MonoBehaviour, IHandTick
         joint.angularYZDrive = rotationDrive;
 
         joint.connectedBody = autoAuthority.GetComponent<Rigidbody>();
+
+        if (_checkAuthorityAfterDelayCoroutine != null)
+        {
+            StopCoroutine(_checkAuthorityAfterDelayCoroutine);
+        }
+
+        _checkAuthorityAfterDelayCoroutine = StartCoroutine(CheckAuthorityAfterDelay());
     }
 }

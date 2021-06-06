@@ -92,9 +92,9 @@ function ButtonGrid({hand}) {
                     <BlockButton hand={hand} blockId={'wood3'}/>
                 </ButtonRow>
                 <ButtonRow>
-                    <BlockButton hand={hand} blockId={'wood4'}/>
-                    <BlockButton hand={hand} blockId={'wood5'}/>
-                    <BlockButton hand={hand} blockId={'wood6'}/>
+                    <BlockButton hand={hand} blockId={"wood4"}/>
+                    <BlockButton hand={hand} blockId={"wood5"}/>
+                    <BlockButton hand={hand} blockId={"bearing"}/>
                 </ButtonRow>
                 <div className={"w-full flex justify-center"}>
                     <BlockButton hand={hand} blockId={''}/>

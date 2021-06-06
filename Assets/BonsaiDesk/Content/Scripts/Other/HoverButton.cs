@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using OVR;
 using UnityEngine;
@@ -41,7 +42,10 @@ public class HoverButton : MonoBehaviour
             if (emitterId == -1)
             {
                 emitterId = tickSound.PlaySoundAt(transform.position);
-                AudioManager.AttachSoundToParent(emitterId, transform);
+                if (emitterId != -1)
+                {
+                    AudioManager.AttachSoundToParent(emitterId, transform);
+                }
             }
             _activeTimer += Time.deltaTime;
         }
@@ -49,6 +53,7 @@ public class HoverButton : MonoBehaviour
         {
             if (emitterId != -1)
             {
+                AudioManager.DetachSoundFromParent(emitterId);
                 AudioManager.StopSound(emitterId, false);
                 emitterId = -1;
             }
@@ -63,6 +68,16 @@ public class HoverButton : MonoBehaviour
         {
             _activated = true;
             action?.Invoke();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (emitterId != -1)
+        {
+            AudioManager.DetachSoundFromParent(emitterId);
+            AudioManager.StopSound(emitterId, false);
+            emitterId = -1;
         }
     }
 }
