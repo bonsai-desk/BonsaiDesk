@@ -9,13 +9,13 @@ public static class BlockObjectFileReader
 {
     public struct BlockObjectFile
     {
-        public string fileName;
-        public string content;
-        public string displayName;
+        public string FileName;
+        public string Content;
+        public string DisplayName;
 
         public override string ToString()
         {
-            return $"fileName: {fileName} content: {!string.IsNullOrEmpty(content)} displayName: {displayName}";
+            return $"fileName: {FileName} content: {!string.IsNullOrEmpty(Content)} displayName: {DisplayName}";
         }
     }
 
@@ -46,7 +46,7 @@ public static class BlockObjectFileReader
             }
 
             name = name.Substring(0, name.Length - 4); //take off extension
-            
+
             fileName = fileNames[i]; //set these now in case the following parsing fails
             displayName = name;
 
@@ -64,7 +64,7 @@ public static class BlockObjectFileReader
                 displayName = name.Substring(dashIndex + 2, name.Length - (dashIndex + 2));
             }
 
-            var newBlockObjectFile = new BlockObjectFile() {fileName = fileName, content = content, displayName = displayName};
+            var newBlockObjectFile = new BlockObjectFile() {FileName = fileName, Content = content, DisplayName = displayName};
             if (blockObjectFiles.TryGetValue(unixTimestamp, out var list))
             {
                 list.Add(newBlockObjectFile);
@@ -152,7 +152,13 @@ public static class BlockObjectFileReader
         }
     }
 
-    public static string LoadFile(string fileName)
+    public static BlockObjectFile LoadFileIntoBlockObjectFile(BlockObjectFile blockObjectFile)
+    {
+        return new BlockObjectFile()
+            {FileName = blockObjectFile.FileName, Content = LoadFile(blockObjectFile.FileName), DisplayName = blockObjectFile.DisplayName};
+    }
+
+    private static string LoadFile(string fileName)
     {
         try
         {

@@ -30,10 +30,10 @@ public class BlockObjectSpawner : NetworkBehaviour
 
         if (files != null && files.Length > 0)
         {
-            var blocksString = BlockObjectFileReader.LoadFile(files[0].fileName);
-            if (!string.IsNullOrEmpty(blocksString))
+            var blockObjectFile = BlockObjectFileReader.LoadFileIntoBlockObjectFile(files[0]);
+            if (!string.IsNullOrEmpty(blockObjectFile.Content))
             {
-                BlockObjectSpawner.Instance.SpawnFromString(blocksString);
+                BlockObjectSpawner.Instance.SpawnFromString(blockObjectFile.Content);
             }
         }
     }
