@@ -29,7 +29,11 @@ public class BlockDeserializeTest : NetworkBehaviour
 
                 var spawnPosition = new Vector3(0, 1.5f, 0);
                 var spawnRotation = Quaternion.identity;
-                if (entry.attachedTo >= 0)
+                if (entry.attachedTo < 0)
+                {
+                    spawnRotation = entry.rootRotation;
+                }
+                else
                 {
                     var parent = idToBlockObject[entry.attachedTo].transform;
                     spawnPosition = parent.TransformPoint(entry.localPosition);

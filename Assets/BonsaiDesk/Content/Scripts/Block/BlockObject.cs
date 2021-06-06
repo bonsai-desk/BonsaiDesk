@@ -368,7 +368,17 @@ public partial class BlockObject : NetworkBehaviour
                 case SyncDictionary<Vector3Int, SyncBlock>.Operation.OP_ADD:
                     if (MeshBlocks.TryGetValue(coord, out MeshBlock meshBlock))
                     {
-                        if (meshBlock.name != syncBlock.name || meshBlock.rotation != BlockUtility.ByteToQuaternion(syncBlock.rotation))
+                        var checkRot = BlockUtility.QuaternionToByte(meshBlock.rotation);
+                        if (checkRot == 0)
+                        {
+                            checkRot = 36;
+                        }
+                        var otherRot = syncBlock.rotation;
+                        if (otherRot == 0)
+                        {
+                            otherRot = 36;
+                        }
+                        if (meshBlock.name != syncBlock.name || checkRot != otherRot)
                         {
                             Debug.LogError(
                                 "MeshBlock already exists, but does not equal syncBlock name or rotation. Did client side prediction cause it to get un-synced?");
@@ -599,17 +609,17 @@ public partial class BlockObject : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdAddBlock(string blockName, Vector3Int coord, Quaternion rotation, NetworkIdentity blockToDestroy)
+    private void CmdAddBlock(string blockName, Vector3Int coord, byte rotationByte, NetworkIdentity identityToDestroy)
     {
-        blockToDestroy.GetComponent<AutoAuthority>().ServerStripOwnerAndDestroy();
+        identityToDestroy.GetComponent<AutoAuthority>().ServerStripOwnerAndDestroy();
 
         if (Blocks.ContainsKey(coord))
         {
             Debug.LogError("Command: Attempted to add block which already exists");
             return;
         }
-
-        Blocks.Add(coord, new SyncBlock(blockName, BlockUtility.QuaternionToByte(rotation)));
+        
+        Blocks.Add(coord, new SyncBlock(blockName, rotationByte));
         if (_updateValidOrientationFromRootFrame != Time.frameCount)
         {
             BlockUtility.GetRootBlockObject(this).ServerUpdateValidOrientationFromRoot();
@@ -1564,16 +1574,28 @@ public partial class BlockObject : NetworkBehaviour
 
     private void Save()
     {
-        CloseDialog();
+        var root = BlockUtility.GetRootBlockObject(this);
 
-        var dataString = BlockUtility.SerializeBlocksFromRoot(BlockUtility.GetRootBlockObject(this));
+        Vector3? saveDialogPos = null;
+        if (_activeDialog)
+        {
+            saveDialogPos = _activeDialog.transform.position;
+        }
+
+        if (root._activeDialog)
+        {
+            saveDialogPos = _activeDialog.transform.position;
+        }
+
+        var dataString = BlockUtility.SerializeBlocksFromRoot(root, saveDialogPos);
 
         if (!string.IsNullOrEmpty(dataString))
         {
+            Debug.LogWarning(dataString);
+
             var data = BlockUtility.DeserializeBlocks(dataString);
             if (data != null)
             {
-                Debug.LogWarning(dataString);
                 //do something with the dataString
             }
             else
@@ -1583,8 +1605,10 @@ public partial class BlockObject : NetworkBehaviour
         }
         else
         {
-            Debug.LogError("Could not serialize blockObject");
+            Debug.LogError("Could not serialize blockObject (returned dataString is empty)");
         }
+
+        CloseDialog();
     }
 
     private void Delete()

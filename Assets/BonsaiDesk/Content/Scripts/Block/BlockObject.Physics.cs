@@ -182,9 +182,10 @@ public partial class BlockObject
 
                             var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
                             localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * MeshBlocks[coord].rotation;
+                            var localRotationByte = BlockUtility.QuaternionToByte(localRotation);
 
                             Mixpanel.Track("Add Block");
-                            blockObject.CmdAddBlock(MeshBlocks[coord].name, blockCoord, localRotation, netIdentity);
+                            blockObject.CmdAddBlock(MeshBlocks[coord].name, blockCoord, localRotationByte, netIdentity);
 
                             //client side prediction
                             var syncBlock = new SyncBlock(MeshBlocks[coord].name, BlockUtility.QuaternionToByte(localRotation));

@@ -6,7 +6,7 @@ using UnityEngine;
 
 public static partial class BlockUtility
 {
-    public static string SerializeBlocksFromRoot(BlockObject rootBlockObject)
+    public static string SerializeBlocksFromRoot(BlockObject rootBlockObject, Vector3? saveDialogPos = null)
     {
         const int blockVersion = 1;
         var data = "Block version v" + blockVersion;
@@ -23,7 +23,11 @@ public static partial class BlockUtility
         var processedRoot = false;
         for (int i = 0; i < blockObjects.Count; i++)
         {
-            var result = SerializeBlockObject(blockObjects[i], blockObjectToIndex);
+            var result = SerializeBlockObject(blockObjects[i], blockObjectToIndex, saveDialogPos);
+            if (!result.valid)
+            {
+                return "";
+            }
             if (!result.isAttached)
             {
                 if (processedRoot)
@@ -40,7 +44,8 @@ public static partial class BlockUtility
         return data;
     }
 
-    private static (string data, bool isAttached) SerializeBlockObject(BlockObject blockObject, Dictionary<BlockObject, int> blockObjectToIndex)
+    private static (string data, bool isAttached, bool valid) SerializeBlockObject(BlockObject blockObject, Dictionary<BlockObject, int> blockObjectToIndex,
+        Vector3? saveDialogPos = null)
     {
         var data = "\n\nId: " + blockObjectToIndex[blockObject];
         var isAttached = false;
@@ -56,7 +61,19 @@ public static partial class BlockUtility
 
         data += "\nAttached to: " + attachedToString;
 
-        if (attachedToString != "none")
+        if (attachedToString == "none")
+        {
+            var rootRotation = blockObject.transform.rotation;
+            if (saveDialogPos.HasValue && InputManager.Hands.head)
+            {
+                // var headToSavePosFlat = InputManager.Hands.head.transform.position - saveDialogPos.Value;
+                // headToSavePosFlat.y = 0;
+                // var headToSaveRot = Quaternion.LookRotation(headToSavePosFlat);
+                // rootRotation = Quaternion.Inverse(headToSaveRot) * rootRotation * Quaternion.AngleAxis(90f, Vector3.up);
+            }
+            data += "\n" + rootRotation.ToString("F5");
+        }
+        else
         {
             var localPosition = blockObject.SyncJoint.attachedTo.Value.transform.InverseTransformPoint(blockObject.transform.position);
             var localRotation = Quaternion.Inverse(blockObject.SyncJoint.attachedTo.Value.transform.rotation) * blockObject.transform.rotation;
@@ -72,10 +89,15 @@ public static partial class BlockUtility
 
         foreach (var pair in blockObject.Blocks)
         {
+            if (!ByteRotationIsInDictionary(pair.Value.rotation))
+            {
+                Debug.LogError($"Rotation {pair.Value.rotation} is not valid");
+                return (data, isAttached, false);
+            }
             data += $"\n{pair.Key.x} {pair.Key.y} {pair.Key.z} {pair.Value.name} {pair.Value.rotation}";
         }
 
-        return (data, isAttached);
+        return (data, isAttached, true);
     }
 
     public static BlockObjectStringData DeserializeBlocks(string data)
@@ -164,6 +186,7 @@ public static partial class BlockUtility
     {
         public int id;
         public int attachedTo;
+        public Quaternion rootRotation;
         public Vector3 localPosition;
         public Quaternion localRotation;
         public byte jointLocalRotation;
@@ -341,6 +364,11 @@ public static partial class BlockUtility
         if (attachedToIdString == "none")
         {
             entry.attachedTo = -1;
+            
+            if (!TryParseQuaternion(lines, ref atLine, out entry.rootRotation))
+            {
+                return false;
+            }
         }
         else
         {
@@ -364,9 +392,21 @@ public static partial class BlockUtility
             {
                 return false;
             }
+            
+            if (!ByteRotationIsInDictionary(entry.jointLocalRotation))
+            {
+                Debug.LogError($"Rotation {entry.jointLocalRotation} is not valid");
+                return false;
+            }
 
             if (!TryParseByte(lines, ref atLine, out entry.jointBearingLocalRotation))
             {
+                return false;
+            }
+            
+            if (!ByteRotationIsInDictionary(entry.jointBearingLocalRotation))
+            {
+                Debug.LogError($"Rotation {entry.jointBearingLocalRotation} is not valid");
                 return false;
             }
 
@@ -401,6 +441,11 @@ public static partial class BlockUtility
                 var coord = new Vector3Int(int.Parse(line[0]), int.Parse(line[1]), int.Parse(line[2]));
                 var name = line[3];
                 var rotation = byte.Parse(line[4]);
+                if (!ByteRotationIsInDictionary(rotation))
+                {
+                    Debug.LogError($"Rotation {rotation} is not valid");
+                    return false;
+                }
                 var pair = new KeyValuePair<Vector3Int, SyncBlock>(coord, new SyncBlock(name, rotation));
                 entry.blocks.Enqueue(pair);
             }
@@ -479,11 +524,12 @@ public static partial class BlockUtility
                         Debug.LogError("multiple root objects");
                         return null;
                     }
+
                     foundRoot = true;
                 }
             }
         }
-        
+
         return data;
     }
 }

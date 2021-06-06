@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Mirror;
 using UnityEngine;
@@ -102,7 +103,21 @@ public static partial class BlockUtility
             return Quaternion.identity;
         }
 
-        return Quaternion.LookRotation(ByteToDirection[(byte) (rotationByte & 0b_1111)], ByteToDirection[(byte) ((rotationByte >> 4) & 0b_1111)]);
+        try
+        {
+            return Quaternion.LookRotation(ByteToDirection[(byte) (rotationByte & 0b_1111)], ByteToDirection[(byte) ((rotationByte >> 4) & 0b_1111)]);
+        }
+        catch
+        {
+            Debug.LogError("Railed to lookup byte: " + rotationByte);
+        }
+        
+        return Quaternion.identity;
+    }
+
+    public static bool ByteRotationIsInDictionary(byte rotationByte)
+    {
+        return ByteToDirection.ContainsKey((byte) (rotationByte & 0b_1111)) && ByteToDirection.ContainsKey((byte) ((rotationByte >> 4) & 0b_1111));
     }
 
     //these two dictionaries allow you to convert a world axis direction to a byte and vice versa for light weight storage
