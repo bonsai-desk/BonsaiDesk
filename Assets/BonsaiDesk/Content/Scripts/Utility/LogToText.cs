@@ -118,7 +118,14 @@ public class LogToText : MonoBehaviour
                 {
                     if (int.TryParse(name, out int nameNumber))
                     {
-                        sortedLogs.Add(nameNumber, filePath.ToString());
+                        if (!sortedLogs.ContainsKey(nameNumber))
+                        {
+                            sortedLogs.Add(nameNumber, filePath.ToString());
+                        }
+                        else
+                        {
+                            Debug.LogError("Sorted logs already contains key: " + nameNumber);
+                        }
                     }
                 }
             }

@@ -1757,6 +1757,139 @@ MonoBehaviour:
   OnClientAuthenticated:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1 &218528289
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 218528291}
+  - component: {fileID: 218528290}
+  m_Layer: 0
+  m_Name: BlockDeserializeTest
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &218528290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 218528289}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a76cd5a313d7b1e4a81fb06795d7859d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  blocksString: 'Block version v1
+
+    File created by: app version 0.1.6b55
+
+    Serialized
+    on date (UTC): 6/6/2021 12:56:06 AM
+
+
+
+    Id: 0
+
+    Attached to: none
+
+    0
+    0 0 wood1 0
+
+    1 0 0 bearing 4
+
+
+
+    Id: 1
+
+    Attached to: 0
+
+    (1.10000,
+    -0.00003, -0.00005)
+
+    (-0.00001, -0.00002, 0.00001, -1.00000)
+
+    36
+
+    4
+
+    (0,
+    0, 0)
+
+    (1, 0, 0)
+
+    0 0 0 wood1 0
+
+    1 0 0 wood1 36
+
+    1 1 0 bearing
+    36
+
+    1 0 -1 bearing 81
+
+
+
+    Id: 2
+
+    Attached to: 1
+
+    (1.00000, 1.10000,
+    -0.00003)
+
+    (-0.00001, 0.85818, -0.00002, 0.51334)
+
+    36
+
+    36
+
+    (0,
+    0, 0)
+
+    (1, 1, 0)
+
+    0 0 0 wood1 0
+
+
+
+    Id: 3
+
+    Attached to: 1
+
+    (0.99997,
+    -0.00001, -1.09999)
+
+    (-0.00001, 0.00001, -0.00001, 1.00000)
+
+    36
+
+    81
+
+    (0,
+    0, 0)
+
+    (1, 0, -1)
+
+    0 0 0 wood1 0'
+--- !u!4 &218528291
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 218528289}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 23
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &223974226
 GameObject:
   m_ObjectHideFlags: 0

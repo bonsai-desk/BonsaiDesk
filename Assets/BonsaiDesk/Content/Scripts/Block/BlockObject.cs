@@ -133,10 +133,6 @@ public partial class BlockObject : NetworkBehaviour
     //used to make sure Init is only called once
     private bool _isInit = false;
 
-    //if this string contains a valid block file string when OnStartServer is called, it will be used to construct the block object
-    [TextArea]
-    public string initialBlocksString;
-
     //material property ids
     private static readonly int TextureArray = Shader.PropertyToID("_TextureArray");
     private static readonly int EffectProgress = Shader.PropertyToID("_EffectProgress");
@@ -157,15 +153,6 @@ public partial class BlockObject : NetworkBehaviour
 
     public override void OnStartServer()
     {
-        var blocks = BlockUtility.DeserializeBlocks(initialBlocksString);
-        if (blocks != null)
-        {
-            while (blocks.Count > 0)
-            {
-                Blocks.Add(blocks.Dequeue());
-            }
-        }
-
         if (Blocks.Count <= 0)
         {
             Debug.LogError("Cannot have block object with no blocks");
@@ -1577,11 +1564,10 @@ public partial class BlockObject : NetworkBehaviour
 
         if (!string.IsNullOrEmpty(dataString))
         {
-            Debug.LogWarning(dataString);
-            
             var data = BlockUtility.DeserializeBlocks(dataString);
             if (data != null)
             {
+                Debug.LogWarning(dataString);
                 //do something with the dataString
             }
             else
