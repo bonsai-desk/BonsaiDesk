@@ -36,33 +36,6 @@ public readonly struct SyncJoint : IEquatable<SyncJoint>
         otherBearingCoord = oldJoint.otherBearingCoord;
     }
 
-    // public SyncJoint(NetworkIdentityReference attachedTo, Vector3 positionLocalToAttachedTo, Quaternion rotationLocalToAttachedTo,
-    //     Vector3Int attachedToMeAtCoord, Vector3Int otherBearingCoord, Vector3 axis, Vector3 anchor, Vector3 connectedAnchor)
-    // {
-    //     connected = true;
-    //     this.attachedTo = attachedTo;
-    //     this.positionLocalToAttachedTo = positionLocalToAttachedTo;
-    //     this.rotationLocalToAttachedTo = rotationLocalToAttachedTo;
-    //     this.attachedToMeAtCoord = attachedToMeAtCoord;
-    //     this.otherBearingCoord = otherBearingCoord;
-    //     this.axis = axis;
-    //     this.anchor = anchor;
-    //     this.connectedAnchor = connectedAnchor;
-    // }
-    //
-    // public SyncJoint(SyncJoint oldJoint, NetworkIdentityReference newNetIdRef)
-    // {
-    //     connected = true;
-    //     attachedTo = newNetIdRef;
-    //     positionLocalToAttachedTo = oldJoint.positionLocalToAttachedTo;
-    //     rotationLocalToAttachedTo = oldJoint.rotationLocalToAttachedTo;
-    //     attachedToMeAtCoord = oldJoint.attachedToMeAtCoord;
-    //     otherBearingCoord = oldJoint.otherBearingCoord;
-    //     axis = oldJoint.axis;
-    //     anchor = oldJoint.anchor;
-    //     connectedAnchor = oldJoint.connectedAnchor;
-    // }
-
     public bool Equals(SyncJoint other)
     {
         var attachedToSame = true;

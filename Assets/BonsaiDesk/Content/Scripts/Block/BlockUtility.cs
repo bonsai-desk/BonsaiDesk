@@ -95,7 +95,9 @@ public static partial class BlockUtility
     /// <returns></returns>
     public static Quaternion ByteToQuaternion(byte rotationByte)
     {
-        if (rotationByte == 0)
+        //even though 0 is technically an invalid rotation, it can be used as shorthand for the identity quaternion
+        //36 just happens to be the correct identity quaternion value, and since it is used often, this will save a bit of computation
+        if (rotationByte == 36 || rotationByte == 0)
         {
             return Quaternion.identity;
         }

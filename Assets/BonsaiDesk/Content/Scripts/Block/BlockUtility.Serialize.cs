@@ -59,8 +59,13 @@ public static partial class BlockUtility
             var localPosition = blockObject.SyncJoint.attachedTo.Value.transform.InverseTransformPoint(blockObject.transform.position);
             var localRotation = Quaternion.Inverse(blockObject.SyncJoint.attachedTo.Value.transform.rotation) * blockObject.transform.rotation;
 
-            data += "\nLocal position: " + localPosition.ToString("F5");
-            data += "\nLocal rotation: " + localRotation.ToString("F5");
+            data += "\n" + localPosition.ToString("F5");
+            data += "\n" + localRotation.ToString("F5");
+
+            data += "\n" + blockObject.SyncJoint.localRotation;
+            data += "\n" + blockObject.SyncJoint.bearingLocalRotation;
+            data += "\n" + blockObject.SyncJoint.attachedToMeAtCoord;
+            data += "\n" + blockObject.SyncJoint.otherBearingCoord;
         }
 
         foreach (var pair in blockObject.Blocks)
