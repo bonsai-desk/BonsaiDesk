@@ -7,29 +7,45 @@ using UnityEngine;
 
 public class BlockObjectSpawner : NetworkBehaviour
 {
-    public MessageStack messageStack;
-
+    public static BlockObjectSpawner Instance;
+    
     private const int ChunkSize = 1024; //smaller than UDP ethernet packet
 
-    private Dictionary<string, byte[]> _partialMessages = new Dictionary<string, byte[]>(); //TODO: message timeout
+    //just used on server
+    private readonly Dictionary<string, byte[]> _partialMessages = new Dictionary<string, byte[]>();
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     public override void OnStartServer()
     {
         _partialMessages.Clear();
     }
 
-    private void Update()
+    public void SpawnFromString(string blocksString)
     {
-        if (Input.GetKeyDown(KeyCode.L))
+        if (isServer)
         {
-            TestMsg();
+            if (!NetworkServer.active)
+            {
+                Debug.LogError("Cannot call SpawnFromString. Server is not active.");
+                return;
+            }
+            
+            ServerSpawnFromString(blocksString);
         }
-    }
+        else if (isClient)
+        {
+            if (!NetworkClient.active)
+            {
+                Debug.LogError("Cannot call SpawnFromString. Client is not active.");
+                return;
+            }
 
-    public void TestMsg()
-    {
-        string myString = new string('T', 1000000);
-        ClientSpawnFromString(myString);
+            ClientSpawnFromString(blocksString);
+        }
     }
 
     private static byte[] GetBytes(string str)
@@ -48,7 +64,7 @@ public class BlockObjectSpawner : NetworkBehaviour
     }
 
     [Client]
-    public void ClientSpawnFromString(string blocksString)
+    private void ClientSpawnFromString(string blocksString)
     {
         var bytes = GetBytes(blocksString);
         var guid = Guid.NewGuid().ToString();
@@ -63,7 +79,7 @@ public class BlockObjectSpawner : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    public void CmdSpawnFromString(byte[] chunk, int offset, int totalSize, bool isEnd, string guid)
+    private void CmdSpawnFromString(byte[] chunk, int offset, int totalSize, bool isEnd, string guid)
     {
         if (!_partialMessages.ContainsKey(guid))
         {
@@ -102,7 +118,7 @@ public class BlockObjectSpawner : NetworkBehaviour
     }
 
     [Server]
-    public void ServerSpawnFromString(string blocksString)
+    private void ServerSpawnFromString(string blocksString)
     {
         var data = BlockUtility.DeserializeBlocks(blocksString);
 

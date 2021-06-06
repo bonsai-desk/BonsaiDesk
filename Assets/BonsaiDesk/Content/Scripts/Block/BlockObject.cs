@@ -1597,6 +1597,7 @@ public partial class BlockObject : NetworkBehaviour
             if (data != null)
             {
                 //do something with the dataString
+                BlockObjectSpawner.Instance.SpawnFromString(dataString);
             }
             else
             {
