@@ -119,7 +119,42 @@ public static class BlockObjectFileReader
         return null;
     }
 
-    public static void SaveFile(string fileName, string content, bool prependUnixTimestamp = false)
+    public static bool SaveStagedBlockObject(string displayName)
+    {
+        if (string.IsNullOrEmpty(BlockObject.StagedSaveData))
+        {
+            return false;
+        }
+
+        var success = SaveFile(displayName, BlockObject.StagedSaveData, true);
+        BlockObject.StagedSaveData = string.Empty;
+        return success;
+    }
+
+    public static bool DeleteFile(string fileName)
+    {
+        try
+        {
+            var folderPath = System.IO.Path.Combine(Application.persistentDataPath, "blocks");
+            System.IO.Directory.CreateDirectory(folderPath);
+
+            var filePath = System.IO.Path.Combine(folderPath, fileName);
+
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+                return true;
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(e);
+        }
+
+        return false;
+    }
+
+    public static bool SaveFile(string fileName, string content, bool prependUnixTimestamp = false)
     {
         try
         {
@@ -145,11 +180,15 @@ public static class BlockObjectFileReader
             filePath += ".txt";
 
             File.WriteAllText(filePath, content);
+
+            return true;
         }
         catch (Exception e)
         {
             Debug.LogError(e);
         }
+
+        return false;
     }
 
     public static BlockObjectFile LoadFileIntoBlockObjectFile(BlockObjectFile blockObjectFile)
