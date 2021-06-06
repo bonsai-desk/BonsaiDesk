@@ -194,6 +194,7 @@ const ClearHand = observer(({hand}) => {
 });
 
 const Context = observer(() => {
+    document.title = "Context Menu"
     return <div className={'bg-gray-900 h-screen flex flex-wrap justify-center space-x-20 content-center'}>
         <div className={'space-y-2'}>
             <BlockBreak hand={'left'}/>

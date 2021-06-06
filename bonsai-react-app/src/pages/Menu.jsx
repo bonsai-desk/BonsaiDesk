@@ -161,6 +161,8 @@ let Menu = observer(() => {
     let debug = store.AppInfo.Build === 'DEVELOPMENT';
 
     let match = useRouteMatch();
+    
+    document.title = "Menu"
 
     useEffect(() => {
         autorun(() => {

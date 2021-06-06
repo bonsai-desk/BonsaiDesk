@@ -41,6 +41,8 @@ public class TableBrowser : Browser
 
     public event EventHandler<EventArgs<string>> InputRecieved;
 
+    public event EventHandler<EventArgs<bool>> FocusInput;
+    
     private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs)
     {
         var message = JsonConvert.DeserializeObject<JsMessageString>(eventArgs.Value);
@@ -65,6 +67,12 @@ public class TableBrowser : Browser
                             InputRecieved(this, new EventArgs<string>(message.Data));
                         }
 
+                        break;
+                    case "focusInput":
+                        FocusInput?.Invoke(this, new EventArgs<bool>(true));
+                        break;
+                    case "blurInput":
+                        FocusInput?.Invoke(this, new EventArgs<bool>(false));
                         break;
                 }
 

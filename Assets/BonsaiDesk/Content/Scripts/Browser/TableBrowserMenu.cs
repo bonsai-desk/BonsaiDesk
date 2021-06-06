@@ -25,8 +25,8 @@ public class TableBrowserMenu : MonoBehaviour
     public TableBrowser contextBrowser;
     public AutoBrowserController autoBrowserController;
     public float postMediaInfoEvery = 0.5f;
-    [FormerlySerializedAs("_browser")] public TableBrowser browser;
-    public bool canPost;
+    [HideInInspector, FormerlySerializedAs("_browser")] public TableBrowser browser;
+    [HideInInspector] public bool canPost;
     private float _postMediaInfoLast;
     private float _postRoomInfoLast;
 
@@ -234,6 +234,13 @@ public class TableBrowserMenu : MonoBehaviour
                     case "ejectVideo":
                         EjectVideo?.Invoke(this, new EventArgs());
                         break;
+                    case "buildsRefresh":
+                        RequestRefreshBuildsList?.Invoke(this, new EventArgs());
+                        break;
+                    case "stageBuild":
+                        var buildId = JsonConvert.DeserializeObject<string>(message.Data);
+                        RequestStageBuild?.Invoke(this, buildId);
+                        break;
                 }
 
                 break;
@@ -369,6 +376,24 @@ public class TableBrowserMenu : MonoBehaviour
         var csMessage = new CsMessageKeyType<PlayerData[]> {Data = new KeyType<PlayerData[]> {Key = "PlayerInfos", Val = data}};
         SerializeAndPost(csMessage);
     }
+    
+    public Transform screen;
+    public Transform raisedTransform;
+
+    public void SetRaised(bool raised)
+    {
+        if (raised)
+        {
+            screen.localPosition = raisedTransform.localPosition;
+            screen.localEulerAngles = raisedTransform.localEulerAngles;
+        }
+        else
+        {
+            screen.localPosition = Vector3.zero;
+            screen.localEulerAngles = Vector3.zero;
+        }
+        
+    }
 
     public static event Action<RoomData> JoinRoom;
     public static event Action LeaveRoom;
@@ -390,6 +415,9 @@ public class TableBrowserMenu : MonoBehaviour
     public event EventHandler<LightState> LightChange;
 
     public event EventHandler<SpotManager.Layout> LayoutChange;
+
+    public event EventHandler<string> RequestStageBuild;
+    public event EventHandler RequestRefreshBuildsList;
 
     private void BonsaiLog(string msg)
     {

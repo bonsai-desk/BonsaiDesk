@@ -1,7 +1,10 @@
 import React, {useState} from 'react';
-import {Shift, SymbolsOrNum, NumsOrChar, Backspace, Enter, KeyChar, Space} from '../components/Keys';
+import {Backspace, Enter, KeyChar, KeyFrames, NumsOrChar, Shift, Space, SymbolsOrNum} from '../components/Keys';
+import {postDismissKeyboard} from '../api';
+import KeyBoardDismissImg from '../static/keyboard-dismiss.svg';
 
 function Keyboard() {
+    document.title = 'Keyboard';
     let [shift, setShift] = useState(false);
     let [level, setLevel] = useState(0);
     let level0 = (
@@ -162,13 +165,20 @@ function Keyboard() {
                         <NumsOrChar level={level} handleClick={handleClickNumOrChar}/>
                         <Space/>
                         <div className={'flex space-x-2'}>
-                            <NumsOrChar level={level} handleClick={handleClickNumOrChar}/>
+                            <DismissKeyboard/>
                         </div>
                     </div>
                 </div>
 
             </div>
     );
+}
+
+function DismissKeyboard() {
+    return <KeyFrames handleClick={postDismissKeyboard}>
+        <img alt={"dismiss keyboard"} src={KeyBoardDismissImg}/>
+    </KeyFrames>;
+
 }
 
 export default Keyboard;

@@ -89,6 +89,22 @@ export function postSetHandMode(hand, mode) {
     });
 }
 
+export function postDismissKeyboard() {
+    postJson({Type: "command", Message: "dismissKeyboard"})
+}
+
+export function postToggleKeyboard() {
+    postJson({Type: "command", Message: "toggleKeyboard"})
+}
+
+export function postStageBuild(buildId) {
+    postJson({Type: "command", Message: "stageBuild", Data: buildId})
+}
+
+export function postBuildsRefresh () {
+    postJson({Type: "command", Message: "buildsRefresh"})
+}
+
 export const Layout = {
     Across: 0, SideBySide: 1,
 };
@@ -112,5 +128,3 @@ export function postSetLayout(layout) {
         Data: layoutStr,
     });
 }
-
-

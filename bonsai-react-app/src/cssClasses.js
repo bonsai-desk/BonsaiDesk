@@ -6,4 +6,5 @@ export const greenButtonClass      = 'py-4 px-8 rounded cursor-pointer flex flex
 export const grayButtonClass       = 'py-4 px-8 rounded cursor-pointer flex flex-wrap content-center font-bold bg-gray-800  active:bg-gray-700  hover:bg-gray-600';
 export const lightGrayButtonClass  = 'py-4 px-8 rounded cursor-pointer flex flex-wrap content-center font-bold bg-gray-700  active:bg-gray-700  hover:bg-gray-600';
 export const grayButtonClassInert  = 'py-4 px-8 rounded flex flex-wrap content-center font-bold bg-gray-800 ';
+export const orangeButtonClass        = 'py-4 px-8 rounded cursor-pointer flex flex-wrap content-center font-bold bg-bonsai-brown hover:bg-bonsai-orange';
 

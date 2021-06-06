@@ -2,7 +2,13 @@ import React, {useEffect, useRef, useState} from 'react';
 import {observer} from 'mobx-react-lite';
 import {MenuContentTabbed} from '../components/MenuContent';
 import {InstantButton} from '../components/Button';
-import {grayButtonClass, grayButtonClassInert, lightGrayButtonClass, redButtonClass} from '../cssClasses';
+import {
+    grayButtonClass,
+    grayButtonClassInert,
+    greenButtonClass,
+    lightGrayButtonClass,
+    orangeButtonClass,
+} from '../cssClasses';
 import {useStore} from '../DataProvider';
 import axios from 'axios';
 import moment from 'moment';
@@ -11,19 +17,28 @@ import BlockImg from '../static/block-line.svg';
 import ThumbImg from '../static/thumb-up.svg';
 import MenuImg from '../static/menu.svg';
 import DownloadImg from '../static/download.svg';
+import PostImg from '../static/post-add.svg';
 import jwt from 'jsonwebtoken';
 import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
+import {postStageBuild} from '../api';
+
+const DeleteState = {
+    None: 0, Failed: 1, Success: 2,
+};
+
+const PublishState = {
+    None: 0, Failed: 1, Success: 2,
+};
 
 let hamburgerButton = 'relative h-20 w-20 rounded-full cursor-pointer flex flex-wrap content-center font-bold bg-gray-800  active:bg-gray-700  hover:bg-gray-600';
 
 let SpawnButton = observer(() => {
-
     return <InstantButton onClick={() => {
     }} className={hamburgerButton}>
         <img src={DownloadImg} alt={'Menu'} className={'absolute left-5 bottom-5 w-10'}/>
     </InstantButton>;
-
 });
+
 
 let ThumbButton = observer((props) => {
     let {store} = useStore();
@@ -82,6 +97,149 @@ let ThumbButton = observer((props) => {
     );
 });
 
+function LocalBlockPost({Name, Id}) {
+    let [modal, setModal] = useState(false);
+    let [deleteModal, setDeleteModal] = useState(false);
+    let [deleteState, setDeleteState] = useState(DeleteState.None);
+    let [publishState, setPublishState] = useState(PublishState.None);
+    let [publishModal, setPublishModal] = useState(false)
+
+    let title = Name;
+    let slug = Id;
+
+    function clickOut() {
+        setModal(false);
+    }
+
+    function spawnDeleteModal() {
+        setDeleteModal(true);
+    }
+
+    function spawnModal() {
+        setModal(true);
+    }
+
+    function postDelete() {
+        console.log('not implemented');
+    }
+    
+    function spawnPublishModal () {
+        setPublishModal(true)
+    }
+
+    function PublishButton() {
+        return <InstantButton onClick={spawnPublishModal} className={hamburgerButton}>
+            <img src={PostImg} alt={'Menu'} className={'absolute left-5 bottom-5 w-10'}/>
+        </InstantButton>;
+    }
+
+    function MiniPublishModal() {
+        function clickOut() {
+            setPublishModal(false);
+        }
+
+        let title = 'Publish Post?';
+        let info = 'Show off your creation to the world.';
+        let leftButton = 'Cancel';
+        let rightButton = 'Publish';
+
+        switch (publishState) {
+            case PublishState.Success:
+                title = 'Done!';
+                info = `You just published ${Name}.`;
+                leftButton = 'Close';
+                break;
+            case PublishState.Failed:
+                title = 'Publish Failed!';
+                info = `Something went wrong.`;
+                leftButton = 'Close';
+                break;
+            default:
+                break;
+        }
+
+        let deleteButtonClass = greenButtonClass;
+        if (deleteState !== DeleteState.None) {
+            deleteButtonClass = grayButtonClassInert;
+        }
+        
+        return <MiniModalAction title={title} info={info} clickOut={clickOut}>
+            <InstantButton onClick={clickOut} className={grayButtonClass}>{leftButton}</InstantButton>
+            <InstantButton onClick={()=>{postStageBuild(Id)}} className={deleteButtonClass}>{rightButton}</InstantButton>
+        </MiniModalAction>;
+    }
+
+    function MiniDeleteModal() {
+        function clickOut() {
+            setDeleteModal(false);
+        }
+
+        let title = 'Delete Post?';
+        let info = 'Are you sure you want to delete your post? You can\'t undo this.';
+        let leftButton = 'Cancel';
+        let rightButton = 'Delete';
+
+        switch (deleteState) {
+            case DeleteState.Success:
+                title = 'Delete Confirmed!';
+                info = `You just deleted ${Name}.`;
+                leftButton = 'Close';
+                break;
+            case DeleteState.Failed:
+                title = 'Delete Failed!';
+                info = `Something went wrong.`;
+                leftButton = 'Close';
+                break;
+            default:
+                break;
+        }
+
+        let deleteButtonClass = orangeButtonClass;
+        if (deleteState !== DeleteState.None) {
+            deleteButtonClass = grayButtonClassInert;
+        }
+
+        return <MiniModalAction title={title} info={info} clickOut={clickOut}>
+            <InstantButton onClick={clickOut} className={grayButtonClass}>{leftButton}</InstantButton>
+            <InstantButton onClick={postDelete} className={deleteButtonClass}>{rightButton}</InstantButton>
+        </MiniModalAction>;
+    }
+
+    function BuildModal() {
+        return <Modal clickOut={clickOut}>
+            <div className={'flex flex-wrap p-20 content-between h-full'}>
+                <div className={''}>
+                    <div className={'text-xl'}>{title}</div>
+                    <div className={'text-gray-400'}>{slug}</div>
+                </div>
+                <div className={'flex w-full justify-end space-x-4'}>
+                    <InstantButton onClick={() => {
+                        setModal(false);
+                    }} className={grayButtonClass}>Close</InstantButton>
+                    <InstantButton onClick={spawnDeleteModal} className={orangeButtonClass}>Delete</InstantButton>
+                </div>
+            </div>
+        </Modal>;
+    }
+
+    return <React.Fragment><InfoItemCustom title={title} slug={slug} imgSrc={BlockImg}
+                                           leftItems={''}>
+
+        {modal ?
+                <BuildModal/> : ''
+        }
+        {deleteModal ? <MiniDeleteModal/> : ''}
+        {publishModal ? <MiniPublishModal/> : ''}
+        <div className={'flex flex-wrap content-center space-x-4'}>
+            <PublishButton/>
+            <InstantButton onClick={spawnModal} className={hamburgerButton}>
+                <img src={MenuImg} alt={'Menu'} className={'absolute left-5 bottom-5 w-10'}/>
+            </InstantButton>
+        </div>
+    </InfoItemCustom>
+    </React.Fragment>;
+}
+
 let BlockPost = observer(({
                               build_name, user_name, created_at, likes, build_id, liked, user_id,
                           }) => {
@@ -89,9 +247,6 @@ let BlockPost = observer(({
     let [reported, setReported] = useState(false);
     let [modal, setModal] = useState(false);
     let [deleteModal, setDeleteModal] = useState(false);
-    const DeleteState = {
-        None: 0, Failed: 1, Success: 2,
-    };
     let [deleteState, setDeleteState] = useState(DeleteState.None);
     const ReportState = {
         None: 0, Failed: 1, Success: 2,
@@ -148,9 +303,9 @@ let BlockPost = observer(({
     function SpawnReportButton() {
         if (reported) {
             return <InstantButton onClick={() => {
-            }} className={redButtonClass}>Reported!</InstantButton>;
+            }} className={orangeButtonClass}>Reported!</InstantButton>;
         }
-        return <InstantButton onClick={spawnReportModal} className={redButtonClass}>Report</InstantButton>;
+        return <InstantButton onClick={spawnReportModal} className={orangeButtonClass}>Report</InstantButton>;
 
     }
 
@@ -162,14 +317,17 @@ let BlockPost = observer(({
                     <div className={'text-gray-400'}>{slug}</div>
                 </div>
                 <div className={'flex w-full justify-end space-x-4'}>
-                    <InstantButton onClick={()=>{setModal(false)}} className={grayButtonClass}>Close</InstantButton>
+                    <InstantButton onClick={() => {
+                        setModal(false);
+                    }} className={grayButtonClass}>Close</InstantButton>
                     {!myPost ?
 
                             <SpawnReportButton/>
                             : ''
                     }
                     {myPost ?
-                            <InstantButton onClick={spawnDeleteModal} className={redButtonClass}>Delete</InstantButton>
+                            <InstantButton onClick={spawnDeleteModal}
+                                           className={orangeButtonClass}>Delete</InstantButton>
                             : ''
                     }
                 </div>
@@ -222,15 +380,15 @@ let BlockPost = observer(({
                 break;
         }
 
-        let deleteButtonClass = redButtonClass;
+        let deleteButtonClass = orangeButtonClass;
         if (deleteState !== DeleteState.None) {
             deleteButtonClass = grayButtonClassInert;
         }
-        
+
         return <MiniModalAction title={title} info={info} clickOut={clickOut}>
             <InstantButton onClick={clickOut} className={grayButtonClass}>{leftButton}</InstantButton>
             <InstantButton onClick={postDelete} className={deleteButtonClass}>{rightButton}</InstantButton>
-        </MiniModalAction>
+        </MiniModalAction>;
     }
 
     function MiniReportModal() {
@@ -269,17 +427,17 @@ let BlockPost = observer(({
                 }
             }
 
-            let className = redButtonClass;
+            let className = orangeButtonClass;
             if (reportState !== ReportState.None) {
                 className = grayButtonClassInert;
             }
             return <InstantButton onClick={onClick} className={className}>{rightButton}</InstantButton>;
         }
-        
+
         return <MiniModalAction title={title} info={info} clickOut={clickOut}>
             <CancelButton/>
             <ReportButton/>
-        </MiniModalAction>
+        </MiniModalAction>;
     }
 
     function handleClickBurger() {
@@ -301,7 +459,7 @@ let BlockPost = observer(({
     </React.Fragment>;
 });
 
-function MiniModalAction ({clickOut, title, info, children}) {
+function MiniModalAction({clickOut, title, info, children}) {
     return <MiniModal clickOut={clickOut}>
         <div className={''}>
             <div className={''}>
@@ -388,11 +546,40 @@ function MiniModal({children, clickOut}) {
 }
 
 const DraftsPage = observer(() => {
-    let data = [];
+    let [modal, setModal] = useState(false);
+    let {builds} = useStore();
+    let input = useRef();
+
+    let data = builds.List;
+
+    function NewBuildModal() {
+
+        return <Modal clickOut={() => {
+        }}>
+            <div className={'px-20 py-20 h-full flex flex-wrap content-between'}>
+                <div className={'w-full text-3xl'}>
+                    Your Build
+                </div>
+                <input spellCheck={false} className={'w-full p-2 text-gray-100 bg-gray-700 rounded text-3xl'}
+                       ref={input}
+                       placeholder={'Title'} type={'text'}/>
+                <div className={'flex flex-wrap justify-end space-x-4 w-full'}>
+                    <InstantButton onClick={() => {
+                        setModal(false);
+                    }} className={grayButtonClass}>Cancel</InstantButton>
+                    <InstantButton onClick={() => {
+                    }} className={greenButtonClass}>Save</InstantButton>
+                </div>
+            </div>
+        </Modal>;
+    }
 
     return <React.Fragment>
+        {modal ? <NewBuildModal/> : ''}
         <Spacer/>
-        {data.map(x => <BlockPost key={x.build_name + x.created_at} {...x}/>)}
+        {data.map(x => {
+            return <LocalBlockPost key={x.Id} {...x}/>;
+        })}
     </React.Fragment>;
 
 });

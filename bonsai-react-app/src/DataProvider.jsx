@@ -38,6 +38,30 @@ class MediaInfo {
 
 }
 
+class BuildInfo {
+    Id = '';
+    Data = '';
+    Name = '';
+
+    constructor(id, data, name) {
+        this.Id = id;
+        this.Data = data;
+        this.Name = name;
+    }
+
+}
+
+class Builds {
+    Staging = new BuildInfo("","","")
+    List = [
+        new BuildInfo('1-build', 'asdf', 'My First Build'),
+        new BuildInfo('2-build', 'asdf', 'My Second Build'),
+        new BuildInfo('3-build', 'asdf', 'Cool Stuff'),
+        new BuildInfo('4-build', 'asdf', 'Minecraft'),
+        new BuildInfo('5-build', 'asdf', 'A Thing'),
+    ];
+}
+
 class Store {
     SocialInfo = {
         UserName: 'NoName',
@@ -190,6 +214,9 @@ Object.seal(store);
 const mediaInfo = new MediaInfo();
 Object.seal(mediaInfo);
 
+const builds = new Builds();
+Object.seal(builds);
+
 let pushStoreList = action((kvList) => {
     kvList.forEach(kv => {
         store[kv.Key] = kv.Val;
@@ -261,5 +288,6 @@ export const StoreProvider = observer(({children}) => {
             value={{
                 store,
                 mediaInfo,
+                builds,
             }}>{children}</StoreContext.Provider>;
 });
