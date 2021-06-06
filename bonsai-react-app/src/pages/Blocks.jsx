@@ -156,16 +156,23 @@ let BlockPost = observer(({
 
     function BuildModal() {
         return <Modal clickOut={clickOut}>
-            <div className={'flex space-x-2'}>
-                {!myPost ?
+            <div className={'flex flex-wrap p-20 content-between h-full'}>
+                <div className={''}>
+                    <div className={'text-xl'}>{title}</div>
+                    <div className={'text-gray-400'}>{slug}</div>
+                </div>
+                <div className={'flex w-full justify-end space-x-4'}>
+                    <InstantButton onClick={()=>{setModal(false)}} className={grayButtonClass}>Close</InstantButton>
+                    {!myPost ?
 
-                        <SpawnReportButton/>
-                        : ''
-                }
-                {myPost ?
-                        <InstantButton onClick={spawnDeleteModal} className={redButtonClass}>Delete</InstantButton>
-                        : ''
-                }
+                            <SpawnReportButton/>
+                            : ''
+                    }
+                    {myPost ?
+                            <InstantButton onClick={spawnDeleteModal} className={redButtonClass}>Delete</InstantButton>
+                            : ''
+                    }
+                </div>
             </div>
         </Modal>;
     }
@@ -219,19 +226,11 @@ let BlockPost = observer(({
         if (deleteState !== DeleteState.None) {
             deleteButtonClass = grayButtonClassInert;
         }
-
-        return <MiniModal clickOut={clickOut}>
-            <div className={'space-y-2 w-4/4'}>
-                <div className={'divide-y'}>
-                    <div className={'text-xl px-6 py-6'}>{title}</div>
-                    <div className={'px-6 py-8'}>{info}</div>
-                </div>
-                <div className={'py-4 px-4 w-full flex flex-wrap space-x-4 justify-end px-2 bg-gray-900'}>
-                    <InstantButton onClick={clickOut} className={grayButtonClass}>{leftButton}</InstantButton>
-                    <InstantButton onClick={postDelete} className={deleteButtonClass}>{rightButton}</InstantButton>
-                </div>
-            </div>
-        </MiniModal>;
+        
+        return <MiniModalAction title={title} info={info} clickOut={clickOut}>
+            <InstantButton onClick={clickOut} className={grayButtonClass}>{leftButton}</InstantButton>
+            <InstantButton onClick={postDelete} className={deleteButtonClass}>{rightButton}</InstantButton>
+        </MiniModalAction>
     }
 
     function MiniReportModal() {
@@ -276,19 +275,11 @@ let BlockPost = observer(({
             }
             return <InstantButton onClick={onClick} className={className}>{rightButton}</InstantButton>;
         }
-
-        return <MiniModal clickOut={clickOut}>
-            <div className={'space-y-2'}>
-                <div className={'divide-y'}>
-                    <div className={'text-xl px-6 py-6'}>{title}</div>
-                    <div className={'px-6 py-8'}>{info}</div>
-                </div>
-                <div className={'py-4 px-4 w-full flex flex-wrap space-x-4 justify-end px-2 bg-gray-900'}>
-                    <CancelButton/>
-                    <ReportButton/>
-                </div>
-            </div>
-        </MiniModal>;
+        
+        return <MiniModalAction title={title} info={info} clickOut={clickOut}>
+            <CancelButton/>
+            <ReportButton/>
+        </MiniModalAction>
     }
 
     function handleClickBurger() {
@@ -309,6 +300,20 @@ let BlockPost = observer(({
     </InfoItemCustom>
     </React.Fragment>;
 });
+
+function MiniModalAction ({clickOut, title, info, children}) {
+    return <MiniModal clickOut={clickOut}>
+        <div className={' divide-y'}>
+            <div className={'divide-y'}>
+                <div className={'text-xl px-6 py-6'}>{title}</div>
+                <div className={'px-6 py-8'}>{info}</div>
+            </div>
+            <div className={'py-4 px-4 w-full flex flex-wrap space-x-4 justify-end px-2'}>
+                {children}
+            </div>
+        </div>
+    </MiniModal>;
+}
 
 const NewPage = observer(() => {
     let [data, setData] = useState([]);
@@ -358,8 +363,8 @@ function Modal({children, clickOut}) {
     }
 
     return <div ref={parentEl} onPointerDown={onPointerDown}
-                className={'bg-opacity-90 z-20 absolute top-0 left-0 w-screen h-screen bg-gray-400 flex flex-wrap content-center justify-center'}>
-        <div className={'z-30 h-3/4 w-3/4 rounded-3xl bg-gray-800 overflow-hidden'}>
+                className={'bg-opacity-90 z-20 absolute top-0 left-0 w-screen h-screen bg-gray-900 flex flex-wrap content-center justify-center'}>
+        <div className={'border z-30 h-3/4 w-3/4 rounded-3xl bg-gray-900 overflow-hidden'}>
             {children}
         </div>
     </div>;
@@ -375,8 +380,8 @@ function MiniModal({children, clickOut}) {
     }
 
     return <div ref={parentEl} onPointerDown={onPointerDown}
-                className={'bg-opacity-90 z-40 absolute top-0 left-0 w-screen h-screen bg-gray-400 flex flex-wrap content-center justify-center'}>
-        <div className={'z-50 rounded-xl bg-gray-800 overflow-hidden w-7/12'}>
+                className={'bg-opacity-90 z-40 absolute top-0 left-0 w-screen h-screen bg-gray-900 flex flex-wrap content-center justify-center'}>
+        <div className={'border z-50 rounded-xl bg-gray-900 overflow-hidden w-7/12'}>
             {children}
         </div>
     </div>;

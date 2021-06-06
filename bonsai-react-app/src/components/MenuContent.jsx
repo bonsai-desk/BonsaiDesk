@@ -13,7 +13,7 @@ export function MenuContentTabbed(props) {
                     </div>
                 </div>
                 <div className={back ? 'h-24' : 'h-20'}/>
-                <div className={'space-y-8 p-4 pb-8'}>
+                <div className={'space-y-12 p-4 pb-8'}>
                     {props.children}
                 </div>
             </div>
