@@ -1598,7 +1598,7 @@ public partial class BlockObject : NetworkBehaviour
             {
                 //do something with the dataString
                 // BlockObjectSpawner.Instance.SpawnFromString(dataString);
-                BlockObjectFile.SaveFile("my cool creation", dataString, true);
+                BlockObjectFileReader.SaveFile("my cool creation", dataString, true);
             }
             else
             {

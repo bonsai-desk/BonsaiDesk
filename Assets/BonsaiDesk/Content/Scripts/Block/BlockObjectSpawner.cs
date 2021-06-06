@@ -26,11 +26,11 @@ public class BlockObjectSpawner : NetworkBehaviour
 
     public override void OnStartClient()
     {
-        var files = BlockObjectFile.ListFiles();
+        var files = BlockObjectFileReader.GetBlockObjectFiles();
 
         if (files != null && files.Length > 0)
         {
-            var blocksString = BlockObjectFile.LoadFile(files[0]);
+            var blocksString = BlockObjectFileReader.LoadFile(files[0].fileName);
             if (!string.IsNullOrEmpty(blocksString))
             {
                 BlockObjectSpawner.Instance.SpawnFromString(blocksString);
