@@ -153,21 +153,18 @@ public partial class BlockObject
 
                         if (attachingToBearing)
                         {
-                            //calculate parameters for the joint
-                            var axisLocalToAttachedTo = blockObject.MeshBlocks[blockCoord].rotation * Vector3.up;
-                            var axisLocalToSelf = transform.InverseTransformDirection(blockObject.transform.rotation * axisLocalToAttachedTo);
-                            axisLocalToSelf = new Vector3(Mathf.Round(axisLocalToSelf.x), Mathf.Round(axisLocalToSelf.y), Mathf.Round(axisLocalToSelf.z));
-                            axisLocalToSelf = axisLocalToSelf.normalized;
+                            transform.position = position;
+                            transform.rotation = rotation;
+                            _body.MovePosition(position);
+                            _body.MoveRotation(rotation);
 
                             //construct the SyncJoint which contains all of the data required to create the joint
                             NetworkIdentity attachedTo = blockObject.netIdentity;
-                            Vector3 positionLocalToAttachedTo = blockObject.transform.InverseTransformPoint(position);
                             Quaternion rotationLocalToAttachedTo = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
-                            Vector3 axis = axisLocalToSelf;
-                            Vector3 anchor = coord;
-                            Vector3 connectedAnchor = blockCoord + 0.1f * axisLocalToAttachedTo;
-                            SyncJoint jointInfo = new SyncJoint(new NetworkIdentityReference(attachedTo), positionLocalToAttachedTo, rotationLocalToAttachedTo,
-                                coord, blockCoord, axis, anchor, connectedAnchor);
+                            byte byteLocalRotation = BlockUtility.QuaternionToByte(rotationLocalToAttachedTo);
+                            byte byteBearingLocalRotation = BlockUtility.QuaternionToByte(blockObject.MeshBlocks[blockCoord].rotation);
+                            SyncJoint jointInfo = new SyncJoint(new NetworkIdentityReference(attachedTo), byteLocalRotation, byteBearingLocalRotation, coord,
+                                blockCoord);
 
                             //connect the joint
                             Mixpanel.Track("Attach Block To Bearing");

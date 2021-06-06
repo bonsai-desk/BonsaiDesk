@@ -566,8 +566,10 @@ public partial class BlockObject : NetworkBehaviour
         var previousPosition = transform.position;
         var previousRotation = transform.rotation;
 
-        transform.position = jointInfo.attachedTo.Value.transform.TransformPoint(jointInfo.positionLocalToAttachedTo);
-        transform.rotation = jointInfo.attachedTo.Value.transform.rotation * jointInfo.rotationLocalToAttachedTo;
+        var axisLocalToAttachedTo = BlockUtility.ByteToQuaternion(jointInfo.bearingLocalRotation) * Vector3.up;
+        var bearingOffset = axisLocalToAttachedTo * 0.1f;
+        transform.position = jointInfo.attachedTo.Value.transform.TransformPoint(jointInfo.otherBearingCoord + bearingOffset);
+        transform.rotation = jointInfo.attachedTo.Value.transform.rotation * BlockUtility.ByteToQuaternion(jointInfo.localRotation);
 
         _body.MovePosition(transform.position);
         _body.MoveRotation(transform.rotation);
@@ -577,10 +579,14 @@ public partial class BlockObject : NetworkBehaviour
 
         _joint.autoConfigureConnectedAnchor = false;
         _joint.enableCollision = true;
+        
+        var axisLocalToSelf = transform.InverseTransformDirection(jointInfo.attachedTo.Value.transform.rotation * axisLocalToAttachedTo);
+        axisLocalToSelf = new Vector3(Mathf.Round(axisLocalToSelf.x), Mathf.Round(axisLocalToSelf.y), Mathf.Round(axisLocalToSelf.z));
+        axisLocalToSelf = axisLocalToSelf.normalized;
 
-        _joint.axis = jointInfo.axis;
-        _joint.anchor = jointInfo.anchor;
-        _joint.connectedAnchor = jointInfo.connectedAnchor;
+        _joint.axis = axisLocalToSelf;
+        _joint.anchor = jointInfo.attachedToMeAtCoord;
+        _joint.connectedAnchor = jointInfo.otherBearingCoord + 0.1f * axisLocalToAttachedTo;
 
         _joint.connectedBody = attachedToBody;
 
