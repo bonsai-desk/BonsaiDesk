@@ -303,8 +303,8 @@ let BlockPost = observer(({
 
 function MiniModalAction ({clickOut, title, info, children}) {
     return <MiniModal clickOut={clickOut}>
-        <div className={' divide-y'}>
-            <div className={'divide-y'}>
+        <div className={''}>
+            <div className={''}>
                 <div className={'text-xl px-6 py-6'}>{title}</div>
                 <div className={'px-6 py-8'}>{info}</div>
             </div>
@@ -364,7 +364,7 @@ function Modal({children, clickOut}) {
 
     return <div ref={parentEl} onPointerDown={onPointerDown}
                 className={'bg-opacity-90 z-20 absolute top-0 left-0 w-screen h-screen bg-gray-900 flex flex-wrap content-center justify-center'}>
-        <div className={'border z-30 h-3/4 w-3/4 rounded-3xl bg-gray-900 overflow-hidden'}>
+        <div className={'border-4 z-30 h-3/4 w-3/4 rounded-3xl bg-gray-900 overflow-hidden'}>
             {children}
         </div>
     </div>;
@@ -381,7 +381,7 @@ function MiniModal({children, clickOut}) {
 
     return <div ref={parentEl} onPointerDown={onPointerDown}
                 className={'bg-opacity-90 z-40 absolute top-0 left-0 w-screen h-screen bg-gray-900 flex flex-wrap content-center justify-center'}>
-        <div className={'border z-50 rounded-xl bg-gray-900 overflow-hidden w-7/12'}>
+        <div className={'border-4 z-50 rounded-xl bg-gray-900 overflow-hidden w-7/12'}>
             {children}
         </div>
     </div>;
