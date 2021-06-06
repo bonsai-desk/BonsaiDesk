@@ -20,6 +20,8 @@ public partial class BlockObject : NetworkBehaviour
     //contains all of the AutoAuthority of all BlockObjects in the scene
     private static readonly HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
 
+    public static string StagedSaveData;
+
     //---all of the data required to reconstruct this block object---
 
     //contains information about blocks and their rotations
@@ -1591,23 +1593,24 @@ public partial class BlockObject : NetworkBehaviour
 
         if (!string.IsNullOrEmpty(dataString))
         {
-            Debug.LogWarning(dataString);
-
             var data = BlockUtility.DeserializeBlocks(dataString);
             if (data != null)
             {
-                //do something with the dataString
-                // BlockObjectSpawner.Instance.SpawnFromString(dataString);
-                BlockObjectFileReader.SaveFile("my cool creation", dataString, true);
+                //cache the save string
+                StagedSaveData = dataString;
             }
             else
             {
-                Debug.LogError("Could not parse the newly serialized blockObject");
+                var msg = "Could not parse the newly serialized blockObject";
+                Debug.LogError(msg);
+                MessageStack.Singleton.AddMessage(msg, MessageStack.MessageType.Bad);
             }
         }
         else
         {
-            Debug.LogError("Could not serialize blockObject (returned dataString is empty)");
+            var msg = "Could not serialize blockObject (returned dataString is empty)";
+            Debug.LogError(msg);
+            MessageStack.Singleton.AddMessage(msg, MessageStack.MessageType.Bad);
         }
 
         CloseDialog();
