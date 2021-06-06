@@ -11,13 +11,12 @@ function Button({children, onClick, active}) {
 const BlockButton = observer(({hand, blockId}) => {
 
     let {store} = useStore();
-    let activeBlock = '';
     let active = false;
     if (hand === 'left') {
-        active = store.ContextInfo.LeftBlockActive == blockId;
+        active = store.ContextInfo.LeftBlockActive === blockId;
     }
     if (hand === 'right') {
-        active = store.ContextInfo.RightBlockActive == blockId;
+        active = store.ContextInfo.RightBlockActive === blockId;
     }
 
     let onClick = () => {
@@ -34,55 +33,6 @@ function ButtonContainer({children}) {
     return <div className={'space-y-4'}>{children}</div>;
 }
 
-const ActiveItem = observer(({hand}) => {
-
-    let {store} = useStore();
-    let activeBlock = '';
-    if (hand === 'left') {
-        activeBlock = store.ContextInfo.LeftBlockActive;
-    }
-    if (hand === 'right') {
-        activeBlock = store.ContextInfo.RightBlockActive;
-    }
-
-    return <div className={'w-full flex justify-center'}>
-        <Button>{activeBlock}</Button>
-    </div>;
-});
-
-const ClearBlock = observer(({hand}) => {
-    let {store} = useStore();
-
-    let switchOff = false;
-
-    switch (hand) {
-        case 'left':
-            switchOff = store.ContextInfo.LeftBlockActive === '';
-            break;
-        case 'right':
-            switchOff = store.ContextInfo.RightBlockActive === '';
-            break;
-        default:
-            console.log(`Toggle blocks for ${hand} not handled`);
-            break;
-    }
-
-    let className = switchOff ? 'bg-gray-900 h-10' : 'bg-green-400 h-10';
-
-    let onClick = () => {
-        if (hand === 'left' || hand === 'right') {
-            postChangeActiveBlock(hand, '');
-        }
-    };
-
-    return <div className={'w-full flex justify-center'}>
-        <Button onClick={onClick}>
-            <div className={className}/>
-        </Button>
-    </div>;
-
-});
-
 function ButtonGrid({hand}) {
     return (
             <ButtonContainer>
@@ -92,11 +42,11 @@ function ButtonGrid({hand}) {
                     <BlockButton hand={hand} blockId={'wood3'}/>
                 </ButtonRow>
                 <ButtonRow>
-                    <BlockButton hand={hand} blockId={"wood4"}/>
-                    <BlockButton hand={hand} blockId={"wood5"}/>
-                    <BlockButton hand={hand} blockId={"bearing"}/>
+                    <BlockButton hand={hand} blockId={'wood4'}/>
+                    <BlockButton hand={hand} blockId={'wood5'}/>
+                    <BlockButton hand={hand} blockId={'bearing'}/>
                 </ButtonRow>
-                <div className={"w-full flex justify-center"}>
+                <div className={'w-full flex justify-center'}>
                     <BlockButton hand={hand} blockId={''}/>
                 </div>
             </ButtonContainer>
@@ -244,6 +194,7 @@ const ClearHand = observer(({hand}) => {
 });
 
 const Context = observer(() => {
+    document.title = "Context Menu"
     return <div className={'bg-gray-900 h-screen flex flex-wrap justify-center space-x-20 content-center'}>
         <div className={'space-y-2'}>
             <BlockBreak hand={'left'}/>

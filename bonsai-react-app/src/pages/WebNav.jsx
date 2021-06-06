@@ -6,9 +6,9 @@ import KeyBoardImg from '../static/keyboard.svg';
 import KeyBoardDismissImg from '../static/keyboard-dismiss.svg';
 import {postJson} from '../utilities';
 import {KeySVG} from '../components/Keys';
+import {postToggleKeyboard} from '../api';
 
 function postCommand(message) {
-    console.log(message);
     postJson({Type: 'command', Message: message});
 }
 
@@ -26,8 +26,8 @@ function KeyboardButton(props) {
 }
 
 function WebNav() {
-
-    let [kbActive, setKbActive] = useState(false);
+    
+    document.title = "Web Navigator"
 
     let closeButtonClass = 'bg-red-800 active:bg-red-700 hover:bg-red-600 rounded cursor-pointer w-20 h-20 flex flex-wrap content-center';
 
@@ -36,8 +36,7 @@ function WebNav() {
     };
 
     let handleKeyboardButtonClick = () => {
-        kbActive ? postCommand('dismissKeyboard') : postCommand('spawnKeyboard');
-        setKbActive(!kbActive);
+        postToggleKeyboard()
     };
 
     return (
@@ -58,7 +57,7 @@ function WebNav() {
                             postCommand('navForward');
                         }}/>
                     </div>
-                    <KeyboardButton kbActive={kbActive}
+                    <KeyboardButton kbActive={false}
                                     handleClick={handleKeyboardButtonClick}/>
                 </div>
             </div>

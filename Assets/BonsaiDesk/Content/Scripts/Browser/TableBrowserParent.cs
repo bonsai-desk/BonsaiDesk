@@ -5,11 +5,13 @@ using Vuplex.WebView;
 public class TableBrowserParent : MonoBehaviour
 {
     private bool openedOnce;
-    private Browser preSleepActive = Browser.Table;
+    private Browser active = Browser.Table;
     public TableBrowser TableBrowser;
     public TableBrowser ContextMenu;
+    public TableBrowser KeyboardBrowser;
     public TableBrowserMenu TableBrowserMenu;
     public WebBrowserParent WebBrowserParent;
+    public KeyboardBrowserController KeyboardBrowserController;
     public MoveToDesk moveToDesk;
     public bool MenuAsleep { get; private set; }
     public bool ContextAsleep { get; private set; }
@@ -29,6 +31,60 @@ public class TableBrowserParent : MonoBehaviour
         TableBrowserMenu.Singleton.CloseMenu += HandleCloseMenu;
 
         ContextMenu.BrowserReady += HandleContextReady;
+
+        KeyboardBrowserController.DismissKeyboard += HandleDismissKeyboard;
+
+        TableBrowser.FocusInput += HandleMenuFocusInput;
+
+        KeyboardBrowser.InputRecieved += HandleKeyboardInput;
+    }
+
+    private void HandleKeyboardInput(object sender, EventArgs<string> e)
+    {
+        switch (active)
+        {
+            case Browser.Web:
+                WebBrowserParent.webBrowser.HandleKeyboardInput(e.Value);
+                break;
+            case Browser.Table:
+                TableBrowser.HandleKeyboardInput(e.Value);
+                break;
+            default:
+                BonsaiLogWarning($"Did not handle input for mode ({active})");
+                break;
+        }
+    }
+
+    private void HandleMenuFocusInput(object sender, EventArgs<bool> focus)
+    {
+        if (focus.Value)
+        {
+            KeyboardBrowserController.SetActive(true);
+            TableBrowserMenu.SetRaised(true);
+        }
+        else
+        {
+            KeyboardBrowserController.SetActive(false);
+            TableBrowserMenu.SetRaised(false);
+        }
+    }
+
+    private void HandleDismissKeyboard()
+    {
+        // if menu mode, set not hidden
+        switch (active)
+        {
+            case Browser.Web:
+                WebBrowserParent.HandleToggleKeyboard();
+                break;
+            case Browser.Table:
+                KeyboardBrowserController.SetActive(false);
+                TableBrowserMenu.SetRaised(false);
+                break;
+            default:
+                BonsaiLogWarning($"Dismiss keyboard while ({active}) not handled");
+                break;
+        }
     }
 
     private void HandleContextReady(object sender, EventArgs e)
@@ -64,6 +120,7 @@ public class TableBrowserParent : MonoBehaviour
 
     private void HandleCloseWeb(object _, EventArgs e)
     {
+        WebBrowserParent.HandleDismissKeyboard();
         SetActive(Browser.Table);
     }
 
@@ -74,7 +131,7 @@ public class TableBrowserParent : MonoBehaviour
 
     private void SetActive(Browser browser)
     {
-        preSleepActive = browser;
+        active = browser;
         switch (browser)
         {
             case Browser.Web:
@@ -112,7 +169,7 @@ public class TableBrowserParent : MonoBehaviour
         }
         else
         {
-            switch (preSleepActive)
+            switch (active)
             {
                 case Browser.Web:
                     WebBrowserParent.SetAllHidden(false);

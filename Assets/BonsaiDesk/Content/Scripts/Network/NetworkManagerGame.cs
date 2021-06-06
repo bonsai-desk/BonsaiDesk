@@ -628,7 +628,7 @@ public class NetworkManagerGame : NetworkManager
 
     private void TerminateWithError(Message msg)
     {
-        BonsaiLogError($"Error {msg.GetError().Message}");
+        BonsaiLogError($"Error {msg.GetError().Code} {msg.GetError().HttpCode} {msg.GetError().Message}");
         Application.Quit();
     }
 
@@ -650,6 +650,37 @@ public class NetworkManagerGame : NetworkManager
         Mixpanel.People.Name = oculusId;
         Mixpanel.People.Email = oculusId + "@BonsaiDesk.com";
         Mixpanel.Track("Login");
+
+        Users.GetUserProof().OnComplete(HandleProofMessage);
+    }
+    
+    private void HandleProofMessage(Message<UserProof> msg)
+    {
+        if (msg.IsError)
+        {
+            TerminateWithError(msg);
+            return;
+        }
+
+        var build = "mobile";
+        
+        #if UNITY_EDITOR
+        build = "desktop";
+        #elif UNITY_ANDROID && !UNITY_EDITOR
+        build = "mobile";
+        #endif
+
+        var authInfo = new AuthInfo()
+        {
+            UserId = User.ID,
+            Nonce = msg.Data.Value,
+            Build = build
+        };
+        
+        TableBrowserMenu.Singleton.PostAuthInfo(authInfo);
+        
+        BonsaiLogWarning($"User info: {User.ID} ${User.OculusID}");
+        BonsaiLogWarning(msg.Data.Value);
     }
 
     public event LoggedInHandler LoggedIn;

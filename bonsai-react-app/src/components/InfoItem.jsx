@@ -5,7 +5,7 @@ export function InfoItem({imgSrc, title, slug, children, rightPad = true}) {
     if (!rightPad) {
         className = 'flex w-full justify-between';
     }
-   
+
     return (
             <div className={className}>
                 <div className={'flex w-auto'}>
@@ -15,6 +15,30 @@ export function InfoItem({imgSrc, title, slug, children, rightPad = true}) {
                                 : ''
                         }
                     </div>
+                    <div className={'my-auto'}>
+                        <div className={'text-xl'}>
+                            {title}
+                        </div>
+                        <div className={'text-gray-400'}>
+                            {slug}
+                        </div>
+                    </div>
+                </div>
+                {children}
+            </div>
+    );
+}
+
+export function InfoItemCustom({imgSrc, title, slug, children, rightPad = true, leftItems}) {
+    let className = 'flex w-full justify-between pr-4';
+    if (!rightPad) {
+        className = 'flex w-full justify-between';
+    }
+
+    return (
+            <div className={className}>
+                <div className={'flex w-auto'}>
+                    {leftItems}
                     <div className={'my-auto'}>
                         <div className={'text-xl'}>
                             {title}

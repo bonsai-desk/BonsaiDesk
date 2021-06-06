@@ -74,7 +74,6 @@ function AboutPage({back}) {
     let aplUrl = `${match.path}/apl`;
     let history = useHistory();
 
-    console.log(match.path);
     return <MenuContent name={'About'} back={back}>
         <InfoItem title={'GeckoView'} slug={'Mozilla Public License'}>
             <ForwardButton onClick={()=>{history.push(mplUrl)}}/>

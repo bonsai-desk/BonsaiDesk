@@ -47,6 +47,7 @@ let showState = (state) => {
 };
 
 let Video = (props) => {
+    document.title = "YouTube Player"
     let query = new URLSearchParams(props.location.search);
 
     let xRes = parseInt(query.get('x'));

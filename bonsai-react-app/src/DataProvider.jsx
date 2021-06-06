@@ -3,6 +3,7 @@ import {action, makeAutoObservable} from 'mobx';
 import {observer} from 'mobx-react-lite';
 import axios from 'axios';
 import {apiBase} from './utilities';
+import jwt from 'jsonwebtoken';
 
 export const StoreContext = React.createContext();
 export const useStore = () => useContext(StoreContext);
@@ -19,7 +20,46 @@ export const HandMode = {
     Single: 1,
     Whole: 2,
     Duplicate: 3,
-    Save: 4
+    Save: 4,
+};
+
+class MediaInfo {
+    Active = false;
+    Name = 'None';
+    Paused = true;
+    Scrub = 0;
+    Duration = 1;
+    VolumeLevel = 0;
+    VolumeMax = 1;
+
+    constructor() {
+        makeAutoObservable(this);
+    }
+
+}
+
+class BuildInfo {
+    Id = '';
+    Data = '';
+    Name = '';
+
+    constructor(id, data, name) {
+        this.Id = id;
+        this.Data = data;
+        this.Name = name;
+    }
+
+}
+
+class Builds {
+    Staging = new BuildInfo("","","")
+    List = [
+        new BuildInfo('1-build', 'asdf', 'My First Build'),
+        new BuildInfo('2-build', 'asdf', 'My Second Build'),
+        new BuildInfo('3-build', 'asdf', 'Cool Stuff'),
+        new BuildInfo('4-build', 'asdf', 'Minecraft'),
+        new BuildInfo('5-build', 'asdf', 'A Thing'),
+    ];
 }
 
 class Store {
@@ -40,22 +80,13 @@ class Store {
         Mode: NetworkManagerMode.Offline,
         PublicRoom: false,
         Full: false,
-        Connecting: false
+        Connecting: false,
     };
     ContextInfo = {
         LeftHandMode: HandMode.None,
         RightHandMode: HandMode.None,
-        LeftBlockActive: "",
-        RightBlockActive: "",
-    }
-    MediaInfo = {
-        Active: false,
-        Name: 'None',
-        Paused: true,
-        Scrub: 0,
-        Duration: 1,
-        VolumeLevel: 0,
-        VolumeMax: 1
+        LeftBlockActive: '',
+        RightBlockActive: '',
     };
     ExperimentalInfo = {
         BlockBreakEnabled: false,
@@ -66,9 +97,44 @@ class Store {
     _refresh_room_code_handler = null;
     RoomSecret = '';
     _roomCode = null;
+    BonsaiToken = '';
+    BonsaiTokenInfo = {
+        userId: -1,
+        orgScopedId: '',
+    };
+
+    _authInfo = {
+        UserId: null,
+        Nonce: '',
+        Build: '',
+    };
 
     constructor() {
         makeAutoObservable(this);
+    }
+
+    set AuthInfo(authInfo) {
+        this._authInfo = authInfo;
+
+        let auth_params = [
+            `user_id=${this._authInfo.UserId}`,
+            `nonce=${this._authInfo.Nonce}`,
+            `build=${this._authInfo.Build}`,
+        ].join('&');
+
+        let url = apiBase(this) + `/blocks/login?` + auth_params;
+
+        axios.post(url).then(response => {
+            this.BonsaiToken = response.data.token;
+            const decoded = jwt.decode(this.BonsaiToken);
+            this.BonsaiTokenInfo = {
+                userId: decoded.user_id,
+                orgScopedId: decoded.org_scoped_id,
+            };
+        }).catch(error => {
+            console.log(error);
+        });
+
     }
 
     get FullVersion() {
@@ -120,9 +186,16 @@ class Store {
         }
     }
 
+    get ApiBase() {
+        let API_BASE = 'https://api.desk.link:1776/v1';
+        if (this.AppInfo.Build === 'DEVELOPMENT') {
+            API_BASE = 'https://api.desk.link:8080/v1';
+        }
+        return API_BASE;
+    }
+
     refreshRoomCode() {
         let url = apiBase(this) + `/rooms/${store.RoomCode}/refresh`;
-        console.log(url);
         axios({
             method: 'post',
             url: url,
@@ -137,18 +210,30 @@ class Store {
 
 const store = new Store();
 Object.seal(store);
+
+const mediaInfo = new MediaInfo();
+Object.seal(mediaInfo);
+
+const builds = new Builds();
+Object.seal(builds);
+
 let pushStoreList = action((kvList) => {
     kvList.forEach(kv => {
         store[kv.Key] = kv.Val;
     });
 });
-let pushStore = action(obj => {
-    for (const prop in obj) {
-        store[prop] = obj[prop];
-    }
-});
 let pushStoreSingle = action(obj => {
-    store[obj.Key] = obj.Val;
+    if (obj.Key === 'MediaInfo') {
+        for (const prop in obj.Val) {
+            mediaInfo[prop] = obj.Val[prop];
+        }
+    } else {
+        let v1 = JSON.stringify(store[obj.Key]);
+        let v2 = JSON.stringify(obj.Val);
+        if (v1 !== v2) {
+            store[obj.Key] = obj.Val;
+        }
+    }
 });
 
 function useListeners() {
@@ -202,7 +287,7 @@ export const StoreProvider = observer(({children}) => {
     return <StoreContext.Provider
             value={{
                 store,
-                pushStore,
-                pushStoreList,
+                mediaInfo,
+                builds,
             }}>{children}</StoreContext.Provider>;
 });
