@@ -458,6 +458,12 @@ public partial class BlockObject : NetworkBehaviour
     [Command(ignoreAuthority = true)]
     private void CmdConnectJoint(SyncJoint jointInfo)
     {
+        ServerConnectJoint(jointInfo);
+    }
+
+    [Server]
+    public void ServerConnectJoint(SyncJoint jointInfo)
+    {
         if (_syncJoint.connected)
         {
             Debug.LogError("SyncJoint was already connected. (not returning, but weird stuff might happen)");
@@ -566,7 +572,7 @@ public partial class BlockObject : NetworkBehaviour
 
         _joint.autoConfigureConnectedAnchor = false;
         _joint.enableCollision = true;
-        
+
         var axisLocalToSelf = transform.InverseTransformDirection(jointInfo.attachedTo.Value.transform.rotation * axisLocalToAttachedTo);
         axisLocalToSelf = new Vector3(Mathf.Round(axisLocalToSelf.x), Mathf.Round(axisLocalToSelf.y), Mathf.Round(axisLocalToSelf.z));
         axisLocalToSelf = axisLocalToSelf.normalized;
