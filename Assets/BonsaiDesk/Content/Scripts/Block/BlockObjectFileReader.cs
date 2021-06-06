@@ -30,41 +30,14 @@ public static class BlockObjectFileReader
         var blockObjectFiles = new SortedList<long, List<BlockObjectFile>>();
 
         var fileName = string.Empty;
-        var content = string.Empty;
         var displayName = string.Empty;
         for (int i = 0; i < fileNames.Length; i++)
         {
-            var name = fileNames[i];
-            if (name.Length < 5) //name must at least have .txt and 1 character
+            if (!TryParseFileName(fileNames[i], out var newBlockObjectFile, out var unixTimestamp))
             {
-                continue;
+                return null;
             }
 
-            if (string.Compare(name, name.Length - 4, ".txt", 0, 4) != 0) //missing extension
-            {
-                continue;
-            }
-
-            name = name.Substring(0, name.Length - 4); //take off extension
-
-            fileName = fileNames[i]; //set these now in case the following parsing fails
-            displayName = name;
-
-            long unixTimestamp = 0;
-
-            var dashIndex = name.IndexOf('-');
-            if (dashIndex != -1 && dashIndex > 0 && name[dashIndex - 1] == ' ' && dashIndex + 2 < name.Length)
-            {
-                var unixTimestampString = name.Substring(0, dashIndex - 1);
-                if (long.TryParse(unixTimestampString, out var num))
-                {
-                    unixTimestamp = num;
-                }
-
-                displayName = name.Substring(dashIndex + 2, name.Length - (dashIndex + 2));
-            }
-
-            var newBlockObjectFile = new BlockObjectFile() {FileName = fileName, Content = content, DisplayName = displayName};
             if (blockObjectFiles.TryGetValue(unixTimestamp, out var list))
             {
                 list.Add(newBlockObjectFile);
@@ -87,6 +60,46 @@ public static class BlockObjectFileReader
         }
 
         return outputList.ToArray();
+    }
+
+    private static bool TryParseFileName(string inputFileName, out BlockObjectFile blockObjectFile, out long unixTimestamp)
+    {
+        var fileName = string.Empty;
+        var displayName = string.Empty;
+        unixTimestamp = 0;
+
+        var name = inputFileName;
+        if (name.Length < 5) //name must at least have .txt and 1 character
+        {
+            blockObjectFile = new BlockObjectFile();
+            return false;
+        }
+
+        if (string.Compare(name, name.Length - 4, ".txt", 0, 4) != 0) //missing extension
+        {
+            blockObjectFile = new BlockObjectFile();
+            return false;
+        }
+
+        name = name.Substring(0, name.Length - 4); //take off extension
+
+        fileName = inputFileName; //set these now in case the following parsing fails
+        displayName = name;
+
+        var dashIndex = name.IndexOf('-');
+        if (dashIndex != -1 && dashIndex + 1 < name.Length)
+        {
+            var unixTimestampString = name.Substring(0, dashIndex);
+            if (long.TryParse(unixTimestampString, out var num))
+            {
+                unixTimestamp = num;
+            }
+
+            displayName = name.Substring(dashIndex + 2, name.Length - (dashIndex + 2));
+        }
+
+        blockObjectFile = new BlockObjectFile() {FileName = fileName, Content = string.Empty, DisplayName = displayName};
+        return true;
     }
 
     private static string[] ListFiles()
@@ -165,7 +178,7 @@ public static class BlockObjectFileReader
             if (prependUnixTimestamp)
             {
                 var now = DateTimeOffset.Now.ToUnixTimeSeconds();
-                saveName = now + " - " + saveName;
+                saveName = now + "-" + saveName;
             }
 
             var filePath = System.IO.Path.Combine(folderPath, saveName);
@@ -195,6 +208,16 @@ public static class BlockObjectFileReader
     {
         return new BlockObjectFile()
             {FileName = blockObjectFile.FileName, Content = LoadFile(blockObjectFile.FileName), DisplayName = blockObjectFile.DisplayName};
+    }
+
+    public static BlockObjectFile LoadFileIntoBlockObjectFile(string fileName)
+    {
+        if (!TryParseFileName(fileName, out BlockObjectFile blockObjectFile, out var _))
+        {
+            return new BlockObjectFile();
+        }
+
+        return LoadFileIntoBlockObjectFile(blockObjectFile);
     }
 
     private static string LoadFile(string fileName)

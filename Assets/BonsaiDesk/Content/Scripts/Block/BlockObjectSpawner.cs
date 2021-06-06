@@ -8,7 +8,7 @@ using UnityEngine;
 public class BlockObjectSpawner : NetworkBehaviour
 {
     public static BlockObjectSpawner Instance;
-    
+
     private const int ChunkSize = 1024; //smaller than UDP ethernet packet
 
     //just used on server
@@ -26,15 +26,21 @@ public class BlockObjectSpawner : NetworkBehaviour
 
     public override void OnStartClient()
     {
-        var files = BlockObjectFileReader.GetBlockObjectFiles();
+        // var files = BlockObjectFileReader.GetBlockObjectFiles();
+        //
+        // if (files != null && files.Length > 0)
+        // {
+        //     var blockObjectFile = BlockObjectFileReader.LoadFileIntoBlockObjectFile(files[0]);
+        //     if (!string.IsNullOrEmpty(blockObjectFile.Content))
+        //     {
+        //         BlockObjectSpawner.Instance.SpawnFromString(blockObjectFile.Content);
+        //     }
+        // }
 
-        if (files != null && files.Length > 0)
+        var blockObjectFile = BlockObjectFileReader.LoadFileIntoBlockObjectFile("1623002097-my cool creation.txt");
+        if (!string.IsNullOrEmpty(blockObjectFile.Content))
         {
-            var blockObjectFile = BlockObjectFileReader.LoadFileIntoBlockObjectFile(files[0]);
-            if (!string.IsNullOrEmpty(blockObjectFile.Content))
-            {
-                BlockObjectSpawner.Instance.SpawnFromString(blockObjectFile.Content);
-            }
+            BlockObjectSpawner.Instance.SpawnFromString(blockObjectFile.Content);
         }
     }
 
@@ -47,7 +53,7 @@ public class BlockObjectSpawner : NetworkBehaviour
                 Debug.LogError("Cannot call SpawnFromString. Server is not active.");
                 return;
             }
-            
+
             ServerSpawnFromString(blocksString);
         }
         else if (isClient)
