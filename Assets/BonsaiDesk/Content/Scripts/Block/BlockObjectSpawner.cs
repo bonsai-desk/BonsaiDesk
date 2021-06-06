@@ -24,6 +24,20 @@ public class BlockObjectSpawner : NetworkBehaviour
         _partialMessages.Clear();
     }
 
+    public override void OnStartClient()
+    {
+        var files = BlockObjectFile.ListFiles();
+
+        if (files != null && files.Length > 0)
+        {
+            var blocksString = BlockObjectFile.LoadFile(files[0]);
+            if (!string.IsNullOrEmpty(blocksString))
+            {
+                BlockObjectSpawner.Instance.SpawnFromString(blocksString);
+            }
+        }
+    }
+
     public void SpawnFromString(string blocksString)
     {
         if (isServer)
