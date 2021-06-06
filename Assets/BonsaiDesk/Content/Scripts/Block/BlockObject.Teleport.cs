@@ -116,11 +116,11 @@ public partial class BlockObject
     }
 
     [Server]
-    private void ServerTeleportToDeskSurface(List<BlockObject> blockObjects = null)
+    public void ServerTeleportToDeskSurface(List<BlockObject> blockObjects = null)
     {
         if (blockObjects == null)
         {
-            blockObjects = BlockUtility.GetBlockObjectsFromRoot(this);
+            blockObjects = BlockUtility.GetBlockObjectsFromRoot(BlockUtility.GetRootBlockObject(this));
         }
 
         var upperBounds = Vector3.zero;

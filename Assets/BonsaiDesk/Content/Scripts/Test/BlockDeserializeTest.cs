@@ -20,6 +20,7 @@ public class BlockDeserializeTest : NetworkBehaviour
 
         var idToBlockObject = new Dictionary<int, BlockObject>();
 
+        var n = 0;
         foreach (var pair in data.entriesByAttachedTo)
         {
             var list = pair.Value;
@@ -27,7 +28,7 @@ public class BlockDeserializeTest : NetworkBehaviour
             {
                 var entry = list[i];
 
-                var spawnPosition = new Vector3(0, 1.5f, 0);
+                var spawnPosition = new Vector3(0, -5f, 0);
                 var spawnRotation = Quaternion.identity;
                 if (entry.attachedTo < 0)
                 {
@@ -48,7 +49,7 @@ public class BlockDeserializeTest : NetworkBehaviour
                 }
 
                 NetworkServer.Spawn(blockObjectGameObject);
-                
+
                 if (entry.attachedTo >= 0)
                 {
                     var netIdRef = new NetworkIdentityReference(idToBlockObject[entry.attachedTo].GetComponent<NetworkIdentity>());
@@ -56,11 +57,17 @@ public class BlockDeserializeTest : NetworkBehaviour
                         entry.jointOtherBearingCoord);
                     blockObject.ServerConnectJoint(syncJoint);
                 }
-                
+
                 blockObjectGameObject.GetComponent<AutoAuthority>().ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
 
                 idToBlockObject.Add(entry.id, blockObject);
+                
+                if (n == data.entriesByAttachedTo.Count - 1 && i == list.Count - 1)
+                {
+                    blockObject.ServerTeleportToDeskSurface();
+                }
             }
+            n++;
         }
     }
 }
