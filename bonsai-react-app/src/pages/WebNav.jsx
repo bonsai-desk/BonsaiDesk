@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React from 'react';
 import CloseImg from '../static/close.svg';
 import BackImg from '../static/back.svg';
 import ForwardImg from '../static/forward.svg';

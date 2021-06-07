@@ -24,7 +24,9 @@ export function InfoItem({imgSrc, title, slug, children, rightPad = true}) {
                         </div>
                     </div>
                 </div>
-                {children}
+                <div className={"flex flex-wrap content-center h-20"}>
+                    {children}
+                </div>
             </div>
     );
 }

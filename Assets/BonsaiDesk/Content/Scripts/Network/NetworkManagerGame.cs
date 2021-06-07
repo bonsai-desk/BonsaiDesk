@@ -678,9 +678,6 @@ public class NetworkManagerGame : NetworkManager
         };
         
         TableBrowserMenu.Singleton.PostAuthInfo(authInfo);
-        
-        BonsaiLogWarning($"User info: {User.ID} ${User.OculusID}");
-        BonsaiLogWarning(msg.Data.Value);
     }
 
     public event LoggedInHandler LoggedIn;

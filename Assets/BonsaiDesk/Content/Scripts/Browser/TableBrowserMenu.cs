@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Mirror;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -251,6 +252,12 @@ public class TableBrowserMenu : MonoBehaviour
                     case "deleteBuild":
                         PostDeleteBuild(message.Data);
                         break;
+                    case "spawnBuild":
+                        SpawnBuild(message.Data);
+                        break;
+                    case "saveBuild":
+                        SaveBuild(message.Data);
+                        break;
                 }
 
                 break;
@@ -260,16 +267,67 @@ public class TableBrowserMenu : MonoBehaviour
         }
     }
 
+    private void SaveBuild(string messageData)
+    {
+        
+        BonsaiLogWarning(messageData);
+        var saved = BlockObjectFileReader.SaveStagedBlockObject(messageData);
+        if (saved)
+        {
+            PostBlockList();
+            PostStagedSavedOk();
+        }
+    }
+
+    private void PostStagedSavedOk()
+    {
+        var data = new BuildsSaved() {SavedOk = true};
+        var msg = Message(data, "Builds");
+        browser.PostMessage(msg);
+    }
+
     private void StageBuild(string buildId)
     {
         var blockObject = BlockObjectFileReader.LoadFileIntoBlockObjectFile(buildId);
         PostStaging(blockObject);
     }
-    
+
+    public static string ByteArrayToString(byte[] ba)
+    {
+        //  https://stackoverflow.com/questions/311165/how-do-you-convert-a-byte-array-to-a-hexadecimal-string-and-vice-versa
+        var hex = new StringBuilder(ba.Length * 2);
+        foreach (var b in ba)
+        {
+            hex.AppendFormat("{0:x2}", b);
+        }
+
+        return hex.ToString();
+    }
+
+    public static byte[] StringToByteArray(string hex)
+    {
+        //  https://stackoverflow.com/questions/311165/how-do-you-convert-a-byte-array-to-a-hexadecimal-string-and-vice-versa
+        var NumberChars = hex.Length;
+        var bytes = new byte[NumberChars / 2];
+        for (var i = 0; i < NumberChars; i += 2)
+        {
+            bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
+        }
+
+        return bytes;
+    }
+
+    private BuildInfo ConvertBlockObject(BlockObjectFileReader.BlockObjectFile blockObject)
+    {
+        var bytes = Encoding.ASCII.GetBytes(blockObject.Content);
+        var hex = ByteArrayToString(bytes);
+        return new BuildInfo(blockObject.FileName, hex, blockObject.DisplayName);
+    }
+
     private void PostBlockList()
     {
         var blockObjects = BlockObjectFileReader.GetBlockObjectFiles();
-        var buildInfos = blockObjects.Select(bo => new BuildInfo(bo.FileName, bo.Content, bo.DisplayName)).ToArray();
+        var buildInfos = blockObjects.Select(ConvertBlockObject).ToArray();
         var BlockList = new Builds
         {
             List = buildInfos
@@ -279,11 +337,9 @@ public class TableBrowserMenu : MonoBehaviour
 
     private void PostStaging(BlockObjectFileReader.BlockObjectFile blockObject)
     {
-        var data = blockObject.Content.Replace("\n", "\\n");
-        var buildInfo = new BuildInfo(blockObject.FileName, data, blockObject.DisplayName);
-        var buildStaging = new BuildStaging() {Staging = buildInfo};
+        var buildInfo = ConvertBlockObject(blockObject);
+        var buildStaging = new BuildStaging {Staging = buildInfo};
         var msg = Message(buildStaging, "Builds");
-        BonsaiLogWarning(msg);
         browser.PostMessage(msg);
     }
 
@@ -293,6 +349,16 @@ public class TableBrowserMenu : MonoBehaviour
         if (deleted)
         {
             PostBlockList();
+        }
+    }
+
+    private void SpawnBuild(string data)
+    {
+        var bytes = StringToByteArray(data);
+        var content = Encoding.ASCII.GetString(bytes);
+        if (!string.IsNullOrEmpty(content))
+        {
+            BlockObjectSpawner.Instance.SpawnFromString(content);
         }
     }
 
@@ -351,7 +417,6 @@ public class TableBrowserMenu : MonoBehaviour
         var jsMessage = new CsMessageKeyType<AppInfo> {Data = kvs};
         SerializeAndPost(jsMessage);
     }
-
 
     private void PostContextInfo()
     {
@@ -483,6 +548,21 @@ public class TableBrowserMenu : MonoBehaviour
         Debug.LogError("<color=orange>BonsaiTableBrowserMenu: </color>: " + msg);
     }
 
+    public void NavToSaveDraft()
+    {
+        // nav to menu first in case they are already on the draft page
+        // this re-triggers the modal to pop up again
+        browser.PostMessage(Browser.BrowserMessage.NavToMenu);
+        browser.PostMessage(Browser.BrowserMessage.NavToSaveDraft);
+        TableBrowserParent.Instance.OpenMenu();
+        
+    }
+
+    private struct BuildsSaved
+    {
+        public bool SavedOk;
+    }
+
     private class BuildInfo
     {
         public string Data;
@@ -501,7 +581,7 @@ public class TableBrowserMenu : MonoBehaviour
     {
         public BuildInfo[] List;
     }
-    
+
     private struct BuildStaging
     {
         public BuildInfo Staging;

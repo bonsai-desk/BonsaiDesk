@@ -13,11 +13,20 @@ public class TableBrowserParent : MonoBehaviour
     public WebBrowserParent WebBrowserParent;
     public KeyboardBrowserController KeyboardBrowserController;
     public MoveToDesk moveToDesk;
+    public static TableBrowserParent Instance;
     public bool MenuAsleep { get; private set; }
     public bool ContextAsleep { get; private set; }
     
     private int _parentsReady;
     public BoxCollider contentBoxCollider;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+    }
 
     // Start is called before the first frame update
     private void Start()
@@ -127,6 +136,12 @@ public class TableBrowserParent : MonoBehaviour
     private void HandleBrowseYouTube(object _, EventArgs e)
     {
         SetActive(Browser.Web);
+    }
+
+    public void OpenMenu()
+    {
+        SetActive(Browser.Table);
+        MenuWake();
     }
 
     private void SetActive(Browser browser)
