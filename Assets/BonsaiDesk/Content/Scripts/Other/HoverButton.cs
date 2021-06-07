@@ -22,6 +22,18 @@ public class HoverButton : MonoBehaviour
 
     public SoundFXRef tickSound;
 
+    private void OnDisable()
+    {
+        if (emitterId != -1)
+        {
+            AudioManager.StopSound(emitterId, false);
+            emitterId = -1;
+        }
+        
+        _activeTimer = 0;
+        progressImage.fillAmount = Mathf.Clamp01(_activeTimer / ActivationTime);
+    }
+
     private void Update()
     {
         var fingerTouchingButton = false;

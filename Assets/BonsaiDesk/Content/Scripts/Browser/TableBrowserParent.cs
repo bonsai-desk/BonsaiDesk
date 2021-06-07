@@ -20,6 +20,8 @@ public class TableBrowserParent : MonoBehaviour
     private int _parentsReady;
     public BoxCollider contentBoxCollider;
 
+    public GameObject closeMenuHoverButton;
+
     private void Awake()
     {
         if (Instance == null)
@@ -116,11 +118,6 @@ public class TableBrowserParent : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
-    private void Update()
-    {
-    }
-
     private void HandleOrientationChange(bool oriented)
     {
         MenuSleep();
@@ -169,6 +166,8 @@ public class TableBrowserParent : MonoBehaviour
         
         TableBrowser.SetHidden(true);
         WebBrowserParent.SetAllHidden(true);
+        
+        closeMenuHoverButton.SetActive(!MenuAsleep);
 
         SetHandForInactiveBrowser();
     }
@@ -176,6 +175,8 @@ public class TableBrowserParent : MonoBehaviour
     private void MenuWake()
     {
         MenuAsleep = false;
+        
+        closeMenuHoverButton.SetActive(!MenuAsleep);
 
         if (!openedOnce)
         {
@@ -199,7 +200,6 @@ public class TableBrowserParent : MonoBehaviour
         }
         
         SetHandsForActiveBrowser();
-
     }
 
     private void SetHandsForActiveBrowser()
@@ -244,6 +244,26 @@ public class TableBrowserParent : MonoBehaviour
         contentBoxCollider.enabled = false;
         ContextMenu.SetHidden(true);
         SetHandForInactiveBrowser();
+    }
+
+    public void ToggleContextAwakeIfMenuClosed()
+    {
+        if (!moveToDesk.oriented)
+        {
+            return;
+        }
+        
+        if (ContextAsleep)
+        {
+            if (MenuAsleep)
+            {
+                ContextWake();
+            }
+        }
+        else
+        {
+            ContextSleep();
+        }
     }
 
     public void ToggleContextAwake()
