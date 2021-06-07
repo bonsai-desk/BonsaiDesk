@@ -1112,50 +1112,36 @@ public partial class BlockObject : NetworkBehaviour
             if (!_activeWholeEffect.activated)
             {
                 _activeWholeEffect.activated = true;
-
-                if (_activeWholeEffect.mode != BlockBreakHand.BreakMode.Duplicate && _autoAuthority.HasAuthority())
+                
+                if (_dialogTimeoutCoroutine != null)
                 {
-                    if (NetworkClient.connection != null && NetworkClient.connection.identity)
-                    {
-                        _autoAuthority.CmdSetNewOwner(NetworkClient.connection.identity.netId, NetworkTime.time, true);
-                        if (_dialogTimeoutCoroutine != null)
-                        {
-                            StopCoroutine(_dialogTimeoutCoroutine);
-                            _dialogTimeoutCoroutine = null;
-                        }
-
-                        _dialogTimeoutCoroutine = StartCoroutine(DialogTimeout());
-                    }
+                    StopCoroutine(_dialogTimeoutCoroutine);
+                    _dialogTimeoutCoroutine = null;
+                }
+                
+                if (_activeWholeEffect.mode != BlockBreakHand.BreakMode.Duplicate)
+                {
+                    _dialogTimeoutCoroutine = StartCoroutine(DialogTimeout(Time.time));
                 }
             }
         }
     }
 
-    private IEnumerator DialogTimeout()
+    private IEnumerator DialogTimeout(float startTime)
     {
-        yield return new WaitForSeconds(1f);
-
-        if (!_autoAuthority.HasAuthority())
+        while (Time.time - startTime < 10f)
         {
-            _activeWholeEffect = null;
-            if (NetworkClient.connection != null && NetworkClient.connection.identity)
+            if (!_autoAuthority.HasAuthority())
             {
-                _autoAuthority.CmdRemoveInUse(NetworkClient.connection.identity.netId);
+                _activeWholeEffect = null;
+                CloseDialog();
+                yield break;
             }
-
-            CloseDialog();
-            yield break;
+            yield return null;
         }
-
-        yield return new WaitForSeconds(10f);
 
         //if coroutine has not been stopped by this point, close it
         _activeWholeEffect = null;
-        if (NetworkClient.connection != null && NetworkClient.connection.identity)
-        {
-            _autoAuthority.CmdRemoveInUse(NetworkClient.connection.identity.netId);
-        }
-
         CloseDialog();
     }
 
