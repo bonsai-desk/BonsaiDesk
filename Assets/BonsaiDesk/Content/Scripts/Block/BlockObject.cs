@@ -1714,7 +1714,6 @@ public partial class BlockObject : NetworkBehaviour
             {
                 //cache the save string
                 StagedSaveData = dataString;
-                BlockObjectSpawner.Instance.SpawnFromString(dataString);
             }
             else
             {
