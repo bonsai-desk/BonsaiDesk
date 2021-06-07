@@ -52,7 +52,8 @@ class BuildInfo {
 }
 
 class Builds {
-    Staging = new BuildInfo("","","")
+    SavedOk = false;
+    Staging = new BuildInfo('', '', '');
     List = [
         new BuildInfo('1-React Dummy Data', '', 'React Dummy Data'),
     ];
@@ -224,11 +225,11 @@ let pushStoreList = action((kvList) => {
 });
 let pushStoreSingle = action(obj => {
     if (obj.Key === 'Builds') {
-        console.log("build update")
+        console.log('build update');
         for (const prop in obj.Val) {
             builds[prop] = obj.Val[prop];
         }
-    } else if (obj.Key === 'MediaInfo'){
+    } else if (obj.Key === 'MediaInfo') {
         for (const prop in obj.Val) {
             mediaInfo[prop] = obj.Val[prop];
         }

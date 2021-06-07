@@ -21,7 +21,8 @@ public partial class BlockObject : NetworkBehaviour
     private static readonly HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
 
     //caches save string between clicking save and creating name
-    public static string StagedSaveData;
+    // todo
+    public static string StagedSaveData = "asdf";
 
     //---all of the data required to reconstruct this block object---
 
@@ -1754,6 +1755,10 @@ public partial class BlockObject : NetworkBehaviour
             {
                 //cache the save string
                 StagedSaveData = dataString;
+                if (TableBrowserMenu.Singleton)
+                {
+                    TableBrowserMenu.Singleton.NavToSaveDraft();
+                }
             }
             else
             {

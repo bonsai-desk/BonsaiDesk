@@ -123,7 +123,7 @@ const RoomAction = observer(({clickCloseRoom}) => {
                 return <ClosePrivateRoom onClick={clickCloseRoom}/>;
             }
         } else {
-            return <OpenRoomItem/>;
+            return <OpenRoomItem onClick={postOpenPublicRoom}/>;
         }
     } else if (isClient) {
         return <ClientConnectedItem/>;

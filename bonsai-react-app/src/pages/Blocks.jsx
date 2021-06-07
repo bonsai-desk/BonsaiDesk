@@ -7,7 +7,7 @@ import {
     grayButtonClassInert,
     greenButtonClass,
     lightGrayButtonClass,
-    orangeButtonClass, redButtonClass,
+    orangeButtonClass,
 } from '../cssClasses';
 import {useStore} from '../DataProvider';
 import axios from 'axios';
@@ -21,6 +21,7 @@ import PostImg from '../static/post-add.svg';
 import jwt from 'jsonwebtoken';
 import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
 import {postDeleteBuild, postSaveBuild, postSpawnBuild, postStageBuild} from '../api';
+import {action} from 'mobx';
 
 const DeleteState = {
     None: 0, Failed: 1, Success: 2,
@@ -30,32 +31,36 @@ const PublishState = {
     None: 0, Working: 1, Failed: 2, Success: 3,
 };
 
+const SaveState = {
+    None: 0, Working: 1, Failed: 2, Success: 3,
+};
+
 let hamburgerButton = 'relative h-20 w-20 rounded-full cursor-pointer flex flex-wrap content-center font-bold bg-gray-800  active:bg-gray-700  hover:bg-gray-600';
 let redHamburgerButton = 'relative h-20 w-20 rounded-full cursor-pointer flex flex-wrap content-center font-bold bg-red-800';
 
 let SpawnButton = observer(({build_id}) => {
-    let [failed, setFailed] = useState(false)
+    let [failed, setFailed] = useState(false);
     let {store} = useStore();
-    let url = store.ApiBase + `/blocks/builds/${build_id}`
-    function fetchBuildData () {
+    let url = store.ApiBase + `/blocks/builds/${build_id}`;
+
+    function fetchBuildData() {
         if (failed) {
             return;
         }
         axios.get(url).then(resp => {
-            postSpawnBuild(resp.data.data)
+            postSpawnBuild(resp.data.data);
         }).catch(err => {
-            console.log(err)
-            setFailed(true)
-        })
+            console.log(err);
+            setFailed(true);
+        });
     }
-    
-    let className = failed ? redHamburgerButton : hamburgerButton
-    
+
+    let className = failed ? redHamburgerButton : hamburgerButton;
+
     return <InstantButton onClick={fetchBuildData} className={className}>
         <img src={DownloadImg} alt={'Menu'} className={'absolute left-5 bottom-5 w-10'}/>
     </InstantButton>;
 });
-
 
 let ThumbButton = observer((props) => {
     let {store} = useStore();
@@ -114,12 +119,11 @@ let ThumbButton = observer((props) => {
     );
 });
 
-let LocalBlockPost = observer(({Name, Id})=> {
+let LocalBlockPost = observer(({Name, Id}) => {
     let [modal, setModal] = useState(false);
     let [deleteModal, setDeleteModal] = useState(false);
-    let [deleteState, setDeleteState] = useState(DeleteState.None);
     let [publishState, setPublishState] = useState(PublishState.None);
-    let [publishModal, setPublishModal] = useState(false)
+    let [publishModal, setPublishModal] = useState(false);
     let {builds, store} = useStore();
 
     let title = Name;
@@ -138,11 +142,11 @@ let LocalBlockPost = observer(({Name, Id})=> {
     }
 
     function postDelete() {
-        postDeleteBuild(Id)
+        postDeleteBuild(Id);
     }
-    
-    function spawnPublishModal () {
-        setPublishModal(true)
+
+    function spawnPublishModal() {
+        setPublishModal(true);
     }
 
     function PublishButton() {
@@ -180,10 +184,10 @@ let LocalBlockPost = observer(({Name, Id})=> {
         if (publishState !== PublishState.None) {
             publishButtonClass = grayButtonClassInert;
         }
-        
-        function postBuild(name, data){
-            console.log(name, data)
-            let url = store.ApiBase + "/blocks/builds";
+
+        function postBuild(name, data) {
+            console.log(name, data);
+            let url = store.ApiBase + '/blocks/builds';
             let token = store.BonsaiToken;
             axios({
                 method: 'POST',
@@ -191,40 +195,40 @@ let LocalBlockPost = observer(({Name, Id})=> {
                 data: `name=${name}&data=${data}&token=${token}`,
                 headers: {'content-type': 'application/x-www-form-urlencoded'},
             }).then(resp => {
-                console.log(resp)
-                setPublishState(PublishState.Success)
+                console.log(resp);
+                setPublishState(PublishState.Success);
             }).catch(err => {
-                console.log(err)
-                setPublishState(PublishState.Failed)
-            })
+                console.log(err);
+                setPublishState(PublishState.Failed);
+            });
         }
 
-        function publishBuild () {
+        function publishBuild() {
             if (publishState !== PublishState.None) {
                 return;
             }
-            postStageBuild(Id)
-            setPublishState(PublishState.Working)
-            let query = setInterval(()=>{
+            postStageBuild(Id);
+            setPublishState(PublishState.Working);
+            let query = setInterval(() => {
                 if (builds.Staging.Id === Id) {
-                    clearInterval(query)
+                    clearInterval(query);
                     query = null;
-                    let name = builds.Staging.Name
+                    let name = builds.Staging.Name;
                     let data = builds.Staging.Data;
-                    if (data.length > 0){
-                        postBuild(name, data)
+                    if (data.length > 0) {
+                        postBuild(name, data);
                     } else {
-                        setPublishState(PublishState.Failed)
+                        setPublishState(PublishState.Failed);
                     }
                 }
-                
-            }, 100)
-            setTimeout(()=>{
+
+            }, 25);
+            setTimeout(() => {
                 if (query) {
-                    clearInterval(query)
-                    setPublishState(PublishState.Failed)
+                    clearInterval(query);
+                    setPublishState(PublishState.Failed);
                 }
-            }, 500)
+            }, 250);
         }
 
         return <MiniModalAction title={title} info={info} clickOut={clickOut}>
@@ -243,25 +247,7 @@ let LocalBlockPost = observer(({Name, Id})=> {
         let leftButton = 'Cancel';
         let rightButton = 'Delete';
 
-        switch (deleteState) {
-            case DeleteState.Success:
-                title = 'Delete Confirmed!';
-                info = `You just deleted ${Name}.`;
-                leftButton = 'Close';
-                break;
-            case DeleteState.Failed:
-                title = 'Delete Failed!';
-                info = `Something went wrong.`;
-                leftButton = 'Close';
-                break;
-            default:
-                break;
-        }
-
         let deleteButtonClass = orangeButtonClass;
-        if (deleteState !== DeleteState.None) {
-            deleteButtonClass = grayButtonClassInert;
-        }
 
         return <MiniModalAction title={title} info={info} clickOut={clickOut}>
             <InstantButton onClick={clickOut} className={grayButtonClass}>{leftButton}</InstantButton>
@@ -302,7 +288,7 @@ let LocalBlockPost = observer(({Name, Id})=> {
         </div>
     </InfoItemCustom>
     </React.Fragment>;
-})
+});
 
 let BlockPost = observer(({
                               build_name, user_name, created_at, likes, build_id, liked, user_id,
@@ -611,42 +597,103 @@ function MiniModal({children, clickOut}) {
 
 const DraftsPage = observer((props) => {
     const searchParams = new URLSearchParams(props.location.search);
-    let modalOn = searchParams.get("modal");
+    let modalOn = searchParams.get('modal');
     let [modal, setModal] = useState(!!modalOn);
     let {builds} = useStore();
     let input = useRef();
+    let [saveState, setSaveState] = useState(SaveState.None);
+    let [savedBuildName, setSavedBuildName] = useState('');
+    let history = useHistory();
 
+    
     let data = builds.List;
-    
-    console.log("drafts")
-    
-    function saveBuild () {
+
+    let setSavedNotOk = action(() => {
+        builds.SavedOk = false;
+    });
+
+    function saveBuild() {
+        if (saveState !== SaveState.None) {
+            return;
+        }
         if (input.current) {
             if (input.current.value.length > 0) {
-                postSaveBuild()
+                setSavedBuildName(input.current.value);
+                setSavedNotOk();
+                setSaveState(SaveState.Working);
+                let query = setInterval(() => {
+                    console.log(builds.SavedOk);
+                    if (builds.SavedOk) {
+                        clearInterval(query);
+                        query = null;
+                        setSaveState(SaveState.Success);
+                    }
+                }, 100);
+                setTimeout(() => {
+                    if (query) {
+                        setSaveState(SaveState.Failed);
+                        clearInterval(query);
+                    }
+                }, 500);
+
+                postSaveBuild(input.current.value);
             }
         }
     }
 
+    let buttonClass = saveState === SaveState.None ? greenButtonClass : grayButtonClassInert;
+
     function NewBuildModal() {
+
+        if (saveState === SaveState.None || saveState === SaveState.Working) {
+            return <Modal clickOut={() => {
+            }}>
+                <div className={'px-20 py-20 h-full flex flex-wrap content-between'}>
+                    <div className={'w-full text-3xl'}>
+                        Your Build
+                    </div>
+                    <input spellCheck={false} className={'w-full p-2 text-gray-100 bg-gray-700 rounded text-3xl'}
+                           ref={input}
+                           placeholder={'Title'} type={'text'}/>
+                    <div className={'flex flex-wrap justify-end space-x-4 w-full'}>
+                        <InstantButton onClick={() => {
+                            setModal(false)
+                            setSaveState(SaveState.None)
+                            input.current.value = ""
+                            setSavedBuildName("")
+                            history.push("/menu/blocks/drafts")
+                        }} className={grayButtonClass}>Cancel</InstantButton>
+                        <InstantButton onClick={saveBuild} className={buttonClass}>Save</InstantButton>
+                    </div>
+                </div>
+            </Modal>;
+        }
+
+        let title = savedBuildName;
+        let info = 'Your build has been saved locally!';
+
+        if (saveState === SaveState.Failed) {
+            title = 'Failed to save build!';
+            info = 'Something went wrong.';
+        }
 
         return <Modal clickOut={() => {
         }}>
             <div className={'px-20 py-20 h-full flex flex-wrap content-between'}>
                 <div className={'w-full text-3xl'}>
-                    Your Build
+                    {title}
                 </div>
-                <input spellCheck={false} className={'w-full p-2 text-gray-100 bg-gray-700 rounded text-3xl'}
-                       ref={input}
-                       placeholder={'Title'} type={'text'}/>
+                <div>
+                    {info}
+                </div>
                 <div className={'flex flex-wrap justify-end space-x-4 w-full'}>
                     <InstantButton onClick={() => {
                         setModal(false);
-                    }} className={grayButtonClass}>Cancel</InstantButton>
-                    <InstantButton onClick={saveBuild} className={greenButtonClass}>Save</InstantButton>
+                    }} className={grayButtonClass}>Close</InstantButton>
                 </div>
             </div>
         </Modal>;
+
     }
 
     return <React.Fragment>

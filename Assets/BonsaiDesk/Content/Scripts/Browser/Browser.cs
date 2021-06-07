@@ -295,6 +295,7 @@ public class Browser : MonoBehaviour
         public static readonly string NavKeyboard = PushPath("/keyboard");
         public static readonly string NavWebNav = PushPath("/webnav");
         public static readonly string NavContext = PushPath("/context");
+        public static readonly string NavToSaveDraft = PushPath("/menu/blocks/drafts?modal=true");
 
         private static string PushPath(string path)
         {

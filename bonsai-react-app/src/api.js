@@ -103,10 +103,6 @@ export function postStageBuild(buildId) {
     postJson({Type: "command", Message: "stageBuild", Data: buildId})
 }
 
-export function postBuildsRefresh () {
-    postJson({Type: "command", Message: "buildsRefresh"})
-}
-
 export function postSaveBuild(name){
     postJson({Type: "command", Message: "saveBuild", Data: name})
 }

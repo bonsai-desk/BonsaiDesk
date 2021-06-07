@@ -7,7 +7,7 @@ import React from 'react';
 import {InfoItem} from '../components/InfoItem';
 import {observer} from 'mobx-react-lite';
 import {useStore} from '../DataProvider';
-import {postToggleBlockBreak, postTogglePinchPull} from '../api';
+import {postTogglePinchPull} from '../api';
 import {showVersionFromStore} from '../esUtils';
 
 const Settings = observer(() => {
@@ -24,11 +24,6 @@ const Settings = observer(() => {
         postTogglePinchPull();
     }
 
-    function handleClickBlockBreak() {
-        postToggleBlockBreak();
-
-    }
-
     return <MenuContent name={'Settings'}>
         <div className={'text-xl'}>
             Experimental
@@ -41,17 +36,6 @@ const Settings = observer(() => {
                     classDisabled={grayButtonClass}
                     enabled={store.ExperimentalInfo.PinchPullEnabled}
                     handleClick={handleClickPinchPull}
-            >
-                Toggle
-            </ToggleButton>
-        </InfoItem>
-        <InfoItem title={'Block Break'}
-                  slug={'Delete blocks by touching them (right index finger)'}>
-            <ToggleButton
-                    classEnabled={greenButtonClass}
-                    classDisabled={grayButtonClass}
-                    enabled={store.ExperimentalInfo.BlockBreakEnabled}
-                    handleClick={handleClickBlockBreak}
             >
                 Toggle
             </ToggleButton>
