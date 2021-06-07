@@ -16,10 +16,16 @@ public class AutoAuthority : NetworkBehaviour
     private float _serverLastOwnerChange;
     private const float OwnerChangeCooldown = 0.25f;
 
-    [SyncVar] private bool _inUse;
+    private const float InUseTimeout = 1f;
+    private float _inUseSetTime;
+    [SyncVar] private uint _inUseBy;
     [SyncVar] public bool isKinematic;
+    private float _clientSetOwnerFakeTime;
+    private const float FakeOwnerDuration = 1f;
 
-    public bool InUse => IsInUse();
+    public bool InUse => GetInUse();
+    public uint InUseBy => GetInUseBy();
+    public bool InUseBySomeoneElse => GetInUseBySomeoneElse();
 
     public bool allowPinchPull = true;
 
@@ -82,6 +88,11 @@ public class AutoAuthority : NetworkBehaviour
 
         if (isServer)
         {
+            if (Time.time - _inUseSetTime > InUseTimeout && _inUseBy != 0)
+            {
+                _inUseBy = 0;
+            }
+            
             if (!_blockObject && (PhysicsHandController.InvalidTransform(transform) || Vector3.SqrMagnitude(transform.position) > 20f * 20f ||
                                   transform.position.y < -1f || transform.position.y > 5f))
             {
@@ -93,7 +104,11 @@ public class AutoAuthority : NetworkBehaviour
         //if you don't have control over the object
         if (!HasAuthority())
         {
-            _body.isKinematic = true;
+            var shouldFakeOwner = Time.time - _clientSetOwnerFakeTime < FakeOwnerDuration;
+            if (!shouldFakeOwner)
+            {
+                _body.isKinematic = true;
+            }
             return;
         }
 
@@ -205,41 +220,70 @@ public class AutoAuthority : NetworkBehaviour
         _visualizePinchPullFrame = Time.frameCount;
     }
 
-    private bool IsInUse()
+    private bool GetInUse()
     {
         if (_blockObject)
         {
-            return BlockUtility.GetRootBlockObject(_blockObject).AutoAuthority._inUse;
+            return BlockUtility.GetRootBlockObject(_blockObject).AutoAuthority._inUseBy != 0;
         }
 
-        return _inUse;
+        return _inUseBy != 0;
+    }
+    
+    private uint GetInUseBy()
+    {
+        if (_blockObject)
+        {
+            return BlockUtility.GetRootBlockObject(_blockObject).AutoAuthority._inUseBy;
+        }
+
+        return _inUseBy;
+    }
+
+    private bool GetInUseBySomeoneElse()
+    {
+        if (NetworkClient.connection != null && NetworkClient.connection.identity)
+        {
+            return InUse && NetworkClient.connection.identity.netId != InUseBy;
+        }
+        else if(isServer)
+        {
+            return InUse && uint.MaxValue != InUseBy;
+        }
+        else
+        {
+            Debug.LogError("Not connected and not server");
+            return false;
+        }
     }
 
     [Server]
-    public void SetInUse(bool inUse)
+    public void SetInUseBy(uint inUseBy)
     {
         if (_blockObject)
         {
             var rootObject = BlockUtility.GetRootBlockObject(_blockObject);
-            if (rootObject != _blockObject && _inUse) //if not at root, but inUse is set, reset it. only the root should be used 
+            if (rootObject != _blockObject && _inUseBy != 0) //if not at root, but inUse is set, reset it. only the root should be used 
             {
-                _inUse = false;
+                _inUseBy = 0;
             }
 
-            rootObject.AutoAuthority._inUse = inUse;
-
-            return;
+            rootObject.AutoAuthority._inUseBy = inUseBy;
+            rootObject.AutoAuthority._inUseSetTime = Time.time;
         }
-
-        _inUse = inUse;
+        else
+        {
+            _inUseBy = inUseBy;
+            _inUseSetTime = Time.time;
+        }
     }
 
     [Command(ignoreAuthority = true)]
     public void CmdRemoveInUse(uint identityId)
     {
-        if (_ownerIdentityId == identityId)
+        if (_ownerIdentityId == identityId || _inUseBy == identityId)
         {
-            SetInUse(false);
+            SetInUseBy(0);
         }
     }
 
@@ -288,7 +332,14 @@ public class AutoAuthority : NetworkBehaviour
         if (_lastSetNewOwnerFrame != Time.frameCount)
         {
             _lastSetNewOwnerFrame = Time.frameCount;
-            CmdSetNewOwner(newOwnerIdentityId, fromLastInteractTime, false);
+            if (isServer)
+            {
+                CmdSetNewOwner(newOwnerIdentityId, fromLastInteractTime, false);
+            }
+            else
+            {
+                ClientSetNewOwnerFake(newOwnerIdentityId, fromLastInteractTime, false);
+            }
         }
     }
 
@@ -336,11 +387,19 @@ public class AutoAuthority : NetworkBehaviour
 
         _lastInteractTime = value;
     }
+    
+    [Client]
+    public void ClientSetNewOwnerFake(uint newOwnerIdentityId, double fromLastInteractTime, bool inUse)
+    {
+        _clientSetOwnerFakeTime = Time.time;
+        _body.isKinematic = false;
+        CmdSetNewOwner(newOwnerIdentityId, fromLastInteractTime, inUse);
+    }
 
     [Command(ignoreAuthority = true)]
-    public void CmdSetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime, bool inUse)
+    private void CmdSetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime, bool inUse)
     {
-        if (Time.time - GetServerLastOwnerChange() < OwnerChangeCooldown)
+        if (!inUse && Time.time - GetServerLastOwnerChange() < OwnerChangeCooldown)
         {
             return;
         }
@@ -353,7 +412,7 @@ public class AutoAuthority : NetworkBehaviour
 
         if (inUse)
         {
-            SetInUse(true);
+            SetInUseBy(newOwnerIdentityId);
         }
 
         ServerTryChangeOwnerAllConnected(newOwnerIdentityId, fromLastInteractTime);
@@ -368,7 +427,14 @@ public class AutoAuthority : NetworkBehaviour
             return;
         }
 
-        SetInUse(inUse);
+        if (inUse)
+        {
+            SetInUseBy(newOwnerIdentityId);
+        }
+        else
+        {
+            SetInUseBy(0);
+        }
 
         ServerTryChangeOwnerAllConnected(newOwnerIdentityId, fromLastInteractTime);
     }

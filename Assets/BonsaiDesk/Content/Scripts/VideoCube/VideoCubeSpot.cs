@@ -75,7 +75,7 @@ public class VideoCubeSpot : NetworkBehaviour
             if (_lerpTime >= 1f)
             {
                 _currentVideoIdentity.GetComponent<VideoCubeControl>().SetServerLerping(false);
-                _currentVideoIdentity.GetComponent<AutoAuthority>().SetInUse(false);
+                _currentVideoIdentity.GetComponent<AutoAuthority>().SetInUseBy(0);
                 //start video
                 var videoId = _currentVideoIdentity.GetComponent<VideoCubeControl>().videoId;
                 if (!string.IsNullOrEmpty(videoId))
@@ -94,7 +94,7 @@ public class VideoCubeSpot : NetworkBehaviour
     {
         _currentVideoIdentity.GetComponent<VideoCubeControl>().SetServerLerping(false);
         _currentVideoIdentity.GetComponent<AutoAuthority>().isKinematic = false;
-        _currentVideoIdentity.GetComponent<AutoAuthority>().SetInUse(false);
+        _currentVideoIdentity.GetComponent<AutoAuthority>().SetInUseBy(0);
 
         //if it had activated
         if (_lerpTime >= 1f)

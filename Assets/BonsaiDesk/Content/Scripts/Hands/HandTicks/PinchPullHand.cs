@@ -55,7 +55,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         if (pinchPullJoint.connectedBody)
         {
             var autoAuthority = pinchPullJoint.connectedBody.GetComponent<AutoAuthority>();
-            if (!autoAuthority.HasAuthority() && autoAuthority.InUse)
+            if (autoAuthority.InUseBySomeoneElse)
             {
                 DetachObject();
                 return;
@@ -108,7 +108,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
             var hit = GetPinchPullCandidate();
             if (hit.hitAutoAuthority != null)
             {
-                hit.hitAutoAuthority.Interact(NetworkClient.connection.identity.netId);
+                // hit.hitAutoAuthority.Interact(NetworkClient.connection.identity.netId);
                 hit.hitAutoAuthority.VisualizePinchPull();
                 if (InputManager.Hands.TrackingRecently())
                     drawLocal = true;
@@ -156,13 +156,18 @@ public class PinchPullHand : MonoBehaviour, IHandTick
     {
         yield return new WaitForSeconds(1f);
 
-        if (pinchPullJoint.connectedBody)
+        while (true)
         {
-            var autoAuthority = pinchPullJoint.connectedBody.GetComponent<AutoAuthority>();
-            if (!autoAuthority.HasAuthority())
+            if (pinchPullJoint.connectedBody)
             {
-                DetachObject();
+                var autoAuthority = pinchPullJoint.connectedBody.GetComponent<AutoAuthority>();
+                if (!autoAuthority.HasAuthority())
+                {
+                    DetachObject();
+                    yield break;
+                }
             }
+            yield return null;
         }
     }
 
@@ -183,7 +188,8 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         _ropeLength = jointLimit + Vector3.Distance(playerHand.PinchPosition(), playerHand.OtherHand.PinchPosition());
 
         _attachedToId = attachToObject.netId;
-        attachToObject.CmdSetNewOwner(NetworkClient.connection.identity.netId, NetworkTime.time, true);
+        // attachToObject.CmdSetNewOwner(NetworkClient.connection.identity.netId, NetworkTime.time, true);
+        attachToObject.ClientSetNewOwnerFake(NetworkClient.connection.identity.netId, NetworkTime.time, true);
         InputManager.Hands.GetHand(playerHand.skeletonType).NetworkHand.CmdSetPinchPullInfo(_attachedToId, _localHitPoint, _ropeLength);
 
         if (attachToObject.isKinematic)
@@ -236,7 +242,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
             if (RaycastCone(out AutoAuthority hitAutoAuthority, out Vector3 hitPoint))
             {
                 //if it is valid to perform a pinch pull with the hit object
-                if (hitAutoAuthority.allowPinchPull && !hitAutoAuthority.InUse)
+                if (hitAutoAuthority.allowPinchPull && !hitAutoAuthority.InUseBySomeoneElse)
                 {
                     return (hitAutoAuthority, hitPoint);
                 }
@@ -276,7 +282,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
                     hitAutoAuthority = check.GetComponent<AutoAuthority>();
                 }
 
-                if (hitAutoAuthority != null && hitAutoAuthority.allowPinchPull && !hitAutoAuthority.InUse)
+                if (hitAutoAuthority != null && hitAutoAuthority.allowPinchPull && !hitAutoAuthority.InUseBySomeoneElse)
                 {
                     if (hit.distance < 0.1f)
                         break;
