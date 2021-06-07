@@ -1559,7 +1559,7 @@ public partial class BlockObject : NetworkBehaviour
         var blockObjectGameObject =
             Instantiate(StaticPrefabs.instance.blockObjectPrefab, rootBlockObject.transform.position, rootBlockObject.transform.rotation);
         var blockObject = blockObjectGameObject.GetComponent<BlockObject>();
-        foreach (var pair in Blocks)
+        foreach (var pair in rootBlockObject.Blocks)
         {
             blockObject.Blocks.Add(pair);
         }
