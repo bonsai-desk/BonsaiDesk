@@ -36,7 +36,8 @@ public class BlockBreakHand : MonoBehaviour, IHandTick
         }
 
         var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
-        _particleObject.SetActive(playerHand.HandComponents.TrackingRecently && HandBreakMode != BreakMode.None && playing);
+        var menuesClosed = TableBrowserParent.Instance.MenuAsleep && TableBrowserParent.Instance.ContextAsleep;
+        _particleObject.SetActive(playerHand.HandComponents.TrackingRecently && HandBreakMode != BreakMode.None && playing && menuesClosed);
     }
 
     private void Init()

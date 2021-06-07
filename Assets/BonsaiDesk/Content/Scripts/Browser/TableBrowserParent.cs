@@ -246,6 +246,14 @@ public class TableBrowserParent : MonoBehaviour
         SetHandForInactiveBrowser();
     }
 
+    public void CloseContextIfOpen()
+    {
+        if (!ContextAsleep)
+        {
+            ContextSleep();
+        }
+    }
+
     public void ToggleContextAwakeIfMenuClosed()
     {
         if (!moveToDesk.oriented)
