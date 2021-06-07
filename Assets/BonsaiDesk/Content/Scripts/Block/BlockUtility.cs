@@ -268,14 +268,14 @@ public static partial class BlockUtility
         new Vector3(-0.5f, -0.5f, -0.5f)
     };
 
-    public static (Queue<BoxCollider> boxCollidersNotNeeded, float mass, bool destroySphere) UpdateHitBox(Dictionary<Vector3Int, MeshBlock> meshBlocks,
+    public static (Queue<BoxCollider> boxCollidersNotNeeded, bool destroySphere) UpdateHitBox(Dictionary<Vector3Int, MeshBlock> meshBlocks,
         Queue<BoxCollider> boxCollidersInUse, Transform boxesParent, Transform sphereObject, PhysicMaterial blockPhysicMaterial,
         PhysicMaterial spherePhysicMaterial, BlockObject blockObject)
     {
         if (meshBlocks.Count < 1)
         {
             Debug.LogError("Cannot update hitbox with no blocks.");
-            return (null, 1f, false);
+            return (null, false);
         }
 
         HashSet<Vector3Int> assimilated = new HashSet<Vector3Int>();
@@ -374,14 +374,7 @@ public static partial class BlockUtility
             destroySphere = true;
         }
 
-        var blockObjects = GetBlockObjectsFromRoot(GetRootBlockObject(blockObject));
-        float mass = 1f / blockObjects.Count;
-        for (int i = 0; i < blockObjects.Count; i++)
-        {
-            blockObjects[i].Body.mass = mass;
-        }
-
-        return (boxCollidersNotNeeded, mass, destroySphere);
+        return (boxCollidersNotNeeded, destroySphere);
     }
 
     private static bool ContainsBlock(BlockObject blockObject, Vector3Int testPosition)

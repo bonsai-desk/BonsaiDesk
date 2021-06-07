@@ -148,6 +148,9 @@ public partial class BlockObject : NetworkBehaviour
     //used to keep track of in use dialog and close it after some amount of time if it is not used
     private Coroutine _dialogTimeoutCoroutine;
 
+    //number of blocks which contribute to the weight of the object. it could be calculated when requested, but this variable caches it
+    private int _numWeightedBlocks;
+
     //for testing purposes
     public bool debug = false;
 
@@ -1380,7 +1383,7 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        var (boxCollidersNotNeeded, mass, destroySphere) = BlockUtility.UpdateHitBox(MeshBlocks, _boxCollidersInUse, _physicsBoxesObject, _sphereObject,
+        var (boxCollidersNotNeeded, destroySphere) = BlockUtility.UpdateHitBox(MeshBlocks, _boxCollidersInUse, _physicsBoxesObject, _sphereObject,
             blockPhysicMaterial, spherePhysicMaterial, this);
         while (boxCollidersNotNeeded.Count > 0)
         {
@@ -1416,7 +1419,44 @@ public partial class BlockObject : NetworkBehaviour
             }
         }
 
-        _body.mass = mass;
+        _numWeightedBlocks = 0;
+        foreach (var pair in MeshBlocks)
+        {
+            if (pair.Value.name != "bearing")
+            {
+                _numWeightedBlocks++;
+            }
+        }
+
+        if (MeshBlocks.Count <= 1)
+        {
+            _numWeightedBlocks = 1;
+        }
+
+        var blockObjects = BlockUtility.GetBlockObjectsFromRoot(BlockUtility.GetRootBlockObject(this));
+        var totalWeightedBlocks = 0;
+        for (int i = 0; i < blockObjects.Count; i++)
+        {
+            //a blockObject should have at least one weighted block. if it is 0 it probably is not initialized yet. when it is, it will fix the mass for
+            //all attached blockObjects. set it to 1 for now to prevent a divide by 0 error
+            if (blockObjects[i]._numWeightedBlocks <= 0)
+            {
+                blockObjects[i]._numWeightedBlocks = 1;
+            }
+
+            totalWeightedBlocks += blockObjects[i]._numWeightedBlocks;
+        }
+
+        for (int i = 0; i < blockObjects.Count; i++)
+        {
+            if (blockObjects[i]._numWeightedBlocks != 0)
+            {
+                blockObjects[i]._body.mass = (float) blockObjects[i]._numWeightedBlocks / totalWeightedBlocks;
+            }
+
+            totalWeightedBlocks += blockObjects[i]._numWeightedBlocks;
+        }
+        
         _resetCoM = true;
 
         //if any blocks are added or removed, close the save dialog if it is up
