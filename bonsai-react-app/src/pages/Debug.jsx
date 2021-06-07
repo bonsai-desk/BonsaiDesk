@@ -10,7 +10,7 @@ import {Layout, postSetLayout} from '../api';
 import axios from 'axios';
 
 export const DebugPage = observer(() => {
-    let {store, mediaInfo} = useStore();
+    let {store, mediaInfo, builds} = useStore();
 
     let setNetState = action((store, netState) => {
         store.NetworkInfo.Mode = netState;
@@ -106,6 +106,15 @@ export const DebugPage = observer(() => {
                         <div className={'text-3xl'}>Media Info</div>
                         <ul>
                             {Object.entries(mediaInfo).map(info => {
+                                return <li className={'mb-2'} key={info[0]}>
+                                    <span className={'font-bold'}>{info[0]}</span>{': '}<span
+                                        className={'text-gray-400'}>{showInfo(info)}</span>
+                                </li>;
+                            })}
+                        </ul>
+                        <div className={'text-3xl'}>Build Info</div>
+                        <ul>
+                            {Object.entries(builds).map(info => {
                                 return <li className={'mb-2'} key={info[0]}>
                                     <span className={'font-bold'}>{info[0]}</span>{': '}<span
                                         className={'text-gray-400'}>{showInfo(info)}</span>

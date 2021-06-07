@@ -37,11 +37,11 @@ public class BlockObjectSpawner : NetworkBehaviour
         //     }
         // }
 
-        var blockObjectFile = BlockObjectFileReader.LoadFileIntoBlockObjectFile("1623002097-my cool creation.txt");
-        if (!string.IsNullOrEmpty(blockObjectFile.Content))
-        {
-            BlockObjectSpawner.Instance.SpawnFromString(blockObjectFile.Content);
-        }
+       //var blockObjectFile = BlockObjectFileReader.LoadFileIntoBlockObjectFile("1623002097-my cool creation.txt");
+       //if (!string.IsNullOrEmpty(blockObjectFile.Content))
+       //{
+       //    BlockObjectSpawner.Instance.SpawnFromString(blockObjectFile.Content);
+       //}
     }
 
     public void SpawnFromString(string blocksString)
