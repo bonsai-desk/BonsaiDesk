@@ -1562,7 +1562,15 @@ public partial class BlockObject : NetworkBehaviour
     [Command]
     private void CmdDuplicate(uint ownerId)
     {
-        var blockObjectGameObject = Instantiate(StaticPrefabs.instance.blockObjectPrefab, new Vector3(0, 1.5f, 0), Quaternion.identity);
+        var rootBlockObject = BlockUtility.GetRootBlockObject(this);
+        ServerDuplicateBlockObject(ownerId, rootBlockObject, null).ServerTeleportToDeskSurface();
+    }
+
+    [Server]
+    private BlockObject ServerDuplicateBlockObject(uint ownerId, BlockObject rootBlockObject, BlockObject parent)
+    {
+        var blockObjectGameObject =
+            Instantiate(StaticPrefabs.instance.blockObjectPrefab, rootBlockObject.transform.position, rootBlockObject.transform.rotation);
         var blockObject = blockObjectGameObject.GetComponent<BlockObject>();
         foreach (var pair in Blocks)
         {
@@ -1570,7 +1578,21 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         NetworkServer.Spawn(blockObjectGameObject);
+        
+        if (rootBlockObject.SyncJoint.connected && parent)
+        {
+            var jointInfo = new SyncJoint(rootBlockObject.SyncJoint, new NetworkIdentityReference(parent.netIdentity));
+            blockObject.ServerConnectJoint(jointInfo);
+        }
+
         blockObjectGameObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time, false);
+
+        foreach (var pair in rootBlockObject.ConnectedToSelf)
+        {
+            ServerDuplicateBlockObject(ownerId, pair.Value.Value.GetComponent<BlockObject>(), blockObject);
+        }
+
+        return blockObject;
     }
 
     private void UpdateDialogPosition()
