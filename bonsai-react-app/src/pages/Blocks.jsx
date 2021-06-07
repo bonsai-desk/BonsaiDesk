@@ -20,7 +20,7 @@ import DownloadImg from '../static/download.svg';
 import PostImg from '../static/post-add.svg';
 import jwt from 'jsonwebtoken';
 import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
-import {postDeleteBuild, postSaveBuild, postSpawnBuild, postStageBuild} from '../api';
+import {postDeleteBuild, postSaveBuild, postSpawnBuild, postSpawnBuildById, postStageBuild} from '../api';
 import {action} from 'mobx';
 
 const DeleteState = {
@@ -37,6 +37,16 @@ const SaveState = {
 
 let hamburgerButton = 'relative h-20 w-20 rounded-full cursor-pointer flex flex-wrap content-center font-bold bg-gray-800  active:bg-gray-700  hover:bg-gray-600';
 let redHamburgerButton = 'relative h-20 w-20 rounded-full cursor-pointer flex flex-wrap content-center font-bold bg-red-800';
+
+let SpawnButtonLocal = observer(({buildId})=>{
+    function onClick () {
+        postSpawnBuildById(buildId)
+    }
+
+    return <InstantButton onClick={onClick} className={hamburgerButton}>
+        <img src={DownloadImg} alt={'Menu'} className={'absolute left-5 bottom-5 w-10'}/>
+    </InstantButton>;
+})
 
 let SpawnButton = observer(({build_id}) => {
     let [failed, setFailed] = useState(false);
@@ -186,7 +196,6 @@ let LocalBlockPost = observer(({Name, Id}) => {
         }
 
         function postBuild(name, data) {
-            console.log(name, data);
             let url = store.ApiBase + '/blocks/builds';
             let token = store.BonsaiToken;
             axios({
@@ -282,6 +291,7 @@ let LocalBlockPost = observer(({Name, Id}) => {
         {publishModal ? <MiniPublishModal/> : ''}
         <div className={'flex flex-wrap content-center space-x-4'}>
             <PublishButton/>
+            <SpawnButtonLocal buildId={Id}/>
             <InstantButton onClick={spawnModal} className={hamburgerButton}>
                 <img src={MenuImg} alt={'Menu'} className={'absolute left-5 bottom-5 w-10'}/>
             </InstantButton>
@@ -644,6 +654,16 @@ const DraftsPage = observer((props) => {
     let buttonClass = saveState === SaveState.None ? greenButtonClass : grayButtonClassInert;
 
     function NewBuildModal() {
+        let [initialClear, setInitialClear] = useState(false);
+        
+        function onClick () {
+            if (!initialClear) {
+                if (input.current) {
+                    input.current.value = "";
+                    setInitialClear(true)
+                }
+            }
+        }
 
         if (saveState === SaveState.None || saveState === SaveState.Working) {
             return <Modal clickOut={() => {
@@ -653,8 +673,9 @@ const DraftsPage = observer((props) => {
                         Your Build
                     </div>
                     <input spellCheck={false} className={'w-full p-2 text-gray-100 bg-gray-700 rounded text-3xl'}
+                           onClick={onClick}
                            ref={input}
-                           placeholder={'Title'} type={'text'}/>
+                           placeholder={'Title'} type={'text'} defaultValue={"New Build"}/>
                     <div className={'flex flex-wrap justify-end space-x-4 w-full'}>
                         <InstantButton onClick={() => {
                             setModal(false)
@@ -751,7 +772,11 @@ const ProfilePage = observer(() => {
 
     return <React.Fragment>
         <UserInfo {...userData}/>
-        {data.map(x => <BlockPost key={x.build_name + x.created_at} {...x}/>)}
+        {data.length > 0 ? data.map(x => <BlockPost key={x.build_name + x.created_at} {...x}/>)
+                : <div className={"pt-20 flex flex-wrap content-center justify-center text-xl"}>
+                    Publish builds from your saved tab.
+                  </div>
+        }
     </React.Fragment>;
 });
 
