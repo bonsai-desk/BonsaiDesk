@@ -24,27 +24,22 @@ public class BlockObjectSpawner : NetworkBehaviour
         _partialMessages.Clear();
     }
 
-    public override void OnStartClient()
+    public void SpawnFromString(string blocksString)
     {
-        // var files = BlockObjectFileReader.GetBlockObjectFiles();
-        //
-        // if (files != null && files.Length > 0)
-        // {
-        //     var blockObjectFile = BlockObjectFileReader.LoadFileIntoBlockObjectFile(files[0]);
-        //     if (!string.IsNullOrEmpty(blockObjectFile.Content))
-        //     {
-        //         BlockObjectSpawner.Instance.SpawnFromString(blockObjectFile.Content);
-        //     }
-        // }
+        var forwardRotation = Quaternion.AngleAxis(-90f, Vector3.up);
 
-       //var blockObjectFile = BlockObjectFileReader.LoadFileIntoBlockObjectFile("1623002097-my cool creation.txt");
-       //if (!string.IsNullOrEmpty(blockObjectFile.Content))
-       //{
-       //    BlockObjectSpawner.Instance.SpawnFromString(blockObjectFile.Content);
-       //}
+        if (NetworkVRPlayer.localPlayer && NetworkVRPlayer.localPlayer.spotId > 0)
+        {
+            var spotTransform = SpotManager.Instance.GetSpotTransform(NetworkVRPlayer.localPlayer.spotId - 1);
+            var forwardFlat = spotTransform.forward;
+            forwardFlat.y = 0;
+            forwardRotation = Quaternion.LookRotation(forwardFlat);
+        }
+
+        SpawnFromString(blocksString, forwardRotation);
     }
 
-    public void SpawnFromString(string blocksString)
+    private void SpawnFromString(string blocksString, Quaternion forwardRotation)
     {
         if (isServer)
         {
@@ -54,7 +49,7 @@ public class BlockObjectSpawner : NetworkBehaviour
                 return;
             }
 
-            ServerSpawnFromString(blocksString);
+            ServerSpawnFromString(blocksString, forwardRotation);
         }
         else if (isClient)
         {
@@ -64,7 +59,7 @@ public class BlockObjectSpawner : NetworkBehaviour
                 return;
             }
 
-            ClientSpawnFromString(blocksString);
+            ClientSpawnFromString(blocksString, forwardRotation);
         }
     }
 
@@ -84,7 +79,7 @@ public class BlockObjectSpawner : NetworkBehaviour
     }
 
     [Client]
-    private void ClientSpawnFromString(string blocksString)
+    private void ClientSpawnFromString(string blocksString, Quaternion forwardRotation)
     {
         var bytes = GetBytes(blocksString);
         var guid = Guid.NewGuid().ToString();
@@ -94,12 +89,12 @@ public class BlockObjectSpawner : NetworkBehaviour
             var chunk = new byte[chunkSize];
             Array.Copy(bytes, i, chunk, 0, chunkSize);
             var isEnd = i + ChunkSize >= bytes.Length;
-            CmdSpawnFromString(chunk, i, bytes.Length, isEnd, guid);
+            CmdSpawnFromString(chunk, i, bytes.Length, isEnd, guid, forwardRotation); //forwardRotation does not need to be sent repeatedly
         }
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdSpawnFromString(byte[] chunk, int offset, int totalSize, bool isEnd, string guid)
+    private void CmdSpawnFromString(byte[] chunk, int offset, int totalSize, bool isEnd, string guid, Quaternion forwardRotation)
     {
         if (!_partialMessages.ContainsKey(guid))
         {
@@ -123,7 +118,7 @@ public class BlockObjectSpawner : NetworkBehaviour
         {
             var finalString = GetString(bytes);
             _partialMessages.Remove(guid);
-            ServerSpawnFromString(finalString);
+            ServerSpawnFromString(finalString, forwardRotation);
         }
     }
 
@@ -138,7 +133,7 @@ public class BlockObjectSpawner : NetworkBehaviour
     }
 
     [Server]
-    private void ServerSpawnFromString(string blocksString)
+    private void ServerSpawnFromString(string blocksString, Quaternion forwardRotation)
     {
         var data = BlockUtility.DeserializeBlocks(blocksString);
 
@@ -162,7 +157,7 @@ public class BlockObjectSpawner : NetworkBehaviour
                 var spawnRotation = Quaternion.identity;
                 if (entry.attachedTo < 0)
                 {
-                    spawnRotation = entry.rootRotation;
+                    spawnRotation = forwardRotation * entry.rootRotation;
                 }
                 else
                 {

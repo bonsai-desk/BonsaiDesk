@@ -1112,13 +1112,13 @@ public partial class BlockObject : NetworkBehaviour
             if (!_activeWholeEffect.activated)
             {
                 _activeWholeEffect.activated = true;
-                
+
                 if (_dialogTimeoutCoroutine != null)
                 {
                     StopCoroutine(_dialogTimeoutCoroutine);
                     _dialogTimeoutCoroutine = null;
                 }
-                
+
                 if (_activeWholeEffect.mode != BlockBreakHand.BreakMode.Duplicate)
                 {
                     _dialogTimeoutCoroutine = StartCoroutine(DialogTimeout(Time.time));
@@ -1137,6 +1137,7 @@ public partial class BlockObject : NetworkBehaviour
                 CloseDialog();
                 yield break;
             }
+
             yield return null;
         }
 
@@ -1564,7 +1565,7 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         NetworkServer.Spawn(blockObjectGameObject);
-        
+
         if (rootBlockObject.SyncJoint.connected && parent)
         {
             var jointInfo = new SyncJoint(rootBlockObject.SyncJoint, new NetworkIdentityReference(parent.netIdentity));
@@ -1713,6 +1714,7 @@ public partial class BlockObject : NetworkBehaviour
             {
                 //cache the save string
                 StagedSaveData = dataString;
+                BlockObjectSpawner.Instance.SpawnFromString(dataString);
             }
             else
             {
