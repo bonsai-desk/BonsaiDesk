@@ -588,10 +588,10 @@ public class NetworkManagerGame : NetworkManager
             {
                 if (autoAuthority.InUse)
                 {
-                    autoAuthority.SetInUse(false);
+                    autoAuthority.SetInUseBy(0);
                 }
 
-                autoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);
+                autoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time);
                 //identity.RemoveClientAuthority();
             }
             else if (!identity.gameObject.CompareTag("NetworkHand") && !identity.gameObject.CompareTag("NetworkHead"))
