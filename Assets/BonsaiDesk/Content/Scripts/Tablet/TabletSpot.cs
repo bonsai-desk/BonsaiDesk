@@ -75,7 +75,7 @@ public class TabletSpot : NetworkBehaviour
             if (_lerpTime >= 1f)
             {
                 _currentTabletIdentity.GetComponent<TabletControl>().SetServerLerping(false);
-                _currentTabletIdentity.GetComponent<AutoAuthority>().SetInUse(false);
+                _currentTabletIdentity.GetComponent<AutoAuthority>().SetInUseBy(0);
                 //start video
                 var videoId = _currentTabletIdentity.GetComponent<TabletControl>().videoId;
                 if (!string.IsNullOrEmpty(videoId))
@@ -94,7 +94,7 @@ public class TabletSpot : NetworkBehaviour
     {
         _currentTabletIdentity.GetComponent<TabletControl>().SetServerLerping(false);
         _currentTabletIdentity.GetComponent<AutoAuthority>().isKinematic = false;
-        _currentTabletIdentity.GetComponent<AutoAuthority>().SetInUse(false);
+        _currentTabletIdentity.GetComponent<AutoAuthority>().SetInUseBy(0);
 
         //if it had activated
         if (_lerpTime >= 1f)

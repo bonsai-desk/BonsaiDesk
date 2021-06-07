@@ -72,7 +72,7 @@ public partial class BlockObject
 
         if (_autoAuthority.HasAuthority())
         {
-            if (MeshBlocks.Count == 1)
+            if (MeshBlocks.Count == 1 && !SyncJoint.connected && ActiveLocal)
             {
                 var leftHandLockedJoint = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>().joint;
                 var rightHandLockedJoint = InputManager.Hands.Left.PlayerHand.GetIHandTick<LockObjectHand>().joint;
