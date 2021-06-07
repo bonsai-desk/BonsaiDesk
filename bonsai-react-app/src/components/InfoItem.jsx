@@ -29,12 +29,11 @@ export function InfoItem({imgSrc, title, slug, children, rightPad = true}) {
     );
 }
 
-export function InfoItemCustom({imgSrc, title, slug, children, rightPad = true, leftItems}) {
-    let className = 'flex w-full justify-between pr-4';
-    if (!rightPad) {
+export function InfoItemCustom({imgSrc, title, slug, children, padded = true, leftItems}) {
+    let className = 'flex w-full justify-between px-4';
+    if (!padded) {
         className = 'flex w-full justify-between';
     }
-
     return (
             <div className={className}>
                 <div className={'flex w-auto'}>

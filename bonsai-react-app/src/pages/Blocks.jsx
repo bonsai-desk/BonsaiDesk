@@ -20,14 +20,14 @@ import DownloadImg from '../static/download.svg';
 import PostImg from '../static/post-add.svg';
 import jwt from 'jsonwebtoken';
 import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
-import {postStageBuild} from '../api';
+import {postDeleteBuild, postSaveBuild, postStageBuild} from '../api';
 
 const DeleteState = {
     None: 0, Failed: 1, Success: 2,
 };
 
 const PublishState = {
-    None: 0, Failed: 1, Success: 2,
+    None: 0, Working: 1, Failed: 2, Success: 3,
 };
 
 let hamburgerButton = 'relative h-20 w-20 rounded-full cursor-pointer flex flex-wrap content-center font-bold bg-gray-800  active:bg-gray-700  hover:bg-gray-600';
@@ -97,12 +97,13 @@ let ThumbButton = observer((props) => {
     );
 });
 
-function LocalBlockPost({Name, Id}) {
+let LocalBlockPost = observer(({Name, Id})=> {
     let [modal, setModal] = useState(false);
     let [deleteModal, setDeleteModal] = useState(false);
     let [deleteState, setDeleteState] = useState(DeleteState.None);
     let [publishState, setPublishState] = useState(PublishState.None);
     let [publishModal, setPublishModal] = useState(false)
+    let {builds, store} = useStore();
 
     let title = Name;
     let slug = Id;
@@ -120,7 +121,7 @@ function LocalBlockPost({Name, Id}) {
     }
 
     function postDelete() {
-        console.log('not implemented');
+        postDeleteBuild(Id)
     }
     
     function spawnPublishModal () {
@@ -158,14 +159,60 @@ function LocalBlockPost({Name, Id}) {
                 break;
         }
 
-        let deleteButtonClass = greenButtonClass;
-        if (deleteState !== DeleteState.None) {
-            deleteButtonClass = grayButtonClassInert;
+        let publishButtonClass = greenButtonClass;
+        if (publishState !== PublishState.None) {
+            publishButtonClass = grayButtonClassInert;
         }
         
+        function postBuild(name, data){
+            console.log(name, data)
+            let url = store.ApiBase + "/blocks/builds";
+            let token = store.BonsaiToken;
+            axios({
+                method: 'POST',
+                url: url,
+                data: `name=${name}&data=${data}&token=${token}`,
+                headers: {'content-type': 'application/x-www-form-urlencoded'},
+            }).then(resp => {
+                console.log(resp)
+                setPublishState(PublishState.Success)
+            }).catch(err => {
+                console.log(err)
+                setPublishState(PublishState.Failed)
+            })
+        }
+
+        function publishBuild () {
+            if (publishState !== PublishState.None) {
+                return;
+            }
+            postStageBuild(Id)
+            setPublishState(PublishState.Working)
+            let query = setInterval(()=>{
+                if (builds.Staging.Id === Id) {
+                    clearInterval(query)
+                    query = null;
+                    let name = builds.Staging.Name
+                    let data = builds.Staging.Data;
+                    if (data.length > 0){
+                        postBuild(name, data)
+                    } else {
+                        setPublishState(PublishState.Failed)
+                    }
+                }
+                
+            }, 100)
+            setTimeout(()=>{
+                if (query) {
+                    clearInterval(query)
+                    setPublishState(PublishState.Failed)
+                }
+            }, 500)
+        }
+
         return <MiniModalAction title={title} info={info} clickOut={clickOut}>
             <InstantButton onClick={clickOut} className={grayButtonClass}>{leftButton}</InstantButton>
-            <InstantButton onClick={()=>{postStageBuild(Id)}} className={deleteButtonClass}>{rightButton}</InstantButton>
+            <InstantButton onClick={publishBuild} className={publishButtonClass}>{rightButton}</InstantButton>
         </MiniModalAction>;
     }
 
@@ -222,7 +269,7 @@ function LocalBlockPost({Name, Id}) {
         </Modal>;
     }
 
-    return <React.Fragment><InfoItemCustom title={title} slug={slug} imgSrc={BlockImg}
+    return <React.Fragment><InfoItemCustom title={title} imgSrc={BlockImg}
                                            leftItems={''}>
 
         {modal ?
@@ -238,7 +285,7 @@ function LocalBlockPost({Name, Id}) {
         </div>
     </InfoItemCustom>
     </React.Fragment>;
-}
+})
 
 let BlockPost = observer(({
                               build_name, user_name, created_at, likes, build_id, liked, user_id,
@@ -258,7 +305,7 @@ let BlockPost = observer(({
     const ago = moment(created_at).fromNow();
     const title = build_name;
     const slug = `${myPost ? 'You' : user_name} ${ago}`;
-    const LeftItems = <div className={'flex space mr-4 space-x-4'}>
+    const LeftItems = <div className={'flex space-x-4 flex-wrap'}>
         <ThumbButton imgSrc={ThumbImg} likes={likes} buildId={build_id} liked={liked}/>
         <SpawnButton/>
         <InstantButton onClick={handleClickBurger} className={hamburgerButton}>
@@ -545,12 +592,24 @@ function MiniModal({children, clickOut}) {
     </div>;
 }
 
-const DraftsPage = observer(() => {
-    let [modal, setModal] = useState(false);
+const DraftsPage = observer((props) => {
+    const searchParams = new URLSearchParams(props.location.search);
+    let modalOn = searchParams.get("modal");
+    let [modal, setModal] = useState(!!modalOn);
     let {builds} = useStore();
     let input = useRef();
 
     let data = builds.List;
+    
+    console.log("drafts")
+    
+    function saveBuild () {
+        if (input.current) {
+            if (input.current.value.length > 0) {
+                postSaveBuild()
+            }
+        }
+    }
 
     function NewBuildModal() {
 
@@ -567,8 +626,7 @@ const DraftsPage = observer(() => {
                     <InstantButton onClick={() => {
                         setModal(false);
                     }} className={grayButtonClass}>Cancel</InstantButton>
-                    <InstantButton onClick={() => {
-                    }} className={greenButtonClass}>Save</InstantButton>
+                    <InstantButton onClick={saveBuild} className={greenButtonClass}>Save</InstantButton>
                 </div>
             </div>
         </Modal>;

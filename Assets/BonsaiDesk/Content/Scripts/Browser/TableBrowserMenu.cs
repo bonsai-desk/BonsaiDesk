@@ -25,8 +25,14 @@ public class TableBrowserMenu : MonoBehaviour
     public TableBrowser contextBrowser;
     public AutoBrowserController autoBrowserController;
     public float postMediaInfoEvery = 0.5f;
-    [HideInInspector, FormerlySerializedAs("_browser")] public TableBrowser browser;
+
+    [HideInInspector] [FormerlySerializedAs("_browser")]
+    public TableBrowser browser;
+
     [HideInInspector] public bool canPost;
+
+    public Transform screen;
+    public Transform raisedTransform;
     private float _postMediaInfoLast;
     private float _postRoomInfoLast;
 
@@ -46,6 +52,7 @@ public class TableBrowserMenu : MonoBehaviour
         NetworkManagerGame.Singleton.InfoChange += HandleNetworkInfoChange;
         OVRManager.HMDUnmounted += () => { browser.SetHidden(true); };
         contextBrowserController.InfoChange += HandleChangeBlockActive;
+        StartCoroutine(PostEventually(PostBlockList));
     }
 
     public void Update()
@@ -161,6 +168,7 @@ public class TableBrowserMenu : MonoBehaviour
                         {
                             browser.PostMessage(Browser.BrowserMessage.NavToMenu);
                         }
+
                         break;
                     case "openPrivateRoom":
                         OpenRoom?.Invoke(false);
@@ -235,11 +243,13 @@ public class TableBrowserMenu : MonoBehaviour
                         EjectVideo?.Invoke(this, new EventArgs());
                         break;
                     case "buildsRefresh":
-                        RequestRefreshBuildsList?.Invoke(this, new EventArgs());
+                        RefreshBuilds();
                         break;
                     case "stageBuild":
-                        var buildId = JsonConvert.DeserializeObject<string>(message.Data);
-                        RequestStageBuild?.Invoke(this, buildId);
+                        StageBuild(message.Data);
+                        break;
+                    case "deleteBuild":
+                        PostDeleteBuild(message.Data);
                         break;
                 }
 
@@ -248,6 +258,47 @@ public class TableBrowserMenu : MonoBehaviour
             case "event":
                 break;
         }
+    }
+
+    private void StageBuild(string buildId)
+    {
+        var blockObject = BlockObjectFileReader.LoadFileIntoBlockObjectFile(buildId);
+        PostStaging(blockObject);
+    }
+    
+    private void PostBlockList()
+    {
+        var blockObjects = BlockObjectFileReader.GetBlockObjectFiles();
+        var buildInfos = blockObjects.Select(bo => new BuildInfo(bo.FileName, bo.Content, bo.DisplayName)).ToArray();
+        var BlockList = new Builds
+        {
+            List = buildInfos
+        };
+        browser.PostMessage(Message(BlockList, "Builds"));
+    }
+
+    private void PostStaging(BlockObjectFileReader.BlockObjectFile blockObject)
+    {
+        var data = blockObject.Content.Replace("\n", "\\n");
+        var buildInfo = new BuildInfo(blockObject.FileName, data, blockObject.DisplayName);
+        var buildStaging = new BuildStaging() {Staging = buildInfo};
+        var msg = Message(buildStaging, "Builds");
+        BonsaiLogWarning(msg);
+        browser.PostMessage(msg);
+    }
+
+    private void PostDeleteBuild(string buildId)
+    {
+        var deleted = BlockObjectFileReader.DeleteFile(buildId);
+        if (deleted)
+        {
+            PostBlockList();
+        }
+    }
+
+    private void RefreshBuilds()
+    {
+        BlockObjectFileReader.GetBlockObjectFiles();
     }
 
     private static void RequestMicrophone()
@@ -268,7 +319,8 @@ public class TableBrowserMenu : MonoBehaviour
     private void ToggleBlockBreak()
     {
         var blockBreakActive = InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().HandBreakMode != BlockBreakHand.BreakMode.None;
-        InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().SetBreakMode(blockBreakActive ? BlockBreakHand.BreakMode.None : BlockBreakHand.BreakMode.Single);
+        InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>()
+                    .SetBreakMode(blockBreakActive ? BlockBreakHand.BreakMode.None : BlockBreakHand.BreakMode.Single);
     }
 
     private void PostMediaInfo(MediaInfo mediaInfo)
@@ -299,6 +351,7 @@ public class TableBrowserMenu : MonoBehaviour
         var jsMessage = new CsMessageKeyType<AppInfo> {Data = kvs};
         SerializeAndPost(jsMessage);
     }
+
 
     private void PostContextInfo()
     {
@@ -338,6 +391,7 @@ public class TableBrowserMenu : MonoBehaviour
         {
             yield return new WaitForSeconds(0.1f);
         }
+
         a();
     }
 
@@ -376,9 +430,6 @@ public class TableBrowserMenu : MonoBehaviour
         var csMessage = new CsMessageKeyType<PlayerData[]> {Data = new KeyType<PlayerData[]> {Key = "PlayerInfos", Val = data}};
         SerializeAndPost(csMessage);
     }
-    
-    public Transform screen;
-    public Transform raisedTransform;
 
     public void SetRaised(bool raised)
     {
@@ -392,7 +443,6 @@ public class TableBrowserMenu : MonoBehaviour
             screen.localPosition = Vector3.zero;
             screen.localEulerAngles = Vector3.zero;
         }
-        
     }
 
     public static event Action<RoomData> JoinRoom;
@@ -417,7 +467,6 @@ public class TableBrowserMenu : MonoBehaviour
     public event EventHandler<SpotManager.Layout> LayoutChange;
 
     public event EventHandler<string> RequestStageBuild;
-    public event EventHandler RequestRefreshBuildsList;
 
     private void BonsaiLog(string msg)
     {
@@ -434,11 +483,35 @@ public class TableBrowserMenu : MonoBehaviour
         Debug.LogError("<color=orange>BonsaiTableBrowserMenu: </color>: " + msg);
     }
 
+    private class BuildInfo
+    {
+        public string Data;
+        public string Id;
+        public string Name;
+
+        public BuildInfo(string id, string data, string name)
+        {
+            Id = id;
+            Data = data;
+            Name = name;
+        }
+    }
+
+    private struct Builds
+    {
+        public BuildInfo[] List;
+    }
+    
+    private struct BuildStaging
+    {
+        public BuildInfo Staging;
+    }
+
     private class ContextInfo
     {
         public string LeftBlockActive;
-        public string RightBlockActive;
         public BlockBreakHand.BreakMode LeftHandMode;
+        public string RightBlockActive;
         public BlockBreakHand.BreakMode RightHandMode;
     }
 

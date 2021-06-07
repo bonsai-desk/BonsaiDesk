@@ -54,12 +54,12 @@ class BuildInfo {
 class Builds {
     Staging = new BuildInfo("","","")
     List = [
-        new BuildInfo('1-build', 'asdf', 'My First Build'),
-        new BuildInfo('2-build', 'asdf', 'My Second Build'),
-        new BuildInfo('3-build', 'asdf', 'Cool Stuff'),
-        new BuildInfo('4-build', 'asdf', 'Minecraft'),
-        new BuildInfo('5-build', 'asdf', 'A Thing'),
+        new BuildInfo('1-React Dummy Data', '', 'React Dummy Data'),
     ];
+
+    constructor() {
+        makeAutoObservable(this);
+    }
 }
 
 class Store {
@@ -223,7 +223,12 @@ let pushStoreList = action((kvList) => {
     });
 });
 let pushStoreSingle = action(obj => {
-    if (obj.Key === 'MediaInfo') {
+    if (obj.Key === 'Builds') {
+        console.log("build update")
+        for (const prop in obj.Val) {
+            builds[prop] = obj.Val[prop];
+        }
+    } else if (obj.Key === 'MediaInfo'){
         for (const prop in obj.Val) {
             mediaInfo[prop] = obj.Val[prop];
         }
