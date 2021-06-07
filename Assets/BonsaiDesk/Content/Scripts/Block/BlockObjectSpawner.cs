@@ -24,6 +24,18 @@ public class BlockObjectSpawner : NetworkBehaviour
         _partialMessages.Clear();
     }
 
+    public bool SpawnFromFileName(string fileName)
+    {
+        var contentString = BlockObjectFileReader.LoadFile(fileName);
+        if (string.IsNullOrEmpty(contentString))
+        {
+            return false;
+        }
+
+        SpawnFromString(contentString);
+        return true;
+    }
+
     public void SpawnFromString(string blocksString)
     {
         var forwardRotation = Quaternion.AngleAxis(-90f, Vector3.up);
@@ -139,7 +151,9 @@ public class BlockObjectSpawner : NetworkBehaviour
 
         if (data == null)
         {
-            Debug.LogError("data is null");
+            var msg = "Failed to spawn structure. Could not parse.";
+            Debug.LogError(msg);
+            MessageStack.Singleton.AddMessage(msg);
             return;
         }
 

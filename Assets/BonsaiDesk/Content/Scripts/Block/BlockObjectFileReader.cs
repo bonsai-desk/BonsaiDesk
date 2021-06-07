@@ -230,7 +230,7 @@ public static class BlockObjectFileReader
         return LoadFileIntoBlockObjectFile(blockObjectFile);
     }
 
-    private static string LoadFile(string fileName)
+    public static string LoadFile(string fileName)
     {
         try
         {
