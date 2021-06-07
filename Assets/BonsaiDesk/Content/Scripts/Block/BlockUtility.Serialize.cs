@@ -66,11 +66,10 @@ public static partial class BlockUtility
             var rootRotation = blockObject.transform.rotation;
             if (saveDialogPos.HasValue && InputManager.Hands.head)
             {
-                var headToSavePosFlat = InputManager.Hands.head.transform.position - saveDialogPos.Value;
+                var headToSavePosFlat = saveDialogPos.Value - InputManager.Hands.head.transform.position;
                 headToSavePosFlat.y = 0;
                 var headToSaveRot = Quaternion.LookRotation(headToSavePosFlat);
                 rootRotation = Quaternion.Inverse(headToSaveRot) * rootRotation;
-                rootRotation = Quaternion.AngleAxis(90f, Vector3.up) * rootRotation;
             }
             data += "\n" + rootRotation.ToString("F5");
         }

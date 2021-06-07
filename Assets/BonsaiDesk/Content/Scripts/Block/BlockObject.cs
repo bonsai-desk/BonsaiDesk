@@ -20,6 +20,7 @@ public partial class BlockObject : NetworkBehaviour
     //contains all of the AutoAuthority of all BlockObjects in the scene
     private static readonly HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
 
+    //caches save string between clicking save and creating name
     public static string StagedSaveData;
 
     //---all of the data required to reconstruct this block object---
@@ -143,6 +144,12 @@ public partial class BlockObject : NetworkBehaviour
 
     //used so we can just check for problems every few seconds, not every frame
     private float _nextCheckBlockObjectForProblemsTime;
+
+    //used to keep track of in use dialog and close it after some amount of time if it is not used
+    private Coroutine _dialogTimeoutCoroutine;
+
+    //number of blocks which contribute to the weight of the object. it could be calculated when requested, but this variable caches it
+    private int _numWeightedBlocks;
 
     //for testing purposes
     public bool debug = false;
@@ -375,11 +382,13 @@ public partial class BlockObject : NetworkBehaviour
                         {
                             checkRot = 36;
                         }
+
                         var otherRot = syncBlock.rotation;
                         if (otherRot == 0)
                         {
                             otherRot = 36;
                         }
+
                         if (meshBlock.name != syncBlock.name || checkRot != otherRot)
                         {
                             Debug.LogError(
@@ -620,7 +629,7 @@ public partial class BlockObject : NetworkBehaviour
             Debug.LogError("Command: Attempted to add block which already exists");
             return;
         }
-        
+
         Blocks.Add(coord, new SyncBlock(blockName, rotationByte));
         if (_updateValidOrientationFromRootFrame != Time.frameCount)
         {
@@ -1044,8 +1053,38 @@ public partial class BlockObject : NetworkBehaviour
                     _dialogLocalPositionRoot = transform.InverseTransformPoint(contactPoint);
                     _activeDialog = Instantiate(breakWholeDialogPrefab);
                     UpdateDialogPosition();
-                    _activeDialog.transform.GetChild(0).GetComponent<HoverButton>().action.AddListener(CloseDialog);
-                    _activeDialog.transform.GetChild(1).GetComponent<HoverButton>().action.AddListener(Delete);
+                    _activeDialog.transform.GetChild(0).GetComponent<HoverButton>().action.AddListener(() =>
+                    {
+                        _activeWholeEffect = null;
+                        if (_dialogTimeoutCoroutine != null)
+                        {
+                            StopCoroutine(_dialogTimeoutCoroutine);
+                            _dialogTimeoutCoroutine = null;
+                        }
+
+                        if (NetworkClient.connection != null && NetworkClient.connection.identity)
+                        {
+                            _autoAuthority.CmdRemoveInUse(NetworkClient.connection.identity.netId);
+                        }
+
+                        CloseDialog();
+                    });
+                    _activeDialog.transform.GetChild(1).GetComponent<HoverButton>().action.AddListener(() =>
+                    {
+                        _activeWholeEffect = null;
+                        if (_dialogTimeoutCoroutine != null)
+                        {
+                            StopCoroutine(_dialogTimeoutCoroutine);
+                            _dialogTimeoutCoroutine = null;
+                        }
+
+                        if (NetworkClient.connection != null && NetworkClient.connection.identity)
+                        {
+                            _autoAuthority.CmdRemoveInUse(NetworkClient.connection.identity.netId);
+                        }
+
+                        Delete();
+                    });
                     break;
                 case BlockBreakHand.BreakMode.Duplicate:
                     if (NetworkClient.connection != null && NetworkClient.connection.identity)
@@ -1073,8 +1112,41 @@ public partial class BlockObject : NetworkBehaviour
                     break;
             }
 
-            _activeWholeEffect.activated = true;
+            if (!_activeWholeEffect.activated)
+            {
+                _activeWholeEffect.activated = true;
+
+                if (_dialogTimeoutCoroutine != null)
+                {
+                    StopCoroutine(_dialogTimeoutCoroutine);
+                    _dialogTimeoutCoroutine = null;
+                }
+
+                if (_activeWholeEffect.mode != BlockBreakHand.BreakMode.Duplicate)
+                {
+                    _dialogTimeoutCoroutine = StartCoroutine(DialogTimeout(Time.time));
+                }
+            }
         }
+    }
+
+    private IEnumerator DialogTimeout(float startTime)
+    {
+        while (Time.time - startTime < 10f)
+        {
+            if (!_autoAuthority.HasAuthority())
+            {
+                _activeWholeEffect = null;
+                CloseDialog();
+                yield break;
+            }
+
+            yield return null;
+        }
+
+        //if coroutine has not been stopped by this point, close it
+        _activeWholeEffect = null;
+        CloseDialog();
     }
 
     private void DamageBlock(Vector3Int coord)
@@ -1189,8 +1261,7 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        ApplyWholeEffectMaterialProperties(Color.red, 0);
-
+        ApplyWholeEffectMaterialProperties(Color.red, 0, false);
 
         if (_activeWholeEffect == null)
         {
@@ -1198,7 +1269,7 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         _activeWholeEffect.framesSinceLastDamage++;
-        if (_activeWholeEffect.framesSinceLastDamage >= 3)
+        if (_activeWholeEffect.framesSinceLastDamage >= 3 && (!_activeWholeEffect.activated || _activeWholeEffect.mode == BlockBreakHand.BreakMode.Duplicate))
         {
             _activeWholeEffect.progress = 0;
             _activeWholeEffect = null;
@@ -1222,11 +1293,17 @@ public partial class BlockObject : NetworkBehaviour
                 break;
         }
 
-        ApplyWholeEffectMaterialProperties(color, _activeWholeEffect.progress);
+        var setKinematic = _activeWholeEffect.progress >= 1f && _activeWholeEffect.mode != BlockBreakHand.BreakMode.Duplicate;
+        ApplyWholeEffectMaterialProperties(color, _activeWholeEffect.progress, setKinematic);
     }
 
-    private void ApplyWholeEffectMaterialProperties(Color color, float progress)
+    private void ApplyWholeEffectMaterialProperties(Color color, float progress, bool setKinematic)
     {
+        if (setKinematic)
+        {
+            _autoAuthority.SetKinematicLocalForOneFrame();
+        }
+
         blockObjectMaterial.SetFloat(EffectProgress, Mathf.Clamp01(progress));
         blockObjectMaterial.SetColor(EffectColor, color);
         foreach (var coord in _blockGameObjects)
@@ -1239,7 +1316,7 @@ public partial class BlockObject : NetworkBehaviour
         {
             if (pair.Value.Value)
             {
-                pair.Value.Value.GetComponent<BlockObject>().ApplyWholeEffectMaterialProperties(color, progress);
+                pair.Value.Value.GetComponent<BlockObject>().ApplyWholeEffectMaterialProperties(color, progress, setKinematic);
             }
         }
     }
@@ -1306,7 +1383,7 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        var (boxCollidersNotNeeded, mass, destroySphere) = BlockUtility.UpdateHitBox(MeshBlocks, _boxCollidersInUse, _physicsBoxesObject, _sphereObject,
+        var (boxCollidersNotNeeded, destroySphere) = BlockUtility.UpdateHitBox(MeshBlocks, _boxCollidersInUse, _physicsBoxesObject, _sphereObject,
             blockPhysicMaterial, spherePhysicMaterial, this);
         while (boxCollidersNotNeeded.Count > 0)
         {
@@ -1342,7 +1419,44 @@ public partial class BlockObject : NetworkBehaviour
             }
         }
 
-        _body.mass = mass;
+        _numWeightedBlocks = 0;
+        foreach (var pair in MeshBlocks)
+        {
+            if (pair.Value.name != "bearing")
+            {
+                _numWeightedBlocks++;
+            }
+        }
+
+        if (MeshBlocks.Count <= 1)
+        {
+            _numWeightedBlocks = 1;
+        }
+
+        var blockObjects = BlockUtility.GetBlockObjectsFromRoot(BlockUtility.GetRootBlockObject(this));
+        var totalWeightedBlocks = 0;
+        for (int i = 0; i < blockObjects.Count; i++)
+        {
+            //a blockObject should have at least one weighted block. if it is 0 it probably is not initialized yet. when it is, it will fix the mass for
+            //all attached blockObjects. set it to 1 for now to prevent a divide by 0 error
+            if (blockObjects[i]._numWeightedBlocks <= 0)
+            {
+                blockObjects[i]._numWeightedBlocks = 1;
+            }
+
+            totalWeightedBlocks += blockObjects[i]._numWeightedBlocks;
+        }
+
+        for (int i = 0; i < blockObjects.Count; i++)
+        {
+            if (blockObjects[i]._numWeightedBlocks != 0)
+            {
+                blockObjects[i]._body.mass = (float) blockObjects[i]._numWeightedBlocks / totalWeightedBlocks;
+            }
+
+            totalWeightedBlocks += blockObjects[i]._numWeightedBlocks;
+        }
+        
         _resetCoM = true;
 
         //if any blocks are added or removed, close the save dialog if it is up
@@ -1475,15 +1589,37 @@ public partial class BlockObject : NetworkBehaviour
     [Command]
     private void CmdDuplicate(uint ownerId)
     {
-        var blockObjectGameObject = Instantiate(StaticPrefabs.instance.blockObjectPrefab, new Vector3(0, 1.5f, 0), Quaternion.identity);
+        var rootBlockObject = BlockUtility.GetRootBlockObject(this);
+        ServerDuplicateBlockObject(ownerId, rootBlockObject, null).ServerTeleportToDeskSurface();
+    }
+
+    [Server]
+    private BlockObject ServerDuplicateBlockObject(uint ownerId, BlockObject rootBlockObject, BlockObject parent)
+    {
+        var blockObjectGameObject =
+            Instantiate(StaticPrefabs.instance.blockObjectPrefab, rootBlockObject.transform.position, rootBlockObject.transform.rotation);
         var blockObject = blockObjectGameObject.GetComponent<BlockObject>();
-        foreach (var pair in Blocks)
+        foreach (var pair in rootBlockObject.Blocks)
         {
             blockObject.Blocks.Add(pair);
         }
 
         NetworkServer.Spawn(blockObjectGameObject);
+
+        if (rootBlockObject.SyncJoint.connected && parent)
+        {
+            var jointInfo = new SyncJoint(rootBlockObject.SyncJoint, new NetworkIdentityReference(parent.netIdentity));
+            blockObject.ServerConnectJoint(jointInfo);
+        }
+
         blockObjectGameObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time, false);
+
+        foreach (var pair in rootBlockObject.ConnectedToSelf)
+        {
+            ServerDuplicateBlockObject(ownerId, pair.Value.Value.GetComponent<BlockObject>(), blockObject);
+        }
+
+        return blockObject;
     }
 
     private void UpdateDialogPosition()
@@ -1507,12 +1643,32 @@ public partial class BlockObject : NetworkBehaviour
         {
             Destroy(_activeDialog);
             _activeDialog = null;
+            if (_activeWholeEffect != null && _activeWholeEffect.activated)
+            {
+                _activeWholeEffect = null;
+            }
+
+            if (_dialogTimeoutCoroutine != null)
+            {
+                StopCoroutine(_dialogTimeoutCoroutine);
+                _dialogTimeoutCoroutine = null;
+            }
         }
 
         if (root._activeDialog)
         {
             Destroy(root._activeDialog);
             root._activeDialog = null;
+            if (root._activeWholeEffect != null && root._activeWholeEffect.activated)
+            {
+                root._activeWholeEffect = null;
+            }
+
+            if (root._dialogTimeoutCoroutine != null)
+            {
+                StopCoroutine(root._dialogTimeoutCoroutine);
+                _dialogTimeoutCoroutine = null;
+            }
         }
     }
 
@@ -1653,9 +1809,8 @@ public partial class BlockObject : NetworkBehaviour
     [Server]
     public static void ServerDestroyFromBlockObjectRoot(BlockObject rootObject)
     {
-        ServerDisconnectAllJointsFromRoot(rootObject);
-
         var blockObjects = BlockUtility.GetBlockObjectsFromRoot(rootObject);
+        ServerDisconnectAllJointsFromRoot(rootObject);
 
         for (int i = 0; i < blockObjects.Count; i++)
         {
