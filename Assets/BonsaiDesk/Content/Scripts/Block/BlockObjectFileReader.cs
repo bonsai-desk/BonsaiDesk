@@ -18,6 +18,16 @@ public static class BlockObjectFileReader
             return $"fileName: {FileName} content: {!string.IsNullOrEmpty(Content)} displayName: {DisplayName}";
         }
     }
+    
+    class DescComparer<T> : IComparer<T>
+    {
+        public int Compare(T x, T y)
+        {
+            if(x == null) return -1;
+            if(y == null) return 1;
+            return Comparer<T>.Default.Compare(y, x);
+        }
+    }
 
     public static BlockObjectFile[] GetBlockObjectFiles()
     {
@@ -27,7 +37,7 @@ public static class BlockObjectFileReader
             return null;
         }
 
-        var blockObjectFiles = new SortedList<long, List<BlockObjectFile>>();
+        var blockObjectFiles = new SortedList<long, List<BlockObjectFile>>(new DescComparer<long>());
 
         var fileName = string.Empty;
         var displayName = string.Empty;
@@ -66,7 +76,7 @@ public static class BlockObjectFileReader
     {
         var fileName = string.Empty;
         var displayName = string.Empty;
-        unixTimestamp = 0;
+        unixTimestamp = long.MaxValue;
 
         var name = inputFileName;
         if (name.Length < 5) //name must at least have .txt and 1 character
@@ -95,7 +105,7 @@ public static class BlockObjectFileReader
                 unixTimestamp = num;
             }
 
-            displayName = name.Substring(dashIndex + 2, name.Length - (dashIndex + 2));
+            displayName = name.Substring(dashIndex + 1, name.Length - (dashIndex + 1));
         }
 
         blockObjectFile = new BlockObjectFile() {FileName = fileName, Content = string.Empty, DisplayName = displayName};
