@@ -251,6 +251,9 @@ public class TableBrowserMenu : MonoBehaviour
                     case "deleteBuild":
                         PostDeleteBuild(message.Data);
                         break;
+                    case "spawnBuild":
+                        SpawnBuild(message.Data);
+                        break;
                 }
 
                 break;
@@ -294,6 +297,15 @@ public class TableBrowserMenu : MonoBehaviour
         {
             PostBlockList();
         }
+    }
+
+    private void SpawnBuild(string data)
+    {
+       if (!string.IsNullOrEmpty(data))
+       {
+           BlockObjectSpawner.Instance.SpawnFromString(data);
+       }
+        
     }
 
     private void RefreshBuilds()

@@ -7,7 +7,7 @@ import {
     grayButtonClassInert,
     greenButtonClass,
     lightGrayButtonClass,
-    orangeButtonClass,
+    orangeButtonClass, redButtonClass,
 } from '../cssClasses';
 import {useStore} from '../DataProvider';
 import axios from 'axios';
@@ -20,7 +20,7 @@ import DownloadImg from '../static/download.svg';
 import PostImg from '../static/post-add.svg';
 import jwt from 'jsonwebtoken';
 import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
-import {postDeleteBuild, postSaveBuild, postStageBuild} from '../api';
+import {postDeleteBuild, postSaveBuild, postSpawnBuild, postStageBuild} from '../api';
 
 const DeleteState = {
     None: 0, Failed: 1, Success: 2,
@@ -31,10 +31,27 @@ const PublishState = {
 };
 
 let hamburgerButton = 'relative h-20 w-20 rounded-full cursor-pointer flex flex-wrap content-center font-bold bg-gray-800  active:bg-gray-700  hover:bg-gray-600';
+let redHamburgerButton = 'relative h-20 w-20 rounded-full cursor-pointer flex flex-wrap content-center font-bold bg-red-800';
 
-let SpawnButton = observer(() => {
-    return <InstantButton onClick={() => {
-    }} className={hamburgerButton}>
+let SpawnButton = observer(({build_id}) => {
+    let [failed, setFailed] = useState(false)
+    let {store} = useStore();
+    let url = store.ApiBase + `/blocks/builds/${build_id}`
+    function fetchBuildData () {
+        if (failed) {
+            return;
+        }
+        axios.get(url).then(resp => {
+            postSpawnBuild(resp.data.data)
+        }).catch(err => {
+            console.log(err)
+            setFailed(true)
+        })
+    }
+    
+    let className = failed ? redHamburgerButton : hamburgerButton
+    
+    return <InstantButton onClick={fetchBuildData} className={className}>
         <img src={DownloadImg} alt={'Menu'} className={'absolute left-5 bottom-5 w-10'}/>
     </InstantButton>;
 });
@@ -307,7 +324,7 @@ let BlockPost = observer(({
     const slug = `${myPost ? 'You' : user_name} ${ago}`;
     const LeftItems = <div className={'flex space-x-4 flex-wrap'}>
         <ThumbButton imgSrc={ThumbImg} likes={likes} buildId={build_id} liked={liked}/>
-        <SpawnButton/>
+        <SpawnButton build_id={build_id}/>
         <InstantButton onClick={handleClickBurger} className={hamburgerButton}>
             <img src={MenuImg} alt={'Menu'} className={'absolute left-5 bottom-5 w-10'}/>
         </InstantButton>

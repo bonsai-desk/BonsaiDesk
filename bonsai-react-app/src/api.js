@@ -115,6 +115,10 @@ export function postDeleteBuild(buildId){
     postJson({Type: "command", Message: "deleteBuild", Data: buildId})
 }
 
+export function postSpawnBuild(data) {
+    postJson({Type: "command", Message: "spawnBuild", Data: data})
+}
+
 export const Layout = {
     Across: 0, SideBySide: 1,
 };
