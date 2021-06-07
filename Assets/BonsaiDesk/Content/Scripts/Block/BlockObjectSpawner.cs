@@ -153,7 +153,7 @@ public class BlockObjectSpawner : NetworkBehaviour
         {
             var msg = "Failed to spawn structure. Could not parse.";
             Debug.LogError(msg);
-            MessageStack.Singleton.AddMessage(msg);
+            MessageStackNetController.Instance.ServerMsg(msg, MessageStack.MessageType.Bad);
             return;
         }
 

@@ -115,6 +115,10 @@ export function postSpawnBuild(data) {
     postJson({Type: "command", Message: "spawnBuild", Data: data})
 }
 
+export function postSpawnBuildById(Id){
+    postJson({Type: "command", Message: "spawnBuildById", Data: Id})
+}
+
 export const Layout = {
     Across: 0, SideBySide: 1,
 };

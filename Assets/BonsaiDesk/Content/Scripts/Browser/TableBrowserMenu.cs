@@ -255,6 +255,9 @@ public class TableBrowserMenu : MonoBehaviour
                     case "spawnBuild":
                         SpawnBuild(message.Data);
                         break;
+                    case "spawnBuildById":
+                        SpawnBuildFromId(message.Data);
+                        break;
                     case "saveBuild":
                         SaveBuild(message.Data);
                         break;
@@ -267,21 +270,46 @@ public class TableBrowserMenu : MonoBehaviour
         }
     }
 
+    private void SpawnBuildFromId(string messageData)
+    {
+        if (!string.IsNullOrEmpty(messageData))
+        {
+            var spawned = BlockObjectSpawner.Instance.SpawnFromFileName(messageData);
+            if (spawned)
+            {
+                TableBrowserParent.Instance.MenuSleep();
+            }
+            else
+            {
+                MessageStack.Singleton.AddMessage("Empty Block Message Data", MessageStack.MessageType.Bad);
+            }
+        }
+        else
+        {
+            MessageStack.Singleton.AddMessage("Empty Block Message Data", MessageStack.MessageType.Bad);
+        }
+    }
+
     private void SaveBuild(string messageData)
     {
-        
-        BonsaiLogWarning(messageData);
-        var saved = BlockObjectFileReader.SaveStagedBlockObject(messageData);
-        if (saved)
+        if (!string.IsNullOrEmpty(messageData))
         {
-            PostBlockList();
-            PostStagedSavedOk();
+            var saved = BlockObjectFileReader.SaveStagedBlockObject(messageData);
+            if (saved)
+            {
+                PostBlockList();
+                PostStagedSavedOk();
+            }
+        }
+        else
+        {
+            MessageStack.Singleton.AddMessage("Can't save empty build");
         }
     }
 
     private void PostStagedSavedOk()
     {
-        var data = new BuildsSaved() {SavedOk = true};
+        var data = new BuildsSaved {SavedOk = true};
         var msg = Message(data, "Builds");
         browser.PostMessage(msg);
     }
@@ -350,6 +378,10 @@ public class TableBrowserMenu : MonoBehaviour
         {
             PostBlockList();
         }
+        else
+        {
+            MessageStack.Singleton.AddMessage("Failed to Delete", MessageStack.MessageType.Bad);
+        }
     }
 
     private void SpawnBuild(string data)
@@ -358,7 +390,13 @@ public class TableBrowserMenu : MonoBehaviour
         var content = Encoding.ASCII.GetString(bytes);
         if (!string.IsNullOrEmpty(content))
         {
+            // todo need a check here
             BlockObjectSpawner.Instance.SpawnFromString(content);
+            TableBrowserParent.Instance.MenuSleep();
+        }
+        else
+        {
+            MessageStack.Singleton.AddMessage("Empty Block Object", MessageStack.MessageType.Bad);
         }
     }
 
@@ -553,7 +591,6 @@ public class TableBrowserMenu : MonoBehaviour
         browser.PostMessage(Browser.BrowserMessage.NavToMenu);
         browser.PostMessage(Browser.BrowserMessage.NavToSaveDraft);
         TableBrowserParent.Instance.OpenMenu();
-        
     }
 
     private struct BuildsSaved
