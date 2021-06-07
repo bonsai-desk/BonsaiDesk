@@ -531,8 +531,6 @@ public class TableBrowserMenu : MonoBehaviour
 
     public event EventHandler<SpotManager.Layout> LayoutChange;
 
-    public event EventHandler<string> RequestStageBuild;
-
     private void BonsaiLog(string msg)
     {
         Debug.Log("<color=orange>BonsaiTableBrowserMenu: </color>: " + msg);

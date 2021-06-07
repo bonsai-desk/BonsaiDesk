@@ -77,19 +77,35 @@ public class LockObjectHand : MonoBehaviour, IHandTick
     //if you don't have authority after a short delay, detach
     private IEnumerator CheckAuthorityAfterDelay()
     {
-        yield return new WaitForSeconds(1f);
+        var startTime = Time.time;
+        var autoAuthority = joint.connectedBody.GetComponent<AutoAuthority>();
+        var lastInUseSet = 0f;
 
         while (true)
         {
-            if (joint && joint.connectedBody)
+            if (!autoAuthority || !autoAuthority.gameObject || !(joint && joint.connectedBody))
             {
-                var autoAuthority = joint.connectedBody.GetComponent<AutoAuthority>();
-                if (!autoAuthority.HasAuthority())
+                yield break;
+            }
+            
+            if (Time.time - startTime > 1f)
+            {
+                if (joint && joint.connectedBody)
                 {
-                    DetachObject();
-                    yield break;
+                    if (!autoAuthority.HasAuthority())
+                    {
+                        DetachObject();
+                        yield break;
+                    }
                 }
             }
+            
+            if (Time.time - lastInUseSet > 0.1f)
+            {
+                lastInUseSet = Time.time;
+                autoAuthority.RefreshInUse(1f);
+            }
+            
             yield return null;
         }
     }
@@ -150,7 +166,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
     private void ConnectObject(AutoAuthority autoAuthority)
     {
         // autoAuthority.CmdSetNewOwner(NetworkClient.connection.identity.netId, NetworkTime.time, true);
-        autoAuthority.ClientSetNewOwnerFake(NetworkClient.connection.identity.netId, NetworkTime.time, true);
+        autoAuthority.ClientSetNewOwnerFake(NetworkClient.connection.identity.netId, NetworkTime.time, true, 1f);
 
         joint = InputManager.Hands.GetHand(playerHand.skeletonType).PhysicsHand.gameObject.AddComponent<ConfigurableJoint>();
         joint.anchor = playerHand.transform.InverseTransformPoint(autoAuthority.transform.position);

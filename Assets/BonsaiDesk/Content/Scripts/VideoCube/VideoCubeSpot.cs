@@ -126,7 +126,7 @@ public class VideoCubeSpot : NetworkBehaviour
 
         //strip authority away from client
         var autoAuthority = videoIdentity.GetComponent<AutoAuthority>();
-        autoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true);
+        autoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, true, AnimationTime);
         autoAuthority.isKinematic = true;
     }
 }

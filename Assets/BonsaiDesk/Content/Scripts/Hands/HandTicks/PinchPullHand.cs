@@ -152,21 +152,38 @@ public class PinchPullHand : MonoBehaviour, IHandTick
     //as long as the object is not inUse, you can immediately attach to it. if someone else quickly touches it they may gain authority even though you
     //are attached. This function checks after a short delay after you attach to make sure you were able to successfully gain authority and set inUse
     //if you don't have authority after a short delay, detach
+    //also refresh inUse
     private IEnumerator CheckAuthorityAfterDelay()
     {
-        yield return new WaitForSeconds(1f);
+        var startTime = Time.time;
+        var autoAuthority = pinchPullJoint.connectedBody.GetComponent<AutoAuthority>();
+        var lastInUseSet = 0f;
 
         while (true)
         {
-            if (pinchPullJoint.connectedBody)
+            if (!autoAuthority || !autoAuthority.gameObject || !pinchPullJoint.connectedBody)
             {
-                var autoAuthority = pinchPullJoint.connectedBody.GetComponent<AutoAuthority>();
-                if (!autoAuthority.HasAuthority())
+                yield break;
+            }
+            
+            if (Time.time - startTime > 1f)
+            {
+                if (pinchPullJoint.connectedBody)
                 {
-                    DetachObject();
-                    yield break;
+                    if (!autoAuthority.HasAuthority())
+                    {
+                        DetachObject();
+                        yield break;
+                    }
                 }
             }
+
+            if (Time.time - lastInUseSet > 0.1f)
+            {
+                lastInUseSet = Time.time;
+                autoAuthority.RefreshInUse(1f);
+            }
+
             yield return null;
         }
     }
