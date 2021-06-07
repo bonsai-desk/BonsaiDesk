@@ -358,13 +358,7 @@ public class TableBrowserMenu : MonoBehaviour
         var content = Encoding.ASCII.GetString(bytes);
         if (!string.IsNullOrEmpty(content))
         {
-            var success = BlockObjectSpawner.Instance.SpawnFromString(content);
-            if (!success)
-            {
-                var msg = "failed to spawn";
-                Debug.LogError(msg);
-                MessageStack.Singleton.AddMessage(msg, MessageStack.MessageType.Bad);
-            }
+            BlockObjectSpawner.Instance.SpawnFromString(content);
         }
     }
 
