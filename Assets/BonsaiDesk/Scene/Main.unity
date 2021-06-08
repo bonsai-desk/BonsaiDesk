@@ -6429,7 +6429,7 @@ MonoBehaviour:
   reservedMixerGroup: {fileID: 0}
   voiceChatMixerGroup: {fileID: 0}
   verboseLogging: 0
-  maxSoundEmitters: 32
+  maxSoundEmitters: 100
   volumeSoundFX: 1
   soundFxFadeSecs: 1
   audioMinFallOffDistance: 0
