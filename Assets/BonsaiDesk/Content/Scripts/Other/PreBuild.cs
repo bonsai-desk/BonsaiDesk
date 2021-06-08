@@ -7,6 +7,7 @@ using UnityEngine;
 public class PreBuild : IPreprocessBuildWithReport
 {
     public int callbackOrder => 0;
+
     public void OnPreprocessBuild(BuildReport report)
     {
         var go = GameObject.FindObjectOfType<NetworkManagerGame>();
@@ -18,6 +19,9 @@ public class PreBuild : IPreprocessBuildWithReport
         {
             Debug.LogError("Cant find NetworkManagerGame for build");
         }
+
+        PlayerSettings.keystorePass = "";
+        PlayerSettings.keyaliasPass = "";
     }
 }
 #endif
