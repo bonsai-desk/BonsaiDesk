@@ -24,12 +24,6 @@ public class HoverButton : MonoBehaviour
 
     private void OnDisable()
     {
-        if (emitterId != -1)
-        {
-            AudioManager.StopSound(emitterId, false);
-            emitterId = -1;
-        }
-        
         _activeTimer = 0;
         progressImage.fillAmount = Mathf.Clamp01(_activeTimer / activationTime);
     }
@@ -52,7 +46,7 @@ public class HoverButton : MonoBehaviour
 
         if (fingerTouchingButton)
         {
-            if (emitterId == -1)
+            if (!_activated && emitterId == -1)
             {
                 emitterId = tickSound.PlaySoundAt(transform.position);
                 if (emitterId != -1)
@@ -81,6 +75,12 @@ public class HoverButton : MonoBehaviour
         if (transform.gameObject.activeInHierarchy && !_activated && _activeTimer > activationTime)
         {
             _activated = true;
+            if (emitterId != -1)
+            {
+                AudioManager.DetachSoundFromParent(emitterId);
+                AudioManager.StopSound(emitterId, false);
+                emitterId = -1;
+            }
             action?.Invoke();
         }
     }

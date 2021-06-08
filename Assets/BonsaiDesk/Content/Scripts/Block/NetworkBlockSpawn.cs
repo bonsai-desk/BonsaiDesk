@@ -25,11 +25,10 @@ public class NetworkBlockSpawn : NetworkBehaviour
     private float _readyToSpawnTime = 0f;
 
     private NetworkIdentity _lastSpawned;
-    public NetworkIdentity LastSpawned => _lastSpawned;
 
-    public void SetLastSpawned(NetworkIdentity netIdentity)
+    public void SetLastSpawned(NetworkIdentity nid)
     {
-        _lastSpawned = netIdentity;
+        _lastSpawned = nid;
     }
 
     private Rigidbody _lastSpawnedBody;
@@ -60,12 +59,15 @@ public class NetworkBlockSpawn : NetworkBehaviour
             return;
         }
 
+        transform.GetChild(0).gameObject.SetActive(!string.IsNullOrEmpty(_spawnBlockName));
+
         var (foundNotLastSpawned, foundLastSpawned) = CheckBox(transform.position, transform.rotation);
         if (!foundLastSpawned)
         {
             _lastSpawned = null;
             _lastSpawnedBody = null;
         }
+
         var recalculateSpawnerPos = foundNotLastSpawned && !foundLastSpawned;
 
         var newSpawnPos = CheckRow(transform.parent.position);
@@ -115,7 +117,7 @@ public class NetworkBlockSpawn : NetworkBehaviour
     {
         var foundNotLastSpawned = false;
         var foundLastSpawned = false;
-        var num = Physics.OverlapBoxNonAlloc(center, _halfExtends, _results, rotation, BlockUtility.DefaultLayerMaskPlusNetworkHandsMinusLocalHands,
+        var num = Physics.OverlapBoxNonAlloc(center, _halfExtends, _results, rotation, BlockUtility.DefaultLayerMaskMinusPlayers,
             QueryTriggerInteraction.Ignore);
 
         for (int i = 0; i < num; i++)
@@ -244,9 +246,11 @@ public class NetworkBlockSpawn : NetworkBehaviour
                 var identity = _results[i].attachedRigidbody.GetComponent<NetworkIdentity>();
                 if (identity && identity == _lastSpawned)
                 {
-                    if (_lastSpawned.GetComponent<BlockObject>().Blocks.Count == 1)
+                    var lastBlockObject = _lastSpawned.GetComponent<BlockObject>();
+                    if (lastBlockObject && lastBlockObject.Blocks.Count == 1)
                     {
-                        _lastSpawned.GetComponent<AutoAuthority>().CmdDestroy();
+                        lastBlockObject.ActiveLocal = false;
+                        lastBlockObject.AutoAuthority.CmdDestroy();
                     }
 
                     _lastSpawned = null;

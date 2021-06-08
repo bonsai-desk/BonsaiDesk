@@ -583,10 +583,10 @@ public static partial class BlockUtility
 
     private static int _defaultLayerMask;
     private static int _defaultLayerMaskPlusNetworkHands;
-    private static int _defaultLayerMaskPlusNetworkHandsMinuLocalHands;
+    private static int _defaultLayerMaskMinusPlayers;
     public static int DefaultLayerMask => GetDefaultLayerMask();
     public static int DefaultLayerMaskPlusNetworkHands => GetDefaultLayerMaskPlusNetworkHands();
-    public static int DefaultLayerMaskPlusNetworkHandsMinusLocalHands => GetDefaultLayerMaskPlusNetworkHandsMinusLocalHands();
+    public static int DefaultLayerMaskMinusPlayers => GetDefaultLayerMaskMinusPlayers();
 
     private static int GetDefaultLayerMask()
     {
@@ -618,15 +618,16 @@ public static partial class BlockUtility
         return _defaultLayerMaskPlusNetworkHands;
     }
 
-    private static int GetDefaultLayerMaskPlusNetworkHandsMinusLocalHands()
+    private static int GetDefaultLayerMaskMinusPlayers()
     {
-        if (_defaultLayerMaskPlusNetworkHandsMinuLocalHands == 0)
+        if (_defaultLayerMaskMinusPlayers == 0)
         {
-            _defaultLayerMaskPlusNetworkHandsMinuLocalHands = DefaultLayerMaskPlusNetworkHands & (~1 << LayerMask.NameToLayer("LeftHand")) &
-                                                              (~1 << LayerMask.NameToLayer("RightHand")) & (~1 << LayerMask.NameToLayer("IndexTip"));
+            _defaultLayerMaskMinusPlayers = DefaultLayerMask & ~(1 << LayerMask.NameToLayer("LeftHand")) & ~(1 << LayerMask.NameToLayer("RightHand")) &
+                                               ~(1 << LayerMask.NameToLayer("IndexTip")) & ~(1 << LayerMask.NameToLayer("networkPlayer")) &
+                                               ~(1 << LayerMask.NameToLayer("networkHand"));
         }
 
-        return _defaultLayerMaskPlusNetworkHandsMinuLocalHands;
+        return _defaultLayerMaskMinusPlayers;
     }
 
     public static (List<Dictionary<Vector3Int, SyncBlock>> filledBlocksGroups, int indexOfLargest) GetFilledBlocksGroups(Vector3Int coord,
