@@ -9,10 +9,48 @@ public class SaveSystem : MonoBehaviour
 {
     public static SaveSystem Instance { get; private set; }
 
-    public Dictionary<string, bool> BoolPairs = new Dictionary<string, bool>();
-    public Dictionary<string, int> IntPairs = new Dictionary<string, int>();
-    public Dictionary<string, float> FloatPairs = new Dictionary<string, float>();
-    public Dictionary<string, string> StringPairs = new Dictionary<string, string>();
+    private bool _possiblyUnsavedData;
+
+    private Dictionary<string, bool> _boolPairs = new Dictionary<string, bool>();
+    private Dictionary<string, int> _intPairs = new Dictionary<string, int>();
+    private Dictionary<string, float> _floatPairs = new Dictionary<string, float>();
+    private Dictionary<string, string> _stringPairs = new Dictionary<string, string>();
+
+    public Dictionary<string, bool> BoolPairs
+    {
+        get
+        {
+            _possiblyUnsavedData = true;
+            return _boolPairs;
+        }
+    }
+
+    public Dictionary<string, int> IntPairs
+    {
+        get
+        {
+            _possiblyUnsavedData = true;
+            return _intPairs;
+        }
+    }
+
+    public Dictionary<string, float> FloatPairs
+    {
+        get
+        {
+            _possiblyUnsavedData = true;
+            return _floatPairs;
+        }
+    }
+
+    public Dictionary<string, string> StringPairs
+    {
+        get
+        {
+            _possiblyUnsavedData = true;
+            return _stringPairs;
+        }
+    }
 
     private void Awake()
     {
@@ -47,27 +85,32 @@ public class SaveSystem : MonoBehaviour
 
         if (dictionaries.TryGetValue(typeof(bool), out var value))
         {
-            BoolPairs = (Dictionary<string, bool>) value;
+            _boolPairs = (Dictionary<string, bool>) value;
         }
 
         if (dictionaries.TryGetValue(typeof(int), out value))
         {
-            IntPairs = (Dictionary<string, int>) value;
+            _intPairs = (Dictionary<string, int>) value;
         }
 
         if (dictionaries.TryGetValue(typeof(float), out value))
         {
-            FloatPairs = (Dictionary<string, float>) value;
+            _floatPairs = (Dictionary<string, float>) value;
         }
 
         if (dictionaries.TryGetValue(typeof(string), out value))
         {
-            StringPairs = (Dictionary<string, string>) value;
+            _stringPairs = (Dictionary<string, string>) value;
         }
     }
 
     public void Save()
     {
+        if (!_possiblyUnsavedData)
+        {
+            return;
+        }
+
         string destination = Path.Combine(Application.persistentDataPath, "save.dat");
         print("Saving file to " + destination);
 
@@ -76,10 +119,10 @@ public class SaveSystem : MonoBehaviour
         else file = File.Create(destination);
 
         var dictionaries = new Dictionary<Type, IDictionary>();
-        dictionaries.Add(typeof(bool), BoolPairs);
-        dictionaries.Add(typeof(int), IntPairs);
-        dictionaries.Add(typeof(float), FloatPairs);
-        dictionaries.Add(typeof(string), StringPairs);
+        dictionaries.Add(typeof(bool), _boolPairs);
+        dictionaries.Add(typeof(int), _intPairs);
+        dictionaries.Add(typeof(float), _floatPairs);
+        dictionaries.Add(typeof(string), _stringPairs);
 
         var bf = new BinaryFormatter();
         bf.Serialize(file, dictionaries);
@@ -89,5 +132,26 @@ public class SaveSystem : MonoBehaviour
     private void OnDestroy()
     {
         Save();
+    }
+
+    private void OnApplicationQuit()
+    {
+        Save();
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus)
+        {
+            Save();
+        }
+    }
+
+    private void OnApplicationPause(bool pauseStatus)
+    {
+        if (pauseStatus)
+        {
+            Save();
+        }
     }
 }

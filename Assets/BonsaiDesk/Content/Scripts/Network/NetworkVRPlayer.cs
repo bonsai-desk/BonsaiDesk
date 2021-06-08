@@ -80,7 +80,7 @@ public class NetworkVRPlayer : NetworkBehaviour
         _moveToDesk.SetTableEdge(tableEdge);
 
         //move head (hands are teleported as part of SetTableEdge)
-        GetComponent<NetworkFollow>().MoveToTarget();
+        GetComponent<HeadFollowPhysics>().ResetToTarget();
         GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
     }
 

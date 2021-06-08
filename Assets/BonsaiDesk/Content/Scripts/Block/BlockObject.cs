@@ -46,6 +46,9 @@ public partial class BlockObject : NetworkBehaviour
     //the purpose is to prevent a split block structure from spawning in the current block structure before the blocks are removed
     [SyncVar] private NetworkIdentityReference _spawnedForBrokenStructure = new NetworkIdentityReference();
 
+    [SyncVar] private uint _spawnedForClientLeft;
+    [SyncVar] private uint _spawnedForClientRight;
+
     public SyncDictionary<Vector3Int, SyncBlock> Blocks => _blocks;
     public SyncDictionary<Vector3Int, NetworkIdentityReference> ConnectedToSelf => _connectedToSelf;
     public SyncJoint SyncJoint => _syncJoint;
@@ -189,6 +192,18 @@ public partial class BlockObject : NetworkBehaviour
         _isInit = true;
 
         gameObject.name = "Block Object - " + Random.Range(0, int.MaxValue);
+        
+        if (NetworkClient.connection != null && NetworkClient.connection.identity)
+        {
+            if (_spawnedForClientLeft == NetworkClient.connection.identity.netId)
+            {
+                NetworkBlockSpawn.InstanceLeft.SetLastSpawned(netIdentity);
+            }
+            if (_spawnedForClientRight == NetworkClient.connection.identity.netId)
+            {
+                NetworkBlockSpawn.InstanceRight.SetLastSpawned(netIdentity);
+            }
+        }
 
         if (_spawnedForBrokenStructure != null && _spawnedForBrokenStructure.Value)
         {
@@ -1453,12 +1468,11 @@ public partial class BlockObject : NetworkBehaviour
             if (blockObjects[i]._numWeightedBlocks != 0)
             {
                 blockObjects[i]._body.mass = (float) blockObjects[i]._numWeightedBlocks / totalWeightedBlocks;
+                blockObjects[i]._resetCoM = true;
             }
 
             totalWeightedBlocks += blockObjects[i]._numWeightedBlocks;
         }
-        
-        _resetCoM = true;
 
         //if any blocks are added or removed, close the save dialog if it is up
         CloseDialog();
@@ -1598,8 +1612,8 @@ public partial class BlockObject : NetworkBehaviour
     [Server]
     private void ServerDuplicateBlockObject(uint ownerId, BlockObject rootBlockObject, BlockObject parent, Vector3 offset)
     {
-        var blockObjectGameObject =
-            Instantiate(StaticPrefabs.instance.blockObjectPrefab, rootBlockObject.transform.position + offset, rootBlockObject.transform.rotation);
+        var blockObjectGameObject = Instantiate(StaticPrefabs.instance.blockObjectPrefab, rootBlockObject.transform.position + offset,
+            rootBlockObject.transform.rotation);
         var blockObject = blockObjectGameObject.GetComponent<BlockObject>();
         foreach (var pair in rootBlockObject.Blocks)
         {
@@ -1861,5 +1875,21 @@ public partial class BlockObject : NetworkBehaviour
         _physicsBoxesObject.gameObject.SetActive(_activeLocal);
         _sphereObject.gameObject.SetActive(_activeLocal);
         _blockGameObjectsParent.gameObject.SetActive(_activeLocal);
+        foreach (var collider in _boxCollidersInUse)
+        {
+            collider.gameObject.layer = isActive ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("nothing");
+        }
+    }
+
+    [Server]
+    public void ServerSetSpawnedForClientLeft(uint ownerId)
+    {
+        _spawnedForClientLeft = ownerId;
+    }
+    
+    [Server]
+    public void ServerSetSpawnedForClientRight(uint ownerId)
+    {
+        _spawnedForClientRight = ownerId;
     }
 }

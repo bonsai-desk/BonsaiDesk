@@ -42,12 +42,12 @@ public class ContextBrowserController : MonoBehaviour
         _browser = GetComponent<TableBrowser>();
         _browser.ListenersReady += SetupBrowser;
         _browser.BrowserReady += (sender, _) => { _browser.OnMessageEmitted(HandleJavascriptMessage); };
-        
+
         if (SaveSystem.Instance.IntPairs.TryGetValue("ContextHand", out var value))
         {
             handActive = (Hand) value;
         }
-        
+
         if (SaveSystem.Instance.StringPairs.TryGetValue("LeftBlockActive", out var leftBlockActive))
         {
             LeftBlockActive = leftBlockActive;
@@ -56,8 +56,9 @@ public class ContextBrowserController : MonoBehaviour
         {
             LeftBlockActive = DefaultLeftActive;
         }
+
         SetLeftSpawner(LeftBlockActive);
-        
+
         if (SaveSystem.Instance.StringPairs.TryGetValue("RightBlockActive", out var rightBlockActive))
         {
             RightBlockActive = rightBlockActive;
@@ -66,6 +67,7 @@ public class ContextBrowserController : MonoBehaviour
         {
             RightBlockActive = DefaultRightActive;
         }
+
         SetRightSpawner(RightBlockActive);
 
         StartCoroutine(SetInitialBlocks());
@@ -177,20 +179,18 @@ public class ContextBrowserController : MonoBehaviour
 
     private void SetRightSpawner(string blockName)
     {
-                                if (NetworkBlockSpawn.InstanceRight)
-                                {
-                                    NetworkBlockSpawn.InstanceRight.SetSpawnBlockName(blockName);
-                                }
-        
+        if (NetworkBlockSpawn.InstanceRight)
+        {
+            NetworkBlockSpawn.InstanceRight.SetSpawnBlockName(blockName);
+        }
     }
 
     private void SetLeftSpawner(string blockName)
     {
-                                if (NetworkBlockSpawn.InstanceLeft)
-                                {
-                                    NetworkBlockSpawn.InstanceLeft.SetSpawnBlockName(blockName);
-                                }
-        
+        if (NetworkBlockSpawn.InstanceLeft)
+        {
+            NetworkBlockSpawn.InstanceLeft.SetSpawnBlockName(blockName);
+        }
     }
 
     private void SetupBrowser()
