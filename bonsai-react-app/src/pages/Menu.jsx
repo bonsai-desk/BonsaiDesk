@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
 import axios from 'axios';
 import {observer} from 'mobx-react-lite';
@@ -6,7 +6,7 @@ import {action, autorun} from 'mobx';
 
 import DotsImg from '../static/dots-vertical.svg';
 import {NetworkManagerMode, useStore} from '../DataProvider';
-import {postCloseMenu, postRequestMicrophone} from '../api';
+import {postCloseMenu, postPublicRoomAvailable, postRequestMicrophone} from '../api';
 
 import {apiBase} from '../utilities';
 import {InstantButton} from '../components/Button';
@@ -157,12 +157,21 @@ function NavTitle(props) {
 
 let Menu = observer(() => {
     let {store, mediaInfo} = useStore();
+    let [roomsCount, setRoomsCount] = useState(0);
+    let [oldRoomsCount, setOldRoomsCount] = useState(0);
 
     let debug = store.AppInfo.Build === 'DEVELOPMENT';
 
     let match = useRouteMatch();
-    
-    document.title = "Menu"
+
+    document.title = 'Menu';
+
+    useEffect(() => {
+        if (oldRoomsCount === 0 && roomsCount > 0) {
+            postPublicRoomAvailable();
+        }
+        setOldRoomsCount(roomsCount);
+    }, [roomsCount, oldRoomsCount]);
 
     useEffect(() => {
         autorun(() => {
@@ -222,6 +231,21 @@ let Menu = observer(() => {
             store.RoomCode = null;
         };
     }, [store]);
+
+    useEffect(() => {
+        let url = store.ApiBase + '/rooms_info';
+        let query = setInterval(() => {
+            axios({
+                method: 'GET',
+                url: url,
+            }).then(resp => {
+                setRoomsCount(resp.data.count);
+            }).catch(console.log);
+        }, 2500);
+        return () => {
+            clearInterval(query);
+        };
+    }, [store.ApiBase]);
 
     if (!store.AppInfo.MicrophonePermission) {
         return <NoMicPage/>;

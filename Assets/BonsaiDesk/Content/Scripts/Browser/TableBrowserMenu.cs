@@ -20,6 +20,8 @@ public class TableBrowserMenu : MonoBehaviour
         Vibes = 1
     }
 
+    public GameObject publicRoomCube;
+    public Transform publicRoomCubeSpawnLocation;
     private const float PostRoomInfoEvery = 1f;
     public static TableBrowserMenu Singleton;
     public ContextBrowserController contextBrowserController;
@@ -266,8 +268,32 @@ public class TableBrowserMenu : MonoBehaviour
                 break;
 
             case "event":
+                switch (message.Message)
+                {
+                    case "publicRoomAvailable":
+                        SpawnPublicRoomCube();
+                        break;
+                }
+
                 break;
         }
+    }
+
+    private void SpawnPublicRoomCube()
+    {
+       var pos = publicRoomCubeSpawnLocation.transform.position;
+       var rot = publicRoomCubeSpawnLocation.transform.rotation;
+       var thing = Instantiate(publicRoomCube, pos, rot);
+       if (NetworkServer.active)
+       {
+           var isHost = NetworkManagerGame.Singleton.mode == NetworkManagerMode.Host;
+           var solo = NetworkManagerGame.Singleton.PlayerInfos.Count == 1;
+           var roomOpen = NetworkManagerGame.Singleton.roomOpen;
+           if (isHost && solo && !roomOpen)
+           {
+               NetworkServer.Spawn(thing);
+           }
+       }
     }
 
     private void SpawnBuildFromId(string messageData)

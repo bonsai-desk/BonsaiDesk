@@ -98,33 +98,39 @@ export function postSetHand(hand) {
 }
 
 export function postDismissKeyboard() {
-    postJson({Type: "command", Message: "dismissKeyboard"})
+    postJson({Type: 'command', Message: 'dismissKeyboard'});
 }
 
 export function postToggleKeyboard() {
-    postJson({Type: "command", Message: "toggleKeyboard"})
+    postJson({Type: 'command', Message: 'toggleKeyboard'});
 }
 
 // blocks
 
 export function postStageBuild(buildId) {
-    postJson({Type: "command", Message: "stageBuild", Data: buildId})
+    postJson({Type: 'command', Message: 'stageBuild', Data: buildId});
 }
 
-export function postSaveBuild(name){
-    postJson({Type: "command", Message: "saveBuild", Data: name})
+export function postSaveBuild(name) {
+    postJson({Type: 'command', Message: 'saveBuild', Data: name});
 }
 
-export function postDeleteBuild(buildId){
-    postJson({Type: "command", Message: "deleteBuild", Data: buildId})
+export function postDeleteBuild(buildId) {
+    postJson({Type: 'command', Message: 'deleteBuild', Data: buildId});
 }
 
 export function postSpawnBuild(data) {
-    postJson({Type: "command", Message: "spawnBuild", Data: data})
+    postJson({Type: 'command', Message: 'spawnBuild', Data: data});
 }
 
-export function postSpawnBuildById(Id){
-    postJson({Type: "command", Message: "spawnBuildById", Data: Id})
+export function postSpawnBuildById(Id) {
+    postJson({Type: 'command', Message: 'spawnBuildById', Data: Id});
+}
+
+// rooms info
+
+export function postPublicRoomAvailable() {
+    postJson({Type: 'event', Message: 'publicRoomAvailable'});
 }
 
 export const Layout = {
