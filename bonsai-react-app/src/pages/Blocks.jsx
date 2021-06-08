@@ -38,15 +38,15 @@ const SaveState = {
 let hamburgerButton = 'relative h-20 w-20 rounded-full cursor-pointer flex flex-wrap content-center font-bold bg-gray-800  active:bg-gray-700  hover:bg-gray-600';
 let redHamburgerButton = 'relative h-20 w-20 rounded-full cursor-pointer flex flex-wrap content-center font-bold bg-red-800';
 
-let SpawnButtonLocal = observer(({buildId})=>{
-    function onClick () {
-        postSpawnBuildById(buildId)
+let SpawnButtonLocal = observer(({buildId}) => {
+    function onClick() {
+        postSpawnBuildById(buildId);
     }
 
     return <InstantButton onClick={onClick} className={hamburgerButton}>
         <img src={DownloadImg} alt={'Menu'} className={'absolute left-5 bottom-5 w-10'}/>
     </InstantButton>;
-})
+});
 
 let SpawnButton = observer(({build_id}) => {
     let [failed, setFailed] = useState(false);
@@ -614,9 +614,17 @@ const DraftsPage = observer((props) => {
     let [saveState, setSaveState] = useState(SaveState.None);
     let [savedBuildName, setSavedBuildName] = useState('');
     let history = useHistory();
+    let [emptyString, setEmptyString] = useState(false);
 
-    
     let data = builds.List;
+
+    useEffect(() => {
+        setTimeout(() => {
+            if (data.length === 0) {
+                setEmptyString(true);
+            }
+        }, 250);
+    });
 
     let setSavedNotOk = action(() => {
         builds.SavedOk = false;
@@ -655,12 +663,12 @@ const DraftsPage = observer((props) => {
 
     function NewBuildModal() {
         let [initialClear, setInitialClear] = useState(false);
-        
-        function onClick () {
+
+        function onClick() {
             if (!initialClear) {
                 if (input.current) {
-                    input.current.value = "";
-                    setInitialClear(true)
+                    input.current.value = '';
+                    setInitialClear(true);
                 }
             }
         }
@@ -675,14 +683,14 @@ const DraftsPage = observer((props) => {
                     <input spellCheck={false} className={'w-full p-2 text-gray-100 bg-gray-700 rounded text-3xl'}
                            onClick={onClick}
                            ref={input}
-                           placeholder={'Title'} type={'text'} defaultValue={"New Build"}/>
+                           placeholder={'Title'} type={'text'} defaultValue={'New Build'}/>
                     <div className={'flex flex-wrap justify-end space-x-4 w-full'}>
                         <InstantButton onClick={() => {
-                            setModal(false)
-                            setSaveState(SaveState.None)
-                            input.current.value = ""
-                            setSavedBuildName("")
-                            history.push("/menu/blocks/drafts")
+                            setModal(false);
+                            setSaveState(SaveState.None);
+                            input.current.value = '';
+                            setSavedBuildName('');
+                            history.push('/menu/blocks/drafts');
                         }} className={grayButtonClass}>Cancel</InstantButton>
                         <InstantButton onClick={saveBuild} className={buttonClass}>Save</InstantButton>
                     </div>
@@ -710,6 +718,7 @@ const DraftsPage = observer((props) => {
                 <div className={'flex flex-wrap justify-end space-x-4 w-full'}>
                     <InstantButton onClick={() => {
                         setModal(false);
+                        history.push('/menu/blocks/profile');
                     }} className={grayButtonClass}>Close</InstantButton>
                 </div>
             </div>
@@ -717,9 +726,16 @@ const DraftsPage = observer((props) => {
 
     }
 
+    function EmptyMessage() {
+        return <div className={'flex flex-wrap w-full justify-center h-full content-center'}>
+            Nothing Here.
+        </div>;
+    }
+
     return <React.Fragment>
         {modal ? <NewBuildModal/> : ''}
         <Spacer/>
+        {emptyString ? <EmptyMessage/> : ''}
         {data.map(x => {
             return <LocalBlockPost key={x.Id} {...x}/>;
         })}
@@ -751,6 +767,16 @@ const ProfilePage = observer(() => {
     let [data, setData] = useState([]);
     let [userData, setUserData] = useState({});
     let {store} = useStore();
+    let [emptyString, setEmptyString] = useState(false);
+
+    useEffect(() => {
+        setTimeout(() => {
+            if (data.length === 0) {
+                setEmptyString(true);
+            }
+
+        }, 250);
+    });
 
     let decoded = jwt.decode(store.BonsaiToken);
     let profile_url = store.ApiBase + `/blocks/users/${decoded.user_id}/info`;
@@ -770,13 +796,16 @@ const ProfilePage = observer(() => {
         }).catch(console.log);
     }, [url]);
 
+    function EmptyMessage() {
+        return <div className={'flex flex-wrap w-full justify-center'}>
+            Publish builds from your saved tab.
+        </div>;
+    }
+
     return <React.Fragment>
         <UserInfo {...userData}/>
-        {data.length > 0 ? data.map(x => <BlockPost key={x.build_name + x.created_at} {...x}/>)
-                : <div className={"pt-20 flex flex-wrap content-center justify-center text-xl"}>
-                    Publish builds from your saved tab.
-                  </div>
-        }
+        {data.map(x => <BlockPost key={x.build_name + x.created_at} {...x}/>)}
+        {emptyString ? <EmptyMessage/> : ''}
     </React.Fragment>;
 });
 

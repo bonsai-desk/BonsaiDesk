@@ -1,14 +1,25 @@
 import {observer} from 'mobx-react-lite';
 import {HandMode, useStore} from '../DataProvider';
 import {postChangeActiveBlock, postSetHandMode} from '../api';
+import wood1 from '../static/wood1.png';
+import wood2 from '../static/wood2.png';
+import wood3 from '../static/wood3.png';
+import wood4 from '../static/wood4.png';
+import wood6 from '../static/wood6.png';
 
 function Button({children, onClick, active}) {
-    let classInactive = 'h-20 w-20 bg-gray-600 rounded';
-    let classActive = 'h-20 w-20 bg-gray-600 rounded border-bonsai-orange border-solid border-4 border-light-blue-500';
-    return <div className={active ? classActive : classInactive} onPointerDown={onClick}>{children}</div>;
+   //let classInactive = ""
+   //let classActive ='p-2 h-20 w-20 bg-gray-600 rounded border-bonsai-orange border-solid border-4 border-light-blue-500';
+    let classActive = "p-1 bg-gray-100 rounded-lg"
+    let classInactive = "p-1 rounded-lg"
+    return (<div className={active ? classActive : classInactive} onPointerDown={onClick}>
+        <div className={"h-16 w-16 rounded-lg overflow-hidden"}>
+            {children}
+        </div>
+    </div>);
 }
 
-const BlockButton = observer(({hand, blockId}) => {
+const BlockButton = observer(({hand, blockId, children}) => {
 
     let {store} = useStore();
     let active = false;
@@ -22,7 +33,9 @@ const BlockButton = observer(({hand, blockId}) => {
     let onClick = () => {
         postChangeActiveBlock(hand, blockId);
     };
-    return <Button onClick={onClick} active={active}>{blockId}</Button>;
+    return <Button onClick={onClick} active={active}>
+            {children}
+    </Button>;
 });
 
 function ButtonRow({children}) {
@@ -37,17 +50,31 @@ function ButtonGrid({hand}) {
     return (
             <ButtonContainer>
                 <ButtonRow>
-                    <BlockButton hand={hand} blockId={'wood1'}/>
-                    <BlockButton hand={hand} blockId={'wood2'}/>
-                    <BlockButton hand={hand} blockId={'wood3'}/>
+                    <BlockButton hand={hand} blockId={'wood1'}>
+                        <img src={wood1} alt={'wood1'}/>
+                    </BlockButton>
+                    <BlockButton hand={hand} blockId={'wood2'}>
+                        <img src={wood2} alt={'wood2'}/>
+                    </BlockButton>
+                    <BlockButton hand={hand} blockId={'wood3'}>
+                        <img src={wood3} alt={'wood3'}/>
+                    </BlockButton>
                 </ButtonRow>
                 <ButtonRow>
-                    <BlockButton hand={hand} blockId={'wood4'}/>
-                    <BlockButton hand={hand} blockId={'wood5'}/>
-                    <BlockButton hand={hand} blockId={'bearing'}/>
+                    <BlockButton hand={hand} blockId={'wood4'}>
+                        <img src={wood4} alt={'wood4'}/>
+                    </BlockButton>
+                    <BlockButton hand={hand} blockId={'wood5'}>
+                        <img src={wood6} alt={'wood6'}/>
+                    </BlockButton>
+                    <BlockButton hand={hand} blockId={'bearing'}>
+                        <img src={wood1} alt={'wood1'}/>
+                    </BlockButton>
                 </ButtonRow>
                 <div className={'w-full flex justify-center'}>
-                    <BlockButton hand={hand} blockId={''}/>
+                    <BlockButton hand={hand} blockId={''}>
+                        <div className={"h-full w-full bg-gray-800"}/>
+                    </BlockButton>
                 </div>
             </ButtonContainer>
     );
@@ -194,7 +221,7 @@ const ClearHand = observer(({hand}) => {
 });
 
 const Context = observer(() => {
-    document.title = "Context Menu"
+    document.title = 'Context Menu';
     return <div className={'bg-gray-900 h-screen flex flex-wrap justify-center space-x-20 content-center'}>
         <div className={'space-y-2'}>
             <BlockBreak hand={'left'}/>
