@@ -135,6 +135,7 @@ let LocalBlockPost = observer(({Name, Id}) => {
     let [publishState, setPublishState] = useState(PublishState.None);
     let [publishModal, setPublishModal] = useState(false);
     let {builds, store} = useStore();
+    let history = useHistory();
 
     let title = Name;
     let slug = Id;
@@ -168,6 +169,9 @@ let LocalBlockPost = observer(({Name, Id}) => {
     function MiniPublishModal() {
         function clickOut() {
             setPublishModal(false);
+            if (publishState === PublishState.Success) {
+                history.push("/menu/blocks/profile")
+            }
         }
 
         let title = 'Publish Post?';
@@ -617,7 +621,7 @@ const DraftsPage = observer((props) => {
     let [emptyString, setEmptyString] = useState(false);
 
     let data = builds.List;
-
+    
     useEffect(() => {
         setTimeout(() => {
             if (data.length === 0) {
@@ -718,7 +722,7 @@ const DraftsPage = observer((props) => {
                 <div className={'flex flex-wrap justify-end space-x-4 w-full'}>
                     <InstantButton onClick={() => {
                         setModal(false);
-                        history.push('/menu/blocks/profile');
+                        history.push('/menu/blocks/drafts');
                     }} className={grayButtonClass}>Close</InstantButton>
                 </div>
             </div>
@@ -768,15 +772,22 @@ const ProfilePage = observer(() => {
     let [userData, setUserData] = useState({});
     let {store} = useStore();
     let [emptyString, setEmptyString] = useState(false);
-
-    useEffect(() => {
+    let [timerDone, setTimerDone] = useState(false);
+    
+    useEffect(()=>{
         setTimeout(() => {
-            if (data.length === 0) {
-                setEmptyString(true);
-            }
-
+            setTimerDone(true)
         }, 250);
-    });
+        
+    }, [])
+    
+    useEffect(()=>{
+        if (timerDone && data.length === 0) {
+            setEmptyString(true)
+        } else if (timerDone && data.length > 0) {
+            setEmptyString(false)
+        }
+    }, [timerDone, data])
 
     let decoded = jwt.decode(store.BonsaiToken);
     let profile_url = store.ApiBase + `/blocks/users/${decoded.user_id}/info`;
