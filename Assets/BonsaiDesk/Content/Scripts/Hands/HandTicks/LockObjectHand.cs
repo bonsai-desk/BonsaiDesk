@@ -165,8 +165,8 @@ public class LockObjectHand : MonoBehaviour, IHandTick
 
     private void ConnectObject(AutoAuthority autoAuthority)
     {
-        // autoAuthority.CmdSetNewOwner(NetworkClient.connection.identity.netId, NetworkTime.time, true);
-        autoAuthority.ClientSetNewOwnerFake(NetworkClient.connection.identity.netId, NetworkTime.time, true, 1f);
+        autoAuthority.CmdSetNewOwner(NetworkClient.connection.identity.netId, NetworkTime.time, true, 1f);
+        // autoAuthority.ClientSetNewOwnerFake(NetworkClient.connection.identity.netId, NetworkTime.time, true, 1f);
 
         joint = InputManager.Hands.GetHand(playerHand.skeletonType).PhysicsHand.gameObject.AddComponent<ConfigurableJoint>();
         joint.anchor = playerHand.transform.InverseTransformPoint(autoAuthority.transform.position);

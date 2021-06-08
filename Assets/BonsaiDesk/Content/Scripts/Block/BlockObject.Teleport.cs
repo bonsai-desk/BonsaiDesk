@@ -115,8 +115,7 @@ public partial class BlockObject
         return true;
     }
 
-    [Server]
-    public void ServerTeleportToDeskSurface(List<BlockObject> blockObjects = null)
+    public (Vector3 offset, List<BlockObject> blockObjects) ServerGetTeleportToDeskSurfaceOffset(List<BlockObject> blockObjects = null)
     {
         if (blockObjects == null)
         {
@@ -164,18 +163,25 @@ public partial class BlockObject
         const float tableSurfaceHeight = 0.726f;
 
         var targetPosition = new Vector3(0, tableSurfaceHeight + boundsSize.y / 2f, 0);
-        while (Physics.CheckBox(targetPosition, halfExtends, Quaternion.identity, BlockUtility.DefaultLayerMask))
+        while (Physics.CheckBox(targetPosition, halfExtends, Quaternion.identity, BlockUtility.DefaultLayerMaskPlusNetworkHands))
         {
             targetPosition.y += 0.025f;
         }
 
-        ServerTeleportToPosition(blockObjects, targetPosition, boundsCenter);
+        var offset = targetPosition - boundsCenter;
+        return (offset, blockObjects);
     }
 
     [Server]
-    private void ServerTeleportToPosition(List<BlockObject> blockObjects, Vector3 position, Vector3 boundsCenter)
+    public void ServerTeleportToDeskSurface(List<BlockObject> blockObjects = null)
     {
-        var offset = position - boundsCenter;
+        var (offset, newBlockObjects) = ServerGetTeleportToDeskSurfaceOffset(blockObjects);
+        ServerTeleportApplyOffset(offset, blockObjects);
+    }
+
+    [Server]
+    private void ServerTeleportApplyOffset(Vector3 offset, List<BlockObject> blockObjects)
+    {
         for (int i = 0; i < blockObjects.Count; i++)
         {
             blockObjects[i]._autoAuthority.ServerForceNewOwner(uint.MaxValue, NetworkTime.time, false);

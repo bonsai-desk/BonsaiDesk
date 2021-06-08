@@ -9,8 +9,9 @@ using UnityEngine.UI;
 public class HoverButton : MonoBehaviour
 {
     public float activationRadius = 0.0275f;
-    private const float ActivationTime = 0.75f;
-    
+    public bool halfSphere;
+    public float activationTime = 0.75f;
+
     public Image progressImage;
     public UnityEvent action;
 
@@ -18,8 +19,20 @@ public class HoverButton : MonoBehaviour
     private bool _activated = false;
 
     private int emitterId = -1;
-    
+
     public SoundFXRef tickSound;
+
+    private void OnDisable()
+    {
+        if (emitterId != -1)
+        {
+            AudioManager.StopSound(emitterId, false);
+            emitterId = -1;
+        }
+        
+        _activeTimer = 0;
+        progressImage.fillAmount = Mathf.Clamp01(_activeTimer / activationTime);
+    }
 
     private void Update()
     {
@@ -28,8 +41,8 @@ public class HoverButton : MonoBehaviour
         {
             for (int i = 0; i < InputManager.Hands.physicsFingerTipPositions.Length; i++)
             {
-                if (Vector3.SqrMagnitude(InputManager.Hands.physicsFingerTipPositions[i] - transform.position) <
-                    activationRadius * activationRadius)
+                if (Vector3.SqrMagnitude(InputManager.Hands.physicsFingerTipPositions[i] - transform.position) < activationRadius * activationRadius &&
+                    (!halfSphere || halfSphere && transform.InverseTransformPoint(InputManager.Hands.physicsFingerTipPositions[i]).z < 0.0015f))
                 {
                     fingerTouchingButton = true;
                     break;
@@ -47,6 +60,7 @@ public class HoverButton : MonoBehaviour
                     AudioManager.AttachSoundToParent(emitterId, transform);
                 }
             }
+
             _activeTimer += Time.deltaTime;
         }
         else
@@ -57,14 +71,14 @@ public class HoverButton : MonoBehaviour
                 AudioManager.StopSound(emitterId, false);
                 emitterId = -1;
             }
-            
+
             _activeTimer = 0;
             _activated = false;
         }
 
-        progressImage.fillAmount = Mathf.Clamp01(_activeTimer / ActivationTime);
+        progressImage.fillAmount = Mathf.Clamp01(_activeTimer / activationTime);
 
-        if (transform.gameObject.activeInHierarchy && !_activated && _activeTimer > ActivationTime)
+        if (transform.gameObject.activeInHierarchy && !_activated && _activeTimer > activationTime)
         {
             _activated = true;
             action?.Invoke();

@@ -116,11 +116,6 @@ public class TableBrowserParent : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
-    private void Update()
-    {
-    }
-
     private void HandleOrientationChange(bool oriented)
     {
         MenuSleep();
@@ -199,7 +194,6 @@ public class TableBrowserParent : MonoBehaviour
         }
         
         SetHandsForActiveBrowser();
-
     }
 
     private void SetHandsForActiveBrowser()
@@ -244,6 +238,34 @@ public class TableBrowserParent : MonoBehaviour
         contentBoxCollider.enabled = false;
         ContextMenu.SetHidden(true);
         SetHandForInactiveBrowser();
+    }
+
+    public void CloseContextIfOpen()
+    {
+        if (!ContextAsleep)
+        {
+            ContextSleep();
+        }
+    }
+
+    public void ToggleContextAwakeIfMenuClosed()
+    {
+        if (!moveToDesk.oriented)
+        {
+            return;
+        }
+        
+        if (ContextAsleep)
+        {
+            if (MenuAsleep)
+            {
+                ContextWake();
+            }
+        }
+        else
+        {
+            ContextSleep();
+        }
     }
 
     public void ToggleContextAwake()

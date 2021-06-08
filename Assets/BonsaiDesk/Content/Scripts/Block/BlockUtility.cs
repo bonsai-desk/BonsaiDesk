@@ -111,7 +111,7 @@ public static partial class BlockUtility
         {
             Debug.LogError("Railed to lookup byte: " + rotationByte);
         }
-        
+
         return Quaternion.identity;
     }
 
@@ -582,7 +582,9 @@ public static partial class BlockUtility
     }
 
     private static int _defaultLayerMask;
+    private static int _defaultLayerMaskPlusNetworkHands;
     public static int DefaultLayerMask => GetDefaultLayerMask();
+    public static int DefaultLayerMaskPlusNetworkHands => GetDefaultLayerMaskPlusNetworkHands();
 
     private static int GetDefaultLayerMask()
     {
@@ -604,7 +606,17 @@ public static partial class BlockUtility
         return _defaultLayerMask;
     }
 
-    public static (List<Dictionary<Vector3Int, SyncBlock>> filledBlocksGroups, int indexOfLargest) GetFilledBlocksGroups(Vector3Int coord,
+    private static int GetDefaultLayerMaskPlusNetworkHands()
+    {
+        if (_defaultLayerMaskPlusNetworkHands == 0)
+        {
+            _defaultLayerMaskPlusNetworkHands = DefaultLayerMask | (1 << LayerMask.NameToLayer("networkHand"));
+        }
+
+        return _defaultLayerMaskPlusNetworkHands;
+    }
+
+public static (List<Dictionary<Vector3Int, SyncBlock>> filledBlocksGroups, int indexOfLargest) GetFilledBlocksGroups(Vector3Int coord,
         SyncDictionary<Vector3Int, SyncBlock> blocks)
     {
         var filledBlocksGroups = new List<Dictionary<Vector3Int, SyncBlock>>();
