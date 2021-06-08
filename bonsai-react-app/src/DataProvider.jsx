@@ -23,6 +23,11 @@ export const HandMode = {
     Save: 4,
 };
 
+export const HandActive = {
+    Left: 0,
+    Right: 1
+}
+
 class MediaInfo {
     Active = false;
     Name = 'None';
@@ -84,8 +89,8 @@ class Store {
         Connecting: false,
     };
     ContextInfo = {
-        LeftHandMode: HandMode.None,
-        RightHandMode: HandMode.None,
+        HandActive : HandActive.Right,
+        HandMode: HandMode.None,
         LeftBlockActive: '',
         RightBlockActive: '',
     };

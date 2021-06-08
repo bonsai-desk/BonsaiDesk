@@ -81,11 +81,19 @@ export function postChangeActiveBlock(hand, blockId) {
     });
 }
 
-export function postSetHandMode(hand, mode) {
+export function postSetHandMode(mode) {
     postJson({
         Type: 'command',
         Message: 'setHandMode',
-        Data: JSON.stringify({Hand: hand, Mode: mode}),
+        Data: mode,
+    });
+}
+
+export function postSetHand(hand) {
+    postJson({
+        Type: 'command',
+        Message: 'setHand',
+        Data: hand,
     });
 }
 
