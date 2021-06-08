@@ -66,7 +66,7 @@ public class NetworkFollow : NetworkBehaviour
 
     public void MoveToTarget()
     {
-        if (target != null)
+        if (target)
         {
             if (body)
             {

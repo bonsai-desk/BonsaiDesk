@@ -141,10 +141,10 @@ GameObject:
   - component: {fileID: 8502092791694960067}
   - component: {fileID: 7227673606183855354}
   - component: {fileID: 397433653346894428}
-  - component: {fileID: 2482834880378478163}
   - component: {fileID: 9215190182876982407}
   - component: {fileID: 3765429293320518224}
   - component: {fileID: 5220972946680504722}
+  - component: {fileID: 3942847966048405970}
   m_Layer: 23
   m_Name: NetworkHead
   m_TagString: NetworkHead
@@ -241,23 +241,6 @@ MonoBehaviour:
   useLocalTransformOnly: 0
   ownerChangeIndicator: 1
   receivedStatesCounter: 0
---- !u!114 &2482834880378478163
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8502092791694960064}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 42d88bc3b73fd2541ad1a9136a196e9a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  syncMode: 0
-  syncInterval: 0.1
-  targetName: CenterEyeAnchor
-  body: {fileID: 3765429293320518224}
-  renderBehaviour: 3
 --- !u!135 &9215190182876982407
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -265,7 +248,7 @@ SphereCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8502092791694960064}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 2ce95ee1c6692e24b93fd320d0345b99, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -279,7 +262,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8502092791694960064}
   serializedVersion: 2
-  m_Mass: 5
+  m_Mass: 1
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 0
@@ -302,9 +285,24 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   headObject: {fileID: 7351998015057912635}
-  _leftHandId: {fileID: 0}
-  _rightHandId: {fileID: 0}
   spotId: 0
+--- !u!114 &3942847966048405970
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8502092791694960064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5f78867ddcf9714fae828f7eafc5e70, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 0}
+  lbsForce: 10
+  lbsTorque: 5
+  snapBackDistance: 0.2
+  targetName: CenterEyeAnchor
 --- !u!1001 &3843194958250371987
 PrefabInstance:
   m_ObjectHideFlags: 0
