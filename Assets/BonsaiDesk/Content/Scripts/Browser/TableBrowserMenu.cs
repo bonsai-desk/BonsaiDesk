@@ -283,7 +283,6 @@ public class TableBrowserMenu : MonoBehaviour
     {
        var pos = publicRoomCubeSpawnLocation.transform.position;
        var rot = publicRoomCubeSpawnLocation.transform.rotation;
-       var thing = Instantiate(publicRoomCube, pos, rot);
        if (NetworkServer.active)
        {
            var isHost = NetworkManagerGame.Singleton.mode == NetworkManagerMode.Host;
@@ -291,7 +290,20 @@ public class TableBrowserMenu : MonoBehaviour
            var roomOpen = NetworkManagerGame.Singleton.roomOpen;
            if (isHost && solo && !roomOpen)
            {
-               NetworkServer.Spawn(thing);
+               var ignore = false;
+               var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+
+               if (SaveSystem.Instance.StringPairs.TryGetValue("SilenceTime", out var value))
+               {
+                   var silencedAt = long.Parse(value);
+                   ignore = (now - silencedAt) < 60 * 60 * 24;
+               }
+               
+               if (!ignore)
+               {
+                   var thing = Instantiate(publicRoomCube, pos, rot);
+                   NetworkServer.Spawn(thing);
+               }
            }
        }
     }
@@ -619,6 +631,12 @@ public class TableBrowserMenu : MonoBehaviour
         TableBrowserParent.Instance.OpenMenu();
     }
 
+    public void NavToPublicRooms()
+    {
+        browser.PostMessage(Browser.BrowserMessage.NavToPublicRooms);
+        TableBrowserParent.Instance.OpenMenu();
+    }
+
     private struct BuildsSaved
     {
         public bool SavedOk;
@@ -738,5 +756,11 @@ public class TableBrowserMenu : MonoBehaviour
     public struct UserInfo
     {
         public string UserName;
+    }
+
+    public void SilencePublicRoomNotifications()
+    {
+        var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+        SaveSystem.Instance.StringPairs["SilenceTime"] = now.ToString();
     }
 }

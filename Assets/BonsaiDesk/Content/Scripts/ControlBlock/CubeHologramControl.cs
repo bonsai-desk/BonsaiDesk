@@ -8,6 +8,7 @@ using UnityEngine.Rendering;
 
 public class CubeHologramControl : NetworkBehaviour
 {
+    public float floatLevel = -0.01f;
     public SmoothSyncVars smoothSyncVars;
     public Transform quad;
     public Transform triangle;
@@ -77,7 +78,7 @@ public class CubeHologramControl : NetworkBehaviour
         quad.position = Vector3.Lerp(startPosition, targetPosition, lerp);
         quad.localScale = Vector3.Lerp(Vector3.zero, _targetScale, lerp);
 
-        icons.position = Vector3.Lerp(startPosition, targetPosition + atHead * Vector3.forward * -0.01f, lerp);
+        icons.position = Vector3.Lerp(startPosition, targetPosition + atHead * Vector3.forward * floatLevel, lerp);
         icons.localScale = Vector3.Lerp(Vector3.zero, new Vector3(1.25f, 1.25f, 1f), lerp);
 
         CalculateTriangle(atHead);

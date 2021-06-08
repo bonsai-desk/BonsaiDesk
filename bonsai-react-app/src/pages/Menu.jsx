@@ -157,8 +157,8 @@ function NavTitle(props) {
 
 let Menu = observer(() => {
     let {store, mediaInfo} = useStore();
-    let [roomsCount, setRoomsCount] = useState(0);
-    let [oldRoomsCount, setOldRoomsCount] = useState(0);
+    let [roomsCount, setRoomsCount] = useState(-1);
+    let [oldRoomsCount, setOldRoomsCount] = useState(-1);
 
     let debug = store.AppInfo.Build === 'DEVELOPMENT';
 
