@@ -67,12 +67,17 @@ public class HeadFollowPhysics : ObjectFollowPhysics
     {
         if (!Physics.CheckSphere(target.transform.position, Vector3Max(transform.localScale) * _sphereCollider.radius, BlockUtility.DefaultLayerMask))
         {
-            Body.velocity = Vector3.zero;
-            Body.angularVelocity = Vector3.zero;
-            transform.position = target.position;
-            transform.rotation = target.rotation;
-            Body.MovePosition(target.position);
-            Body.MoveRotation(target.rotation);
+            ResetToTarget();
         }
+    }
+
+    public void ResetToTarget()
+    {
+        Body.velocity = Vector3.zero;
+        Body.angularVelocity = Vector3.zero;
+        transform.position = target.position;
+        transform.rotation = target.rotation;
+        Body.MovePosition(target.position);
+        Body.MoveRotation(target.rotation);
     }
 }
