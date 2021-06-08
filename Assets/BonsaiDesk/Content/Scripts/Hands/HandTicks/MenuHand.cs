@@ -16,6 +16,7 @@ public class MenuHand : MonoBehaviour, IHandTick
     public Image[] images;
     public Material overlayTextMaterial;
     public TextMeshProUGUI[] texts;
+    public GameObject returnToVoidHoverButton;
 
     private bool _isInit = false;
 
@@ -54,6 +55,10 @@ public class MenuHand : MonoBehaviour, IHandTick
         var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
         var oriented = MoveToDesk.Singleton.oriented;
         var active = angleBelowThreshold && playerHand.HandComponents.TrackingRecently && playing && oriented;
+        if (returnToVoidHoverButton)
+        {
+            returnToVoidHoverButton.SetActive(active);
+        }
         if (playerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft && tableBrowserParent && !tableBrowserParent.ContextAsleep)
         {
             active = false;

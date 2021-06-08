@@ -9053,7 +9053,6 @@ MonoBehaviour:
   angleToHead: {fileID: 1189444693556535356}
   tableBrowserParent: {fileID: 955373203}
   menuObjects:
-  - {fileID: 1055431812}
   - {fileID: 1052262077}
   overlayUIMaterial: {fileID: 2100000, guid: 549202f8af681b04aab3a385d4a63fab, type: 2}
   images:
@@ -9070,6 +9069,7 @@ MonoBehaviour:
   overlayTextMaterial: {fileID: 2100000, guid: 5970012d8e74fdc4ab9977f99253b54c, type: 2}
   texts:
   - {fileID: 1008765914}
+  returnToVoidHoverButton: {fileID: 1055431812}
 --- !u!114 &630641737
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11312,6 +11312,7 @@ MonoBehaviour:
   - {fileID: 258065666}
   overlayTextMaterial: {fileID: 2100000, guid: 5970012d8e74fdc4ab9977f99253b54c, type: 2}
   texts: []
+  returnToVoidHoverButton: {fileID: 0}
 --- !u!1 &952936015
 GameObject:
   m_ObjectHideFlags: 0
