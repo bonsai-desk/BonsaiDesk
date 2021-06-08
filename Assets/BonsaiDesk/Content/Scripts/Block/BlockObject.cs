@@ -1875,6 +1875,10 @@ public partial class BlockObject : NetworkBehaviour
         _physicsBoxesObject.gameObject.SetActive(_activeLocal);
         _sphereObject.gameObject.SetActive(_activeLocal);
         _blockGameObjectsParent.gameObject.SetActive(_activeLocal);
+        foreach (var collider in _boxCollidersInUse)
+        {
+            collider.gameObject.layer = isActive ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("nothing");
+        }
     }
 
     [Server]

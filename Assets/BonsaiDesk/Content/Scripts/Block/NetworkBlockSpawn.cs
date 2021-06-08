@@ -246,9 +246,11 @@ public class NetworkBlockSpawn : NetworkBehaviour
                 var identity = _results[i].attachedRigidbody.GetComponent<NetworkIdentity>();
                 if (identity && identity == _lastSpawned)
                 {
-                    if (_lastSpawned.GetComponent<BlockObject>().Blocks.Count == 1)
+                    var lastBlockObject = _lastSpawned.GetComponent<BlockObject>();
+                    if (lastBlockObject && lastBlockObject.Blocks.Count == 1)
                     {
-                        _lastSpawned.GetComponent<AutoAuthority>().CmdDestroy();
+                        lastBlockObject.ActiveLocal = false;
+                        lastBlockObject.AutoAuthority.CmdDestroy();
                     }
 
                     _lastSpawned = null;
