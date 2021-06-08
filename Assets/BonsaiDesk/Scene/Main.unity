@@ -2112,7 +2112,7 @@ PrefabInstance:
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
       propertyPath: initialUrl
-      value: http://localhost:3000
+      value: http://localhost:9696
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
@@ -9605,7 +9605,7 @@ PrefabInstance:
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
       propertyPath: initialUrl
-      value: http://localhost:3000
+      value: http://localhost:9696
       objectReference: {fileID: 0}
     - target: {fileID: 1385808365339141496, guid: fc85167017a34d34ba8364d3581e6fac,
         type: 3}
@@ -13893,6 +13893,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f349dca275e36604883978521079ae9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  handActive: 1
   blockBreakHandLeft: {fileID: 946290010}
   blockBreakHandRight: {fileID: 630641735}
 --- !u!114 &1341499996 stripped

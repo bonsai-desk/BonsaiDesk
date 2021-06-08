@@ -1,18 +1,13 @@
-import {useState} from"react"
 import {observer} from 'mobx-react-lite';
-import {HandMode, useStore} from '../DataProvider';
-import {postChangeActiveBlock, postSetHandMode} from '../api';
+import {HandActive, HandMode, useStore} from '../DataProvider';
+import {postChangeActiveBlock, postSetHand, postSetHandMode} from '../api';
 import wood1 from '../static/wood1.png';
 import wood2 from '../static/wood2.png';
 import wood3 from '../static/wood3.png';
 import wood4 from '../static/wood4.png';
 import wood6 from '../static/wood6.png';
 
-let buttonClass = 'bg-gray-800 h-full w-full text-white flex flex-wrap content-center justify-center';
-
 function Button({children, onClick, active}) {
-    //let classInactive = ""
-    //let classActive ='p-2 h-20 w-20 bg-gray-600 rounded border-bonsai-orange border-solid border-4 border-light-blue-500';
     let classActive = 'p-1 bg-gray-100 rounded-lg';
     let classInactive = 'p-1 rounded-lg';
     return (<div className={active ? classActive : classInactive} onPointerDown={onClick}>
@@ -83,175 +78,92 @@ function ButtonGrid({hand}) {
     );
 }
 
-const BlockBreak = observer(({hand}) => {
+const BlockBreakButton = observer(({children, mode}) => {
     let {store} = useStore();
 
-    let blockBreakOn = false;
-
-    if (hand === 'left') {
-        blockBreakOn = store.ContextInfo.LeftHandMode === HandMode.Single;
-    }
-    if (hand === 'right') {
-        blockBreakOn = store.ContextInfo.RightHandMode === HandMode.Single;
-    }
+    let blockBreakOn = store.ContextInfo.HandMode === mode;
 
     let className = 'bg-gray-800 h-full w-full text-white flex flex-wrap content-center justify-center';
 
     function Inner() {
         return <div className={className}>
-            <div>
-                <div>Delete</div>
-                <div>Block</div>
-            </div>
+            {children}
         </div>;
     }
 
     function onClick() {
-        postSetHandMode(hand, HandMode.Single);
+        postSetHandMode(mode);
     }
 
     return <div className={'flex flex-wrap content-center'}>
         <Button active={blockBreakOn} onClick={onClick}><Inner/></Button>
     </div>;
-
 });
 
-const WholeBreak = observer(({hand}) => {
-    let {store} = useStore();
+function BlockBreakNew() {
+    return <BlockBreakButton mode={HandMode.Single}>
+        <div>
+            <div>Delete</div>
+            <div>Block</div>
+        </div>
+    </BlockBreakButton>;
+}
 
-    let blockBreakOn = false;
+function WholeBreak() {
+    return <BlockBreakButton mode={HandMode.Whole}>
+        <div>
+            <div>Delete</div>
+            <div>Chunk</div>
+        </div>
+    </BlockBreakButton>;
+}
 
-    if (hand === 'left') {
-        blockBreakOn = store.ContextInfo.LeftHandMode === HandMode.Whole;
-    }
-    if (hand === 'right') {
-        blockBreakOn = store.ContextInfo.RightHandMode === HandMode.Whole;
-    }
+function Save() {
+    return <BlockBreakButton mode={HandMode.Save}>
+        Save
+    </BlockBreakButton>;
+}
 
-    let className = 'bg-gray-800 h-full w-full text-white flex flex-wrap content-center justify-center';
+function Duplicate() {
+    return <BlockBreakButton mode={HandMode.Duplicate}>
+        Clone
+    </BlockBreakButton>;
+}
 
-    function Inner() {
-        return <div className={className}>
-            <div>
-                <div>Delete</div>
-                <div>Chunk</div>
-            </div>
-        </div>;
-    }
-
-    function onClick() {
-        postSetHandMode(hand, HandMode.Whole);
-    }
-
-    return <div className={'flex flex-wrap content-center'}>
-        <Button active={blockBreakOn} onClick={onClick}><Inner/></Button>
-    </div>;
-
-});
-
-const Save = observer(({hand}) => {
-    let {store} = useStore();
-
-    let blockBreakOn = false;
-
-    if (hand === 'left') {
-        blockBreakOn = store.ContextInfo.LeftHandMode === HandMode.Save;
-    }
-    if (hand === 'right') {
-        blockBreakOn = store.ContextInfo.RightHandMode === HandMode.Save;
-    }
-
-    let className = 'bg-gray-800 h-full w-full text-white flex flex-wrap content-center justify-center';
-
-    function Inner() {
-        return <div className={className}>Save</div>;
-    }
-
-    function onClick() {
-        postSetHandMode(hand, HandMode.Save);
-    }
-
-    return <div className={'flex flex-wrap content-center'}>
-        <Button active={blockBreakOn} onClick={onClick}><Inner/></Button>
-    </div>;
-
-});
-
-const Duplicate = observer(({hand}) => {
-    let {store} = useStore();
-
-    let active = false;
-
-    if (hand === 'left') {
-        active = store.ContextInfo.LeftHandMode === HandMode.Duplicate;
-    }
-    if (hand === 'right') {
-        active = store.ContextInfo.RightHandMode === HandMode.Duplicate;
-    }
-
-    let className = buttonClass;
-
-    function Inner() {
-        return <div className={className}>Clone</div>;
-    }
-
-    function onClick() {
-        postSetHandMode(hand, HandMode.Duplicate);
-    }
-
-    return <div className={'flex flex-wrap content-center'}>
-        <Button active ={active} onClick={onClick}><Inner/></Button>
-    </div>;
-
-});
-
-const ClearHand = observer(({hand}) => {
-    let {store} = useStore();
-
-    let active = false;
-
-    if (hand === 'left') {
-        active = store.ContextInfo.LeftHandMode === HandMode.None;
-    }
-    if (hand === 'right') {
-        active = store.ContextInfo.RightHandMode === HandMode.None;
-    }
-
-    let className = buttonClass;
-
-    function Inner() {
-        return <div className={className}></div>;
-    }
-
-    function onClick() {
-        postSetHandMode(hand, HandMode.None);
-    }
-
-    return <div className={'flex flex-wrap content-center'}>
-        <Button active={active} onClick={onClick}><Inner/></Button>
-    </div>;
-
-});
+function ClearHand() {
+    return <BlockBreakButton mode={HandMode.None}>
+    </BlockBreakButton>;
+}
 
 const HandModes = observer(() => {
-    let [hand, setHand] = useState("right")
-    
+    let {store} = useStore();
+
+    let hand = store.ContextInfo.HandActive;
+
+    function clickLeft() {
+        postSetHand('left');
+    }
+
+    function clickRight() {
+        postSetHand('right');
+    }
+
     return (
             <div className={'flex flex-wrap w-full justify-center space-x-8'}>
                 <div className={'flex space-x-2'}>
-                    <Button active={hand === "left"}>
+                    <Button onClick={clickLeft} active={hand === HandActive.Left}>
                         <div className={'h-full w-full bg-gray-800 content-center justify-center flex flex-wrap'}>
                             <span className={'text-white text-3xl'}>L</span>
                         </div>
                     </Button>
-                    <Button active={hand === "right"}>
+                    <Button onClick={clickRight} active={hand === HandActive.Right}>
                         <div className={'h-full w-full bg-gray-800 content-center justify-center flex flex-wrap'}>
                             <span className={'text-white text-3xl'}>R</span>
                         </div>
                     </Button>
                 </div>
                 <div className={'space-x-2 flex'}>
-                    <BlockBreak hand={'left'}/>
+                    <BlockBreakNew/>
                     <WholeBreak hand={'left'}/>
                     <Save hand={'left'}/>
                     <Duplicate hand={'left'}/>

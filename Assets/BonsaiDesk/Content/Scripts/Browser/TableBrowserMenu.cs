@@ -460,10 +460,10 @@ public class TableBrowserMenu : MonoBehaviour
     {
         var contextInfo = new ContextInfo
         {
+            HandActive = contextBrowserController.handActive,
+            HandMode = contextBrowserController.ActiveHandMode,
             LeftBlockActive = contextBrowserController.LeftBlockActive,
-            RightBlockActive = contextBrowserController.RightBlockActive,
-            LeftHandMode = contextBrowserController.LeftHandMode,
-            RightHandMode = contextBrowserController.RightHandMode
+            RightBlockActive = contextBrowserController.RightBlockActive
         };
         contextBrowser.PostMessage(Message(contextInfo, "ContextInfo"));
     }
@@ -624,10 +624,10 @@ public class TableBrowserMenu : MonoBehaviour
 
     private class ContextInfo
     {
+        public ContextBrowserController.Hand HandActive;
+        public BlockBreakHand.BreakMode HandMode;
         public string LeftBlockActive;
-        public BlockBreakHand.BreakMode LeftHandMode;
         public string RightBlockActive;
-        public BlockBreakHand.BreakMode RightHandMode;
     }
 
     private struct NetworkInfo

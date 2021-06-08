@@ -8,6 +8,7 @@ public class BlockBreakHand : MonoBehaviour, IHandTick
     public PlayerHand playerHand { get; set; }
     private bool _init = false;
 
+    // Don't change this enum or the javascript will break
     public enum BreakMode
     {
         None = 0,
