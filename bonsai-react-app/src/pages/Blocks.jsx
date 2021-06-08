@@ -617,7 +617,7 @@ const DraftsPage = observer((props) => {
     let [emptyString, setEmptyString] = useState(false);
 
     let data = builds.List;
-
+    
     useEffect(() => {
         setTimeout(() => {
             if (data.length === 0) {
@@ -768,15 +768,22 @@ const ProfilePage = observer(() => {
     let [userData, setUserData] = useState({});
     let {store} = useStore();
     let [emptyString, setEmptyString] = useState(false);
-
-    useEffect(() => {
+    let [timerDone, setTimerDone] = useState(false);
+    
+    useEffect(()=>{
         setTimeout(() => {
-            if (data.length === 0) {
-                setEmptyString(true);
-            }
-
+            setTimerDone(true)
         }, 250);
-    });
+        
+    }, [])
+    
+    useEffect(()=>{
+        if (timerDone && data.length === 0) {
+            setEmptyString(true)
+        } else if (timerDone && data.length > 0) {
+            setEmptyString(false)
+        }
+    }, [timerDone, data])
 
     let decoded = jwt.decode(store.BonsaiToken);
     let profile_url = store.ApiBase + `/blocks/users/${decoded.user_id}/info`;
