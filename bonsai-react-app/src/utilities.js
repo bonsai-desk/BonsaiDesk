@@ -1,5 +1,7 @@
 let postJson = (json) => {
-    console.log('post json ' + JSON.stringify(json));
+    //console.log('post json ' + JSON.stringify(json);
+    //let time = "\n " + (new Date()).getTime())
+    //console.log(time)
     if (window.vuplex != null) {
         window.vuplex.postMessage(json);
     }
