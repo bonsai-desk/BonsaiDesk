@@ -177,11 +177,7 @@ public class AutoAuthority : NetworkBehaviour
             visualizePinchPullFrame = BlockUtility.GetRootBlockObject(_blockObject).AutoAuthority._visualizePinchPullFrame;
         }
 
-        if (Time.frameCount <= visualizePinchPullFrame + 1)
-        {
-            color = Color.red;
-        }
-        else if (NetworkManagerGame.Singleton.visualizeAuthority)
+        if (NetworkManagerGame.Singleton.visualizeAuthority)
         {
             var hasAuthority = isServer && !isClient && ServerHasAuthority() || isClient && ClientHasAuthority();
             if (hasAuthority)
@@ -206,6 +202,10 @@ public class AutoAuthority : NetworkBehaviour
                     color = Color.red;
                 }
             }
+        }
+        else if (Time.frameCount <= visualizePinchPullFrame + 1)
+        {
+            color = Color.red;
         }
 
         if (cachedMaterial == null)
@@ -382,13 +382,10 @@ public class AutoAuthority : NetworkBehaviour
         if (_lastSetNewOwnerFrame != Time.frameCount)
         {
             _lastSetNewOwnerFrame = Time.frameCount;
-            if (isServer)
+            CmdSetNewOwner(newOwnerIdentityId, fromLastInteractTime, false, 0);
+            if (!isClient)
             {
-                CmdSetNewOwner(newOwnerIdentityId, fromLastInteractTime, false, 0);
-            }
-            else
-            {
-                ClientSetNewOwnerFake(newOwnerIdentityId, fromLastInteractTime, false, 0);
+                Debug.LogError("SetNewOwner: commands are for clients");
             }
         }
     }
@@ -452,7 +449,7 @@ public class AutoAuthority : NetworkBehaviour
     }
 
     [Command(ignoreAuthority = true)]
-    private void CmdSetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime, bool inUse, float inUseTimeout)
+    public void CmdSetNewOwner(uint newOwnerIdentityId, double fromLastInteractTime, bool inUse, float inUseTimeout)
     {
         if (!inUse && Time.time - GetServerLastOwnerChange() < OwnerChangeCooldown)
         {
