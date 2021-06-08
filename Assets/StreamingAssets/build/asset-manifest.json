@@ -1,17 +1,18 @@
 {
   "files": {
-    "main.css": "/static/css/main.e52670ef.chunk.css",
-    "main.js": "/static/js/main.9a2fdd4a.chunk.js",
-    "main.js.map": "/static/js/main.9a2fdd4a.chunk.js.map",
+    "main.css": "/static/css/main.bd992ec0.chunk.css",
+    "main.js": "/static/js/main.08ff788a.chunk.js",
+    "main.js.map": "/static/js/main.08ff788a.chunk.js.map",
     "runtime-main.js": "/static/js/runtime-main.8c24e311.js",
     "runtime-main.js.map": "/static/js/runtime-main.8c24e311.js.map",
     "static/js/2.6ccdff54.chunk.js": "/static/js/2.6ccdff54.chunk.js",
     "static/js/2.6ccdff54.chunk.js.map": "/static/js/2.6ccdff54.chunk.js.map",
     "index.html": "/index.html",
-    "static/css/main.e52670ef.chunk.css.map": "/static/css/main.e52670ef.chunk.css.map",
+    "static/css/main.bd992ec0.chunk.css.map": "/static/css/main.bd992ec0.chunk.css.map",
     "static/js/2.6ccdff54.chunk.js.LICENSE.txt": "/static/js/2.6ccdff54.chunk.js.LICENSE.txt",
     "static/media/back.d3a137ff.svg": "/static/media/back.d3a137ff.svg",
     "static/media/backspace-hollow.5cb2158e.svg": "/static/media/backspace-hollow.5cb2158e.svg",
+    "static/media/bearing.d64faccb.png": "/static/media/bearing.d64faccb.png",
     "static/media/block-line.5f44f2a8.svg": "/static/media/block-line.5f44f2a8.svg",
     "static/media/caret-square-up-hollow.5d65dc16.svg": "/static/media/caret-square-up-hollow.5d65dc16.svg",
     "static/media/caret-square-up.bce15253.svg": "/static/media/caret-square-up.bce15253.svg",
@@ -35,6 +36,7 @@
     "static/media/table-regular.52831ea1.svg": "/static/media/table-regular.52831ea1.svg",
     "static/media/thinking-face.179ede86.svg": "/static/media/thinking-face.179ede86.svg",
     "static/media/thumb-up.513e7738.svg": "/static/media/thumb-up.513e7738.svg",
+    "static/media/value-none.87fa2434.svg": "/static/media/value-none.87fa2434.svg",
     "static/media/volume-high.701f2269.svg": "/static/media/volume-high.701f2269.svg",
     "static/media/volume-off.fc42f15f.svg": "/static/media/volume-off.fc42f15f.svg",
     "static/media/wood1.02898d5e.png": "/static/media/wood1.02898d5e.png",
@@ -46,7 +48,7 @@
   "entrypoints": [
     "static/js/runtime-main.8c24e311.js",
     "static/js/2.6ccdff54.chunk.js",
-    "static/css/main.e52670ef.chunk.css",
-    "static/js/main.9a2fdd4a.chunk.js"
+    "static/css/main.bd992ec0.chunk.css",
+    "static/js/main.08ff788a.chunk.js"
   ]
 }

@@ -6,6 +6,8 @@ import wood2 from '../static/wood2.png';
 import wood3 from '../static/wood3.png';
 import wood4 from '../static/wood4.png';
 import wood6 from '../static/wood6.png';
+import bearing from '../static/bearing.png';
+import none from '../static/value-none.svg';
 
 function Button({children, onClick, active}) {
     let classActive = 'p-1 bg-gray-100 rounded-lg';
@@ -30,6 +32,7 @@ const BlockButton = observer(({hand, blockId, children}) => {
 
     let onClick = () => {
         postChangeActiveBlock(hand, blockId);
+        postSetHandMode(HandMode.None);
     };
     return <Button onClick={onClick} active={active}>
         {children}
@@ -66,12 +69,14 @@ function ButtonGrid({hand}) {
                         <img src={wood6} alt={'wood6'}/>
                     </BlockButton>
                     <BlockButton hand={hand} blockId={'bearing'}>
-                        <img src={wood1} alt={'wood1'}/>
+                        <div className={'flex flex-wrap content-center justify-center h-full w-full bg-gray-800'}>
+                            <img className={'h-9/12 w-9/12'} src={bearing} alt={'bearing'}/>
+                        </div>
                     </BlockButton>
                 </ButtonRow>
                 <div className={'w-full flex justify-center'}>
                     <BlockButton hand={hand} blockId={''}>
-                        <div className={'h-full w-full bg-gray-800'}/>
+                        <ClearIcon/>
                     </BlockButton>
                 </div>
             </ButtonContainer>
@@ -130,8 +135,15 @@ function Duplicate() {
     </BlockBreakButton>;
 }
 
+function ClearIcon() {
+    return <div className={'flex flex-wrap content-center justify-center h-full w-full bg-gray-800'}>
+        <img className={'h-8/12 w-8/12'} src={none} alt={'none'}/>
+    </div>;
+}
+
 function ClearHand() {
     return <BlockBreakButton mode={HandMode.None}>
+        <ClearIcon/>
     </BlockBreakButton>;
 }
 
@@ -163,10 +175,10 @@ const HandModes = observer(() => {
                     </Button>
                 </div>
                 <div className={'space-x-2 flex'}>
-                    <BlockBreakNew/>
-                    <WholeBreak hand={'left'}/>
-                    <Save hand={'left'}/>
                     <Duplicate hand={'left'}/>
+                    <WholeBreak hand={'left'}/>
+                    <BlockBreakNew/>
+                    <Save hand={'left'}/>
                     <ClearHand hand={'left'}/>
                 </div>
             </div>
@@ -177,13 +189,13 @@ const HandModes = observer(() => {
 const Context = observer(() => {
     document.title = 'Context Menu';
     return (
-            <div className={'bg-gray-900 flex flex-wrap content-center h-screen space-y-8'}>
+            <div className={'bg-gray-900 flex flex-wrap content-center h-screen space-y-10'}>
+                <HandModes/>
+                <div className={"bg-gray-700 rounded h-4 w-full mx-6"}/>
                 <div className={'flex flex-wrap justify-center space-x-20 w-full'}>
                     <ButtonGrid hand={'left'}/>
                     <ButtonGrid hand={'right'}/>
                 </div>
-                ;
-                <HandModes/>
             </div>
 
     );
