@@ -583,8 +583,10 @@ public static partial class BlockUtility
 
     private static int _defaultLayerMask;
     private static int _defaultLayerMaskPlusNetworkHands;
+    private static int _defaultLayerMaskPlusNetworkHandsMinuLocalHands;
     public static int DefaultLayerMask => GetDefaultLayerMask();
     public static int DefaultLayerMaskPlusNetworkHands => GetDefaultLayerMaskPlusNetworkHands();
+    public static int DefaultLayerMaskPlusNetworkHandsMinusLocalHands => GetDefaultLayerMaskPlusNetworkHandsMinusLocalHands();
 
     private static int GetDefaultLayerMask()
     {
@@ -616,7 +618,18 @@ public static partial class BlockUtility
         return _defaultLayerMaskPlusNetworkHands;
     }
 
-public static (List<Dictionary<Vector3Int, SyncBlock>> filledBlocksGroups, int indexOfLargest) GetFilledBlocksGroups(Vector3Int coord,
+    private static int GetDefaultLayerMaskPlusNetworkHandsMinusLocalHands()
+    {
+        if (_defaultLayerMaskPlusNetworkHandsMinuLocalHands == 0)
+        {
+            _defaultLayerMaskPlusNetworkHandsMinuLocalHands = DefaultLayerMaskPlusNetworkHands & (~1 << LayerMask.NameToLayer("LeftHand")) &
+                                                              (~1 << LayerMask.NameToLayer("RightHand")) & (~1 << LayerMask.NameToLayer("IndexTip"));
+        }
+
+        return _defaultLayerMaskPlusNetworkHandsMinuLocalHands;
+    }
+
+    public static (List<Dictionary<Vector3Int, SyncBlock>> filledBlocksGroups, int indexOfLargest) GetFilledBlocksGroups(Vector3Int coord,
         SyncDictionary<Vector3Int, SyncBlock> blocks)
     {
         var filledBlocksGroups = new List<Dictionary<Vector3Int, SyncBlock>>();
