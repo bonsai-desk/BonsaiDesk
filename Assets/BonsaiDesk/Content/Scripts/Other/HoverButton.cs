@@ -10,7 +10,7 @@ public class HoverButton : MonoBehaviour
 {
     public float activationRadius = 0.0275f;
     public bool halfSphere;
-    private const float ActivationTime = 0.75f;
+    public float activationTime = 0.75f;
 
     public Image progressImage;
     public UnityEvent action;
@@ -31,7 +31,7 @@ public class HoverButton : MonoBehaviour
         }
         
         _activeTimer = 0;
-        progressImage.fillAmount = Mathf.Clamp01(_activeTimer / ActivationTime);
+        progressImage.fillAmount = Mathf.Clamp01(_activeTimer / activationTime);
     }
 
     private void Update()
@@ -76,9 +76,9 @@ public class HoverButton : MonoBehaviour
             _activated = false;
         }
 
-        progressImage.fillAmount = Mathf.Clamp01(_activeTimer / ActivationTime);
+        progressImage.fillAmount = Mathf.Clamp01(_activeTimer / activationTime);
 
-        if (transform.gameObject.activeInHierarchy && !_activated && _activeTimer > ActivationTime)
+        if (transform.gameObject.activeInHierarchy && !_activated && _activeTimer > activationTime)
         {
             _activated = true;
             action?.Invoke();

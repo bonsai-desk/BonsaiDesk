@@ -105,8 +105,8 @@ public class NetworkHand : NetworkBehaviour
             _handMaterial.mainTexture = _handTexture;
         }
 
-        HandComponents.SetLayerRecursive(hand.transform.GetChild(0), LayerMask.NameToLayer("onlyHands"));
-        
+        HandComponents.SetLayerRecursive(hand.transform.GetChild(0), LayerMask.NameToLayer("networkHand"));
+
         _physicsHandController.overrideCapsulesActive = true;
         _physicsHandRenderer.enabled = false;
         _physicsHandController.overrideCapsulesActiveTarget = false;

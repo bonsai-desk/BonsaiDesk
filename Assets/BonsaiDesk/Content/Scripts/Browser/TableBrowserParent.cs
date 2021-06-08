@@ -20,8 +20,6 @@ public class TableBrowserParent : MonoBehaviour
     private int _parentsReady;
     public BoxCollider contentBoxCollider;
 
-    public GameObject closeMenuHoverButton;
-
     private void Awake()
     {
         if (Instance == null)
@@ -166,8 +164,6 @@ public class TableBrowserParent : MonoBehaviour
         
         TableBrowser.SetHidden(true);
         WebBrowserParent.SetAllHidden(true);
-        
-        closeMenuHoverButton.SetActive(!MenuAsleep);
 
         SetHandForInactiveBrowser();
     }
@@ -175,8 +171,6 @@ public class TableBrowserParent : MonoBehaviour
     private void MenuWake()
     {
         MenuAsleep = false;
-        
-        closeMenuHoverButton.SetActive(!MenuAsleep);
 
         if (!openedOnce)
         {

@@ -1591,14 +1591,15 @@ public partial class BlockObject : NetworkBehaviour
     private void CmdDuplicate(uint ownerId)
     {
         var rootBlockObject = BlockUtility.GetRootBlockObject(this);
-        ServerDuplicateBlockObject(ownerId, rootBlockObject, null).ServerTeleportToDeskSurface();
+        var (offset, _) = rootBlockObject.ServerGetTeleportToDeskSurfaceOffset();
+        ServerDuplicateBlockObject(ownerId, rootBlockObject, null, offset);
     }
 
     [Server]
-    private BlockObject ServerDuplicateBlockObject(uint ownerId, BlockObject rootBlockObject, BlockObject parent)
+    private void ServerDuplicateBlockObject(uint ownerId, BlockObject rootBlockObject, BlockObject parent, Vector3 offset)
     {
         var blockObjectGameObject =
-            Instantiate(StaticPrefabs.instance.blockObjectPrefab, rootBlockObject.transform.position, rootBlockObject.transform.rotation);
+            Instantiate(StaticPrefabs.instance.blockObjectPrefab, rootBlockObject.transform.position + offset, rootBlockObject.transform.rotation);
         var blockObject = blockObjectGameObject.GetComponent<BlockObject>();
         foreach (var pair in rootBlockObject.Blocks)
         {
@@ -1613,14 +1614,12 @@ public partial class BlockObject : NetworkBehaviour
             blockObject.ServerConnectJoint(jointInfo);
         }
 
-        blockObjectGameObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time, false);
+        blockObjectGameObject.GetComponent<AutoAuthority>().ServerForceNewOwner(ownerId, NetworkTime.time);
 
         foreach (var pair in rootBlockObject.ConnectedToSelf)
         {
-            ServerDuplicateBlockObject(ownerId, pair.Value.Value.GetComponent<BlockObject>(), blockObject);
+            ServerDuplicateBlockObject(ownerId, pair.Value.Value.GetComponent<BlockObject>(), blockObject, offset);
         }
-
-        return blockObject;
     }
 
     private void UpdateDialogPosition()
