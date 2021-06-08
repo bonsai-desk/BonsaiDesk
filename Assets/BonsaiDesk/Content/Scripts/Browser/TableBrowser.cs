@@ -53,6 +53,7 @@ public class TableBrowser : Browser
                 switch (message.Message)
                 {
                     case "hover":
+                        BonsaiLogWarning("Play Hover");
                         hoverSound.PlaySoundAt(CustomInputModule.Singleton.cursorRoot);
                         break;
                     case "mouseDown":
