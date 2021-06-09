@@ -164,9 +164,10 @@ public class PinchPullHand : MonoBehaviour, IHandTick
         {
             if (!autoAuthority || !autoAuthority.gameObject || !pinchPullJoint.connectedBody)
             {
+                _checkAuthorityAfterDelayCoroutine = null;
                 yield break;
             }
-            
+
             if (Time.time - startTime > 1f)
             {
                 if (pinchPullJoint.connectedBody)
@@ -174,6 +175,7 @@ public class PinchPullHand : MonoBehaviour, IHandTick
                     if (!autoAuthority.HasAuthority())
                     {
                         DetachObject();
+                        _checkAuthorityAfterDelayCoroutine = null;
                         yield break;
                     }
                 }
@@ -187,12 +189,14 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
             yield return null;
         }
+
+        _checkAuthorityAfterDelayCoroutine = null;
     }
 
     private void AttachObject(AutoAuthority attachToObject, Vector3 hitPoint)
     {
         Mixpanel.Track("Pinch Pull Attach");
-        
+
         _localHitPoint = attachToObject.transform.InverseTransformPoint(hitPoint);
         pinchPullJoint.connectedAnchor = _localHitPoint;
 

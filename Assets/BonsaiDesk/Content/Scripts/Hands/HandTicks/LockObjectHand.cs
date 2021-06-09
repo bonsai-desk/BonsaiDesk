@@ -85,6 +85,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
         {
             if (!autoAuthority || !autoAuthority.gameObject || !(joint && joint.connectedBody))
             {
+                _checkAuthorityAfterDelayCoroutine = null;
                 yield break;
             }
             
@@ -95,6 +96,7 @@ public class LockObjectHand : MonoBehaviour, IHandTick
                     if (!autoAuthority.HasAuthority())
                     {
                         DetachObject();
+                        _checkAuthorityAfterDelayCoroutine = null;
                         yield break;
                     }
                 }
@@ -108,6 +110,8 @@ public class LockObjectHand : MonoBehaviour, IHandTick
             
             yield return null;
         }
+
+        _checkAuthorityAfterDelayCoroutine = null;
     }
 
     private AutoAuthority GetLockObjectCandidate()
