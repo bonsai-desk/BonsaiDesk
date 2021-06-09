@@ -759,6 +759,7 @@ public class TableBrowserMenu : MonoBehaviour
         public ulong UserId;
         public string Nonce;
         public string Build; // mobile or desktop
+        public string Release; // DEVELOPMENT, PRODUCTION
     }
 
     public struct UserInfo
