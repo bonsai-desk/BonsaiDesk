@@ -13,4 +13,13 @@ function apiBase(store) {
     return API_BASE;
 }
 
-module.exports = {postJson, apiBase};
+function apiBaseManual(release) {
+    let API_BASE = 'https://api.desk.link:1776/v1';
+    if (release === 'DEVELOPMENT') {
+        API_BASE = 'https://api.desk.link:8080/v1';
+    }
+    return API_BASE;
+    
+}
+
+module.exports = {postJson, apiBase, apiBaseManual};

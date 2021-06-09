@@ -676,12 +676,19 @@ public class NetworkManagerGame : NetworkManager
         #elif UNITY_ANDROID && !UNITY_EDITOR
         build = "mobile";
         #endif
+            
+        var release = "PRODUCTION";
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+        release = "DEVELOPMENT";
+        #endif
+            
 
         var authInfo = new AuthInfo()
         {
             UserId = User.ID,
             Nonce = msg.Data.Value,
-            Build = build
+            Build = build,
+            Release = release
         };
         
         TableBrowserMenu.Singleton.PostAuthInfo(authInfo);

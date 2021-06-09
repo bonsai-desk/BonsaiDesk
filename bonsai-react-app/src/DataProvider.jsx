@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useState} from 'react';
 import {action, makeAutoObservable} from 'mobx';
 import {observer} from 'mobx-react-lite';
 import axios from 'axios';
-import {apiBase} from './utilities';
+import {apiBase, apiBaseManual} from './utilities';
 import jwt from 'jsonwebtoken';
 
 export const StoreContext = React.createContext();
@@ -113,6 +113,7 @@ class Store {
         UserId: null,
         Nonce: '',
         Build: '',
+        Release: '',
     };
 
     constructor() {
@@ -128,7 +129,7 @@ class Store {
             `build=${this._authInfo.Build}`,
         ].join('&');
 
-        let url = apiBase(this) + `/blocks/login?` + auth_params;
+        let url = apiBaseManual(authInfo.Release) + `/blocks/login?` + auth_params;
 
         axios.post(url).then(response => {
             this.BonsaiToken = response.data.token;
