@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 using Mirror;
+using mixpanel;
 
 public class PinchPullHand : MonoBehaviour, IHandTick
 {
@@ -190,6 +191,8 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
     private void AttachObject(AutoAuthority attachToObject, Vector3 hitPoint)
     {
+        Mixpanel.Track("Pinch Pull Attach");
+        
         _localHitPoint = attachToObject.transform.InverseTransformPoint(hitPoint);
         pinchPullJoint.connectedAnchor = _localHitPoint;
 
