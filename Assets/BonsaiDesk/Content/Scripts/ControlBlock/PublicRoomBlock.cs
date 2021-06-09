@@ -11,11 +11,13 @@ public class PublicRoomBlock : MonoBehaviour
     
     public void Silence()
     {
-        
+        TableBrowserMenu.Singleton.SilencePublicRoomNotifications();
+        gameObject.GetComponent<AutoAuthority>().CmdDestroy();
     }
     
     public void Go()
     {
-        
+        TableBrowserMenu.Singleton.NavToPublicRooms();
+        gameObject.GetComponent<AutoAuthority>().CmdDestroy();
     }
 }
