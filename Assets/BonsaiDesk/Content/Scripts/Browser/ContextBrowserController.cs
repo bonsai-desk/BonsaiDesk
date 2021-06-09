@@ -26,7 +26,7 @@ public class ContextBrowserController : MonoBehaviour
     public BlockBreakHand.BreakMode RightHandMode => blockBreakHandRight.HandBreakMode;
 
     private const string DefaultLeftActive = "wood1";
-    private const string DefaultRightActive = "bearing";
+    private const string DefaultRightActive = "";
 
     public string LeftBlockActive { get; private set; } = DefaultLeftActive;
 

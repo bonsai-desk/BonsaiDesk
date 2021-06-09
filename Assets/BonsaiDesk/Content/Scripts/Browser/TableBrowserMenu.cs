@@ -298,9 +298,8 @@ public class TableBrowserMenu : MonoBehaviour
                var ignore = false;
                var now = DateTimeOffset.Now.ToUnixTimeSeconds();
 
-               if (SaveSystem.Instance.StringPairs.TryGetValue("SilenceTime", out var value))
+               if (SaveSystem.Instance.LongPairs.TryGetValue("SilenceTime", out var silencedAt))
                {
-                   var silencedAt = long.Parse(value);
                    ignore = (now - silencedAt) < 60 * 60 * 24;
                }
                
@@ -770,6 +769,6 @@ public class TableBrowserMenu : MonoBehaviour
     public void SilencePublicRoomNotifications()
     {
         var now = DateTimeOffset.Now.ToUnixTimeSeconds();
-        SaveSystem.Instance.StringPairs["SilenceTime"] = now.ToString();
+        SaveSystem.Instance.LongPairs["SilenceTime"] = now;
     }
 }

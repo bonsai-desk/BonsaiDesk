@@ -1165,6 +1165,7 @@ public partial class BlockObject : NetworkBehaviour
             {
                 _activeWholeEffect = null;
                 CloseDialog();
+                _dialogTimeoutCoroutine = null;
                 yield break;
             }
 
@@ -1174,6 +1175,7 @@ public partial class BlockObject : NetworkBehaviour
         //if coroutine has not been stopped by this point, close it
         _activeWholeEffect = null;
         CloseDialog();
+        _dialogTimeoutCoroutine = null;
     }
 
     private void DamageBlock(Vector3Int coord)
