@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using Newtonsoft.Json;
 using UnityEngine;
 using Vuplex.WebView;
@@ -6,34 +7,34 @@ using Vuplex.WebView;
 [RequireComponent(typeof(TableBrowser))]
 public class ContextBrowserController : MonoBehaviour
 {
-    public enum Block
-    {
-        None,
-        Wood,
-        Orange,
-        Green,
-        Brown,
-        Pink,
-        LightPurple,
-        DarkPurple,
-        Violet,
-        LightNeutral,
-        DarkNeutral
-    }
-
     public enum Hand
     {
         Left,
         Right
     }
 
-    public Block LeftBlockActive = Block.None;
-    public Block RightBlockActive = Block.None;
+    public Hand handActive = Hand.Right;
 
-    public bool LeftBlockBreak;
-    public bool RightBlockBreak;
+    public BlockBreakHand.BreakMode ActiveHandMode => handActive == Hand.Left ? LeftHandMode : RightHandMode;
+
+    public BlockBreakHand blockBreakHandLeft;
+    public BlockBreakHand blockBreakHandRight;
 
     private TableBrowser _browser;
+
+    public BlockBreakHand.BreakMode LeftHandMode => blockBreakHandLeft.HandBreakMode;
+    public BlockBreakHand.BreakMode RightHandMode => blockBreakHandRight.HandBreakMode;
+
+    private const string DefaultLeftActive = "wood1";
+    private const string DefaultRightActive = "";
+
+    public string LeftBlockActive { get; private set; } = DefaultLeftActive;
+
+    public string RightBlockActive { get; private set; } = DefaultRightActive;
+
+    public bool LeftBlockBreak { get; }
+
+    public bool RightBlockBreak { get; }
 
     // Start is called before the first frame update
     private void Start()
@@ -41,10 +42,87 @@ public class ContextBrowserController : MonoBehaviour
         _browser = GetComponent<TableBrowser>();
         _browser.ListenersReady += SetupBrowser;
         _browser.BrowserReady += (sender, _) => { _browser.OnMessageEmitted(HandleJavascriptMessage); };
+
+        if (SaveSystem.Instance.IntPairs.TryGetValue("ContextHand", out var value))
+        {
+            handActive = (Hand) value;
+        }
+
+        if (SaveSystem.Instance.StringPairs.TryGetValue("LeftBlockActive", out var leftBlockActive))
+        {
+            LeftBlockActive = leftBlockActive;
+        }
+        else
+        {
+            LeftBlockActive = DefaultLeftActive;
+        }
+
+        SetLeftSpawner(LeftBlockActive);
+
+        if (SaveSystem.Instance.StringPairs.TryGetValue("RightBlockActive", out var rightBlockActive))
+        {
+            RightBlockActive = rightBlockActive;
+        }
+        else
+        {
+            RightBlockActive = DefaultRightActive;
+        }
+
+        SetRightSpawner(RightBlockActive);
+
+        StartCoroutine(SetInitialBlocks());
     }
 
+    private IEnumerator SetInitialBlocks()
+    {
+        while (!NetworkBlockSpawn.InstanceLeft || !NetworkBlockSpawn.InstanceRight)
+        {
+            yield return null;
+        }
+
+        NetworkBlockSpawn.InstanceLeft.SetSpawnBlockName(LeftBlockActive);
+        NetworkBlockSpawn.InstanceRight.SetSpawnBlockName(RightBlockActive);
+    }
 
     public event Action InfoChange;
+
+    private void SetHand(string hand)
+    {
+        if (hand == "left")
+        {
+            handActive = Hand.Left;
+            if (blockBreakHandLeft.HandBreakMode == BlockBreakHand.BreakMode.None)
+            {
+                blockBreakHandLeft.SetBreakMode(blockBreakHandRight.HandBreakMode);
+                blockBreakHandRight.SetBreakMode(BlockBreakHand.BreakMode.None);
+            }
+        }
+
+        if (hand == "right")
+        {
+            handActive = Hand.Right;
+            SaveSystem.Instance.IntPairs["ContextHand"] = (int) Hand.Right;
+            if (blockBreakHandRight.HandBreakMode == BlockBreakHand.BreakMode.None)
+            {
+                blockBreakHandRight.SetBreakMode(blockBreakHandLeft.HandBreakMode);
+                blockBreakHandLeft.SetBreakMode(BlockBreakHand.BreakMode.None);
+            }
+        }
+
+        SaveSystem.Instance.IntPairs["ContextHand"] = (int) handActive;
+    }
+
+    private void SetHandMode(BlockBreakHand.BreakMode handMode)
+    {
+        if (handActive == Hand.Left)
+        {
+            blockBreakHandLeft.SetBreakMode(handMode);
+        }
+        else
+        {
+            blockBreakHandRight.SetBreakMode(handMode);
+        }
+    }
 
     private void HandleJavascriptMessage(object sender, EventArgs<string> e)
     {
@@ -54,54 +132,40 @@ public class ContextBrowserController : MonoBehaviour
             case "command":
                 switch (message.Message)
                 {
-                    case "toggleBlockBreakHand":
-                        var toggleBlockBreakHand = message.Data == "left" ? Hand.Left : Hand.Right;
-                        if (toggleBlockBreakHand == Hand.Left)
-                        {
-                            LeftBlockBreak = !LeftBlockBreak;
-                            InfoChange?.Invoke();
-                        }
-
-                        if (toggleBlockBreakHand == Hand.Right)
-                        {
-                            RightBlockBreak = !RightBlockBreak;
-                            InfoChange?.Invoke();
-                        }
-
+                    case "setHand":
+                        SetHand(message.Data);
+                        InfoChange.Invoke();
                         break;
-                        
-                    case "toggleBlockActive":
-                        var toggleHand = message.Data == "left" ? Hand.Left : Hand.Right;
-                        if (toggleHand == Hand.Left)
-                        {
-                            LeftBlockActive = LeftBlockActive == Block.None ? Block.Wood : Block.None;
-                            InfoChange?.Invoke();
-                        }
 
-                        if (toggleHand == Hand.Right)
-                        {
-                            RightBlockActive = RightBlockActive == Block.None ? Block.Wood : Block.None;
-                            InfoChange?.Invoke();
-                        }
-
+                    case "setHandMode":
+                        var handModeData = JsonConvert.DeserializeObject<BlockBreakHand.BreakMode>(message.Data);
+                        SetHandMode(handModeData);
+                        InfoChange.Invoke();
                         break;
                     case "changeActiveBlock":
                         var data = JsonConvert.DeserializeObject<ActiveBlockString>(message.Data);
                         var hand = data.Hand == "left" ? Hand.Left : Hand.Right;
-                        var block = (Block) data.BlockId;
-                        if (!Enum.IsDefined(typeof(Block), data.BlockId))
+                        var blockName = data.BlockName;
+                        if (blockName != string.Empty && Blocks.GetBlock(blockName) == null)
                         {
-                            BonsaiLogWarning("Failed to match block id, defaulting to None");
+                            BonsaiLogWarning($"Block {blockName} does not exist in blocks");
                         }
 
-                        BonsaiLog($"changeActiveBlock: {hand} {block}");
+                        var printName = blockName == string.Empty ? "(no block)" : blockName;
+                        BonsaiLog($"changeActiveBlock: {hand} {printName}");
                         switch (hand)
                         {
                             case Hand.Left:
-                                LeftBlockActive = block;
+                                LeftBlockActive = blockName;
+                                SaveSystem.Instance.StringPairs["LeftBlockActive"] = blockName;
+                                SetLeftSpawner(blockName);
+
                                 break;
                             case Hand.Right:
-                                RightBlockActive = block;
+                                RightBlockActive = blockName;
+                                SaveSystem.Instance.StringPairs["RightBlockActive"] = blockName;
+                                SetRightSpawner(blockName);
+
                                 break;
                         }
 
@@ -110,6 +174,22 @@ public class ContextBrowserController : MonoBehaviour
                 }
 
                 break;
+        }
+    }
+
+    private void SetRightSpawner(string blockName)
+    {
+        if (NetworkBlockSpawn.InstanceRight)
+        {
+            NetworkBlockSpawn.InstanceRight.SetSpawnBlockName(blockName);
+        }
+    }
+
+    private void SetLeftSpawner(string blockName)
+    {
+        if (NetworkBlockSpawn.InstanceLeft)
+        {
+            NetworkBlockSpawn.InstanceLeft.SetSpawnBlockName(blockName);
         }
     }
 
@@ -138,6 +218,12 @@ public class ContextBrowserController : MonoBehaviour
     private struct ActiveBlockString
     {
         public string Hand;
-        public int BlockId;
+        public string BlockName;
+    }
+
+    private struct HandMode
+    {
+        public string Hand;
+        public BlockBreakHand.BreakMode Mode;
     }
 }

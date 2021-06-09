@@ -5,16 +5,28 @@ using Vuplex.WebView;
 public class TableBrowserParent : MonoBehaviour
 {
     private bool openedOnce;
-    private Browser preSleepActive = Browser.Table;
+    private Browser active = Browser.Table;
     public TableBrowser TableBrowser;
     public TableBrowser ContextMenu;
+    public TableBrowser KeyboardBrowser;
     public TableBrowserMenu TableBrowserMenu;
     public WebBrowserParent WebBrowserParent;
+    public KeyboardBrowserController KeyboardBrowserController;
+    public MoveToDesk moveToDesk;
+    public static TableBrowserParent Instance;
     public bool MenuAsleep { get; private set; }
     public bool ContextAsleep { get; private set; }
     
     private int _parentsReady;
     public BoxCollider contentBoxCollider;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+    }
 
     // Start is called before the first frame update
     private void Start()
@@ -28,6 +40,60 @@ public class TableBrowserParent : MonoBehaviour
         TableBrowserMenu.Singleton.CloseMenu += HandleCloseMenu;
 
         ContextMenu.BrowserReady += HandleContextReady;
+
+        KeyboardBrowserController.DismissKeyboard += HandleDismissKeyboard;
+
+        TableBrowser.FocusInput += HandleMenuFocusInput;
+
+        KeyboardBrowser.InputRecieved += HandleKeyboardInput;
+    }
+
+    private void HandleKeyboardInput(object sender, EventArgs<string> e)
+    {
+        switch (active)
+        {
+            case Browser.Web:
+                WebBrowserParent.webBrowser.HandleKeyboardInput(e.Value);
+                break;
+            case Browser.Table:
+                TableBrowser.HandleKeyboardInput(e.Value);
+                break;
+            default:
+                BonsaiLogWarning($"Did not handle input for mode ({active})");
+                break;
+        }
+    }
+
+    private void HandleMenuFocusInput(object sender, EventArgs<bool> focus)
+    {
+        if (focus.Value)
+        {
+            KeyboardBrowserController.SetActive(true);
+            TableBrowserMenu.SetRaised(true);
+        }
+        else
+        {
+            KeyboardBrowserController.SetActive(false);
+            TableBrowserMenu.SetRaised(false);
+        }
+    }
+
+    private void HandleDismissKeyboard()
+    {
+        // if menu mode, set not hidden
+        switch (active)
+        {
+            case Browser.Web:
+                WebBrowserParent.HandleToggleKeyboard();
+                break;
+            case Browser.Table:
+                KeyboardBrowserController.SetActive(false);
+                TableBrowserMenu.SetRaised(false);
+                break;
+            default:
+                BonsaiLogWarning($"Dismiss keyboard while ({active}) not handled");
+                break;
+        }
     }
 
     private void HandleContextReady(object sender, EventArgs e)
@@ -50,18 +116,15 @@ public class TableBrowserParent : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
-    private void Update()
-    {
-    }
-
     private void HandleOrientationChange(bool oriented)
     {
         MenuSleep();
+        ContextSleep();
     }
 
     private void HandleCloseWeb(object _, EventArgs e)
     {
+        WebBrowserParent.HandleDismissKeyboard();
         SetActive(Browser.Table);
     }
 
@@ -70,9 +133,15 @@ public class TableBrowserParent : MonoBehaviour
         SetActive(Browser.Web);
     }
 
+    public void OpenMenu()
+    {
+        SetActive(Browser.Table);
+        MenuWake();
+    }
+
     private void SetActive(Browser browser)
     {
-        preSleepActive = browser;
+        active = browser;
         switch (browser)
         {
             case Browser.Web:
@@ -110,7 +179,7 @@ public class TableBrowserParent : MonoBehaviour
         }
         else
         {
-            switch (preSleepActive)
+            switch (active)
             {
                 case Browser.Web:
                     WebBrowserParent.SetAllHidden(false);
@@ -125,7 +194,6 @@ public class TableBrowserParent : MonoBehaviour
         }
         
         SetHandsForActiveBrowser();
-
     }
 
     private void SetHandsForActiveBrowser()
@@ -134,6 +202,8 @@ public class TableBrowserParent : MonoBehaviour
         InputManager.Hands.Right.ZTestOverlay();
         InputManager.Hands.Left.SetPhysicsLayerForTouchScreen();
         InputManager.Hands.Right.SetPhysicsLayerForTouchScreen();
+        InputManager.Hands.Left.SetPhysicsForUsingScreen(true);
+        InputManager.Hands.Right.SetPhysicsForUsingScreen(true);
     }
 
     private void SetHandForInactiveBrowser()
@@ -144,7 +214,14 @@ public class TableBrowserParent : MonoBehaviour
             InputManager.Hands.Right.ZTestRegular();
             InputManager.Hands.Left.SetPhysicsLayerRegular();
             InputManager.Hands.Right.SetPhysicsLayerRegular();
+            InputManager.Hands.Left.SetPhysicsForUsingScreen(false);
+            InputManager.Hands.Right.SetPhysicsForUsingScreen(false);
         }
+    }
+
+    public bool AllMenusClosed()
+    {
+        return MenuAsleep && ContextAsleep;
     }
 
     private void ContextWake()
@@ -153,7 +230,6 @@ public class TableBrowserParent : MonoBehaviour
         contentBoxCollider.enabled = true;
         ContextMenu.SetHidden(false);
         SetHandsForActiveBrowser();
-        
     }
 
     private void ContextSleep()
@@ -164,8 +240,41 @@ public class TableBrowserParent : MonoBehaviour
         SetHandForInactiveBrowser();
     }
 
+    public void CloseContextIfOpen()
+    {
+        if (!ContextAsleep)
+        {
+            ContextSleep();
+        }
+    }
+
+    public void ToggleContextAwakeIfMenuClosed()
+    {
+        if (!moveToDesk.oriented)
+        {
+            return;
+        }
+        
+        if (ContextAsleep)
+        {
+            if (MenuAsleep)
+            {
+                ContextWake();
+            }
+        }
+        else
+        {
+            ContextSleep();
+        }
+    }
+
     public void ToggleContextAwake()
     {
+        if (!moveToDesk.oriented)
+        {
+            return;
+        }
+        
         if (ContextAsleep)
         {
             ContextWake();
@@ -178,6 +287,11 @@ public class TableBrowserParent : MonoBehaviour
 
     public void ToggleAwake()
     {
+        if (!moveToDesk.oriented)
+        {
+            return;
+        }
+        
         if (MenuAsleep)
         {
             MenuWake();

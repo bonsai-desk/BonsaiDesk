@@ -16,6 +16,7 @@ public class Browser : MonoBehaviour
     public Transform boundsTransform;
     public Transform overlayTransform;
     public Transform holePuncherTransform;
+    public Transform stencilTransform;
     public Transform screenTransform;
     public string initialUrl;
     public bool useBuiltHtml;
@@ -177,6 +178,10 @@ public class Browser : MonoBehaviour
         hidden = choice;
         var renderEnabled = !choice;
 
+        if (stencilTransform)
+        {
+            stencilTransform.gameObject.SetActive(!choice);
+        }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
 		if (_overlay != null) {
@@ -286,10 +291,12 @@ public class Browser : MonoBehaviour
     public static class BrowserMessage
     {
         public static readonly string NavToMenu = PushPath("/menu/home");
+        public static readonly string NavToPublicRooms = PushPath("/menu/public-rooms");
         public static readonly string NavHome = PushPath("/home");
         public static readonly string NavKeyboard = PushPath("/keyboard");
         public static readonly string NavWebNav = PushPath("/webnav");
         public static readonly string NavContext = PushPath("/context");
+        public static readonly string NavToSaveDraft = PushPath("/menu/blocks/drafts?modal=true");
 
         private static string PushPath(string path)
         {

@@ -38,6 +38,8 @@ public class WebNavBrowserController : MonoBehaviour
     public event Action SpawnKeyboard;
     public event Action DismissKeyboard;
 
+    public event Action ToggleKeyboard;
+
     private void HandleJavascriptMessage(object _, EventArgs<string> eventArgs)
     {
         var message = JsonConvert.DeserializeObject<Browser.JsMessageString>(eventArgs.Value);
@@ -59,6 +61,9 @@ public class WebNavBrowserController : MonoBehaviour
                     break;
                 case "dismissKeyboard":
                     DismissKeyboard?.Invoke();
+                    break;
+                case "toggleKeyboard":
+                    ToggleKeyboard?.Invoke();
                     break;
             }
         }

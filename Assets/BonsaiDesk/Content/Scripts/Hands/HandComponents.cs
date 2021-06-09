@@ -24,6 +24,7 @@ public class HandComponents
     public bool MapperTargetsInitialized = false;
     public bool Tracking { get; private set; } = false;
     public bool TrackingRecently { get; private set; } = false;
+    private bool _lastTrackingRecently = false;
 
     private readonly int _physicsLayer;
     private readonly int _indexPhysicsLayer;
@@ -37,6 +38,8 @@ public class HandComponents
     private Material _handMaterial;
     private float _handAlpha = 1f;
     private bool _zTestOverlay = false;
+
+    private TableBrowserParent _tableBrowserParent;
 
     public HandComponents(PlayerHand playerHand, Transform handAnchor, Transform handObject, RuntimeAnimatorController animationController)
     {
@@ -55,6 +58,7 @@ public class HandComponents
         _handMaterial.SetInt("_ZWrite", 1);
         MakeMaterialOpaque();
         PhysicsHandController = PhysicsHand.GetComponent<PhysicsHandController>();
+        PhysicsHandController.isOwnHand = true;
         TargetHand = handObject.GetChild(1);
         PlayerHand.transform.SetParent(PhysicsHand, false);
         TargetHand.GetComponentInChildren<SkinnedMeshRenderer>().enabled = InputManager.Hands.renderTargetHands;
@@ -105,6 +109,8 @@ public class HandComponents
         TargetHandAnimatorController.controller =
             PlayerHand.skeletonType == OVRSkeleton.SkeletonType.HandLeft ? OVRInput.Controller.LTouch : OVRInput.Controller.RTouch;
         TargetHandAnimatorController.animator = handTargetAnimator;
+
+        _tableBrowserParent = GameObject.FindObjectOfType<TableBrowserParent>();
     }
 
     public void SetPhysicsLayerRegular()
@@ -133,25 +139,44 @@ public class HandComponents
 
     public void SetTracking(bool tracking)
     {
+        var currentlyTracking = tracking;
+
+        //if you are not playing (in oculus menu, etc.) we will just say you don't have tracking
+        var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
+        if (!playing)
+        {
+            currentlyTracking = false;
+        }
+
         //if tracking just started this frame
-        // if (!Tracking && tracking)
-        // {
-        //     PhysicsHandController.SetCapsulesActiveTarget(false);
-        //     PhysicsHandController.ResetFingerJoints();
-        //     PhysicsHandController.SetCapsulesActiveTarget(true);
-        // }
+        if (!TrackingRecently && currentlyTracking)
+        {
+            PhysicsHandController.SetCapsulesActiveTarget(false);
+            PhysicsHandController.ResetFingerJoints();
+            PhysicsHandController.SetCapsulesActiveTarget(true);
+        }
 
-        Tracking = tracking;
+        Tracking = currentlyTracking;
 
-        if (tracking)
+        if (currentlyTracking)
         {
             _lastTrackingTime = Time.time;
             TrackingRecently = true;
         }
-        else if (Time.time - _lastTrackingTime > RecentTrackingThreshold)
+        else if (Time.time - _lastTrackingTime > RecentTrackingThreshold || !playing)
         {
             TrackingRecently = false;
         }
+
+        if (NetworkHand)
+        {
+            if (TrackingRecently != _lastTrackingRecently)
+            {
+                NetworkHand.CmdSetActive(TrackingRecently);
+            }
+        }
+
+        _lastTrackingRecently = TrackingRecently;
 
         UpdateRendererTransparency();
     }
@@ -165,8 +190,13 @@ public class HandComponents
     {
         bool isTransparent = _handMaterial.GetInt("_DstBlend") == (int) UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
 
-        float handAlphaTarget = Tracking ? 1f : 0f;
+        //0 if not tracking, 0.25 if tracking and menu open, 1 if tracking and menu closed
+        //note that if the hand is over a menu, it uses the hard coded alpha of 1 in the shader
+        float handAlphaTarget = Tracking ? (_tableBrowserParent.AllMenusClosed() ? 1f : 0.5f) : 0f;
+
+        //move alpha towards target
         _handAlpha = Mathf.MoveTowards(_handAlpha, handAlphaTarget, Time.deltaTime / RecentTrackingThreshold);
+
         var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
         var controllersAndInVoid = !InputManager.Hands.UsingHandTracking && !MoveToDesk.Singleton.oriented;
         if (!playing || controllersAndInVoid)
@@ -267,17 +297,28 @@ public class HandComponents
     }
 
     /// <summary>
+    /// The wording for SetHandColliderActiveForScreen is confusing, so this function makes it easier to use.
+    /// If usingScreen is true, your hand clips through the screen. If it is false, your whole hand hits it like normal
+    /// </summary>
+    /// <param name="usingScreen">true if a screen is up and your hand should clip through it</param>
+    public void SetPhysicsForUsingScreen(bool usingScreen)
+    {
+        SetHandColliderActiveForScreen(!usingScreen);
+    }
+
+    /// <summary>
+    /// Use SetPhysicsForUsingScreen instead.
     /// changes the layer collision matrix for TouchScreenSurface to not collide or not collide with this hand
     /// excluding the index tip collider
     /// </summary>
-    /// <param name="active"></param>
-    public void SetHandColliderActiveForScreen(bool active)
+    /// <param name="active">if active is true, your hand will hit the screen like normal</param>
+    private void SetHandColliderActiveForScreen(bool active)
     {
         Physics.IgnoreLayerCollision(_touchScreenSurfaceLayer, _physicsLayer, !active);
         Physics.IgnoreLayerCollision(_touchScreenSurfaceLayer, _onlyScreenLayer, !active);
     }
 
-    private static void SetLayerRecursive(Transform go, int layer)
+    public static void SetLayerRecursive(Transform go, int layer)
     {
         if (!go.CompareTag("KeepLayer"))
         {
@@ -297,11 +338,5 @@ public class HandComponents
         {
             SetTagRecursive(child, tag);
         }
-    }
-
-    public enum Colors
-    {
-        Green,
-        Orange
     }
 }

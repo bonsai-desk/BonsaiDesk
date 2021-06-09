@@ -10,6 +10,10 @@ public class LockObjectHand : MonoBehaviour, IHandTick
 
     [HideInInspector] public ConfigurableJoint joint;
 
+    public TableBrowserParent tableBrowserParent;
+
+    private Coroutine _checkAuthorityAfterDelayCoroutine;
+
     public void Tick()
     {
         //TODO add drag if picking up larger object/blockArea with more than 4 blocks
@@ -24,14 +28,14 @@ public class LockObjectHand : MonoBehaviour, IHandTick
         if (joint && joint.connectedBody)
         {
             var autoAuthority = joint.connectedBody.GetComponent<AutoAuthority>();
-            if (!autoAuthority.ClientHasAuthority() && autoAuthority.InUse)
+            if (autoAuthority.InUseBySomeoneElse)
             {
                 Destroy(joint);
                 return;
             }
         }
 
-        if (joint && (!playerHand.HandComponents.TrackingRecently ||
+        if (joint && (!playerHand.HandComponents.TrackingRecently || !tableBrowserParent.AllMenusClosed() ||
                       !playerHand.GetGesture(PlayerHand.Gesture.IndexTargetPinching) && !playerHand.GetGesture(PlayerHand.Gesture.Fist)))
         {
             DetachObject();
@@ -43,13 +47,68 @@ public class LockObjectHand : MonoBehaviour, IHandTick
 
         //code below here if not holding object
 
-        if (playerHand.GetGestureStart(PlayerHand.Gesture.IndexTargetPinching) || playerHand.GetGestureStart(PlayerHand.Gesture.Fist))
+        if (tableBrowserParent.AllMenusClosed() &&
+            (playerHand.GetGestureStart(PlayerHand.Gesture.IndexTargetPinching) || playerHand.GetGestureStart(PlayerHand.Gesture.Fist)))
         {
             var hitAutoAuthority = GetLockObjectCandidate();
-            if (hitAutoAuthority && !hitAutoAuthority.isKinematic && !hitAutoAuthority.InUse)
+            if (hitAutoAuthority && !hitAutoAuthority.isKinematic && !hitAutoAuthority.InUseBySomeoneElse)
             {
                 ConnectObject(hitAutoAuthority);
             }
+        }
+    }
+    
+    public BlockObject ConnectedBlockObjectRoot()
+    {
+        if (joint && joint.connectedBody)
+        {
+            var connectedBlockObject = joint.connectedBody.GetComponent<BlockObject>();
+            if (connectedBlockObject)
+            {
+                return BlockUtility.GetRootBlockObject(connectedBlockObject);
+            }
+        }
+
+        return null;
+    }
+
+    //as long as the object is not inUse, you can immediately attach to it. if someone else quickly touches it they may gain authority even though you
+    //are attached. This function checks after a short delay after you attach to make sure you were able to successfully gain authority and set inUse
+    //if you don't have authority after a short delay, detach
+    private IEnumerator CheckAuthorityAfterDelay()
+    {
+        var startTime = Time.time;
+        var autoAuthority = joint.connectedBody.GetComponent<AutoAuthority>();
+        var lastInUseSet = 0f;
+
+        while (true)
+        {
+            if (!autoAuthority || !autoAuthority.gameObject || !(joint && joint.connectedBody))
+            {
+                _checkAuthorityAfterDelayCoroutine = null;
+                yield break;
+            }
+            
+            if (Time.time - startTime > 1f)
+            {
+                if (joint && joint.connectedBody)
+                {
+                    if (!autoAuthority.HasAuthority())
+                    {
+                        DetachObject();
+                        _checkAuthorityAfterDelayCoroutine = null;
+                        yield break;
+                    }
+                }
+            }
+            
+            if (Time.time - lastInUseSet > 0.1f)
+            {
+                lastInUseSet = Time.time;
+                autoAuthority.RefreshInUse(1f);
+            }
+            
+            yield return null;
         }
     }
 
@@ -88,8 +147,14 @@ public class LockObjectHand : MonoBehaviour, IHandTick
         return null;
     }
 
-    private void DetachObject()
+    public void DetachObject()
     {
+        if (_checkAuthorityAfterDelayCoroutine != null)
+        {
+            StopCoroutine(_checkAuthorityAfterDelayCoroutine);
+            _checkAuthorityAfterDelayCoroutine = null;
+        }
+
         if (!joint)
             return;
 
@@ -102,7 +167,8 @@ public class LockObjectHand : MonoBehaviour, IHandTick
 
     private void ConnectObject(AutoAuthority autoAuthority)
     {
-        autoAuthority.CmdSetNewOwner(NetworkClient.connection.identity.netId, NetworkTime.time, true);
+        autoAuthority.CmdSetNewOwner(NetworkClient.connection.identity.netId, NetworkTime.time, true, 1f);
+        // autoAuthority.ClientSetNewOwnerFake(NetworkClient.connection.identity.netId, NetworkTime.time, true, 1f);
 
         joint = InputManager.Hands.GetHand(playerHand.skeletonType).PhysicsHand.gameObject.AddComponent<ConfigurableJoint>();
         joint.anchor = playerHand.transform.InverseTransformPoint(autoAuthority.transform.position);
@@ -131,5 +197,12 @@ public class LockObjectHand : MonoBehaviour, IHandTick
         joint.angularYZDrive = rotationDrive;
 
         joint.connectedBody = autoAuthority.GetComponent<Rigidbody>();
+
+        if (_checkAuthorityAfterDelayCoroutine != null)
+        {
+            StopCoroutine(_checkAuthorityAfterDelayCoroutine);
+        }
+
+        _checkAuthorityAfterDelayCoroutine = StartCoroutine(CheckAuthorityAfterDelay());
     }
 }

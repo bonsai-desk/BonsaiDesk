@@ -108,11 +108,13 @@ public class NetworkOpenAuthenticator : NetworkAuthenticator
         {
             // Invoke the event to complete a successful authentication
             case 100:
+                Mixpanel.Track("ClientAccept");
                 ClientAccept(conn);
                 break;
             case 200:
                 BonsaiLog($"Authenticator Rejected: {msg.Message}");
                 MessageStack.Singleton.AddMessage(msg.Message);
+                Mixpanel.Track("ClientReject");
                 ClientReject(conn);
                 break;
         }

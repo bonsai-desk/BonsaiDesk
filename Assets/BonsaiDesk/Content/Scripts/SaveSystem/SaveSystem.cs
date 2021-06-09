@@ -3,16 +3,65 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using Newtonsoft.Json;
 using UnityEngine;
 
 public class SaveSystem : MonoBehaviour
 {
     public static SaveSystem Instance { get; private set; }
 
-    public Dictionary<string, bool> BoolPairs = new Dictionary<string, bool>();
-    public Dictionary<string, int> IntPairs = new Dictionary<string, int>();
-    public Dictionary<string, float> FloatPairs = new Dictionary<string, float>();
-    public Dictionary<string, string> StringPairs = new Dictionary<string, string>();
+    private bool _possiblyUnsavedData;
+
+    private Dictionary<string, bool> _boolPairs = new Dictionary<string, bool>();
+    private Dictionary<string, int> _intPairs = new Dictionary<string, int>();
+    private Dictionary<string, long> _longPairs = new Dictionary<string, long>();
+    private Dictionary<string, float> _floatPairs = new Dictionary<string, float>();
+    private Dictionary<string, string> _stringPairs = new Dictionary<string, string>();
+
+    public Dictionary<string, bool> BoolPairs
+    {
+        get
+        {
+            _possiblyUnsavedData = true;
+            return _boolPairs;
+        }
+    }
+
+    public Dictionary<string, int> IntPairs
+    {
+        get
+        {
+            _possiblyUnsavedData = true;
+            return _intPairs;
+        }
+    }
+
+    public Dictionary<string, long> LongPairs
+    {
+        get
+        {
+            _possiblyUnsavedData = true;
+            return _longPairs;
+        }
+    }
+
+    public Dictionary<string, float> FloatPairs
+    {
+        get
+        {
+            _possiblyUnsavedData = true;
+            return _floatPairs;
+        }
+    }
+
+    public Dictionary<string, string> StringPairs
+    {
+        get
+        {
+            _possiblyUnsavedData = true;
+            return _stringPairs;
+        }
+    }
 
     private void Awake()
     {
@@ -28,61 +77,159 @@ public class SaveSystem : MonoBehaviour
         }
     }
 
+    private void DeleteSave()
+    {
+        try
+        {
+            string destination = Path.Combine(Application.persistentDataPath, "save.json");
+            if (File.Exists(destination))
+            {
+                File.Delete(destination);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Delete error: " + e);
+        }
+    }
+
     private void Load()
     {
-        string destination = Path.Combine(Application.persistentDataPath, "save.dat");
+        string destination = Path.Combine(Application.persistentDataPath, "save.json");
         print("Attempting to load file from " + destination);
 
-        FileStream file;
-        if (File.Exists(destination)) file = File.OpenRead(destination);
-        else
+        if (!File.Exists(destination))
         {
             print("No load file found.");
             return;
         }
 
-        BinaryFormatter bf = new BinaryFormatter();
-        var dictionaries = (Dictionary<Type, IDictionary>) bf.Deserialize(file);
-        file.Close();
-
-        if (dictionaries.TryGetValue(typeof(bool), out var value))
+        try
         {
-            BoolPairs = (Dictionary<string, bool>) value;
+            var json = File.ReadAllText(destination);
+            if (string.IsNullOrEmpty(json))
+            {
+                Debug.LogError("Load json was empty.");
+                Debug.LogError("Deleting save file.");
+                DeleteSave();
+                return;
+            }
+
+            var dictionaries = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+            if (dictionaries == null)
+            {
+                Debug.LogError("Load dictionaries was null.");
+                Debug.LogError("Deleting save file.");
+                DeleteSave();
+                return;
+            }
+
+            if (dictionaries.TryGetValue("BoolPairs", out var boolPairsJson) && !string.IsNullOrEmpty(boolPairsJson))
+            {
+                var boolPairs = JsonConvert.DeserializeObject<Dictionary<string, bool>>(boolPairsJson);
+                if (boolPairs != null)
+                {
+                    _boolPairs = boolPairs;
+                }
+            }
+
+            if (dictionaries.TryGetValue("IntPairs", out var intPairsJson) && !string.IsNullOrEmpty(intPairsJson))
+            {
+                var intPairs = JsonConvert.DeserializeObject<Dictionary<string, int>>(intPairsJson);
+                if (intPairs != null)
+                {
+                    _intPairs = intPairs;
+                }
+            }
+
+            if (dictionaries.TryGetValue("LongPairs", out var longPairsJson) && !string.IsNullOrEmpty(longPairsJson))
+            {
+                var longPairs = JsonConvert.DeserializeObject<Dictionary<string, long>>(longPairsJson);
+                if (longPairs != null)
+                {
+                    _longPairs = longPairs;
+                }
+            }
+
+            if (dictionaries.TryGetValue("FloatPairs", out var floatPairsJson) && !string.IsNullOrEmpty(floatPairsJson))
+            {
+                var floatPairs = JsonConvert.DeserializeObject<Dictionary<string, float>>(floatPairsJson);
+                if (floatPairs != null)
+                {
+                    _floatPairs = floatPairs;
+                }
+            }
+
+            if (dictionaries.TryGetValue("StringPairs", out var stringPairsJson) && !string.IsNullOrEmpty(stringPairsJson))
+            {
+                var stringPairs = JsonConvert.DeserializeObject<Dictionary<string, string>>(stringPairsJson);
+                if (_stringPairs != null)
+                {
+                    _stringPairs = stringPairs;
+                }
+            }
         }
-
-        if (dictionaries.TryGetValue(typeof(int), out value))
+        catch (Exception e)
         {
-            IntPairs = (Dictionary<string, int>) value;
-        }
-
-        if (dictionaries.TryGetValue(typeof(float), out value))
-        {
-            FloatPairs = (Dictionary<string, float>) value;
-        }
-
-        if (dictionaries.TryGetValue(typeof(string), out value))
-        {
-            StringPairs = (Dictionary<string, string>) value;
+            Debug.LogError("Load error: " + e);
+            Debug.LogError("Deleting save file.");
+            DeleteSave();
         }
     }
 
     public void Save()
     {
-        string destination = Path.Combine(Application.persistentDataPath, "save.dat");
-        print("Saving file to " + destination);
+        if (!_possiblyUnsavedData)
+        {
+            return;
+        }
 
-        FileStream file;
-        if (File.Exists(destination)) file = File.OpenWrite(destination);
-        else file = File.Create(destination);
+        _possiblyUnsavedData = false;
 
-        var dictionaries = new Dictionary<Type, IDictionary>();
-        dictionaries.Add(typeof(bool), BoolPairs);
-        dictionaries.Add(typeof(int), IntPairs);
-        dictionaries.Add(typeof(float), FloatPairs);
-        dictionaries.Add(typeof(string), StringPairs);
+        try
+        {
+            string destination = Path.Combine(Application.persistentDataPath, "save.json");
+            print("Saving file to " + destination);
 
-        var bf = new BinaryFormatter();
-        bf.Serialize(file, dictionaries);
-        file.Close();
+            var dictionaries = new Dictionary<string, string>();
+            dictionaries.Add("BoolPairs", JsonConvert.SerializeObject(_boolPairs));
+            dictionaries.Add("IntPairs", JsonConvert.SerializeObject(_intPairs));
+            dictionaries.Add("LongPairs", JsonConvert.SerializeObject(_longPairs));
+            dictionaries.Add("FloatPairs", JsonConvert.SerializeObject(_floatPairs));
+            dictionaries.Add("StringPairs", JsonConvert.SerializeObject(_stringPairs));
+
+            var json = JsonConvert.SerializeObject(dictionaries, Formatting.Indented);
+            File.WriteAllText(destination, json);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Save error: " + e);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        Save();
+    }
+
+    private void OnApplicationQuit()
+    {
+        Save();
+    }
+
+    private void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus)
+        {
+            Save();
+        }
+    }
+
+    private void OnApplicationPause(bool pauseStatus)
+    {
+        if (pauseStatus)
+        {
+            Save();
+        }
     }
 }

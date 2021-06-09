@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Mirror;
+using mixpanel;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Android;
@@ -14,18 +17,26 @@ public class TableBrowserMenu : MonoBehaviour
 {
     public enum LightState
     {
-        Bright,
-        Vibes
+        Bright = 0,
+        Vibes = 1
     }
 
+    public GameObject publicRoomCube;
+    public Transform publicRoomCubeSpawnLocation;
     private const float PostRoomInfoEvery = 1f;
     public static TableBrowserMenu Singleton;
     public ContextBrowserController contextBrowserController;
     public TableBrowser contextBrowser;
     public AutoBrowserController autoBrowserController;
     public float postMediaInfoEvery = 0.5f;
-    [FormerlySerializedAs("_browser")] public TableBrowser browser;
-    public bool canPost;
+
+    [HideInInspector] [FormerlySerializedAs("_browser")]
+    public TableBrowser browser;
+
+    [HideInInspector] public bool canPost;
+
+    public Transform screen;
+    public Transform raisedTransform;
     private float _postMediaInfoLast;
     private float _postRoomInfoLast;
 
@@ -45,6 +56,7 @@ public class TableBrowserMenu : MonoBehaviour
         NetworkManagerGame.Singleton.InfoChange += HandleNetworkInfoChange;
         OVRManager.HMDUnmounted += () => { browser.SetHidden(true); };
         contextBrowserController.InfoChange += HandleChangeBlockActive;
+        StartCoroutine(PostEventually(PostBlockList));
     }
 
     public void Update()
@@ -155,7 +167,12 @@ public class TableBrowserMenu : MonoBehaviour
                         break;
                     case "openPublicRoom":
                         OpenRoom?.Invoke(true);
-                        browser.PostMessage(Browser.BrowserMessage.NavToMenu);
+                        var resetNav = JsonConvert.DeserializeObject<bool>(message.Data);
+                        if (resetNav)
+                        {
+                            browser.PostMessage(Browser.BrowserMessage.NavToMenu);
+                        }
+
                         break;
                     case "openPrivateRoom":
                         OpenRoom?.Invoke(false);
@@ -211,9 +228,11 @@ public class TableBrowserMenu : MonoBehaviour
                             switch (message.Data)
                             {
                                 case "vibes":
+                                    Mixpanel.Track("Activate Vibes Lights");
                                     LightChange.Invoke(this, LightState.Vibes);
                                     break;
                                 case "bright":
+                                    Mixpanel.Track("Activate Bright Lights");
                                     LightChange.Invoke(this, LightState.Bright);
                                     break;
                             }
@@ -229,13 +248,203 @@ public class TableBrowserMenu : MonoBehaviour
                     case "ejectVideo":
                         EjectVideo?.Invoke(this, new EventArgs());
                         break;
+                    case "buildsRefresh":
+                        RefreshBuilds();
+                        break;
+                    case "stageBuild":
+                        StageBuild(message.Data);
+                        break;
+                    case "deleteBuild":
+                        PostDeleteBuild(message.Data);
+                        break;
+                    case "spawnBuild":
+                        Mixpanel.Track("React Spawn Build");
+                        SpawnBuild(message.Data);
+                        break;
+                    case "spawnBuildById":
+                        Mixpanel.Track("React Spawn Build By Id");
+                        SpawnBuildFromId(message.Data);
+                        break;
+                    case "saveBuild":
+                        SaveBuild(message.Data);
+                        break;
                 }
 
                 break;
 
             case "event":
+                switch (message.Message)
+                {
+                    case "publicRoomAvailable":
+                        SpawnPublicRoomCube();
+                        break;
+                }
+
                 break;
         }
+    }
+
+    private void SpawnPublicRoomCube()
+    {
+       var pos = publicRoomCubeSpawnLocation.transform.position;
+       var rot = publicRoomCubeSpawnLocation.transform.rotation;
+       if (NetworkServer.active)
+       {
+           var isHost = NetworkManagerGame.Singleton.mode == NetworkManagerMode.Host;
+           var solo = NetworkManagerGame.Singleton.PlayerInfos.Count == 1;
+           var roomOpen = NetworkManagerGame.Singleton.roomOpen;
+           if (isHost && solo && !roomOpen)
+           {
+               var ignore = false;
+               var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+
+               if (SaveSystem.Instance.LongPairs.TryGetValue("SilenceTime", out var silencedAt))
+               {
+                   ignore = (now - silencedAt) < 60 * 60 * 24;
+               }
+               
+               if (!ignore)
+               {
+                   var thing = Instantiate(publicRoomCube, pos, rot);
+                   NetworkServer.Spawn(thing);
+               }
+           }
+       }
+    }
+
+    private void SpawnBuildFromId(string messageData)
+    {
+        if (!string.IsNullOrEmpty(messageData))
+        {
+            var spawned = BlockObjectSpawner.Instance.SpawnFromFileName(messageData);
+            if (spawned)
+            {
+                TableBrowserParent.Instance.MenuSleep();
+            }
+            else
+            {
+                MessageStack.Singleton.AddMessage("Empty Block Message Data", MessageStack.MessageType.Bad);
+            }
+        }
+        else
+        {
+            MessageStack.Singleton.AddMessage("Empty Block Message Data", MessageStack.MessageType.Bad);
+        }
+    }
+
+    private void SaveBuild(string messageData)
+    {
+        if (!string.IsNullOrEmpty(messageData))
+        {
+            var saved = BlockObjectFileReader.SaveStagedBlockObject(messageData);
+            if (saved)
+            {
+                PostBlockList();
+                PostStagedSavedOk();
+            }
+        }
+        else
+        {
+            MessageStack.Singleton.AddMessage("Can't save empty build");
+        }
+    }
+
+    private void PostStagedSavedOk()
+    {
+        var data = new BuildsSaved {SavedOk = true};
+        var msg = Message(data, "Builds");
+        browser.PostMessage(msg);
+    }
+
+    private void StageBuild(string buildId)
+    {
+        var blockObject = BlockObjectFileReader.LoadFileIntoBlockObjectFile(buildId);
+        PostStaging(blockObject);
+    }
+
+    public static string ByteArrayToString(byte[] ba)
+    {
+        //  https://stackoverflow.com/questions/311165/how-do-you-convert-a-byte-array-to-a-hexadecimal-string-and-vice-versa
+        var hex = new StringBuilder(ba.Length * 2);
+        foreach (var b in ba)
+        {
+            hex.AppendFormat("{0:x2}", b);
+        }
+
+        return hex.ToString();
+    }
+
+    public static byte[] StringToByteArray(string hex)
+    {
+        //  https://stackoverflow.com/questions/311165/how-do-you-convert-a-byte-array-to-a-hexadecimal-string-and-vice-versa
+        var NumberChars = hex.Length;
+        var bytes = new byte[NumberChars / 2];
+        for (var i = 0; i < NumberChars; i += 2)
+        {
+            bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
+        }
+
+        return bytes;
+    }
+
+    private BuildInfo ConvertBlockObject(BlockObjectFileReader.BlockObjectFile blockObject)
+    {
+        var bytes = Encoding.ASCII.GetBytes(blockObject.Content);
+        var hex = ByteArrayToString(bytes);
+        return new BuildInfo(blockObject.FileName, hex, blockObject.DisplayName);
+    }
+
+    private void PostBlockList()
+    {
+        var blockObjects = BlockObjectFileReader.GetBlockObjectFiles();
+        var buildInfos = blockObjects.Select(ConvertBlockObject).ToArray();
+        var BlockList = new Builds
+        {
+            List = buildInfos
+        };
+        browser.PostMessage(Message(BlockList, "Builds"));
+    }
+
+    private void PostStaging(BlockObjectFileReader.BlockObjectFile blockObject)
+    {
+        var buildInfo = ConvertBlockObject(blockObject);
+        var buildStaging = new BuildStaging {Staging = buildInfo};
+        var msg = Message(buildStaging, "Builds");
+        browser.PostMessage(msg);
+    }
+
+    private void PostDeleteBuild(string buildId)
+    {
+        var deleted = BlockObjectFileReader.DeleteFile(buildId);
+        if (deleted)
+        {
+            PostBlockList();
+        }
+        else
+        {
+            MessageStack.Singleton.AddMessage("Failed to Delete", MessageStack.MessageType.Bad);
+        }
+    }
+
+    private void SpawnBuild(string data)
+    {
+        var bytes = StringToByteArray(data);
+        var content = Encoding.ASCII.GetString(bytes);
+        if (!string.IsNullOrEmpty(content))
+        {
+            // todo need a check here
+            BlockObjectSpawner.Instance.SpawnFromString(content);
+            TableBrowserParent.Instance.MenuSleep();
+        }
+        else
+        {
+            MessageStack.Singleton.AddMessage("Empty Block Object", MessageStack.MessageType.Bad);
+        }
+    }
+
+    private void RefreshBuilds()
+    {
+        BlockObjectFileReader.GetBlockObjectFiles();
     }
 
     private static void RequestMicrophone()
@@ -246,14 +455,22 @@ public class TableBrowserMenu : MonoBehaviour
     private void TogglePinchPull()
     {
         var pinchPullEnabled = InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled;
-        InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled = !pinchPullEnabled;
-        InputManager.Hands.Right.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled = !pinchPullEnabled;
+        var newPinchPullState = !pinchPullEnabled; //toggle state
+        if (newPinchPullState)
+        {
+            Mixpanel.Track("Enable Pinch Pull");
+        }
+        InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled = newPinchPullState;
+        InputManager.Hands.Right.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled = newPinchPullState;
+        SaveSystem.Instance.BoolPairs["PinchPullEnabled"] = newPinchPullState;
+        SaveSystem.Instance.Save();
     }
 
     private void ToggleBlockBreak()
     {
-        var blockBreakActive = InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().BreakModeActive;
-        InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().SetBreakMode(!blockBreakActive);
+        var blockBreakActive = InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().HandBreakMode != BlockBreakHand.BreakMode.None;
+        InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>()
+                    .SetBreakMode(blockBreakActive ? BlockBreakHand.BreakMode.None : BlockBreakHand.BreakMode.Single);
     }
 
     private void PostMediaInfo(MediaInfo mediaInfo)
@@ -289,10 +506,10 @@ public class TableBrowserMenu : MonoBehaviour
     {
         var contextInfo = new ContextInfo
         {
+            HandActive = contextBrowserController.handActive,
+            HandMode = contextBrowserController.ActiveHandMode,
             LeftBlockActive = contextBrowserController.LeftBlockActive,
-            RightBlockActive = contextBrowserController.RightBlockActive,
-            LeftBlockBreak = contextBrowserController.LeftBlockBreak,
-            RightBlockBreak = contextBrowserController.RightBlockBreak
+            RightBlockActive = contextBrowserController.RightBlockActive
         };
         contextBrowser.PostMessage(Message(contextInfo, "ContextInfo"));
     }
@@ -312,6 +529,21 @@ public class TableBrowserMenu : MonoBehaviour
         browser.PostMessage(message);
     }
 
+    public void PostAuthInfo(AuthInfo authInfo)
+    {
+        StartCoroutine(PostEventually(() => { Post(authInfo, "AuthInfo"); }));
+    }
+
+    private IEnumerator PostEventually(Action a)
+    {
+        while (!canPost)
+        {
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        a();
+    }
+
     private void PostSocialInfo()
     {
         var socialInfo = new SocialInfo
@@ -326,7 +558,7 @@ public class TableBrowserMenu : MonoBehaviour
         var experimentalInfo = new ExperimentalInfo
         {
             PinchPullEnabled = InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled,
-            BlockBreakEnabled = InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().BreakModeActive
+            BlockBreakEnabled = InputManager.Hands.Right.PlayerHand.GetIHandTick<BlockBreakHand>().HandBreakMode != BlockBreakHand.BreakMode.None
         };
         Post(experimentalInfo, "ExperimentalInfo");
     }
@@ -346,6 +578,20 @@ public class TableBrowserMenu : MonoBehaviour
         var data = playerInfos.Select(entry => new PlayerData {Name = entry.Value.OculusId, ConnectionId = entry.Key.connectionId}).ToArray();
         var csMessage = new CsMessageKeyType<PlayerData[]> {Data = new KeyType<PlayerData[]> {Key = "PlayerInfos", Val = data}};
         SerializeAndPost(csMessage);
+    }
+
+    public void SetRaised(bool raised)
+    {
+        if (raised)
+        {
+            screen.localPosition = raisedTransform.localPosition;
+            screen.localEulerAngles = raisedTransform.localEulerAngles;
+        }
+        else
+        {
+            screen.localPosition = Vector3.zero;
+            screen.localEulerAngles = Vector3.zero;
+        }
     }
 
     public static event Action<RoomData> JoinRoom;
@@ -384,12 +630,56 @@ public class TableBrowserMenu : MonoBehaviour
         Debug.LogError("<color=orange>BonsaiTableBrowserMenu: </color>: " + msg);
     }
 
+    public void NavToSaveDraft()
+    {
+        // nav to menu first in case they are already on the draft page
+        // this re-triggers the modal to pop up again
+        browser.PostMessage(Browser.BrowserMessage.NavToMenu);
+        browser.PostMessage(Browser.BrowserMessage.NavToSaveDraft);
+        TableBrowserParent.Instance.OpenMenu();
+    }
+
+    public void NavToPublicRooms()
+    {
+        browser.PostMessage(Browser.BrowserMessage.NavToPublicRooms);
+        TableBrowserParent.Instance.OpenMenu();
+    }
+
+    private struct BuildsSaved
+    {
+        public bool SavedOk;
+    }
+
+    private class BuildInfo
+    {
+        public string Data;
+        public string Id;
+        public string Name;
+
+        public BuildInfo(string id, string data, string name)
+        {
+            Id = id;
+            Data = data;
+            Name = name;
+        }
+    }
+
+    private struct Builds
+    {
+        public BuildInfo[] List;
+    }
+
+    private struct BuildStaging
+    {
+        public BuildInfo Staging;
+    }
+
     private class ContextInfo
     {
-        public ContextBrowserController.Block LeftBlockActive;
-        public bool LeftBlockBreak;
-        public ContextBrowserController.Block RightBlockActive;
-        public bool RightBlockBreak;
+        public ContextBrowserController.Hand HandActive;
+        public BlockBreakHand.BreakMode HandMode;
+        public string LeftBlockActive;
+        public string RightBlockActive;
     }
 
     private struct NetworkInfo
@@ -464,8 +754,22 @@ public class TableBrowserMenu : MonoBehaviour
         public int port;
     }
 
+    public struct AuthInfo
+    {
+        public ulong UserId;
+        public string Nonce;
+        public string Build; // mobile or desktop
+        public string Release; // DEVELOPMENT, PRODUCTION
+    }
+
     public struct UserInfo
     {
         public string UserName;
+    }
+
+    public void SilencePublicRoomNotifications()
+    {
+        var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+        SaveSystem.Instance.LongPairs["SilenceTime"] = now;
     }
 }

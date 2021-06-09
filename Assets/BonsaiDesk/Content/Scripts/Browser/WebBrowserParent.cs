@@ -15,6 +15,7 @@ public class WebBrowserParent : MonoBehaviour
     public TableBrowserParent tableBrowserParent;
     private int _browsersReady = 0;
     public Transform headTransform;
+    private bool keyboardActive = false;
 
     // Start is called before the first frame update
     private void Start()
@@ -56,12 +57,16 @@ public class WebBrowserParent : MonoBehaviour
         BonsaiLog("SetupWebWebNavBrowser");
         webNavBrowserController.GoBack += HandleGoBack;
         webNavBrowserController.GoForward += HandleGoForward;
+        
         webNavBrowserController.SpawnKeyboard += HandleSpawnKeyboard;
         webNavBrowserController.DismissKeyboard += HandleDismissKeyboard;
+        webNavBrowserController.ToggleKeyboard += HandleToggleKeyboard;
+        
         webNavBrowserController.CloseWeb += HandleCloseWeb;
         webBrowserController.SpawnYT += HandleSpawnYt;
         webBrowserController.InputFocus += HandleInputFocus;
     }
+
 
     private void HandleInputFocus(object sender, EventArgs<bool> e)
     {
@@ -84,8 +89,8 @@ public class WebBrowserParent : MonoBehaviour
 
     private void SetupKeyboardBrowser()
     {
-        BonsaiLog("SetupKeyboardBrowser");
-        keyboardBrowser.InputRecieved += (sender, e) => webBrowser.HandleKeyboardInput(e.Value);
+        //BonsaiLog("SetupKeyboardBrowser");
+        //keyboardBrowser.InputRecieved += (sender, e) => webBrowser.HandleKeyboardInput(e.Value);
     }
 
     private void HandleGoBack()
@@ -112,10 +117,23 @@ public class WebBrowserParent : MonoBehaviour
         keyboardBrowserController.SetActive(true);
     }
 
-    private void HandleDismissKeyboard()
+    public void HandleDismissKeyboard()
     {
         webBrowserController.SetRaised(false);
         keyboardBrowserController.SetActive(false);
+    }
+    
+    public void HandleToggleKeyboard()
+    {
+        keyboardActive = !keyboardActive;
+        if (keyboardActive)
+        {
+            HandleSpawnKeyboard();
+        }
+        else
+        {
+            HandleDismissKeyboard();
+        }
     }
 
     public void LoadUrl(string url)

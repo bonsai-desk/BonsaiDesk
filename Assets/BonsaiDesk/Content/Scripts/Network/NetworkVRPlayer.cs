@@ -1,39 +1,93 @@
-﻿using Mirror;
+﻿using System;
+using System.Collections;
+using Mirror;
+using Smooth;
 using UnityEngine;
 
 public class NetworkVRPlayer : NetworkBehaviour
 {
-    public GameObject networkHandLeftPrefab;
-    public GameObject networkHandRightPrefab;
+    public static NetworkVRPlayer localPlayer;
 
-    [SyncVar] public NetworkIdentity _leftHandId;
-    [SyncVar] public NetworkIdentity _rightHandId;
+    public GameObject headObject;
+
+    [SyncVar] public NetworkIdentityReference leftHandId = new NetworkIdentityReference();
+    [SyncVar] public NetworkIdentityReference rightHandId = new NetworkIdentityReference();
 
     [SyncVar(hook = nameof(SpotChange))] public int spotId;
 
+    private MoveToDesk _moveToDesk;
+
+    private Coroutine _tryingToSetTexturesCoroutine;
+
     public override void OnStartClient()
     {
+        headObject.SetActive(false);
+        StartCoroutine(WaitThenActivate());
+
         if (!isLocalPlayer)
+        {
             return;
-            
-        SpotManager.Instance.LayoutChange -= HandleLayoutChange;
-        SpotManager.Instance.LayoutChange += HandleLayoutChange;
+        }
+
+        localPlayer = this;
+
+        if (!_moveToDesk)
+        {
+            _moveToDesk = GameObject.Find("GameManager").GetComponent<MoveToDesk>();
+        }
 
         var tableEdge = SpotManager.Instance.GetSpotTransform(spotId - 1);
-        GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(tableEdge);
-        
+        _moveToDesk.SetTableEdge(tableEdge);
+
         var textures = SpotManager.Instance.GetColorInfo(spotId - 1);
         InputManager.Hands.Left.SetHandTexture(textures.handTexture);
         InputManager.Hands.Right.SetHandTexture(textures.handTexture);
     }
-    
-    private void HandleLayoutChange(object sender, SpotManager.Layout newLayout)
+
+    public override void OnStopClient()
     {
         if (!isLocalPlayer)
+        {
             return;
-        
+        }
+
+        localPlayer = null;
+    }
+
+    private void OnDestroy()
+    {
+        if (!isLocalPlayer)
+        {
+            return;
+        }
+
+        localPlayer = null;
+    }
+
+    public void LayoutChange(SpotManager.Layout newLayout)
+    {
+        if (!isLocalPlayer)
+        {
+            return;
+        }
+
+        if (!_moveToDesk)
+        {
+            _moveToDesk = GameObject.Find("GameManager").GetComponent<MoveToDesk>();
+        }
+
         var tableEdge = SpotManager.Instance.GetSpotTransform(spotId - 1, newLayout);
-        GameObject.Find("GameManager").GetComponent<MoveToDesk>().SetTableEdge(tableEdge);
+        _moveToDesk.SetTableEdge(tableEdge);
+
+        //move head (hands are teleported as part of SetTableEdge)
+        GetComponent<HeadFollowPhysics>().ResetToTarget();
+        GetComponent<SmoothSyncMirror>().teleportOwnedObjectFromOwner();
+    }
+
+    private IEnumerator WaitThenActivate()
+    {
+        yield return new WaitForSeconds(1f);
+        headObject.SetActive(true);
     }
 
     [Server]
@@ -54,23 +108,54 @@ public class NetworkVRPlayer : NetworkBehaviour
         //spot - 1 for same reason in SetSpot
         var textures = SpotManager.Instance.GetColorInfo(spot - 1);
         GetComponentInChildren<MeshRenderer>().material.mainTexture = textures.headTexture;
-        _leftHandId.GetComponent<NetworkHand>().ChangeHandTexture(textures.handTexture);
-        _rightHandId.GetComponent<NetworkHand>().ChangeHandTexture(textures.handTexture);
+        if (_tryingToSetTexturesCoroutine != null)
+        {
+            StopCoroutine(_tryingToSetTexturesCoroutine);
+        }
+
+        _tryingToSetTexturesCoroutine = StartCoroutine(KeepTryingToSetTextures(textures));
+    }
+
+    private IEnumerator KeepTryingToSetTextures(SpotManager.ColorInfo textures)
+    {
+        int attempts = 250;
+        while (!leftHandId.Value || !rightHandId.Value)
+        {
+            attempts--;
+            if (attempts < 0)
+            {
+                Debug.LogError("KeepTryingToSetTextures: out of attempts");
+                yield break;
+            }
+
+            yield return null;
+        }
+
+        leftHandId.Value.GetComponent<NetworkHand>().ChangeHandTexture(textures.handTexture);
+        rightHandId.Value.GetComponent<NetworkHand>().ChangeHandTexture(textures.handTexture);
+
+        _tryingToSetTexturesCoroutine = null;
     }
 
     [Server]
-    public void SetHandIdentities(NetworkIdentity lid, NetworkIdentity rid)
+    public void SetHandIdentities(NetworkIdentityReference lid, NetworkIdentityReference rid)
     {
-        _leftHandId = lid;
-        _rightHandId = rid;
+        leftHandId = lid;
+        rightHandId = rid;
     }
 
     public NetworkHand GetOtherHand(OVRSkeleton.SkeletonType skeletonType)
     {
-        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft)
-            return _rightHandId.GetComponent<NetworkHand>();
-        if (skeletonType == OVRSkeleton.SkeletonType.HandRight)
-            return _leftHandId.GetComponent<NetworkHand>();
+        if (skeletonType == OVRSkeleton.SkeletonType.HandLeft && rightHandId.Value)
+        {
+            return rightHandId.Value.GetComponent<NetworkHand>();
+        }
+
+        if (skeletonType == OVRSkeleton.SkeletonType.HandRight && leftHandId.Value)
+        {
+            return leftHandId.Value.GetComponent<NetworkHand>();
+        }
+
         return null;
     }
 }

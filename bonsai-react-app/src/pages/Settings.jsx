@@ -7,7 +7,8 @@ import React from 'react';
 import {InfoItem} from '../components/InfoItem';
 import {observer} from 'mobx-react-lite';
 import {useStore} from '../DataProvider';
-import {postToggleBlockBreak, postTogglePinchPull} from '../api';
+import {postTogglePinchPull} from '../api';
+import {showVersionFromStore} from '../esUtils';
 
 const Settings = observer(() => {
 
@@ -21,11 +22,6 @@ const Settings = observer(() => {
 
     function handleClickPinchPull() {
         postTogglePinchPull();
-    }
-
-    function handleClickBlockBreak() {
-        postToggleBlockBreak();
-
     }
 
     return <MenuContent name={'Settings'}>
@@ -44,22 +40,11 @@ const Settings = observer(() => {
                 Toggle
             </ToggleButton>
         </InfoItem>
-        <InfoItem title={'Block Break'}
-                  slug={'Delete blocks by touching them (right index finger)'}>
-            <ToggleButton
-                    classEnabled={greenButtonClass}
-                    classDisabled={grayButtonClass}
-                    enabled={store.ExperimentalInfo.BlockBreakEnabled}
-                    handleClick={handleClickBlockBreak}
-            >
-                Toggle
-            </ToggleButton>
-        </InfoItem>
         <div className={'text-xl'}>
             Info
         </div>
         <InfoItem title={'About'}
-                  slug={store.AppInfo.Version + 'b' + store.AppInfo.BuildId}>
+                  slug={showVersionFromStore(store)}>
             <ForwardButton onClick={goToInfo}/>
         </InfoItem>
     </MenuContent>;
@@ -73,7 +58,6 @@ function AboutPage({back}) {
     let aplUrl = `${match.path}/apl`;
     let history = useHistory();
 
-    console.log(match.path);
     return <MenuContent name={'About'} back={back}>
         <InfoItem title={'GeckoView'} slug={'Mozilla Public License'}>
             <ForwardButton onClick={()=>{history.push(mplUrl)}}/>

@@ -7,9 +7,10 @@ import {InstantButton} from '../components/Button';
 import {grayButtonClass} from '../cssClasses';
 import React from 'react';
 import {Layout, postSetLayout} from '../api';
+import axios from 'axios';
 
 export const DebugPage = observer(() => {
-    let {store} = useStore();
+    let {store, mediaInfo, builds} = useStore();
 
     let setNetState = action((store, netState) => {
         store.NetworkInfo.Mode = netState;
@@ -30,54 +31,60 @@ export const DebugPage = observer(() => {
     let toggleRoomOpen = action(store => {
         store.NetworkInfo.RoomOpen = !store.NetworkInfo.RoomOpen;
     });
-    
+
     let toggleRoomPublic = action(store => {
         store.NetworkInfo.PublicRoom = !store.NetworkInfo.PublicRoom;
-    })
+    });
 
     let toggleRoomFull = action(store => {
         store.NetworkInfo.Full = !store.NetworkInfo.Full;
-    })
-    
+    });
+
     let setLayoutAcross = () => {
-        postSetLayout(Layout.Across)
-    }
-    
+        postSetLayout(Layout.Across);
+    };
+
     let setLayoutSideBySide = () => {
-        postSetLayout(Layout.SideBySide)
-    }
+        postSetLayout(Layout.SideBySide);
+    };
 
     let addFakeVideoPlayerPaused = () => {
-        store.MediaInfo = {
-            Active: true,
-            Name: 'Video Name',
-            Paused: true,
-            Scrub: 20,
-            Duration: 60,
-            VolumeLevel: 0.5,
-        };
+        mediaInfo.Active = true;
+        mediaInfo.Name = 'Video Name';
+        mediaInfo.Paused = true;
+        mediaInfo.Scrub = 20;
+        mediaInfo.Duration = 60;
+        mediaInfo.VolumeLevel = 0.5;
     };
 
     let addFakeVideoPlayerPlaying = () => {
-        store.MediaInfo = {
-            Active: true,
-            Name: 'Video Name',
-            Paused: false,
-            Scrub: 20,
-            Duration: 60,
-            VolumeLevel: 0.5,
-        };
+        mediaInfo.Active = true;
+        mediaInfo.Name = 'Video Name';
+        mediaInfo.Paused = false;
+        mediaInfo.Scrub = 20;
+        mediaInfo.Duration = 60;
+        mediaInfo.VolumeLevel = 0.5;
     };
 
     let rmFakeVideoPlayer = () => {
-        store.MediaInfo = {
-            Active: false,
-            Name: 'None',
-            Paused: true,
-            Scrub: 0,
-            Duration: 1,
-            VolumeLevel: 0,
-        };
+        mediaInfo.Active = false;
+        mediaInfo.Name = 'None';
+        mediaInfo.Paused = true;
+        mediaInfo.Scrub = 0;
+        mediaInfo.Duration = 1;
+        mediaInfo.VolumeLevel = 0;
+    };
+
+    let postAuthTest = () => {
+        axios({
+            method: 'POST',
+            url: store.ApiBase + '/auth_test',
+            data: `token=${store.BonsaiToken}`,
+            headers: {'content-type': 'application/x-www-form-urlencoded'},
+        }).then(response => {
+            console.log(response);
+        }).catch(console.log);
+
     };
 
     let containerClass = 'flex flex-wrap';
@@ -87,8 +94,27 @@ export const DebugPage = observer(() => {
                 <div className={'flex'}>
 
                     <div className={'w-1/2'}>
+                        <div className={'text-3xl'}>Store</div>
                         <ul>
                             {Object.entries(store).map(info => {
+                                return <li className={'mb-2'} key={info[0]}>
+                                    <span className={'font-bold'}>{info[0]}</span>{': '}<span
+                                        className={'text-gray-400'}>{showInfo(info)}</span>
+                                </li>;
+                            })}
+                        </ul>
+                        <div className={'text-3xl'}>Media Info</div>
+                        <ul>
+                            {Object.entries(mediaInfo).map(info => {
+                                return <li className={'mb-2'} key={info[0]}>
+                                    <span className={'font-bold'}>{info[0]}</span>{': '}<span
+                                        className={'text-gray-400'}>{showInfo(info)}</span>
+                                </li>;
+                            })}
+                        </ul>
+                        <div className={'text-3xl'}>Build Info</div>
+                        <ul>
+                            {Object.entries(builds).map(info => {
                                 return <li className={'mb-2'} key={info[0]}>
                                     <span className={'font-bold'}>{info[0]}</span>{': '}<span
                                         className={'text-gray-400'}>{showInfo(info)}</span>
@@ -159,17 +185,21 @@ export const DebugPage = observer(() => {
                         <div>Player</div>
                         <div className={containerClass}>
                             <InstantButton onClick={rmFakeVideoPlayer}
-                                    className={grayButtonClass}>none</InstantButton>
+                                           className={grayButtonClass}>none</InstantButton>
                             <InstantButton onClick={addFakeVideoPlayerPlaying}
-                                    className={grayButtonClass}>playing</InstantButton>
+                                           className={grayButtonClass}>playing</InstantButton>
                             <InstantButton onClick={addFakeVideoPlayerPaused}
-                                    className={grayButtonClass}>paused</InstantButton>
+                                           className={grayButtonClass}>paused</InstantButton>
                         </div>
-                        
+
                         <div>Layout</div>
                         <div className={containerClass}>
                             <InstantButton onClick={setLayoutAcross} className={grayButtonClass}>across</InstantButton>
-                            <InstantButton onClick={setLayoutSideBySide} className={grayButtonClass}>side</InstantButton>
+                            <InstantButton onClick={setLayoutSideBySide}
+                                           className={grayButtonClass}>side</InstantButton>
+                        </div>
+                        <div className={containerClass}>
+                            <InstantButton onClick={postAuthTest} className={grayButtonClass}>auth test</InstantButton>
                         </div>
 
                     </div>

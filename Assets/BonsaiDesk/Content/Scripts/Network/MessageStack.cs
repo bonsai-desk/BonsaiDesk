@@ -27,10 +27,7 @@ public class MessageStack : MonoBehaviour
 
     private void Awake()
     {
-        if (Singleton == null)
-        {
-            Singleton = this;
-        }
+        Singleton = this;
     }
 
     private void Update()
@@ -38,8 +35,6 @@ public class MessageStack : MonoBehaviour
         PruneMessages();
         UpdateAllMessageTransforms();
     }
-
-    private void Start() { }
 
     private IEnumerator DemoMessages()
     {

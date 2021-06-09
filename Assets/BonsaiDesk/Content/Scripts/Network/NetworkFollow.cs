@@ -12,56 +12,39 @@ public class NetworkFollow : NetworkBehaviour
     public enum RenderBehaviour
     {
         Normal,
-        DissableRenderers,
-        DoNotRenderLayer
+        DisableRenderers,
+        DoNotRenderLayer,
+        DoNotRenderHeadLayer
     };
 
     public Rigidbody body;
 
     public RenderBehaviour renderBehaviour = RenderBehaviour.Normal;
 
-    // void Start()
-    // {
-    //     if (!(isLocalPlayer || (hasAuthority && !isServer)))
-    //         return;
-    // }
-
-    private void init()
+    private void Init()
     {
         inited = true;
 
         int layer = LayerMask.NameToLayer("doNotRender");
-        var r = GetComponent<MeshRenderer>();
-        var sr = GetComponent<SkinnedMeshRenderer>();
-        if (r != null)
-        {
-            if (renderBehaviour == RenderBehaviour.DoNotRenderLayer)
-                r.gameObject.layer = layer;
-            if (renderBehaviour == RenderBehaviour.DissableRenderers)
-                r.enabled = false;
-        }
+        int layerHead = LayerMask.NameToLayer("doNotRenderHead");
 
-        if (sr != null)
-        {
-            if (renderBehaviour == RenderBehaviour.DoNotRenderLayer)
-                sr.gameObject.layer = layer;
-            if (renderBehaviour == RenderBehaviour.DissableRenderers)
-                sr.enabled = false;
-        }
-
-        foreach (var rend in GetComponentsInChildren<MeshRenderer>())
+        foreach (var rend in GetComponentsInChildren<MeshRenderer>(true))
         {
             if (renderBehaviour == RenderBehaviour.DoNotRenderLayer)
                 rend.gameObject.layer = layer;
-            if (renderBehaviour == RenderBehaviour.DissableRenderers)
+            if (renderBehaviour == RenderBehaviour.DoNotRenderHeadLayer)
+                rend.gameObject.layer = layerHead;
+            if (renderBehaviour == RenderBehaviour.DisableRenderers)
                 rend.enabled = false;
         }
 
-        foreach (var rend in GetComponentsInChildren<SkinnedMeshRenderer>())
+        foreach (var rend in GetComponentsInChildren<SkinnedMeshRenderer>(true))
         {
             if (renderBehaviour == RenderBehaviour.DoNotRenderLayer)
                 rend.gameObject.layer = layer;
-            if (renderBehaviour == RenderBehaviour.DissableRenderers)
+            if (renderBehaviour == RenderBehaviour.DoNotRenderHeadLayer)
+                rend.gameObject.layer = layerHead;
+            if (renderBehaviour == RenderBehaviour.DisableRenderers)
                 rend.enabled = false;
         }
 
@@ -76,12 +59,19 @@ public class NetworkFollow : NetworkBehaviour
             return;
 
         if (!inited)
-            init();
+            Init();
 
-        if (target != null)
+        MoveToTarget();
+    }
+
+    public void MoveToTarget()
+    {
+        if (target)
         {
             if (body)
             {
+                transform.position = target.position;
+                transform.rotation = target.rotation;
                 body.MovePosition(target.position);
                 body.MoveRotation(target.rotation);
             }

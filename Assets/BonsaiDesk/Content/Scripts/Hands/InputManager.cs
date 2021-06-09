@@ -77,8 +77,8 @@ public class InputManager : MonoBehaviour
         Left = new HandComponents(leftPlayerHand, leftHandAnchor, leftHandObject, leftAnimationController);
         Right = new HandComponents(rightPlayerHand, rightHandAnchor, rightHandObject, rightAnimationController);
 
-        Left.SetHandColliderActiveForScreen(false);
-        Right.SetHandColliderActiveForScreen(false);
+        // Left.SetPhysicsForUsingScreen(true);
+        // Right.SetPhysicsForUsingScreen(true);
     }
 
     private void Update()
@@ -107,8 +107,8 @@ public class InputManager : MonoBehaviour
         //set controllers on/off
         var controllersActive = !UsingHandTracking && !MoveToDesk.Singleton.oriented;
         var playing = Application.isFocused && Application.isPlaying || Application.isEditor;
-        leftControllerModel.SetActive(controllersActive);
-        rightControllerModel.SetActive(controllersActive);
+        leftControllerModel.SetActive(controllersActive && playing);
+        rightControllerModel.SetActive(controllersActive && playing);
     }
 
     public void UpdateHandTargets(bool updateTracking = true)
@@ -150,9 +150,13 @@ public class InputManager : MonoBehaviour
                 handComponents.SetTracking(tracking);
             }
         }
-        else if (controller == OVRInput.Controller.Touch)
+        else if (controller == OVRInput.Controller.Touch || controller == OVRInput.Controller.LTouch || controller == OVRInput.Controller.RTouch)
         {
-            handComponents.SetTracking(true);
+            if (updateTracking)
+            {
+                handComponents.SetTracking(true);
+            }
+
             if (handComponents.Tracking)
             {
                 handComponents.TargetHand.position = handComponents.HandAnchor.TransformPoint(controllerOffset);
@@ -160,6 +164,21 @@ public class InputManager : MonoBehaviour
                 handComponents.TargetMapper.UpdateBonesToStartPose();
 
                 handComponents.PhysicsHandController.SetHandScale(1f);
+            }
+        }
+        else if (controller == OVRInput.Controller.None) //usually controller type none means the oculus menu is open and the app doesn't have focus
+        {
+            if (updateTracking)
+            {
+                handComponents.SetTracking(false);
+            }
+        }
+        else
+        {
+            Debug.LogError("Unknown controller type: " + controller);
+            if (updateTracking)
+            {
+                handComponents.SetTracking(false);
             }
         }
     }
@@ -251,10 +270,10 @@ public class InputManager : MonoBehaviour
             {
                 rightMenu.TurnOffMenus();
             }
-            
+
             leftControllerModel.SetActive(false);
             rightControllerModel.SetActive(false);
-            
+
             Left.PlayerHand.stylus.parent.gameObject.SetActive(false);
             Right.PlayerHand.stylus.parent.gameObject.SetActive(false);
         }

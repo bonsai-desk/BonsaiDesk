@@ -24,8 +24,8 @@ export function postOpenPrivateRoom() {
     postJson({Type: 'command', Message: 'openPrivateRoom'});
 }
 
-export function postOpenPublicRoom() {
-    postJson({Type: 'command', Message: 'openPublicRoom'});
+export function postOpenPublicRoom(resetNav = true) {
+    postJson({Type: 'command', Message: 'openPublicRoom', Data: resetNav});
 }
 
 export function postCloseRoom() {
@@ -77,42 +77,78 @@ export function postChangeActiveBlock(hand, blockId) {
     postJson({
         Type: 'command',
         Message: 'changeActiveBlock',
-        Data: JSON.stringify({Hand: hand, BlockId: blockId}),
+        Data: JSON.stringify({Hand: hand, BlockName: blockId}),
     });
 }
 
-export function postToggleBlockActive(hand) {
+export function postSetHandMode(mode) {
     postJson({
         Type: 'command',
-        Message: 'toggleBlockActive',
+        Message: 'setHandMode',
+        Data: mode,
+    });
+}
+
+export function postSetHand(hand) {
+    postJson({
+        Type: 'command',
+        Message: 'setHand',
         Data: hand,
     });
 }
 
-export function postToggleBlockBreakHand(hand) {
-    postJson({
-        Type: 'command',
-        Message: 'toggleBlockBreakHand',
-        Data: hand,
-    });
+export function postDismissKeyboard() {
+    postJson({Type: 'command', Message: 'dismissKeyboard'});
+}
+
+export function postToggleKeyboard() {
+    postJson({Type: 'command', Message: 'toggleKeyboard'});
+}
+
+// blocks
+
+export function postStageBuild(buildId) {
+    postJson({Type: 'command', Message: 'stageBuild', Data: buildId});
+}
+
+export function postSaveBuild(name) {
+    postJson({Type: 'command', Message: 'saveBuild', Data: name});
+}
+
+export function postDeleteBuild(buildId) {
+    postJson({Type: 'command', Message: 'deleteBuild', Data: buildId});
+}
+
+export function postSpawnBuild(data) {
+    postJson({Type: 'command', Message: 'spawnBuild', Data: data});
+}
+
+export function postSpawnBuildById(Id) {
+    postJson({Type: 'command', Message: 'spawnBuildById', Data: Id});
+}
+
+// rooms info
+
+export function postPublicRoomAvailable() {
+    postJson({Type: 'event', Message: 'publicRoomAvailable'});
 }
 
 export const Layout = {
-    Across: 0, SideBySide: 1
-}
+    Across: 0, SideBySide: 1,
+};
 
-export function postSetLayout(layout){
+export function postSetLayout(layout) {
     let layoutStr;
     switch (layout) {
         case Layout.Across:
-            layoutStr = "across"
+            layoutStr = 'across';
             break;
         case Layout.SideBySide:
-            layoutStr = "sideBySide"
+            layoutStr = 'sideBySide';
             break;
         default:
             layoutStr = 'across';
-            break
+            break;
     }
     postJson({
         Type: 'command',
@@ -120,5 +156,3 @@ export function postSetLayout(layout){
         Data: layoutStr,
     });
 }
-
-

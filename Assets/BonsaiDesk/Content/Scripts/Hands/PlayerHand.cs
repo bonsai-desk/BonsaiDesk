@@ -144,16 +144,6 @@ public class PlayerHand : MonoBehaviour
         return !GetGesture(gesture) && GetLastGesture(gesture);
     }
 
-    // public bool GetGestureActiveWithin(Gesture gesture, float time)
-    // {
-    //     if (_lastGestureActiveTime.TryGetValue(gesture, out float value))
-    //     {
-    //         return Time.time - value <= time;
-    //     }
-    //
-    //     return false;
-    // }
-
     public void UpdateLastGestures()
     {
         foreach (Gesture gesture in (Gesture[]) Gesture.GetValues(typeof(Gesture)))

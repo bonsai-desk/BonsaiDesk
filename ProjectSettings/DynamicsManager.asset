@@ -6,18 +6,18 @@ PhysicsManager:
   serializedVersion: 13
   m_Gravity: {x: 0, y: -9.81, z: 0}
   m_DefaultMaterial: {fileID: 0}
-  m_BounceThreshold: 0.25
+  m_BounceThreshold: 2
   m_SleepThreshold: 0.005
   m_DefaultContactOffset: 0.001
-  m_DefaultSolverIterations: 50
-  m_DefaultSolverVelocityIterations: 25
+  m_DefaultSolverIterations: 25
+  m_DefaultSolverVelocityIterations: 15
   m_QueriesHitBackfaces: 0
   m_QueriesHitTriggers: 1
   m_EnableAdaptiveForce: 1
   m_ClothInterCollisionDistance: 0
   m_ClothInterCollisionStiffness: 0
   m_ContactsGeneration: 1
-  m_LayerCollisionMatrix: ff97d5ffff97d5ffff97d5ffffffffffff97d5ffff97d5ffffffffffffffffffff9f9dffff9f9dffff9f9dffc86720ffff97d5ffc80800ffc80800ffff97d0ffff17d3ffc80001ffff17d4ffc80700ffff97d5ffc80800ffff90d5ffff97d5ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+  m_LayerCollisionMatrix: ff97d1f9ff97d1f9ff97d1f9ffffffffff97d1f9ff97d1f9ffffffffffffffffff9f9dfbff9f9dfbff9f9dfbc86720f9ff97d1f9c80800f9c80800f9ff97d0f9ff17d3f9c80001f9c80700f9c80700f8ff97d1f9c80800f9ff90d1f9ff97d1f9fffff7f9c80700f8c80000f8ffffffffffffffffffffffffffffffffffffffff
   m_AutoSimulation: 1
   m_AutoSyncTransforms: 0
   m_ReuseCollisionCallbacks: 1
@@ -29,7 +29,7 @@ PhysicsManager:
     m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 250, y: 250, z: 250}
   m_WorldSubdivisions: 8
-  m_FrictionType: 2
+  m_FrictionType: 1
   m_EnableEnhancedDeterminism: 0
   m_EnableUnifiedHeightmaps: 1
   m_SolverType: 1

@@ -1,4 +1,5 @@
-﻿using Mirror;
+﻿using System.Collections;
+using Mirror;
 using UnityEngine;
 
 public class NetworkHand : NetworkBehaviour
@@ -25,14 +26,21 @@ public class NetworkHand : NetworkBehaviour
 
     public LineRenderer lineRenderer;
 
-    [SyncVar] public NetworkIdentity ownerIdentity;
+    [SyncVar] public NetworkIdentityReference ownerIdentity = new NetworkIdentityReference();
 
     //pinch pull info
     [SyncVar] private uint _pinchPullAttachedToId = uint.MaxValue;
     [SyncVar] private Vector3 _pinchPullLocalHitPoint = Vector3.zero;
     [SyncVar] private float _pinchPullRopeLength = 0f;
 
+    [SyncVar(hook = nameof(OnActiveChange))]
+    private bool _active;
+
+    private bool _disableWaitPeriodDone = false;
+
     private GameObject physicsHand;
+    private PhysicsHandController _physicsHandController;
+    private SkinnedMeshRenderer _physicsHandRenderer;
 
     private Material _handMaterial;
     private Texture _handTexture;
@@ -46,6 +54,8 @@ public class NetworkHand : NetworkBehaviour
 
     public override void OnStartServer()
     {
+        _active = false;
+
         if (!isClient)
         {
             SetupPhysicsHand();
@@ -64,6 +74,8 @@ public class NetworkHand : NetworkBehaviour
             InputManager.Hands.Left.NetworkHand = this;
         if (_skeletonType == OVRSkeleton.SkeletonType.HandRight)
             InputManager.Hands.Right.NetworkHand = this;
+
+        StartCoroutine(WaitThenActivateClientAuthority());
     }
 
     private void SetupPhysicsHand()
@@ -74,7 +86,8 @@ public class NetworkHand : NetworkBehaviour
         else
             physicsHandPrefab = Resources.Load<GameObject>("Right_Hand");
         var hand = Instantiate(physicsHandPrefab);
-        hand.transform.GetChild(0).GetComponent<PhysicsHandController>().SetKinematic();
+        _physicsHandController = hand.transform.GetChild(0).GetComponent<PhysicsHandController>();
+        _physicsHandController.SetKinematic();
         var physicsMapper = hand.transform.GetChild(1).GetComponent<OVRHandTransformMapper>();
         physicsMapper.targetObject = transform;
         physicsMapper.capsulesParent = transform;
@@ -84,12 +97,63 @@ public class NetworkHand : NetworkBehaviour
         physicsMapper.fixRotation = false;
         physicsHand = hand;
 
-        var physicsHandRenderer = physicsHand.GetComponentInChildren<SkinnedMeshRenderer>();
-        physicsHandRenderer.gameObject.layer = LayerMask.NameToLayer("networkPlayer");
-        _handMaterial = physicsHandRenderer.material;
+        _physicsHandRenderer = physicsHand.GetComponentInChildren<SkinnedMeshRenderer>();
+        _physicsHandRenderer.gameObject.layer = LayerMask.NameToLayer("networkPlayer");
+        _handMaterial = _physicsHandRenderer.material;
         if (_handTexture)
         {
             _handMaterial.mainTexture = _handTexture;
+        }
+
+        HandComponents.SetLayerRecursive(hand.transform.GetChild(0), LayerMask.NameToLayer("networkHand"));
+
+        _physicsHandController.overrideCapsulesActive = true;
+        _physicsHandRenderer.enabled = false;
+        _physicsHandController.overrideCapsulesActiveTarget = false;
+        StartCoroutine(WaitThenActivate());
+    }
+    
+    private IEnumerator WaitThenActivate()
+    {
+        yield return new WaitForSeconds(1f);
+        _disableWaitPeriodDone = true;
+        OnActiveChange(false, _active);
+    }
+    
+    private IEnumerator WaitThenActivateClientAuthority()
+    {
+        yield return new WaitForSeconds(1f);
+        CmdSetActive(InputManager.Hands.GetHand(_skeletonType).TrackingRecently);
+    }
+
+    [Command]
+    public void CmdSetActive(bool active)
+    {
+        _active = active;
+    }
+
+    private void OnActiveChange(bool oldValue, bool newValue)
+    {
+        if (hasAuthority)
+        {
+            return;
+        }
+
+        if (_physicsHandController && _physicsHandRenderer && _disableWaitPeriodDone)
+        {
+            var active = newValue;
+            if (active)
+            {
+                _physicsHandController.overrideCapsulesActive = false;
+                _physicsHandRenderer.enabled = true;
+            }
+            else
+            {
+                _physicsHandController.overrideCapsulesActive = true;
+                _physicsHandRenderer.enabled = false;
+            }
+
+            _physicsHandController.overrideCapsulesActiveTarget = false;
         }
     }
 
@@ -130,13 +194,18 @@ public class NetworkHand : NetworkBehaviour
                 SetFingerRotations( /*hand*/);
 
             //maxvalue if attached to nothing, so don't draw
-            if (_pinchPullAttachedToId != uint.MaxValue && NetworkIdentity.spawned.TryGetValue(_pinchPullAttachedToId, out NetworkIdentity value))
+            //no need to retry if ownerIdentity.Value is null since this is in update, so it will keep trying in the next frames
+            if (_pinchPullAttachedToId != uint.MaxValue && NetworkIdentity.spawned.TryGetValue(_pinchPullAttachedToId, out NetworkIdentity value) && ownerIdentity.Value)
             {
-                var from = ownerIdentity.GetComponent<NetworkVRPlayer>().GetOtherHand(_skeletonType).GetComponent<OVRHandTransformMapper>().CustomBones[20]
-                    .position;
-                var to = GetComponent<OVRHandTransformMapper>().CustomBones[20].position;
-                var end = value.transform.TransformPoint(_pinchPullLocalHitPoint);
-                RenderPinchPullLine(from, to, end);
+                var otherHand = ownerIdentity.Value.GetComponent<NetworkVRPlayer>().GetOtherHand(_skeletonType);
+                if (otherHand)
+                {
+                    var from = otherHand.GetComponent<OVRHandTransformMapper>().CustomBones[20]
+                        .position;
+                    var to = GetComponent<OVRHandTransformMapper>().CustomBones[20].position;
+                    var end = value.transform.TransformPoint(_pinchPullLocalHitPoint);
+                    RenderPinchPullLine(from, to, end);
+                }
             }
             else
             {

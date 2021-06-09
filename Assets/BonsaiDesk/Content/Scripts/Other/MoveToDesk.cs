@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Mirror;
+using Smooth;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -540,7 +541,7 @@ public class MoveToDesk : MonoBehaviour
     public void SetTableEdge(Transform tableEdge)
     {
         this.tableEdge = tableEdge;
-        if (tableEdge != null && tableControls != null)
+        if (tableEdge && tableControls)
         {
             tableControls.position = tableEdge.position;
             tableControls.rotation = tableEdge.rotation;

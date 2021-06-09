@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {postJson} from '../utilities';
-import {smallRoundButtonClass} from '../cssClasses';
+import {smallRoundButtonClass, smallRoundButtonClassGreen} from '../cssClasses';
 import ForwardImg from '../static/forward.svg';
 import BackImg from '../static/back.svg';
 
@@ -63,7 +63,7 @@ function Button(props) {
         shouldPostUp = true,
     } = props;
     return (
-            <div onPointerEnter={shouldPostHover ? postHover : null}
+            <div className={className} onPointerEnter={shouldPostHover ? postHover : null}
                  onPointerDown={() => {
                      handleClick();
                      if (shouldPostDown) {
@@ -72,15 +72,17 @@ function Button(props) {
                  }}
                  onPointerUp={shouldPostUp ? postMouseUp : null}
             >
-                <div className={className}>
                     {props.children}
-                </div>
             </div>
     );
 }
 
-export function ForwardButton({onClick}) {
-    return <Button className={smallRoundButtonClass} handleClick={onClick}>
+export function ForwardButton({onClick, variant}) {
+    let className = smallRoundButtonClass;
+    if (variant === "green"){
+        className = smallRoundButtonClassGreen
+    }
+    return <Button className={className} handleClick={onClick}>
         <div className={'flex flex-wrap content-center justify-center'}>
             <img className={'h-8 object-contain'} src={ForwardImg} alt={'forward'}/>
         </div>
