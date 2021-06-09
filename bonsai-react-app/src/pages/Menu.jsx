@@ -6,7 +6,7 @@ import {action, autorun} from 'mobx';
 
 import DotsImg from '../static/dots-vertical.svg';
 import {NetworkManagerMode, useStore} from '../DataProvider';
-import {postCloseMenu, postPublicRoomAvailable, postRequestMicrophone} from '../api';
+import {postPublicRoomAvailable, postRequestMicrophone} from '../api';
 
 import {apiBase} from '../utilities';
 import {InstantButton} from '../components/Button';
@@ -48,19 +48,6 @@ function NoMicPage() {
                     </div>
                 </div>
             </div>
-    );
-
-}
-
-function ExitButton() {
-
-    let buttonClass = 'rounded h-16 py-4 px-8 bg-bonsai-brown hover:bg-bonsai-orange active:bg-red-600 hover:text-white cursor-pointer flex flex-wrap content-center';
-
-    return (
-            <NavItem buttonClass={buttonClass} handleClick={postCloseMenu}
-                     className={'text-white'}>
-                <span className={'text-white'}>Close Menu</span>
-            </NavItem>
     );
 
 }
@@ -297,9 +284,6 @@ let Menu = observer(() => {
                                 : ''
                         }
                     </NavList>
-                    <div className={'w-full p-2'}>
-                        <ExitButton/>
-                    </div>
                 </div>
 
                 <div className={'bg-gray-900 z-10 w-full overflow-auto scroll-host'}>
