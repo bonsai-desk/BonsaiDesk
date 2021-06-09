@@ -58,7 +58,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 6dc13f11e97c325429b8a3938d03c76a, type: 2}
+  - {fileID: 2100000, guid: 588a936777c1c6545b718bbcdbb84808, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -286,7 +286,6 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   isKinematic: 0
-  destroyIfBelow: 1
   allowPinchPull: 1
   meshRenderer: {fileID: 3343159806455607842}
   cachedMaterial: {fileID: 0}
