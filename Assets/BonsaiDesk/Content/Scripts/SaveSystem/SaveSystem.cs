@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using Newtonsoft.Json;
 using UnityEngine;
 
 public class SaveSystem : MonoBehaviour
@@ -13,6 +14,7 @@ public class SaveSystem : MonoBehaviour
 
     private Dictionary<string, bool> _boolPairs = new Dictionary<string, bool>();
     private Dictionary<string, int> _intPairs = new Dictionary<string, int>();
+    private Dictionary<string, long> _longPairs = new Dictionary<string, long>();
     private Dictionary<string, float> _floatPairs = new Dictionary<string, float>();
     private Dictionary<string, string> _stringPairs = new Dictionary<string, string>();
 
@@ -31,6 +33,15 @@ public class SaveSystem : MonoBehaviour
         {
             _possiblyUnsavedData = true;
             return _intPairs;
+        }
+    }
+
+    public Dictionary<string, long> LongPairs
+    {
+        get
+        {
+            _possiblyUnsavedData = true;
+            return _longPairs;
         }
     }
 
@@ -66,41 +77,68 @@ public class SaveSystem : MonoBehaviour
         }
     }
 
+    private void DeleteSave()
+    {
+        try
+        {
+            string destination = Path.Combine(Application.persistentDataPath, "save.json");
+            if (File.Exists(destination))
+            {
+                File.Delete(destination);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Delete error: " + e);
+        }
+    }
+
     private void Load()
     {
-        string destination = Path.Combine(Application.persistentDataPath, "save.dat");
+        string destination = Path.Combine(Application.persistentDataPath, "save.json");
         print("Attempting to load file from " + destination);
 
-        FileStream file;
-        if (File.Exists(destination)) file = File.OpenRead(destination);
-        else
+        if (!File.Exists(destination))
         {
             print("No load file found.");
             return;
         }
 
-        BinaryFormatter bf = new BinaryFormatter();
-        var dictionaries = (Dictionary<Type, IDictionary>) bf.Deserialize(file);
-        file.Close();
-
-        if (dictionaries.TryGetValue(typeof(bool), out var value1))
+        try
         {
-            _boolPairs = (Dictionary<string, bool>) value1;
+            var json = File.ReadAllText(destination);
+            var dictionaries = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+
+            if (dictionaries.TryGetValue("BoolPairs", out var boolPairsJson))
+            {
+                _boolPairs = JsonConvert.DeserializeObject<Dictionary<string, bool>>(boolPairsJson);
+            }
+            
+            if (dictionaries.TryGetValue("IntPairs", out var intPairsJson))
+            {
+                _intPairs = JsonConvert.DeserializeObject<Dictionary<string, int>>(intPairsJson);
+            }
+            
+            if (dictionaries.TryGetValue("LongPairs", out var longPairsJson))
+            {
+                _longPairs = JsonConvert.DeserializeObject<Dictionary<string, long>>(longPairsJson);
+            }
+            
+            if (dictionaries.TryGetValue("FloatPairs", out var floatPairsJson))
+            {
+                _floatPairs = JsonConvert.DeserializeObject<Dictionary<string, float>>(floatPairsJson);
+            }
+            
+            if (dictionaries.TryGetValue("StringPairs", out var stringPairsJson))
+            {
+                _stringPairs = JsonConvert.DeserializeObject<Dictionary<string, string>>(stringPairsJson);
+            }
         }
-
-        if (dictionaries.TryGetValue(typeof(int), out var value2))
+        catch (Exception e)
         {
-            _intPairs = (Dictionary<string, int>) value2;
-        }
-
-        if (dictionaries.TryGetValue(typeof(float), out var value3))
-        {
-            _floatPairs = (Dictionary<string, float>) value3;
-        }
-
-        if (dictionaries.TryGetValue(typeof(string), out var value4))
-        {
-            _stringPairs = (Dictionary<string, string>) value4;
+            Debug.LogError("Load error: " + e);
+            Debug.LogError("Deleting save file.");
+            DeleteSave();
         }
     }
 
@@ -111,22 +149,27 @@ public class SaveSystem : MonoBehaviour
             return;
         }
 
-        string destination = Path.Combine(Application.persistentDataPath, "save.dat");
-        print("Saving file to " + destination);
+        _possiblyUnsavedData = false;
 
-        FileStream file;
-        if (File.Exists(destination)) file = File.OpenWrite(destination);
-        else file = File.Create(destination);
+        try
+        {
+            string destination = Path.Combine(Application.persistentDataPath, "save.json");
+            print("Saving file to " + destination);
 
-        var dictionaries = new Dictionary<Type, IDictionary>();
-        dictionaries.Add(typeof(bool), _boolPairs);
-        dictionaries.Add(typeof(int), _intPairs);
-        dictionaries.Add(typeof(float), _floatPairs);
-        dictionaries.Add(typeof(string), _stringPairs);
+            var dictionaries = new Dictionary<string, string>();
+            dictionaries.Add("BoolPairs", JsonConvert.SerializeObject(_boolPairs));
+            dictionaries.Add("IntPairs", JsonConvert.SerializeObject(_intPairs));
+            dictionaries.Add("LongPairs", JsonConvert.SerializeObject(_longPairs));
+            dictionaries.Add("FloatPairs", JsonConvert.SerializeObject(_floatPairs));
+            dictionaries.Add("StringPairs", JsonConvert.SerializeObject(_stringPairs));
 
-        var bf = new BinaryFormatter();
-        bf.Serialize(file, dictionaries);
-        file.Close();
+            var json = JsonConvert.SerializeObject(dictionaries, Formatting.Indented);
+            File.WriteAllText(destination, json);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Save error: " + e);
+        }
     }
 
     private void OnDestroy()
