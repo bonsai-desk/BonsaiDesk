@@ -110,8 +110,6 @@ public class LockObjectHand : MonoBehaviour, IHandTick
             
             yield return null;
         }
-
-        _checkAuthorityAfterDelayCoroutine = null;
     }
 
     private AutoAuthority GetLockObjectCandidate()

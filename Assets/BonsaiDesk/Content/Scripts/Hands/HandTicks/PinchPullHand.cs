@@ -189,8 +189,6 @@ public class PinchPullHand : MonoBehaviour, IHandTick
 
             yield return null;
         }
-
-        _checkAuthorityAfterDelayCoroutine = null;
     }
 
     private void AttachObject(AutoAuthority attachToObject, Vector3 hitPoint)
