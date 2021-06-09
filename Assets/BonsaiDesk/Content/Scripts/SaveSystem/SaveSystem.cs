@@ -107,31 +107,66 @@ public class SaveSystem : MonoBehaviour
         try
         {
             var json = File.ReadAllText(destination);
-            var dictionaries = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+            if (string.IsNullOrEmpty(json))
+            {
+                Debug.LogError("Load json was empty.");
+                Debug.LogError("Deleting save file.");
+                DeleteSave();
+                return;
+            }
 
-            if (dictionaries.TryGetValue("BoolPairs", out var boolPairsJson))
+            var dictionaries = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+            if (dictionaries == null)
             {
-                _boolPairs = JsonConvert.DeserializeObject<Dictionary<string, bool>>(boolPairsJson);
+                Debug.LogError("Load dictionaries was null.");
+                Debug.LogError("Deleting save file.");
+                DeleteSave();
+                return;
             }
-            
-            if (dictionaries.TryGetValue("IntPairs", out var intPairsJson))
+
+            if (dictionaries.TryGetValue("BoolPairs", out var boolPairsJson) && !string.IsNullOrEmpty(boolPairsJson))
             {
-                _intPairs = JsonConvert.DeserializeObject<Dictionary<string, int>>(intPairsJson);
+                var boolPairs = JsonConvert.DeserializeObject<Dictionary<string, bool>>(boolPairsJson);
+                if (boolPairs != null)
+                {
+                    _boolPairs = boolPairs;
+                }
             }
-            
-            if (dictionaries.TryGetValue("LongPairs", out var longPairsJson))
+
+            if (dictionaries.TryGetValue("IntPairs", out var intPairsJson) && !string.IsNullOrEmpty(intPairsJson))
             {
-                _longPairs = JsonConvert.DeserializeObject<Dictionary<string, long>>(longPairsJson);
+                var intPairs = JsonConvert.DeserializeObject<Dictionary<string, int>>(intPairsJson);
+                if (intPairs != null)
+                {
+                    _intPairs = intPairs;
+                }
             }
-            
-            if (dictionaries.TryGetValue("FloatPairs", out var floatPairsJson))
+
+            if (dictionaries.TryGetValue("LongPairs", out var longPairsJson) && !string.IsNullOrEmpty(longPairsJson))
             {
-                _floatPairs = JsonConvert.DeserializeObject<Dictionary<string, float>>(floatPairsJson);
+                var longPairs = JsonConvert.DeserializeObject<Dictionary<string, long>>(longPairsJson);
+                if (longPairs != null)
+                {
+                    _longPairs = longPairs;
+                }
             }
-            
-            if (dictionaries.TryGetValue("StringPairs", out var stringPairsJson))
+
+            if (dictionaries.TryGetValue("FloatPairs", out var floatPairsJson) && !string.IsNullOrEmpty(floatPairsJson))
             {
-                _stringPairs = JsonConvert.DeserializeObject<Dictionary<string, string>>(stringPairsJson);
+                var floatPairs = JsonConvert.DeserializeObject<Dictionary<string, float>>(floatPairsJson);
+                if (floatPairs != null)
+                {
+                    _floatPairs = floatPairs;
+                }
+            }
+
+            if (dictionaries.TryGetValue("StringPairs", out var stringPairsJson) && !string.IsNullOrEmpty(stringPairsJson))
+            {
+                var stringPairs = JsonConvert.DeserializeObject<Dictionary<string, string>>(stringPairsJson);
+                if (_stringPairs != null)
+                {
+                    _stringPairs = stringPairs;
+                }
             }
         }
         catch (Exception e)
