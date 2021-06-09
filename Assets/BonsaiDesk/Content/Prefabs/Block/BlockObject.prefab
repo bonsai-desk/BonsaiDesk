@@ -60,7 +60,12 @@ MonoBehaviour:
     type: 3}
   transparentCubePrefab: {fileID: 7474305919945807990, guid: ec0fcdac38c680c45b9f89ce54a45ed3,
     type: 3}
-  initialBlocksString: 
+  blockBreakSound:
+    soundFXName: block_lock_in_place
+  blockAttachSound:
+    soundFXName: block_lock_in_place
+  bearingAttachSound:
+    soundFXName: bearing_attach
   debug: 0
 --- !u!54 &1897995405423690379
 Rigidbody:

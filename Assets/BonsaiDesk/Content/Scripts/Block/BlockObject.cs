@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Mirror;
+using OVR;
 using Smooth;
 using UnityEditor;
 using UnityEngine;
@@ -123,6 +124,11 @@ public partial class BlockObject : NetworkBehaviour
     private GameObject _transparentCube;
     private BoxCollider _transparentCubeCollider = null;
     public GameObject transparentCubePrefab;
+    
+    //sounds
+    public SoundFXRef blockBreakSound;
+    public SoundFXRef blockAttachSound;
+    public SoundFXRef bearingAttachSound;
 
     //physics
     private Rigidbody _body;
@@ -1241,6 +1247,8 @@ public partial class BlockObject : NetworkBehaviour
             }
 
             CmdRemoveBlock(coord, nId);
+            
+            blockBreakSound.PlaySoundAt(transform.TransformPoint(coord), 0, 0.35f, 0.6f);
 
             return;
         }

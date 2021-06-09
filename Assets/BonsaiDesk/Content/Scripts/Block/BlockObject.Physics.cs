@@ -174,6 +174,9 @@ public partial class BlockObject
                             ConnectJoint(jointInfo);
                             blockObject._connectedToSelfChanges.Enqueue((blockCoord, new NetworkIdentityReference(netIdentity),
                                 SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation.OP_ADD));
+                            
+                            //sound
+                            bearingAttachSound.PlaySoundAt(position);
                         }
                         else
                         {
@@ -183,6 +186,9 @@ public partial class BlockObject
                             var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
                             localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * MeshBlocks[coord].rotation;
                             var localRotationByte = BlockUtility.QuaternionToByte(localRotation);
+                            
+                            //sound
+                            blockAttachSound.PlaySoundAt(position, 0, 0.35f, 0.6f);
 
                             Mixpanel.Track("Add Block");
                             blockObject.CmdAddBlock(MeshBlocks[coord].name, blockCoord, localRotationByte, netIdentity);

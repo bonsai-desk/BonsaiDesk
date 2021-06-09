@@ -176,7 +176,7 @@ public partial class BlockObject
     public void ServerTeleportToDeskSurface(List<BlockObject> blockObjects = null)
     {
         var (offset, newBlockObjects) = ServerGetTeleportToDeskSurfaceOffset(blockObjects);
-        ServerTeleportApplyOffset(offset, blockObjects);
+        ServerTeleportApplyOffset(offset, newBlockObjects);
     }
 
     [Server]
