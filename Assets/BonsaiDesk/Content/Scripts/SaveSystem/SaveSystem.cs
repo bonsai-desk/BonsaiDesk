@@ -83,24 +83,24 @@ public class SaveSystem : MonoBehaviour
         var dictionaries = (Dictionary<Type, IDictionary>) bf.Deserialize(file);
         file.Close();
 
-        if (dictionaries.TryGetValue(typeof(bool), out var value))
+        if (dictionaries.TryGetValue(typeof(bool), out var value1))
         {
-            _boolPairs = (Dictionary<string, bool>) value;
+            _boolPairs = (Dictionary<string, bool>) value1;
         }
 
-        if (dictionaries.TryGetValue(typeof(int), out value))
+        if (dictionaries.TryGetValue(typeof(int), out var value2))
         {
-            _intPairs = (Dictionary<string, int>) value;
+            _intPairs = (Dictionary<string, int>) value2;
         }
 
-        if (dictionaries.TryGetValue(typeof(float), out value))
+        if (dictionaries.TryGetValue(typeof(float), out var value3))
         {
-            _floatPairs = (Dictionary<string, float>) value;
+            _floatPairs = (Dictionary<string, float>) value3;
         }
 
-        if (dictionaries.TryGetValue(typeof(string), out value))
+        if (dictionaries.TryGetValue(typeof(string), out var value4))
         {
-            _stringPairs = (Dictionary<string, string>) value;
+            _stringPairs = (Dictionary<string, string>) value4;
         }
     }
 

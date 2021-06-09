@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Mirror;
+using mixpanel;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Android;
@@ -227,9 +228,11 @@ public class TableBrowserMenu : MonoBehaviour
                             switch (message.Data)
                             {
                                 case "vibes":
+                                    Mixpanel.Track("Activate Vibes Lights");
                                     LightChange.Invoke(this, LightState.Vibes);
                                     break;
                                 case "bright":
+                                    Mixpanel.Track("Activate Bright Lights");
                                     LightChange.Invoke(this, LightState.Bright);
                                     break;
                             }
@@ -255,9 +258,11 @@ public class TableBrowserMenu : MonoBehaviour
                         PostDeleteBuild(message.Data);
                         break;
                     case "spawnBuild":
+                        Mixpanel.Track("React Spawn Build");
                         SpawnBuild(message.Data);
                         break;
                     case "spawnBuildById":
+                        Mixpanel.Track("React Spawn Build By Id");
                         SpawnBuildFromId(message.Data);
                         break;
                     case "saveBuild":
@@ -452,6 +457,10 @@ public class TableBrowserMenu : MonoBehaviour
     {
         var pinchPullEnabled = InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled;
         var newPinchPullState = !pinchPullEnabled; //toggle state
+        if (newPinchPullState)
+        {
+            Mixpanel.Track("Enable Pinch Pull");
+        }
         InputManager.Hands.Left.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled = newPinchPullState;
         InputManager.Hands.Right.PlayerHand.GetIHandTick<PinchPullHand>().pinchPullEnabled = newPinchPullState;
         SaveSystem.Instance.BoolPairs["PinchPullEnabled"] = newPinchPullState;

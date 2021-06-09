@@ -291,6 +291,7 @@ public class NetworkManagerGame : NetworkManager
 
     private void JoinRoom(RoomData roomData)
     {
+        Mixpanel.Track("JoinRoom Begin");
         roomOpen = false;
         connecting = true;
         InfoChange?.Invoke(this, new EventArgs());
@@ -314,6 +315,7 @@ public class NetworkManagerGame : NetworkManager
 
         if (mode == NetworkManagerMode.Offline)
         {
+            Mixpanel.Track("JoinRoom StartClient");
             networkAddress = roomData.network_address;
             BonsaiLog("StartClient");
             //StartClient();
@@ -321,6 +323,7 @@ public class NetworkManagerGame : NetworkManager
         }
         else
         {
+            Mixpanel.Track("JoinRoom Error");
             connecting = false;
             BonsaiLogError($"Did not get into offline state before joining room ({mode})");
         }
@@ -442,6 +445,10 @@ public class NetworkManagerGame : NetworkManager
             BonsaiLogWarning("Did not fetch oculus id before joining room");
         }
 
+        if (!NetworkServer.active)
+        {
+            Mixpanel.Track("OnClientConnect");
+        }
         ClientConnect?.Invoke(this, conn);
         InfoChange?.Invoke(this, new EventArgs());
     }

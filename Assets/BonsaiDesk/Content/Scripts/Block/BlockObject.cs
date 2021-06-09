@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Mirror;
+using mixpanel;
 using OVR;
 using Smooth;
 using UnityEditor;
@@ -18,12 +19,14 @@ public partial class BlockObject : NetworkBehaviour
     private const float MaxVelocity = 10f;
     private const float MaxAngularVelocity = 50f;
 
+    private static bool _hasLoggedSyncConnectionError;
+    private static bool _hasLoggedHingeJointError;
+
     //contains all of the AutoAuthority of all BlockObjects in the scene
     private static readonly HashSet<AutoAuthority> _blockObjectAuthorities = new HashSet<AutoAuthority>();
 
     //caches save string between clicking save and creating name
-    // todo
-    public static string StagedSaveData = "asdf";
+    public static string StagedSaveData;
 
     //---all of the data required to reconstruct this block object---
 
@@ -1105,12 +1108,14 @@ public partial class BlockObject : NetworkBehaviour
                             _autoAuthority.CmdRemoveInUse(NetworkClient.connection.identity.netId);
                         }
 
+                        Mixpanel.Track("Remove Chunk");
                         Delete();
                     });
                     break;
                 case BlockBreakHand.BreakMode.Duplicate:
                     if (NetworkClient.connection != null && NetworkClient.connection.identity)
                     {
+                        Mixpanel.Track("Duplicate Chunk");
                         CmdDuplicate(NetworkClient.connection.identity.netId);
                     }
 
@@ -1249,6 +1254,7 @@ public partial class BlockObject : NetworkBehaviour
             CmdRemoveBlock(coord, nId);
             
             blockBreakSound.PlaySoundAt(transform.TransformPoint(coord), 0, 0.35f, 0.6f);
+            Mixpanel.Track("Remove Block");
 
             return;
         }
@@ -1738,11 +1744,21 @@ public partial class BlockObject : NetworkBehaviour
                 //TODO: can anything be done if this problem is detected? Does it matter if this happens on a client vs on the server?
                 //      maybe if this happens on the server, it should just delete it. if it happens on a client but not the server, what do we do?
                 Debug.LogError("Found sync connection problem with blockObject: " + gameObject.name);
+                if (!_hasLoggedSyncConnectionError)
+                {
+                    _hasLoggedSyncConnectionError = true;
+                    Mixpanel.Track("Found Sync Connection Problem With BlockObject");
+                }
             }
 
             if (problem.hingeJointProblem)
             {
                 Debug.LogError("Found hinge joint problem with blockObject: " + gameObject.name + ". Attempting to correct.");
+                if (!_hasLoggedHingeJointError)
+                {
+                    _hasLoggedHingeJointError = true;
+                    Mixpanel.Track("Found Hinge Joint Problem With BlockObject");
+                }
                 var blockObjects = BlockUtility.GetBlockObjectsFromRoot(BlockUtility.GetRootBlockObject(this));
                 for (int i = 0; i < blockObjects.Count; i++)
                 {
@@ -1754,6 +1770,7 @@ public partial class BlockObject : NetworkBehaviour
 
     private void Save()
     {
+        Mixpanel.Track("Try Save Chunk");
         var root = BlockUtility.GetRootBlockObject(this);
 
         Vector3? saveDialogPos = null;
@@ -1774,6 +1791,7 @@ public partial class BlockObject : NetworkBehaviour
             var data = BlockUtility.DeserializeBlocks(dataString);
             if (data != null)
             {
+                Mixpanel.Track("Cache Chunk");
                 //cache the save string
                 StagedSaveData = dataString;
                 if (TableBrowserMenu.Singleton)
