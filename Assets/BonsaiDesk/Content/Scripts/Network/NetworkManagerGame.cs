@@ -343,17 +343,17 @@ public class NetworkManagerGame : NetworkManager
 
     private void BonsaiLog(string msg)
     {
-        Debug.Log("<color=orange>BonsaiNetwork: </color>: " + msg);
+        global::BonsaiLog.Log(msg, "BonsaiNetwork");
     }
 
     private void BonsaiLogWarning(string msg)
     {
-        Debug.LogWarning("<color=orange>BonsaiNetwork: </color>: " + msg);
+        global::BonsaiLog.LogWarning(msg, "BonsaiNetwork");
     }
 
     private void BonsaiLogError(string msg)
     {
-        Debug.LogError("<color=orange>BonsaiNetwork: </color>: " + msg);
+        global::BonsaiLog.LogError(msg, "BonsaiNetwork");
     }
 
     private IEnumerator KickClients()
