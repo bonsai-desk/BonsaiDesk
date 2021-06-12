@@ -85,7 +85,7 @@ public class AutoAuthority : NetworkBehaviour
                 _inUseBy = 0;
             }
 
-            if (!_blockObject && (PhysicsHandController.InvalidTransform(transform) || Vector3.SqrMagnitude(transform.position) > 20f * 20f ||
+            if (!_blockObject && (transform.Invalid() || Vector3.SqrMagnitude(transform.position) > 20f * 20f ||
                                   transform.position.y < -1f || transform.position.y > 5f))
             {
                 ServerStripOwnerAndDestroy();

@@ -69,7 +69,7 @@ public partial class BlockObject
     {
         for (int i = 0; i < blockObjects.Count; i++)
         {
-            if (PhysicsHandController.InvalidTransform(blockObjects[i].transform))
+            if (blockObjects[i].transform.Invalid())
             {
                 Debug.LogWarning("BlockObject has invalid transform!");
                 if (blockObjects.Count == 1 && blockObjects[0].Blocks.Count <= 4)
@@ -345,7 +345,7 @@ public partial class BlockObject
             var smoothSync = next.GetComponent<SmoothSyncMirror>();
             smoothSync.clearBuffer();
 
-            if (next == rootBlockObject && PhysicsHandController.InvalidTransform(next.transform))
+            if (next == rootBlockObject && next.transform.Invalid())
             {
                 next.transform.position = new Vector3(0, 5, 0);
                 next.transform.rotation = Quaternion.identity;
