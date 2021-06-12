@@ -49,10 +49,11 @@ let SpawnButtonLocal = observer(({buildId}) => {
     </InstantButton>;
 });
 
-let SpawnButton = observer(({build_id}) => {
+let SpawnButton = observer(({build_id, overrideApi}) => {
     let [failed, setFailed] = useState(false);
     let {store} = useStore();
-    let url = store.ApiBase + `/blocks/builds/${build_id}`;
+    let api_base = overrideApi ? overrideApi : store.ApiBase;
+    let url = api_base + `/blocks/builds/${build_id}`;
 
     function fetchBuildData() {
         if (failed) {
@@ -128,6 +129,22 @@ let ThumbButton = observer((props) => {
                 </div>
             </InstantButton>
     );
+});
+
+let DevBlockPost = observer(({build_name, user_name, created_at, likes, build_id, liked, user_id}) => {
+
+    let title = build_name;
+    let slug = `(${likes}) ${user_name}`;
+
+    return <React.Fragment>
+        <InfoItemCustom title={title} imgSrc={BlockImg} slug={slug}
+                        leftItems={''}>
+            <div className={'flex flex-wrap content-center space-x-4'}>
+                <SpawnButton build_id={build_id} overrideApi={apiBaseManual('PRODUCTION')}/>
+            </div>
+        </InfoItemCustom>
+    </React.Fragment>;
+
 });
 
 let LocalBlockPost = observer(({Name, Id}) => {
@@ -593,7 +610,7 @@ let ProdPage = observer(() => {
     }, [url]);
     return <React.Fragment>
         <Spacer/>
-        {data.map(x => <BlockPost key={x.build_name + x.created_at} {...x}/>)}
+        {data.map(x => <DevBlockPost key={x.build_name + x.created_at} {...x}/>)}
     </React.Fragment>;
 });
 
@@ -877,8 +894,10 @@ export const BlocksPage = observer(() => {
     function goProd() {
         history.push(match.path + '/prod');
     }
+    
+    let className = dev ? 'flex flex-wrap w-full justify-between' : 'flex flex-wrap w-full space-x-14 justify-center'
 
-    let navBar = <div className={'flex flex-wrap w-full space-x-14 justify-center'}>
+    let navBar = <div className={className}>
         <InstantButton className={hotButtonClass} onClick={goHot}>Top</InstantButton>
         {dev ? <InstantButton className={prodButtonClass} onClick={goProd}>Prod</InstantButton> : ''}
         <InstantButton className={newButtonClass} onClick={goNew}>New</InstantButton>
