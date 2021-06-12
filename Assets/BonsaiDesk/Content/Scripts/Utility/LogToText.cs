@@ -18,6 +18,8 @@ public class LogToText : MonoBehaviour
     private int _numCharsWritten;
     private int _flushedFrame;
 
+    private bool _showedMessageStack;
+
     private void Awake()
     {
         if (_instance != null && _instance != this)
@@ -72,9 +74,10 @@ public class LogToText : MonoBehaviour
     private void LogCallBack(string condition, string stackTrace, LogType type)
     {
 #if DEVELOPMENT_BUILD
-        if (type == LogType.Error && MessageStack.Singleton)
+        if (!_showedMessageStack && type == LogType.Error && MessageStack.Singleton)
         {
-            MessageStack.Singleton.AddMessage(condition, MessageStack.MessageType.Bad, 1f);
+            _showedMessageStack = true;
+            MessageStack.Singleton.AddMessage(condition, MessageStack.MessageType.Bad, 10f);
         }
 #endif
 
