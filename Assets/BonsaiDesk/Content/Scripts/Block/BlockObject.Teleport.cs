@@ -305,7 +305,15 @@ public partial class BlockObject
         var currentPosition = blockObject.transform.TransformPoint(blockObject.SyncJoint.attachedToMeAtCoord);
         var distanceSquared = Vector3.SqrMagnitude(targetPosition - currentPosition);
 
-        var invalid = distanceSquared > 0.045f * 0.045f;
+        var diff = Quaternion.Inverse(blockObject.SyncJoint.attachedTo.Value.transform.rotation) * blockObject.transform.rotation;
+        var bearingLocalRotation = BlockUtility.ByteToQuaternion(blockObject.SyncJoint.bearingLocalRotation);
+        
+        var targetUp = bearingLocalRotation * Vector3.up;
+        var up = diff * Quaternion.Inverse(BlockUtility.ByteToQuaternion(blockObject.SyncJoint.localRotation)) * bearingLocalRotation * Vector3.up;
+
+        var dot = Vector3.Dot(up, targetUp);
+
+        var invalid = distanceSquared > 0.045f * 0.045f || dot < 0.9779841f; //dot of 0.9779841f is about equal to an angle of 12 degrees
         return invalid;
     }
 
