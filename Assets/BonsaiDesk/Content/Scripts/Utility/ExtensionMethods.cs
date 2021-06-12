@@ -6,7 +6,7 @@ public static class ExtensionMethods
 {
     public static T GetComponentCheck<T>(this Component component)
     {
-#if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
         var c = component.GetComponent<T>();
 
         if (c == null)
@@ -26,7 +26,7 @@ public static class ExtensionMethods
 
     public static T GetComponentCheck<T>(this GameObject gameObject)
     {
-#if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
         var c = gameObject.GetComponent<T>();
 
         if (c == null)

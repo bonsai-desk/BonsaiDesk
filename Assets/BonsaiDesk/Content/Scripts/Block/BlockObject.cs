@@ -127,7 +127,7 @@ public partial class BlockObject : NetworkBehaviour
     private GameObject _transparentCube;
     private BoxCollider _transparentCubeCollider = null;
     public GameObject transparentCubePrefab;
-    
+
     //sounds
     public SoundFXRef blockBreakSound;
     public SoundFXRef blockAttachSound;
@@ -201,13 +201,14 @@ public partial class BlockObject : NetworkBehaviour
         _isInit = true;
 
         gameObject.name = "Block Object - " + Random.Range(0, int.MaxValue);
-        
+
         if (NetworkClient.connection != null && NetworkClient.connection.identity)
         {
             if (_spawnedForClientLeft == NetworkClient.connection.identity.netId)
             {
                 NetworkBlockSpawn.InstanceLeft.SetLastSpawned(netIdentity);
             }
+
             if (_spawnedForClientRight == NetworkClient.connection.identity.netId)
             {
                 NetworkBlockSpawn.InstanceRight.SetLastSpawned(netIdentity);
@@ -493,6 +494,8 @@ public partial class BlockObject : NetworkBehaviour
                     break;
             }
         }
+        
+        CalculateRelativeWeights();
     }
 
     private void OnConnectedToSelfDictionaryChange(SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation op, Vector3Int key,
@@ -633,6 +636,8 @@ public partial class BlockObject : NetworkBehaviour
         transform.rotation = previousRotation;
         _body.MovePosition(transform.position);
         _body.MoveRotation(transform.rotation);
+        
+        CalculateRelativeWeights();
     }
 
     private void DisconnectJoint()
@@ -641,6 +646,7 @@ public partial class BlockObject : NetworkBehaviour
         {
             Destroy(_joint);
             _joint = null;
+            CalculateRelativeWeights();
         }
     }
 
@@ -1254,7 +1260,7 @@ public partial class BlockObject : NetworkBehaviour
             }
 
             CmdRemoveBlock(coord, nId);
-            
+
             blockBreakSound.PlaySoundAt(transform.TransformPoint(coord), 0, 0.35f, 0.6f);
             Mixpanel.Track("Remove Block");
 
@@ -1465,6 +1471,14 @@ public partial class BlockObject : NetworkBehaviour
             _numWeightedBlocks = 1;
         }
 
+        CalculateRelativeWeights();
+
+        //if any blocks are added or removed, close the save dialog if it is up
+        CloseDialog();
+    }
+
+    private void CalculateRelativeWeights()
+    {
         var blockObjects = BlockUtility.GetBlockObjectsFromRoot(BlockUtility.GetRootBlockObject(this));
         var totalWeightedBlocks = 0;
         for (int i = 0; i < blockObjects.Count; i++)
@@ -1486,12 +1500,7 @@ public partial class BlockObject : NetworkBehaviour
                 blockObjects[i]._body.mass = (float) blockObjects[i]._numWeightedBlocks / totalWeightedBlocks;
                 blockObjects[i]._resetCoM = true;
             }
-
-            totalWeightedBlocks += blockObjects[i]._numWeightedBlocks;
         }
-
-        //if any blocks are added or removed, close the save dialog if it is up
-        CloseDialog();
     }
 
     private void CreateInitialMesh()
@@ -1761,6 +1770,7 @@ public partial class BlockObject : NetworkBehaviour
                     _hasLoggedHingeJointError = true;
                     Mixpanel.Track("Found Hinge Joint Problem With BlockObject");
                 }
+
                 var blockObjects = BlockUtility.GetBlockObjectsFromRoot(BlockUtility.GetRootBlockObject(this));
                 for (int i = 0; i < blockObjects.Count; i++)
                 {
@@ -1914,7 +1924,7 @@ public partial class BlockObject : NetworkBehaviour
     {
         _spawnedForClientLeft = ownerId;
     }
-    
+
     [Server]
     public void ServerSetSpawnedForClientRight(uint ownerId)
     {

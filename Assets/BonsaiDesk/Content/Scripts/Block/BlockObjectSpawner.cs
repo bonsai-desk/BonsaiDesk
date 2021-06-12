@@ -201,7 +201,7 @@ public class BlockObjectSpawner : NetworkBehaviour
 
                 idToBlockObject.Add(entry.id, blockObject);
 
-                if (n == data.entriesByAttachedTo.Count - 1 && i == list.Count - 1)
+                if (n == data.entriesByAttachedTo.Count - 1 && i == list.Count - 1) //if last thing
                 {
                     blockObject.ServerTeleportToDeskSurface();
                 }

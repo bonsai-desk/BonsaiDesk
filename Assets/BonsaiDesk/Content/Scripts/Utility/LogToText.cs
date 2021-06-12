@@ -73,7 +73,7 @@ public class LogToText : MonoBehaviour
 
     private void LogCallBack(string condition, string stackTrace, LogType type)
     {
-#if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
         if (!_showedMessageStack && type == LogType.Error && MessageStack.Singleton)
         {
             _showedMessageStack = true;
@@ -113,7 +113,7 @@ public class LogToText : MonoBehaviour
                 _streamWriter.WriteLine("\n\n\n_numCharsWritten >= MaxCharsPerFile. No more logs will be written.");
             }
 
-#if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
             _streamWriter.Flush(); //in development build, flush after every log to ensure logs are always up to date in case of a crash
 #endif
         }
