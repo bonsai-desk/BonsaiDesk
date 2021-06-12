@@ -76,8 +76,6 @@ public class AutoAuthority : NetworkBehaviour
 
     private void Update()
     {
-        UpdateColor();
-
         if (isServer)
         {
             if (Time.time - _inUseSetTime > _inUseTimeout && _inUseBy != 0)
@@ -92,6 +90,15 @@ public class AutoAuthority : NetworkBehaviour
                 return;
             }
         }
+        else
+        {
+            if (transform.Invalid())
+            {
+                BonsaiLog.LogError("Invalid transform in AutoAuthority");
+            }
+        }
+        
+        UpdateColor();
 
         //if you don't have control over the object
         if (!HasAuthority())
