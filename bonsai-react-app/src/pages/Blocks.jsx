@@ -22,6 +22,7 @@ import jwt from 'jsonwebtoken';
 import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom';
 import {postDeleteBuild, postSaveBuild, postSpawnBuild, postSpawnBuildById, postStageBuild} from '../api';
 import {action} from 'mobx';
+import {apiBaseManual} from '../utilities';
 
 const DeleteState = {
     None: 0, Failed: 1, Success: 2,
@@ -170,7 +171,7 @@ let LocalBlockPost = observer(({Name, Id}) => {
         function clickOut() {
             setPublishModal(false);
             if (publishState === PublishState.Success) {
-                history.push("/menu/blocks/profile")
+                history.push('/menu/blocks/profile');
             }
         }
 
@@ -318,7 +319,12 @@ let BlockPost = observer(({
     let [reportState, setReportState] = useState(ReportState.None);
     let [reportModal, setReportModal] = useState(false);
     let decoded = jwt.decode(store.BonsaiToken);
-    const myPost = decoded.user_id === user_id;
+
+    let myPost = false;
+    if (decoded) {
+        myPost = decoded.user_id === user_id;
+    }
+
     const ago = moment(created_at).fromNow();
     const title = build_name;
     const slug = `${myPost ? 'You' : user_name} ${ago}`;
@@ -575,6 +581,22 @@ const HotPage = observer(() => {
     </React.Fragment>;
 });
 
+let ProdPage = observer(() => {
+    let [data, setData] = useState([]);
+    let url = apiBaseManual('PRODUCTION') + '/blocks/debug';
+
+    useEffect(() => {
+        axios.get(url).then(response => {
+            setData(response.data);
+        }).catch(console.log);
+
+    }, [url]);
+    return <React.Fragment>
+        <Spacer/>
+        {data.map(x => <BlockPost key={x.build_name + x.created_at} {...x}/>)}
+    </React.Fragment>;
+});
+
 function Modal({children, clickOut}) {
     const parentEl = useRef(null);
 
@@ -621,7 +643,7 @@ const DraftsPage = observer((props) => {
     let [emptyString, setEmptyString] = useState(false);
 
     let data = builds.List;
-    
+
     useEffect(() => {
         setTimeout(() => {
             if (data.length === 0) {
@@ -773,21 +795,21 @@ const ProfilePage = observer(() => {
     let {store} = useStore();
     let [emptyString, setEmptyString] = useState(false);
     let [timerDone, setTimerDone] = useState(false);
-    
-    useEffect(()=>{
+
+    useEffect(() => {
         setTimeout(() => {
-            setTimerDone(true)
+            setTimerDone(true);
         }, 250);
-        
-    }, [])
-    
-    useEffect(()=>{
+
+    }, []);
+
+    useEffect(() => {
         if (timerDone && data.length === 0) {
-            setEmptyString(true)
+            setEmptyString(true);
         } else if (timerDone && data.length > 0) {
-            setEmptyString(false)
+            setEmptyString(false);
         }
-    }, [timerDone, data])
+    }, [timerDone, data]);
 
     let decoded = jwt.decode(store.BonsaiToken);
     let profile_url = store.ApiBase + `/blocks/users/${decoded.user_id}/info`;
@@ -824,6 +846,9 @@ export const BlocksPage = observer(() => {
     let match = useRouteMatch();
     let history = useHistory();
 
+    let {store} = useStore();
+    let dev = store.AppInfo.Build === 'DEVELOPMENT';
+
     let path = window.location.pathname.split('/');
     let loc = path[path.length - 1];
 
@@ -831,6 +856,7 @@ export const BlocksPage = observer(() => {
     let newButtonClass = loc === 'new' ? lightGrayButtonClass : grayButtonClass;
     let profileButtonClass = loc === 'profile' ? lightGrayButtonClass : grayButtonClass;
     let draftsButtonClass = loc === 'drafts' ? lightGrayButtonClass : grayButtonClass;
+    let prodButtonClass = loc === 'prod' ? lightGrayButtonClass : grayButtonClass;
 
     function goHot() {
         history.push(match.path + '/hot');
@@ -848,8 +874,13 @@ export const BlocksPage = observer(() => {
         history.push(match.path + '/drafts');
     }
 
+    function goProd() {
+        history.push(match.path + '/prod');
+    }
+
     let navBar = <div className={'flex flex-wrap w-full space-x-14 justify-center'}>
         <InstantButton className={hotButtonClass} onClick={goHot}>Top</InstantButton>
+        {dev ? <InstantButton className={prodButtonClass} onClick={goProd}>Prod</InstantButton> : ''}
         <InstantButton className={newButtonClass} onClick={goNew}>New</InstantButton>
         <InstantButton className={profileButtonClass} onClick={goProfile}>Published</InstantButton>
         <InstantButton className={draftsButtonClass} onClick={goDrafts}>Saved</InstantButton>
@@ -858,6 +889,7 @@ export const BlocksPage = observer(() => {
     return <MenuContentTabbed name={'Blocks'} navBar={navBar}>
         <Switch>
             <Route path={`${match.path}/hot`} component={HotPage}/>
+            <Route path={`${match.path}/prod`} component={ProdPage}/>
             <Route path={`${match.path}/new`} component={NewPage}/>
             <Route path={`${match.path}/profile`} component={ProfilePage}/>
             <Route path={`${match.path}/drafts`} component={DraftsPage}/>
