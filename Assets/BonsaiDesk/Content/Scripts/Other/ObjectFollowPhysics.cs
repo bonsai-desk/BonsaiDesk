@@ -29,7 +29,7 @@ public class ObjectFollowPhysics : MonoBehaviour
         _sqrSnapBackDistance = snapBackDistance * snapBackDistance;
     }
 
-    private void FixedUpdate()
+    protected virtual void FixedUpdate()
     {
         if (!target)
         {

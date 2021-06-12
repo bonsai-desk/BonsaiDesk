@@ -124,6 +124,26 @@ public class AutoAuthority : NetworkBehaviour
         }
     }
 
+    private void FixedUpdate()
+    {
+        if (isServer)
+        {
+            if (!_blockObject && (transform.Invalid() || Vector3.SqrMagnitude(transform.position) > 20f * 20f ||
+                                  transform.position.y < -1f || transform.position.y > 5f))
+            {
+                ServerStripOwnerAndDestroy();
+                return;
+            }
+        }
+        else
+        {
+            if (transform.Invalid())
+            {
+                BonsaiLog.LogError("Invalid transform in AutoAuthority FixedUpdate");
+            }
+        }
+    }
+
     public void SetKinematicLocalForOneFrame()
     {
         _body.isKinematic = true;
