@@ -71,6 +71,13 @@ public class LogToText : MonoBehaviour
 
     private void LogCallBack(string condition, string stackTrace, LogType type)
     {
+#if DEVELOPMENT_BUILD
+        if (type == LogType.Error && MessageStack.Singleton)
+        {
+            MessageStack.Singleton.AddMessage(condition, MessageStack.MessageType.Bad, 1f);
+        }
+#endif
+
         if (_numCharsWritten >= MaxCharsPerFile)
         {
             return;
