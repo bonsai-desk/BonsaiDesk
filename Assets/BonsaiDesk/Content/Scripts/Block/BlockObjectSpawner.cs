@@ -14,6 +14,8 @@ public class BlockObjectSpawner : NetworkBehaviour
     //just used on server
     private readonly Dictionary<string, byte[]> _partialMessages = new Dictionary<string, byte[]>();
 
+    [TextArea] public string blockString;
+
     private void Awake()
     {
         Instance = this;
@@ -22,6 +24,13 @@ public class BlockObjectSpawner : NetworkBehaviour
     public override void OnStartServer()
     {
         _partialMessages.Clear();
+
+#if UNITY_EDITOR
+        if (!string.IsNullOrEmpty(blockString))
+        {
+            SpawnFromString(blockString);
+        }
+#endif
     }
 
     public bool SpawnFromFileName(string fileName)

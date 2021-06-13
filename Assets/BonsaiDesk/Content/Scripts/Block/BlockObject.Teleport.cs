@@ -314,6 +314,7 @@ public partial class BlockObject
         var dot = Vector3.Dot(up, targetUp);
 
         var invalid = distanceSquared > 0.045f * 0.045f || dot < 0.9779841f; //dot of 0.9779841f is about equal to an angle of 12 degrees
+        return false;
         return invalid;
     }
 

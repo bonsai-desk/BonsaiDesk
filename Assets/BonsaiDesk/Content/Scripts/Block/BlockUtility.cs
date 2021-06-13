@@ -337,21 +337,21 @@ public static partial class BlockUtility
             float yPosition = -(1f / 2f) - (1f * -box.Value[1][0]) + (yScale / 2f);
             float zPosition = -(1f / 2f) - (1f * -box.Value[2][0]) + (zScale / 2f);
 
+            BoxCollider boxCollider;
             if (boxCollidersNotNeeded.Count > 0)
             {
-                BoxCollider boxCollider = boxCollidersNotNeeded.Dequeue();
-                boxCollider.size = new Vector3(xScale, yScale, zScale);
-                boxCollider.center = box.Key + new Vector3(xPosition, yPosition, zPosition);
-                boxCollidersInUse.Enqueue(boxCollider);
+                boxCollider = boxCollidersNotNeeded.Dequeue();
             }
             else
             {
-                BoxCollider boxCollider = boxesParent.gameObject.AddComponent<BoxCollider>();
-                boxCollider.sharedMaterial = blockPhysicMaterial;
-                boxCollider.size = new Vector3(xScale, yScale, zScale);
-                boxCollider.center = box.Key + new Vector3(xPosition, yPosition, zPosition);
-                boxCollidersInUse.Enqueue(boxCollider);
+                boxCollider = boxesParent.gameObject.AddComponent<BoxCollider>();
             }
+
+            boxCollider.sharedMaterial = blockPhysicMaterial;
+            const float reduceSize = 0.5f;
+            boxCollider.size = new Vector3(xScale - reduceSize, yScale - reduceSize, zScale - reduceSize);
+            boxCollider.center = box.Key + new Vector3(xPosition, yPosition, zPosition);
+            boxCollidersInUse.Enqueue(boxCollider);
         }
 
         bool destroySphere = false;
@@ -623,8 +623,8 @@ public static partial class BlockUtility
         if (_defaultLayerMaskMinusPlayers == 0)
         {
             _defaultLayerMaskMinusPlayers = DefaultLayerMask & ~(1 << LayerMask.NameToLayer("LeftHand")) & ~(1 << LayerMask.NameToLayer("RightHand")) &
-                                               ~(1 << LayerMask.NameToLayer("IndexTip")) & ~(1 << LayerMask.NameToLayer("networkPlayer")) &
-                                               ~(1 << LayerMask.NameToLayer("networkHand"));
+                                            ~(1 << LayerMask.NameToLayer("IndexTip")) & ~(1 << LayerMask.NameToLayer("networkPlayer")) &
+                                            ~(1 << LayerMask.NameToLayer("networkHand"));
         }
 
         return _defaultLayerMaskMinusPlayers;

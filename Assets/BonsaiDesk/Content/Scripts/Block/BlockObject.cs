@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Mirror;
@@ -165,7 +166,7 @@ public partial class BlockObject : NetworkBehaviour
     private int _numWeightedBlocks;
 
     //for testing purposes
-    public bool debug = false;
+    public bool debug;
 
     private void Awake()
     {
@@ -262,6 +263,18 @@ public partial class BlockObject : NetworkBehaviour
         UpdateDialogPosition();
         CheckPotentialBlocksParent();
         CheckForProblems();
+
+#if UNITY_EDITOR
+        if (debug)
+        {
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                var root = BlockUtility.GetRootBlockObject(this);
+                var dataString = BlockUtility.SerializeBlocksFromRoot(root);
+                File.WriteAllText(System.IO.Path.Combine(Application.persistentDataPath, root.name + ".txt"), dataString);
+            }
+        }
+#endif
     }
 
     private void FixedUpdate()
