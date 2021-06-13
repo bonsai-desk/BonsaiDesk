@@ -348,7 +348,7 @@ public static partial class BlockUtility
             }
 
             boxCollider.sharedMaterial = blockPhysicMaterial;
-            const float reduceSize = 0.5f;
+            const float reduceSize = 0.075f;
             boxCollider.size = new Vector3(xScale - reduceSize, yScale - reduceSize, zScale - reduceSize);
             boxCollider.center = box.Key + new Vector3(xPosition, yPosition, zPosition);
             boxCollidersInUse.Enqueue(boxCollider);
