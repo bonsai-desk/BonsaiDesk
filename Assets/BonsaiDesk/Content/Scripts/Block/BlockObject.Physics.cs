@@ -47,15 +47,30 @@ public partial class BlockObject
 
     private void CalculateBearingFriction()
     {
-        if (_joint && _joint.connectedBody)
+        var rootBlockObject = BlockUtility.GetRootBlockObject(this);
+        if (rootBlockObject == this)
         {
-            const float friction = 0.00075f;
-            var worldAxis = transform.TransformVector(_joint.axis).normalized;
-            var resistTorque = friction * Time.fixedDeltaTime * -_joint.velocity * worldAxis;
-        
-            _body.AddTorque(resistTorque);
-            _joint.connectedBody.AddTorque(-resistTorque);
+            var blockObjects = BlockUtility.GetBlockObjectsFromRoot(rootBlockObject);
+            for (int i = blockObjects.Count - 1; i >= 0; i--)
+            {
+                ApplyFriction(blockObjects[i]);
+            }
         }
+    }
+
+    private static void ApplyFriction(BlockObject blockObject)
+    {
+        if (!blockObject._joint || !blockObject._joint.connectedBody)
+        {
+            return;
+        }
+
+        const float friction = 0.001f;
+        var worldAxis = blockObject.transform.TransformVector(blockObject._joint.axis).normalized;
+        var resistTorque = friction * Time.fixedDeltaTime * -blockObject._joint.velocity * worldAxis;
+
+        blockObject._body.AddTorque(resistTorque * blockObject._body.mass);
+        blockObject._joint.connectedBody.AddTorque(blockObject._joint.connectedBody.mass * 0.5f * -resistTorque);
     }
 
     private void PhysicsFixedUpdate()
@@ -187,7 +202,7 @@ public partial class BlockObject
                             ConnectJoint(jointInfo);
                             blockObject._connectedToSelfChanges.Enqueue((blockCoord, new NetworkIdentityReference(netIdentity),
                                 SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation.OP_ADD));
-                            
+
                             //sound
                             bearingAttachSound.PlaySoundAt(position);
                         }
@@ -199,7 +214,7 @@ public partial class BlockObject
                             var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
                             localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * MeshBlocks[coord].rotation;
                             var localRotationByte = BlockUtility.QuaternionToByte(localRotation);
-                            
+
                             //sound
                             blockAttachSound.PlaySoundAt(position, 0, 0.35f, 0.6f);
 
