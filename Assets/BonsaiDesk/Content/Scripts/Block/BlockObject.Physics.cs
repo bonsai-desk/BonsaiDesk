@@ -45,6 +45,19 @@ public partial class BlockObject
         _blockAreaLayer = LayerMask.NameToLayer("blockArea");
     }
 
+    private void CalculateBearingFriction()
+    {
+        if (_joint && _joint.connectedBody)
+        {
+            const float friction = 0.00075f;
+            var worldAxis = transform.TransformVector(_joint.axis).normalized;
+            var resistTorque = friction * Time.fixedDeltaTime * -_joint.velocity * worldAxis;
+        
+            _body.AddTorque(resistTorque);
+            _joint.connectedBody.AddTorque(-resistTorque);
+        }
+    }
+
     private void PhysicsFixedUpdate()
     {
         if (Joint && !Joint.connectedBody)

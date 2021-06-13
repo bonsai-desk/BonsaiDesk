@@ -292,6 +292,8 @@ public partial class BlockObject : NetworkBehaviour
         {
             PhysicsFixedUpdate();
         }
+
+        CalculateBearingFriction();
     }
 
     public override void OnStopServer()
@@ -494,7 +496,7 @@ public partial class BlockObject : NetworkBehaviour
                     break;
             }
         }
-        
+
         CalculateRelativeWeights();
     }
 
@@ -636,7 +638,7 @@ public partial class BlockObject : NetworkBehaviour
         transform.rotation = previousRotation;
         _body.MovePosition(transform.position);
         _body.MoveRotation(transform.rotation);
-        
+
         CalculateRelativeWeights();
     }
 
