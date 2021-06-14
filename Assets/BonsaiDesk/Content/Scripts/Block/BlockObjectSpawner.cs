@@ -14,6 +14,7 @@ public class BlockObjectSpawner : NetworkBehaviour
     //just used on server
     private readonly Dictionary<string, byte[]> _partialMessages = new Dictionary<string, byte[]>();
 
+    public bool spawnBlockString;
     [TextArea] public string blockString;
 
     private void Awake()
@@ -26,7 +27,7 @@ public class BlockObjectSpawner : NetworkBehaviour
         _partialMessages.Clear();
 
 #if UNITY_EDITOR
-        if (!string.IsNullOrEmpty(blockString))
+        if (!string.IsNullOrEmpty(blockString) && spawnBlockString)
         {
             SpawnFromString(blockString);
         }
