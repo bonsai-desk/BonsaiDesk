@@ -65,12 +65,25 @@ public partial class BlockObject
             return;
         }
 
-        const float friction = 0.001f;
-        var worldAxis = blockObject.transform.TransformVector(blockObject._joint.axis).normalized;
-        var resistTorque = friction * Time.fixedDeltaTime * -blockObject._joint.velocity * worldAxis;
+        const float friction = 0.75f; //the percent of the energy which will be lost each second
+        const float maxVelocityChange = 5f;
+        const float forceRatio = 0.5f; //the percent of the force which goes to blockObject vs the thing it is attached to
 
-        blockObject._body.AddTorque(resistTorque * blockObject._body.mass);
-        blockObject._joint.connectedBody.AddTorque(blockObject._joint.connectedBody.mass * 0.5f * -resistTorque);
+        var worldAxis = blockObject.transform.TransformVector(blockObject._joint.axis).normalized;
+
+        var relativeAngularVelocity = blockObject._body.angularVelocity - blockObject._joint.connectedBody.angularVelocity;
+        var rotationSpeed = Vector3.Dot(worldAxis, relativeAngularVelocity);
+        var rotationDirection = rotationSpeed > 0 ? 1f : -1f;
+
+        var fixedSlowDown = Mathf.Min(maxVelocityChange * Time.fixedDeltaTime, Mathf.Abs(rotationSpeed));
+        var proportionalSlowDown = Mathf.Abs(friction * Time.deltaTime * rotationSpeed);
+        var slowDown = Mathf.Max(fixedSlowDown, proportionalSlowDown);
+
+        var resistTorque = slowDown * rotationDirection * -worldAxis;
+        var angularVelocityChange = resistTorque;
+
+        blockObject._body.AddTorque(angularVelocityChange * forceRatio, ForceMode.VelocityChange);
+        blockObject._joint.connectedBody.AddTorque(-angularVelocityChange * (1f - forceRatio), ForceMode.VelocityChange);
     }
 
     private void PhysicsFixedUpdate()
