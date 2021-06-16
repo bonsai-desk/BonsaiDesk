@@ -257,11 +257,11 @@ public partial class BlockObject
 
         if ((isInCubeArea && isNearHole) || (isNearHole && TouchingHand))
         {
-            _physicsBoxesObject.gameObject.layer = _blockLayer;
+            _collidersObject.gameObject.layer = _blockLayer;
         }
         else
         {
-            _physicsBoxesObject.gameObject.layer = _blockAreaLayer;
+            _collidersObject.gameObject.layer = _blockAreaLayer;
         }
 
         _body.useGravity = !isInCubeArea;
