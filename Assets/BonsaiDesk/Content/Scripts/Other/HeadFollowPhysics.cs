@@ -47,6 +47,29 @@ public class HeadFollowPhysics : ObjectFollowPhysics
         }
     }
 
+    protected override void FixedUpdate()
+    {
+        base.FixedUpdate();
+
+        if (transform.Invalid())
+        {
+            if (NetworkIdentity.isLocalPlayer)
+            {
+                transform.position = target.position;
+                transform.rotation = target.rotation;
+                Body.MovePosition(transform.position);
+                Body.MoveRotation(transform.rotation);
+            }
+            else
+            {
+                transform.position = new Vector3(0, -10, 0);
+                transform.rotation = Quaternion.identity;
+                Body.MovePosition(transform.position);
+                Body.MoveRotation(transform.rotation);
+            }
+        }
+    }
+
     private float Vector3Max(Vector3 v)
     {
         var max = v.x;

@@ -76,8 +76,6 @@ public class AutoAuthority : NetworkBehaviour
 
     private void Update()
     {
-        UpdateColor();
-
         if (isServer)
         {
             if (Time.time - _inUseSetTime > _inUseTimeout && _inUseBy != 0)
@@ -85,13 +83,22 @@ public class AutoAuthority : NetworkBehaviour
                 _inUseBy = 0;
             }
 
-            if (!_blockObject && (PhysicsHandController.InvalidTransform(transform) || Vector3.SqrMagnitude(transform.position) > 20f * 20f ||
+            if (!_blockObject && (transform.Invalid() || Vector3.SqrMagnitude(transform.position) > 20f * 20f ||
                                   transform.position.y < -1f || transform.position.y > 5f))
             {
                 ServerStripOwnerAndDestroy();
                 return;
             }
         }
+        else
+        {
+            if (transform.Invalid())
+            {
+                BonsaiLog.LogError("Invalid transform in AutoAuthority");
+            }
+        }
+        
+        UpdateColor();
 
         //if you don't have control over the object
         if (!HasAuthority())
@@ -114,6 +121,26 @@ public class AutoAuthority : NetworkBehaviour
         if (Time.time - _keepAwakeTime < 1f)
         {
             _body.WakeUp();
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        if (isServer)
+        {
+            if (!_blockObject && (transform.Invalid() || Vector3.SqrMagnitude(transform.position) > 20f * 20f ||
+                                  transform.position.y < -1f || transform.position.y > 5f))
+            {
+                ServerStripOwnerAndDestroy();
+                return;
+            }
+        }
+        else
+        {
+            if (transform.Invalid())
+            {
+                BonsaiLog.LogError("Invalid transform in AutoAuthority FixedUpdate");
+            }
         }
     }
 

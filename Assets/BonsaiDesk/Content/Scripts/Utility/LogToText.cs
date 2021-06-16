@@ -1,44 +1,24 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using UnityEngine;
 
 public class LogToText : MonoBehaviour
 {
     private const int NumLogsToStore = 5;
-    private const int MaxLogsPerFile = 5000;
-    private const int NumLogsBeforeSave = 100;
-    private const int LogUpdateInterval = 10;
-
-    private int _numLogged = 0;
-    private float _lastLogSaveTime = 0;
+    private const int MaxCharsPerFile = 25000000;
 
     private static LogToText _instance;
+    public static LogToText Instance => _instance;
 
-    public static LogToText Instance
-    {
-        get { return _instance; }
-    }
+    private string _logPath;
+    private StreamWriter _streamWriter;
+    private int _numCharsWritten;
+    private int _flushedFrame;
 
-    struct Log
-    {
-        public string condition;
-        public string stackTrace;
-        public LogType type;
-        public float time;
-
-        public Log(string condition, string stackTrace, LogType type, float time)
-        {
-            this.condition = condition;
-            this.stackTrace = stackTrace;
-            this.type = type;
-            this.time = time;
-        }
-    }
-
-    private Queue<Log> logs = new Queue<Log>();
-    private string logPath;
+    private bool _showedMessageStack;
 
     private void Awake()
     {
@@ -47,61 +27,105 @@ public class LogToText : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-        else
+
+        _instance = this;
+
+        if (!string.IsNullOrEmpty(_logPath))
         {
-            _instance = this;
+            return;
         }
 
-        if (string.IsNullOrEmpty(logPath))
+        try
         {
-            deleteOldFiles();
+            DeleteOldFiles();
 
-            System.DateTime epochStart = new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
-            int cur_time = (int) (System.DateTime.UtcNow - epochStart).TotalSeconds;
+            var unixTimestamp = DateTimeOffset.Now.ToUnixTimeSeconds();
+            var fileName = unixTimestamp + ".log";
 
-            string fileName = cur_time + ".log";
-
-            logPath = Path.Combine(Application.persistentDataPath, fileName);
-            StreamWriter sw = File.CreateText(logPath);
-            sw.Close();
-            print("Saving log to: " + logPath);
+            _logPath = Path.Combine(Application.persistentDataPath, fileName);
+            var fs = File.Create(_logPath);
+            fs.Close();
 
             OVRManager.HMDUnmounted += OVRManagerOnHMDUnmounted;
+
+            _streamWriter = new StreamWriter(_logPath, true);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("LogToText Awake init error: " + e);
         }
     }
 
     private void Update()
     {
-        if (Time.realtimeSinceStartup - _lastLogSaveTime > LogUpdateInterval || logs.Count >= NumLogsBeforeSave)
-        {
-            _lastLogSaveTime = Time.realtimeSinceStartup;
-            appendLogQueueToFile();
-        }
+        _streamWriter?.Flush(); //flush stream once per frame to prevent buffer from growing too large
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         Application.logMessageReceived += LogCallBack;
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
         Application.logMessageReceived -= LogCallBack;
     }
 
-    void LogCallBack(string condition, string stackTrace, LogType type)
+    private void LogCallBack(string condition, string stackTrace, LogType type)
     {
-        Log log;
-        log.condition = condition;
-        log.stackTrace = stackTrace;
-        log.type = type;
-        log.time = Time.realtimeSinceStartup;
-        logs.Enqueue(log);
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        if (!_showedMessageStack && type == LogType.Error && MessageStack.Singleton)
+        {
+            _showedMessageStack = true;
+            MessageStack.Singleton.AddMessage(condition, MessageStack.MessageType.Bad, 10f);
+        }
+#endif
+
+        if (_numCharsWritten >= MaxCharsPerFile)
+        {
+            return;
+        }
+
+        try
+        {
+            if (_streamWriter == null)
+            {
+                _streamWriter = new StreamWriter(_logPath, true);
+            }
+
+            string typeString = type.ToString();
+            const string atTimeString = " at time: ";
+            string timeString = Time.realtimeSinceStartup.ToString(CultureInfo.InvariantCulture);
+
+            _streamWriter.Write(typeString);
+            _numCharsWritten += typeString.Length;
+            _streamWriter.Write(atTimeString);
+            _numCharsWritten += atTimeString.Length;
+            _streamWriter.WriteLine(timeString);
+            _numCharsWritten += timeString.Length + 1;
+            _streamWriter.WriteLine(condition);
+            _numCharsWritten += condition.Length + 1;
+            _streamWriter.WriteLine(stackTrace);
+            _numCharsWritten += stackTrace.Length + 1;
+
+            if (_numCharsWritten >= MaxCharsPerFile)
+            {
+                _streamWriter.WriteLine("\n\n\n_numCharsWritten >= MaxCharsPerFile. No more logs will be written.");
+            }
+
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            _streamWriter.Flush(); //in development build, flush after every log to ensure logs are always up to date in case of a crash
+#endif
+        }
+        catch
+        {
+            //fail silently to prevent any recursive logs
+        }
     }
 
     //deletes old logs so there is (numLogsToStore - 1) logs remaining
     //deletes old logs first based on unix timestamp name
-    void deleteOldFiles()
+    private void DeleteOldFiles()
     {
         var directoryInfo = new DirectoryInfo(Application.persistentDataPath);
         var filePaths = directoryInfo.GetFiles();
@@ -112,11 +136,11 @@ public class LogToText : MonoBehaviour
             int periodIndex = fileName.IndexOf('.');
             if (periodIndex > 0)
             {
-                string name = fileName.Substring(0, periodIndex);
+                string justName = fileName.Substring(0, periodIndex);
                 string ext = fileName.Substring(periodIndex + 1);
-                if (ext.CompareTo("log") == 0)
+                if (ext == "log")
                 {
-                    if (int.TryParse(name, out int nameNumber))
+                    if (int.TryParse(justName, out int nameNumber))
                     {
                         if (!sortedLogs.ContainsKey(nameNumber))
                         {
@@ -138,48 +162,40 @@ public class LogToText : MonoBehaviour
         }
     }
 
-    void appendLogQueueToFile()
-    {
-        if (logs.Count == 0 || _numLogged >= MaxLogsPerFile)
-            return;
-
-        print("Updating log at: " + logPath);
-        using (StreamWriter sw = File.AppendText(logPath))
-        {
-            while (logs.Count > 0)
-            {
-                Log log = logs.Dequeue();
-                sw.WriteLine(log.type + " at time: " + log.time);
-                sw.WriteLine(log.condition);
-                sw.WriteLine(log.stackTrace);
-                _numLogged++;
-                if (_numLogged >= MaxLogsPerFile)
-                {
-                    break;
-                }
-            }
-        }
-    }
-
     private void OnApplicationQuit()
     {
-        appendLogQueueToFile();
+        CleanupStreamWriter();
     }
 
     private void OnApplicationFocus(bool hasFocus)
     {
         if (!hasFocus)
-            appendLogQueueToFile();
+        {
+            CleanupStreamWriter();
+        }
     }
 
     private void OnApplicationPause(bool pauseStatus)
     {
         if (pauseStatus)
-            appendLogQueueToFile();
+        {
+            CleanupStreamWriter();
+        }
     }
 
     private void OVRManagerOnHMDUnmounted()
     {
-        appendLogQueueToFile();
+        CleanupStreamWriter();
+    }
+
+    private void CleanupStreamWriter()
+    {
+        if (_streamWriter == null)
+        {
+            return;
+        }
+
+        _streamWriter.Close();
+        _streamWriter = null;
     }
 }

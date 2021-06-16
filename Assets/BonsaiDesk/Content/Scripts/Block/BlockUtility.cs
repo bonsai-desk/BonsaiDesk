@@ -269,17 +269,89 @@ public static partial class BlockUtility
     };
 
     public static (Queue<BoxCollider> boxCollidersNotNeeded, bool destroySphere) UpdateHitBox(Dictionary<Vector3Int, MeshBlock> meshBlocks,
-        Queue<BoxCollider> boxCollidersInUse, Transform boxesParent, Transform sphereObject, PhysicMaterial blockPhysicMaterial,
-        PhysicMaterial spherePhysicMaterial, BlockObject blockObject)
+        Queue<BoxCollider> boxCollidersInUse, Queue<CapsuleCollider> capsuleCollidersInUse, Transform collidersParent, Transform sphereObject,
+        PhysicMaterial blockPhysicMaterial, PhysicMaterial spherePhysicMaterial, BlockObject blockObject)
     {
         if (meshBlocks.Count < 1)
         {
             Debug.LogError("Cannot update hitbox with no blocks.");
             return (null, false);
         }
+        
+        Queue<BoxCollider> boxCollidersNotNeeded = new Queue<BoxCollider>();
+        while (boxCollidersInUse.Count > 0)
+        {
+            BoxCollider boxCollider = boxCollidersInUse.Dequeue();
+            boxCollidersNotNeeded.Enqueue(boxCollider);
+        }
+
+        Queue<CapsuleCollider> capsuleCollidersNotNeeded = new Queue<CapsuleCollider>();
+        while (capsuleCollidersInUse.Count > 0)
+        {
+            var collider = capsuleCollidersInUse.Dequeue();
+            capsuleCollidersNotNeeded.Enqueue(collider);
+        }
 
         HashSet<Vector3Int> assimilated = new HashSet<Vector3Int>();
         Dictionary<Vector3Int, Vector2Int[]> boxes = new Dictionary<Vector3Int, Vector2Int[]>();
+        
+        // if (blockObject.SyncJointLocal.connected && meshBlocks.ContainsKey(blockObject.SyncJointLocal.attachedToMeAtCoord) &&
+        //     blockObject.SyncJointLocal.attachedTo != null && blockObject.SyncJointLocal.attachedTo.Value)
+        // {
+        //     var axisLocalToAttachedTo = BlockUtility.ByteToQuaternion(blockObject.SyncJointLocal.bearingLocalRotation) * Vector3.up;
+        //     var axisLocalToSelf =
+        //         blockObject.transform.InverseTransformDirection(blockObject.SyncJointLocal.attachedTo.Value.transform.rotation * axisLocalToAttachedTo);
+        //     var direction = new Vector3Int(Mathf.RoundToInt(axisLocalToSelf.x), Mathf.RoundToInt(axisLocalToSelf.y), Mathf.RoundToInt(axisLocalToSelf.z));
+        //     if (direction != Vector3Int.zero)
+        //     {
+        //         var check = blockObject.SyncJointLocal.attachedToMeAtCoord;
+        //         var start = check;
+        //         var height = 0;
+        //         while (meshBlocks.ContainsKey(check) && !assimilated.Contains(check))
+        //         {
+        //             height++;
+        //             assimilated.Add(check);
+        //             check += direction;
+        //         }
+        //
+        //         var end = check - direction;
+        //
+        //         var capsuleCollider = capsuleCollidersNotNeeded.Count > 0
+        //             ? capsuleCollidersNotNeeded.Dequeue()
+        //             : collidersParent.gameObject.AddComponent<CapsuleCollider>();
+        //         capsuleCollider.sharedMaterial = blockPhysicMaterial;
+        //         capsuleCollider.center = ((Vector3) start + end) / 2f;
+        //         capsuleCollider.height = height;
+        //         capsuleCollider.radius = 0.49f;
+        //         if (Mathf.Abs(direction.x) == 1)
+        //         {
+        //             capsuleCollider.direction = 0;
+        //         }
+        //         else if (Mathf.Abs(direction.y) == 1)
+        //         {
+        //             capsuleCollider.direction = 1;
+        //         }
+        //         else if (Mathf.Abs(direction.x) == 1)
+        //         {
+        //             capsuleCollider.direction = 2;
+        //         }
+        //         else
+        //         {
+        //             BonsaiLog.LogWarning("Unknown direction");
+        //         }
+        //
+        //         capsuleCollidersInUse.Enqueue(capsuleCollider);
+        //         
+        //         var boxCollider = boxCollidersNotNeeded.Count > 0 ? boxCollidersNotNeeded.Dequeue() : collidersParent.gameObject.AddComponent<BoxCollider>();
+        //         boxCollider.sharedMaterial = blockPhysicMaterial;
+        //         boxCollider.center = end;
+        //         const float boxSize = 0.6929646f;
+        //         boxCollider.size = new Vector3(boxSize, boxSize, boxSize);
+        //         
+        //         boxCollidersInUse.Enqueue(boxCollider);
+        //     }
+        // }
+
         foreach (var block in meshBlocks)
         {
             if (!assimilated.Contains(block.Key))
@@ -320,11 +392,9 @@ public static partial class BlockUtility
             }
         }
 
-        Queue<BoxCollider> boxCollidersNotNeeded = new Queue<BoxCollider>();
-        while (boxCollidersInUse.Count > 0)
+        while (capsuleCollidersNotNeeded.Count > 0)
         {
-            BoxCollider boxCollider = boxCollidersInUse.Dequeue();
-            boxCollidersNotNeeded.Enqueue(boxCollider);
+            UnityEngine.Object.Destroy(capsuleCollidersNotNeeded.Dequeue());
         }
 
         foreach (var box in boxes)
@@ -337,21 +407,13 @@ public static partial class BlockUtility
             float yPosition = -(1f / 2f) - (1f * -box.Value[1][0]) + (yScale / 2f);
             float zPosition = -(1f / 2f) - (1f * -box.Value[2][0]) + (zScale / 2f);
 
-            if (boxCollidersNotNeeded.Count > 0)
-            {
-                BoxCollider boxCollider = boxCollidersNotNeeded.Dequeue();
-                boxCollider.size = new Vector3(xScale, yScale, zScale);
-                boxCollider.center = box.Key + new Vector3(xPosition, yPosition, zPosition);
-                boxCollidersInUse.Enqueue(boxCollider);
-            }
-            else
-            {
-                BoxCollider boxCollider = boxesParent.gameObject.AddComponent<BoxCollider>();
-                boxCollider.sharedMaterial = blockPhysicMaterial;
-                boxCollider.size = new Vector3(xScale, yScale, zScale);
-                boxCollider.center = box.Key + new Vector3(xPosition, yPosition, zPosition);
-                boxCollidersInUse.Enqueue(boxCollider);
-            }
+            var boxCollider = boxCollidersNotNeeded.Count > 0 ? boxCollidersNotNeeded.Dequeue() : collidersParent.gameObject.AddComponent<BoxCollider>();
+
+            boxCollider.sharedMaterial = blockPhysicMaterial;
+            const float reduceSize = 0; //0.075f
+            boxCollider.size = new Vector3(xScale - reduceSize, yScale - reduceSize, zScale - reduceSize);
+            boxCollider.center = box.Key + new Vector3(xPosition, yPosition, zPosition);
+            boxCollidersInUse.Enqueue(boxCollider);
         }
 
         bool destroySphere = false;
@@ -623,8 +685,8 @@ public static partial class BlockUtility
         if (_defaultLayerMaskMinusPlayers == 0)
         {
             _defaultLayerMaskMinusPlayers = DefaultLayerMask & ~(1 << LayerMask.NameToLayer("LeftHand")) & ~(1 << LayerMask.NameToLayer("RightHand")) &
-                                               ~(1 << LayerMask.NameToLayer("IndexTip")) & ~(1 << LayerMask.NameToLayer("networkPlayer")) &
-                                               ~(1 << LayerMask.NameToLayer("networkHand"));
+                                            ~(1 << LayerMask.NameToLayer("IndexTip")) & ~(1 << LayerMask.NameToLayer("networkPlayer")) &
+                                            ~(1 << LayerMask.NameToLayer("networkHand"));
         }
 
         return _defaultLayerMaskMinusPlayers;

@@ -1,4 +1,6 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+
+using System;
 using EmbedIO;
 using EmbedIO.Actions;
 using EmbedIO.Routing;
@@ -61,3 +63,5 @@ namespace Bonsai.Web
    //    }
    //}
 }
+
+#endif
