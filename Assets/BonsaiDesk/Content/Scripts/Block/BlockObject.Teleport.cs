@@ -69,7 +69,7 @@ public partial class BlockObject
     {
         for (int i = 0; i < blockObjects.Count; i++)
         {
-            if (PhysicsHandController.InvalidTransform(blockObjects[i].transform))
+            if (blockObjects[i].transform.Invalid())
             {
                 Debug.LogWarning("BlockObject has invalid transform!");
                 if (blockObjects.Count == 1 && blockObjects[0].Blocks.Count <= 4)
@@ -305,7 +305,16 @@ public partial class BlockObject
         var currentPosition = blockObject.transform.TransformPoint(blockObject.SyncJoint.attachedToMeAtCoord);
         var distanceSquared = Vector3.SqrMagnitude(targetPosition - currentPosition);
 
-        var invalid = distanceSquared > 0.045f * 0.045f;
+        var diff = Quaternion.Inverse(blockObject.SyncJoint.attachedTo.Value.transform.rotation) * blockObject.transform.rotation;
+        var bearingLocalRotation = BlockUtility.ByteToQuaternion(blockObject.SyncJoint.bearingLocalRotation);
+        
+        var targetUp = bearingLocalRotation * Vector3.up;
+        var up = diff * Quaternion.Inverse(BlockUtility.ByteToQuaternion(blockObject.SyncJoint.localRotation)) * bearingLocalRotation * Vector3.up;
+
+        // var dot = Vector3.Dot(up, targetUp); //dot < 0.9779841f; //dot of 0.9779841f is about equal to an angle of 12 degrees
+        var angle = Vector3.Angle(up, targetUp);
+
+        var invalid = distanceSquared > 0.045f * 0.045f || angle > 20f;
         return invalid;
     }
 
@@ -345,7 +354,7 @@ public partial class BlockObject
             var smoothSync = next.GetComponent<SmoothSyncMirror>();
             smoothSync.clearBuffer();
 
-            if (next == rootBlockObject && PhysicsHandController.InvalidTransform(next.transform))
+            if (next == rootBlockObject && next.transform.Invalid())
             {
                 next.transform.position = new Vector3(0, 5, 0);
                 next.transform.rotation = Quaternion.identity;

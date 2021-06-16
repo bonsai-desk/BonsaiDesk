@@ -45,6 +45,47 @@ public partial class BlockObject
         _blockAreaLayer = LayerMask.NameToLayer("blockArea");
     }
 
+    private void CalculateBearingFriction()
+    {
+        var rootBlockObject = BlockUtility.GetRootBlockObject(this);
+        if (rootBlockObject == this)
+        {
+            var blockObjects = BlockUtility.GetBlockObjectsFromRoot(rootBlockObject);
+            for (int i = blockObjects.Count - 1; i >= 0; i--)
+            {
+                ApplyFriction(blockObjects[i]);
+            }
+        }
+    }
+
+    private static void ApplyFriction(BlockObject blockObject)
+    {
+        if (!blockObject._joint || !blockObject._joint.connectedBody)
+        {
+            return;
+        }
+
+        const float friction = 0.75f; //the percent of the energy which will be lost each second
+        const float maxVelocityChange = 5f;
+        const float forceRatio = 0.5f; //the percent of the force which goes to blockObject vs the thing it is attached to
+
+        var worldAxis = blockObject.transform.TransformVector(blockObject._joint.axis).normalized;
+
+        var relativeAngularVelocity = blockObject._body.angularVelocity - blockObject._joint.connectedBody.angularVelocity;
+        var rotationSpeed = Vector3.Dot(worldAxis, relativeAngularVelocity);
+        var rotationDirection = rotationSpeed > 0 ? 1f : -1f;
+
+        var fixedSlowDown = Mathf.Min(maxVelocityChange * Time.fixedDeltaTime, Mathf.Abs(rotationSpeed));
+        var proportionalSlowDown = Mathf.Abs(friction * Time.deltaTime * rotationSpeed);
+        var slowDown = Mathf.Max(fixedSlowDown, proportionalSlowDown);
+
+        var resistTorque = slowDown * rotationDirection * -worldAxis;
+        var angularVelocityChange = resistTorque;
+
+        blockObject._body.AddTorque(angularVelocityChange * forceRatio, ForceMode.VelocityChange);
+        blockObject._joint.connectedBody.AddTorque(-angularVelocityChange * (1f - forceRatio), ForceMode.VelocityChange);
+    }
+
     private void PhysicsFixedUpdate()
     {
         if (Joint && !Joint.connectedBody)
@@ -174,7 +215,7 @@ public partial class BlockObject
                             ConnectJoint(jointInfo);
                             blockObject._connectedToSelfChanges.Enqueue((blockCoord, new NetworkIdentityReference(netIdentity),
                                 SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation.OP_ADD));
-                            
+
                             //sound
                             bearingAttachSound.PlaySoundAt(position);
                         }
@@ -186,7 +227,7 @@ public partial class BlockObject
                             var localRotation = Quaternion.Inverse(blockObject.transform.rotation) * rotation;
                             localRotation = BlockUtility.SnapToNearestRightAngle(localRotation) * MeshBlocks[coord].rotation;
                             var localRotationByte = BlockUtility.QuaternionToByte(localRotation);
-                            
+
                             //sound
                             blockAttachSound.PlaySoundAt(position, 0, 0.35f, 0.6f);
 
@@ -216,11 +257,11 @@ public partial class BlockObject
 
         if ((isInCubeArea && isNearHole) || (isNearHole && TouchingHand))
         {
-            _physicsBoxesObject.gameObject.layer = _blockLayer;
+            _collidersObject.gameObject.layer = _blockLayer;
         }
         else
         {
-            _physicsBoxesObject.gameObject.layer = _blockAreaLayer;
+            _collidersObject.gameObject.layer = _blockAreaLayer;
         }
 
         _body.useGravity = !isInCubeArea;

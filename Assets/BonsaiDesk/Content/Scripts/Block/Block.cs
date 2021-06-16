@@ -26,6 +26,7 @@ public class Block
         this.blockType = blockType;
         AllowRotation = allowRotation;
         blockGameObjectPrefab = null;
+        
     }
 
     public Block(string textureName, bool allowRotation = true)

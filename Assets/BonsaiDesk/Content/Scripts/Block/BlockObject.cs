@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Mirror;
@@ -56,6 +57,8 @@ public partial class BlockObject : NetworkBehaviour
     public SyncDictionary<Vector3Int, SyncBlock> Blocks => _blocks;
     public SyncDictionary<Vector3Int, NetworkIdentityReference> ConnectedToSelf => _connectedToSelf;
     public SyncJoint SyncJoint => _syncJoint;
+    private SyncJoint _syncJointLocal;
+    public SyncJoint SyncJointLocal => _syncJointLocal;
 
     private Queue<Vector3Int> _toBeRemovedClientSidePrediction = new Queue<Vector3Int>();
 
@@ -127,7 +130,7 @@ public partial class BlockObject : NetworkBehaviour
     private GameObject _transparentCube;
     private BoxCollider _transparentCubeCollider = null;
     public GameObject transparentCubePrefab;
-    
+
     //sounds
     public SoundFXRef blockBreakSound;
     public SoundFXRef blockAttachSound;
@@ -136,8 +139,9 @@ public partial class BlockObject : NetworkBehaviour
     //physics
     private Rigidbody _body;
     public Rigidbody Body => _body;
-    private Transform _physicsBoxesObject;
+    private Transform _collidersObject;
     private Queue<BoxCollider> _boxCollidersInUse = new Queue<BoxCollider>();
+    private Queue<CapsuleCollider> _capsuleCollidersInUse = new Queue<CapsuleCollider>();
     private bool _resetCoM; //flag to reset CoM on the next physics update
     private AutoAuthority _autoAuthority;
     public AutoAuthority AutoAuthority => _autoAuthority;
@@ -165,7 +169,7 @@ public partial class BlockObject : NetworkBehaviour
     private int _numWeightedBlocks;
 
     //for testing purposes
-    public bool debug = false;
+    public bool debug;
 
     private void Awake()
     {
@@ -201,13 +205,14 @@ public partial class BlockObject : NetworkBehaviour
         _isInit = true;
 
         gameObject.name = "Block Object - " + Random.Range(0, int.MaxValue);
-        
+
         if (NetworkClient.connection != null && NetworkClient.connection.identity)
         {
             if (_spawnedForClientLeft == NetworkClient.connection.identity.netId)
             {
                 NetworkBlockSpawn.InstanceLeft.SetLastSpawned(netIdentity);
             }
+
             if (_spawnedForClientRight == NetworkClient.connection.identity.netId)
             {
                 NetworkBlockSpawn.InstanceRight.SetLastSpawned(netIdentity);
@@ -261,6 +266,18 @@ public partial class BlockObject : NetworkBehaviour
         UpdateDialogPosition();
         CheckPotentialBlocksParent();
         CheckForProblems();
+
+#if UNITY_EDITOR
+        if (debug)
+        {
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                var root = BlockUtility.GetRootBlockObject(this);
+                var dataString = BlockUtility.SerializeBlocksFromRoot(root);
+                File.WriteAllText(System.IO.Path.Combine(Application.persistentDataPath, root.name + ".txt"), dataString);
+            }
+        }
+#endif
     }
 
     private void FixedUpdate()
@@ -291,6 +308,8 @@ public partial class BlockObject : NetworkBehaviour
         {
             PhysicsFixedUpdate();
         }
+
+        CalculateBearingFriction();
     }
 
     public override void OnStopServer()
@@ -351,8 +370,8 @@ public partial class BlockObject : NetworkBehaviour
         _autoAuthority.meshRenderer = meshRenderer;
         _meshFilter = meshObject.AddComponent<MeshFilter>();
 
-        var physicsBoxes = new GameObject("PhysicsBoxes");
-        _physicsBoxesObject = physicsBoxes.transform;
+        var physicsBoxes = new GameObject("PhysicsColliders");
+        _collidersObject = physicsBoxes.transform;
         physicsBoxes.transform.SetParent(transform, false);
 
         _potentialBlocksParent = new GameObject("PotentialBlocks").transform;
@@ -493,6 +512,8 @@ public partial class BlockObject : NetworkBehaviour
                     break;
             }
         }
+
+        CalculateRelativeWeights();
     }
 
     private void OnConnectedToSelfDictionaryChange(SyncDictionary<Vector3Int, NetworkIdentityReference>.Operation op, Vector3Int key,
@@ -508,6 +529,13 @@ public partial class BlockObject : NetworkBehaviour
     }
 
     [Server]
+    private void ServerSetSyncJoint(SyncJoint syncJoint)
+    {
+        _syncJoint = syncJoint;
+        _syncJointLocal = syncJoint;
+    }
+
+    [Server]
     public void ServerConnectJoint(SyncJoint jointInfo)
     {
         if (_syncJoint.connected)
@@ -515,7 +543,7 @@ public partial class BlockObject : NetworkBehaviour
             Debug.LogError("SyncJoint was already connected. (not returning, but weird stuff might happen)");
         }
 
-        _syncJoint = jointInfo;
+        ServerSetSyncJoint(jointInfo);
 
         if (jointInfo.attachedTo == null || !jointInfo.attachedTo.Value)
         {
@@ -590,6 +618,8 @@ public partial class BlockObject : NetworkBehaviour
         {
             return;
         }
+        
+        _syncJointLocal = jointInfo;
 
         //perfectly allign block before attaching joint. This is because a joint is not fully defined
         //by the axis, anchor, and connected anchor. The initial relative position of the two objects matters
@@ -633,6 +663,8 @@ public partial class BlockObject : NetworkBehaviour
         transform.rotation = previousRotation;
         _body.MovePosition(transform.position);
         _body.MoveRotation(transform.rotation);
+
+        CalculateRelativeWeights();
     }
 
     private void DisconnectJoint()
@@ -641,6 +673,8 @@ public partial class BlockObject : NetworkBehaviour
         {
             Destroy(_joint);
             _joint = null;
+            _syncJointLocal = new SyncJoint();
+            CalculateRelativeWeights();
         }
     }
 
@@ -836,7 +870,7 @@ public partial class BlockObject : NetworkBehaviour
                     if (cachedSyncJoint.attachedTo != null && cachedSyncJoint.attachedTo.Value)
                     {
                         //add joints/joint references in both directions (doubly linked references)
-                        newBlockObjectScript._syncJoint = cachedSyncJoint;
+                        newBlockObjectScript.ServerSetSyncJoint(cachedSyncJoint);
                         cachedSyncJoint.attachedTo.Value.GetComponent<BlockObject>().ConnectedToSelf.Add(cachedSyncJoint.otherBearingCoord,
                             new NetworkIdentityReference(newBlockObjectScript.netIdentity)); //must be done after spawn so netIdentity has a non-zero netId
                     }
@@ -853,8 +887,8 @@ public partial class BlockObject : NetworkBehaviour
                         {
                             //add joints/joint references in both directions (doubly linked references)
                             //create copy of SyncJoint with nedIdRef now pointing to the new blockObject, not this
-                            pair.Value.netIdRef.Value.GetComponent<BlockObject>()._syncJoint = new SyncJoint(pair.Value.syncJoint,
-                                new NetworkIdentityReference(newBlockObjectScript.netIdentity));
+                            pair.Value.netIdRef.Value.GetComponent<BlockObject>().ServerSetSyncJoint(new SyncJoint(pair.Value.syncJoint,
+                                new NetworkIdentityReference(newBlockObjectScript.netIdentity)));
                             newBlockObjectScript.ConnectedToSelf.Add(pair.Value.syncJoint.otherBearingCoord, pair.Value.netIdRef);
                         }
                     }
@@ -959,7 +993,7 @@ public partial class BlockObject : NetworkBehaviour
         }
 
         var oldSyncJoint = _syncJoint;
-        _syncJoint = new SyncJoint();
+        ServerSetSyncJoint(new SyncJoint());
         DisconnectJoint();
 
         if (oldSyncJoint.attachedTo == null || !oldSyncJoint.attachedTo.Value)
@@ -1254,7 +1288,7 @@ public partial class BlockObject : NetworkBehaviour
             }
 
             CmdRemoveBlock(coord, nId);
-            
+
             blockBreakSound.PlaySoundAt(transform.TransformPoint(coord), 0, 0.35f, 0.6f);
             Mixpanel.Track("Remove Block");
 
@@ -1415,7 +1449,7 @@ public partial class BlockObject : NetworkBehaviour
             return;
         }
 
-        var (boxCollidersNotNeeded, destroySphere) = BlockUtility.UpdateHitBox(MeshBlocks, _boxCollidersInUse, _physicsBoxesObject, _sphereObject,
+        var (boxCollidersNotNeeded, destroySphere) = BlockUtility.UpdateHitBox(MeshBlocks, _boxCollidersInUse, _capsuleCollidersInUse, _collidersObject, _sphereObject,
             blockPhysicMaterial, spherePhysicMaterial, this);
         while (boxCollidersNotNeeded.Count > 0)
         {
@@ -1465,6 +1499,14 @@ public partial class BlockObject : NetworkBehaviour
             _numWeightedBlocks = 1;
         }
 
+        CalculateRelativeWeights();
+
+        //if any blocks are added or removed, close the save dialog if it is up
+        CloseDialog();
+    }
+
+    private void CalculateRelativeWeights()
+    {
         var blockObjects = BlockUtility.GetBlockObjectsFromRoot(BlockUtility.GetRootBlockObject(this));
         var totalWeightedBlocks = 0;
         for (int i = 0; i < blockObjects.Count; i++)
@@ -1486,12 +1528,7 @@ public partial class BlockObject : NetworkBehaviour
                 blockObjects[i]._body.mass = (float) blockObjects[i]._numWeightedBlocks / totalWeightedBlocks;
                 blockObjects[i]._resetCoM = true;
             }
-
-            totalWeightedBlocks += blockObjects[i]._numWeightedBlocks;
         }
-
-        //if any blocks are added or removed, close the save dialog if it is up
-        CloseDialog();
     }
 
     private void CreateInitialMesh()
@@ -1761,6 +1798,7 @@ public partial class BlockObject : NetworkBehaviour
                     _hasLoggedHingeJointError = true;
                     Mixpanel.Track("Found Hinge Joint Problem With BlockObject");
                 }
+
                 var blockObjects = BlockUtility.GetBlockObjectsFromRoot(BlockUtility.GetRootBlockObject(this));
                 for (int i = 0; i < blockObjects.Count; i++)
                 {
@@ -1900,12 +1938,18 @@ public partial class BlockObject : NetworkBehaviour
     {
         _activeLocal = isActive;
         _meshObject.gameObject.SetActive(_activeLocal);
-        _physicsBoxesObject.gameObject.SetActive(_activeLocal);
+        _collidersObject.gameObject.SetActive(_activeLocal);
         _sphereObject.gameObject.SetActive(_activeLocal);
         _blockGameObjectsParent.gameObject.SetActive(_activeLocal);
-        foreach (var collider in _boxCollidersInUse)
+        var defaultLayer = LayerMask.NameToLayer("Default");
+        var nothingLayer = LayerMask.NameToLayer("nothing");
+        foreach (var inUseCollider in _boxCollidersInUse)
         {
-            collider.gameObject.layer = isActive ? LayerMask.NameToLayer("Default") : LayerMask.NameToLayer("nothing");
+            inUseCollider.gameObject.layer = isActive ? defaultLayer : nothingLayer;
+        }
+        foreach (var inUseCollider in _capsuleCollidersInUse)
+        {
+            inUseCollider.gameObject.layer = isActive ? defaultLayer : nothingLayer;
         }
     }
 
@@ -1914,7 +1958,7 @@ public partial class BlockObject : NetworkBehaviour
     {
         _spawnedForClientLeft = ownerId;
     }
-    
+
     [Server]
     public void ServerSetSpawnedForClientRight(uint ownerId)
     {

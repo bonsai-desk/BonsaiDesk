@@ -39,12 +39,12 @@ public class PreBuild : IPreprocessBuildWithReport
             }
             else
             {
-                Debug.LogError("android_pass.txt should have exactly 2 lines.");
+                Debug.LogWarning("android_pass.txt should have exactly 2 lines.");
             }
         }
         catch (Exception e)
         {
-            Debug.LogError("Get android_pass.txt error: " + e);
+            Debug.LogWarning("Get android_pass.txt error: " + e);
         }
     }
 }
