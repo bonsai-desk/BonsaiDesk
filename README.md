@@ -76,7 +76,7 @@ Join the [Discord server](https://discord.com/invite/K3jMY7nv9k)
 [issues-shield]: https://img.shields.io/github/issues/Bonsai-Desk/BonsaiDesk.svg?style=for-the-badge
 [issues-url]: https://github.com/Bonsai-Desk/BonsaiDesk/issues
 [license-shield]: https://img.shields.io/github/license/Bonsai-Desk/BonsaiDesk.svg?style=for-the-badge
-[license-url]: https://github.com/Bonsai-Desk/BonsaiDesk/blob/master/LICENSE.txt
+[license-url]: https://github.com/Bonsai-Desk/BonsaiDesk/blob/master/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/linkedin_username
 [product-screenshot]: images/screenshot.jpg
